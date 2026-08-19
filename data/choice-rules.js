@@ -46,4 +46,9 @@ if(typeof EXPANDED_FOODS!=='undefined'){
   extra.forEach(x=>{if(!existing.has(x[0]))EXPANDED_FOODS.push(x)});
 }
 
-if(typeof window!=='undefined')window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
+if(typeof window!=='undefined'){
+  window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
+  if(!document.querySelector('script[data-kinaraidee-group]')){
+    const s=document.createElement('script');s.src='data/group-mode.js';s.dataset.kinaraideeGroup='1';document.head.appendChild(s);
+  }
+}
