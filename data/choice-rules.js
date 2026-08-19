@@ -48,7 +48,12 @@ if(typeof EXPANDED_FOODS!=='undefined'){
 
 if(typeof window!=='undefined'){
   window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
-  if(!document.querySelector('script[data-kinaraidee-group]')){
-    const s=document.createElement('script');s.src='data/group-mode.js';s.dataset.kinaraideeGroup='1';document.head.appendChild(s);
+  // ป้องกัน group-mode ถูกโหลดซ้ำ เพราะ index.html อาจโหลดไฟล์นี้อยู่แล้ว
+  if(!document.querySelector('script[src$="data/group-mode.js"]')){
+    const g=document.createElement('script');g.src='data/group-mode.js';g.dataset.kinaraideeGroup='1';document.head.appendChild(g);
+  }
+  // Phase 2A: ระบบโหวตข้ามมือถือแบบลิงก์ + รหัสโหวต (ยังไม่ใช้ backend)
+  if(!document.querySelector('script[src$="data/group-remote.js"]')){
+    const r=document.createElement('script');r.src='data/group-remote.js';r.dataset.kinaraideeRemote='1';document.head.appendChild(r);
   }
 }
