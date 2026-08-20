@@ -18,3 +18,14 @@
   function init(){if(!document.querySelector('#home'))return setTimeout(init,100);addStyles();addScreens();bind();window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0)
 })();
+
+// Load optional Beta modules from the one module already included by index.html.
+(function(){
+  ['data/member-sync.js','data/nearby-restaurants.js'].forEach(src=>{
+    if(document.querySelector(`script[src="${src}"]`))return;
+    const s=document.createElement('script');
+    s.src=src;
+    s.defer=true;
+    document.body.appendChild(s);
+  });
+})();
