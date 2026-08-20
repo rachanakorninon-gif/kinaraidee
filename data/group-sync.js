@@ -16,4 +16,12 @@
     closeRoom:(roomId,hostToken)=>call('close_room',{roomId,hostToken})
   };
   window.KINARAIDEE_GROUP_SYNC=api;
+
+  // Nearby restaurants Phase 1: โหลดหน้าค้นหาร้านในแอปหลังระบบหลักพร้อม
+  if(!document.querySelector('script[src$="data/nearby-restaurants.js"]')){
+    const n=document.createElement('script');
+    n.src='data/nearby-restaurants.js';
+    n.dataset.kinaraideeNearby='1';
+    document.head.appendChild(n);
+  }
 })();
