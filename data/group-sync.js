@@ -32,4 +32,12 @@
     m.dataset.kinaraideeMemberSync='1';
     document.head.appendChild(m);
   }
+
+  // Personalization: ใช้ประวัติชอบ/เลือกกินเป็นน้ำหนักแนะนำ โดยยังคงการค้นพบเมนูใหม่
+  if(!document.querySelector('script[src$="data/personalization.js"]')){
+    const p=document.createElement('script');
+    p.src='data/personalization.js';
+    p.dataset.kinaraideePersonalization='1';
+    document.head.appendChild(p);
+  }
 })();
