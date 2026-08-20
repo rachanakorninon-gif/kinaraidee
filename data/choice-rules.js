@@ -49,11 +49,10 @@ if(typeof EXPANDED_FOODS!=='undefined'){
   const existing=new Set(EXPANDED_FOODS.map(x=>String(x?.[0]||'').trim()));
   extra.forEach(x=>{if(!existing.has(x[0])){EXPANDED_FOODS.push(x);existing.add(x[0])}});
 
-  // QA guard: ตัดรายการเสีย/ชื่อซ้ำก่อนระบบแนะนำเมนูใช้งานจริง
   const validMeals=new Set(['เช้า','กลางวัน','เย็น','ดึก']);
   const seen=new Set();
   const clean=[];
-  const report={input:EXPANDED_FOODS.length,duplicates:0,invalid:0,output:0};
+  const report={input:EXPANDED_FOODS.length,duplicates:0,invalid:0,output:0,coverage:{},sparse:[]};
   EXPANDED_FOODS.forEach(row=>{
     if(!Array.isArray(row)||row.length<7){report.invalid++;return}
     const name=String(row[0]||'').trim();
@@ -69,6 +68,23 @@ if(typeof EXPANDED_FOODS!=='undefined'){
   });
   EXPANDED_FOODS.splice(0,EXPANDED_FOODS.length,...clean);
   report.output=clean.length;
+
+  // Coverage QA: เช็กทุกมื้อ x งบ x Choice เพื่อเห็นช่องที่เมนูน้อยเกินไปก่อนเปิดใช้จริง
+  const qaMeals=['เช้า','กลางวัน','เย็น','ดึก'];
+  const qaBudgets=[50,100,150,200,999];
+  const qaTags=['ข้าว','เส้น','เผ็ด','ของทอด','ของหวาน','หนัก','โปรตีน','เบา','ซุป','ต่างชาติ'];
+  qaMeals.forEach(meal=>{
+    report.coverage[meal]={};
+    qaBudgets.forEach(budget=>{
+      const bKey=String(budget);
+      report.coverage[meal][bKey]={};
+      qaTags.forEach(tag=>{
+        const count=clean.filter(row=>Number(row[2])<=budget&&String(row[4]).split(',').includes(meal)&&KINARAIDEE_CHOICE_RULES.derive(row).includes(tag)).length;
+        report.coverage[meal][bKey][tag]=count;
+        if(count<2)report.sparse.push({meal,budget,tag,count});
+      });
+    });
+  });
   if(typeof window!=='undefined')window.KINARAIDEE_CATALOG_QA=report;
 }
 
