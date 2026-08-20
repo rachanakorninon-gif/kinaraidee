@@ -55,8 +55,6 @@ if(typeof EXPANDED_FOODS!=='undefined'){
     ['ข้าวไข่ข้นจานเล็ก','🍳',50,'ไม่เผ็ด','กลางวัน,เย็น','ข้าว,โปรตีน,หนัก','อาหารจานเดียว'],
     ['ยำมาม่าไข่ต้มจานเล็ก','🥗',50,'เผ็ดน้อย','กลางวัน,เย็น','เส้น,เผ็ด,โปรตีน','ยำ'],
     ['ตำแตงไข่ต้ม','🥗',50,'เผ็ด','กลางวัน,เย็น','เผ็ด,โปรตีน,เบา','อีสาน'],
-
-    // เติมจุดบางสุดท้าย: เช้า/ดึก งบ 50 ให้แต่ละ Choice มีทางเลือกมากขึ้น
     ['ขนมปังปิ้งนม','🍞',45,'ไม่เผ็ด','เช้า,ดึก','ของหวาน','ของหวาน'],
     ['กล้วยปิ้งราดนม','🍌',50,'ไม่เผ็ด','เช้า,ดึก','ของหวาน','ของหวาน'],
     ['แฮชบราวน์ไข่ดาว','🍳',50,'ไม่เผ็ด','เช้า','ของทอด,โปรตีน,หนัก,ต่างชาติ','ตะวันตก'],
@@ -88,7 +86,7 @@ if(typeof EXPANDED_FOODS!=='undefined'){
   report.output=clean.length;
 
   const qaMeals=['เช้า','กลางวัน','เย็น','ดึก'];
-  const qaBudgets=[50,100,150,200,999];
+  const qaBudgets=[100,150,200,999];
   const qaTags=['ข้าว','เส้น','เผ็ด','ของทอด','ของหวาน','หนัก','โปรตีน','เบา','ซุป','ต่างชาติ'];
   qaMeals.forEach(meal=>{
     report.coverage[meal]={};
@@ -107,6 +105,8 @@ if(typeof EXPANDED_FOODS!=='undefined'){
 
 if(typeof window!=='undefined'){
   window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
+  // เอางบ 50 บาทออกจากหน้าเลือกงบ แต่เก็บเมนูราคาต่ำไว้เป็นผลลัพธ์ได้ตามปกติ
+  document.querySelector('#budgetChips .budget[data-v="50"]')?.remove();
   if(!document.querySelector('script[src$="data/group-mode.js"]')){
     const g=document.createElement('script');g.src='data/group-mode.js';g.dataset.kinaraideeGroup='1';document.head.appendChild(g);
   }
