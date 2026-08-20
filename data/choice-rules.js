@@ -1,5 +1,5 @@
 // Choice/tag expansion rules for กินอะไรดี
-// Prepared separately so we can QA the food catalog before exposing new UI choices.
+// Central tag derivation used by single and group recommendation QA.
 const KINARAIDEE_CHOICE_RULES={
   choices:[
     {key:'โปรตีน',label:'🍗 เนื้อสัตว์/โปรตีน'},
@@ -8,16 +8,22 @@ const KINARAIDEE_CHOICE_RULES={
     {key:'ต่างชาติ',label:'🌏 อาหารต่างชาติ'}
   ],
   foreignCategories:['ญี่ปุ่น','เกาหลี','ตะวันตก','ฟิวชัน','ฟาสต์ฟู้ด'],
-  soupKeywords:['ต้ม','แกง','ซุป','สุกี้','แจ่วฮ้อน','โจ๊ก','ข้าวต้ม','เกาเหลา','ก๋วยเตี๋ยวน้ำ','ราเมน','รามยอน'],
-  proteinKeywords:['หมู','ไก่','ปลา','กุ้ง','ทะเล','เนื้อ','เป็ด','ปู','แซลมอน','ทูน่า','ไข่','หอย'],
-  lightKeywords:['สลัด','ผัก','น้ำพริก','ตำ','ลาบ','ยำ','โจ๊ก','ข้าวต้ม','เกาเหลา','ซุป'],
+  soupKeywords:['ต้ม','แกง','ซุป','สุกี้','แจ่วฮ้อน','โจ๊ก','ข้าวต้ม','เกาเหลา','ก๋วยเตี๋ยวน้ำ','ราเมน','รามยอน','จีแก'],
+  proteinKeywords:['หมู','ไก่','ปลา','กุ้ง','ทะเล','เนื้อ','เป็ด','ปู','แซลมอน','ทูน่า','ไข่','หอย','เต้าหู้'],
+  lightKeywords:['สลัด','ผัก','น้ำพริก','ตำ','ลาบ','ยำ','โจ๊ก','ข้าวต้ม','เกาเหลา','ซุป','มิโสะ'],
+  heavyKeywords:['หมูกระทะ','ชาบู','ปิ้งย่าง','บุฟเฟต์','พิซซ่า','เบอร์เกอร์','สเต๊ก','คาโบนารา'],
+  friedKeywords:['ทอด','เฟรนช์ฟราย','คาราอาเกะ','ทงคัตสึ','เทมปุระ'],
   derive(row){
     const name=row[0]||'',category=row[6]||'';
     const tags=new Set((row[5]||'').split(',').filter(Boolean));
     if(this.foreignCategories.includes(category))tags.add('ต่างชาติ');
     if(this.soupKeywords.some(k=>name.includes(k)))tags.add('ซุป');
     if(this.proteinKeywords.some(k=>name.includes(k)))tags.add('โปรตีน');
-    if(this.lightKeywords.some(k=>name.includes(k))&&!tags.has('หนัก')&&!tags.has('ของทอด'))tags.add('เบา');
+    if(this.heavyKeywords.some(k=>name.includes(k)))tags.add('หนัก');
+    if(this.friedKeywords.some(k=>name.includes(k)))tags.add('ของทอด');
+    // เบา ๆ ต้องไม่ชนกับเมนูหนักหรือของทอด
+    if(tags.has('หนัก')||tags.has('ของทอด'))tags.delete('เบา');
+    else if(this.lightKeywords.some(k=>name.includes(k)))tags.add('เบา');
     return [...tags];
   }
 };
@@ -48,15 +54,12 @@ if(typeof EXPANDED_FOODS!=='undefined'){
 
 if(typeof window!=='undefined'){
   window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
-  // ป้องกัน group-mode ถูกโหลดซ้ำ เพราะ index.html อาจโหลดไฟล์นี้อยู่แล้ว
   if(!document.querySelector('script[src$="data/group-mode.js"]')){
     const g=document.createElement('script');g.src='data/group-mode.js';g.dataset.kinaraideeGroup='1';document.head.appendChild(g);
   }
-  // Phase 2A: ระบบโหวตข้ามมือถือแบบลิงก์ + รหัสโหวต (ยังไม่ใช้ backend)
   if(!document.querySelector('script[src$="data/group-remote.js"]')){
     const r=document.createElement('script');r.src='data/group-remote.js';r.dataset.kinaraideeRemote='1';document.head.appendChild(r);
   }
-  // Phase 2B foundation: generic REST sync adapter. It stays inactive until apiBase is configured.
   if(!document.querySelector('script[src$="data/group-sync.js"]')){
     const s=document.createElement('script');s.src='data/group-sync.js';s.dataset.kinaraideeSync='1';document.head.appendChild(s);
   }
