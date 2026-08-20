@@ -56,4 +56,8 @@ if(typeof window!=='undefined'){
   if(!document.querySelector('script[src$="data/group-remote.js"]')){
     const r=document.createElement('script');r.src='data/group-remote.js';r.dataset.kinaraideeRemote='1';document.head.appendChild(r);
   }
+  // Phase 2B foundation: generic REST sync adapter. It stays inactive until apiBase is configured.
+  if(!document.querySelector('script[src$="data/group-sync.js"]')){
+    const s=document.createElement('script');s.src='data/group-sync.js';s.dataset.kinaraideeSync='1';document.head.appendChild(s);
+  }
 }
