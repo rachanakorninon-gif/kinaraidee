@@ -107,6 +107,21 @@ if(typeof window!=='undefined'){
   window.KINARAIDEE_CHOICE_RULES=KINARAIDEE_CHOICE_RULES;
   // เอางบ 50 บาทออกจากหน้าเลือกงบ แต่เก็บเมนูราคาต่ำไว้เป็นผลลัพธ์ได้ตามปกติ
   document.querySelector('#budgetChips .budget[data-v="50"]')?.remove();
+
+  // เพิ่มทางเข้าสมาชิกที่หน้าหลักโดยไม่ต้องแก้ index.html โดยตรง
+  const addMemberEntry=()=>{
+    const hero=document.querySelector('#home .homeHero');
+    if(!hero||document.getElementById('memberEntryBtn'))return;
+    const btn=document.createElement('button');
+    btn.id='memberEntryBtn';
+    btn.className='secondary';
+    btn.textContent='👤 สมัครสมาชิก / เข้าสู่ระบบ';
+    btn.onclick=()=>{location.href='member.html'};
+    const quick=hero.querySelector('.quick');
+    if(quick)hero.insertBefore(btn,quick);else hero.appendChild(btn);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addMemberEntry);else addMemberEntry();
+
   if(!document.querySelector('script[src$="data/group-mode.js"]')){
     const g=document.createElement('script');g.src='data/group-mode.js';g.dataset.kinaraideeGroup='1';document.head.appendChild(g);
   }
