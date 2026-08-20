@@ -16,6 +16,23 @@
     });
   }
 
+  function addMemberEntry(){
+    const hero=document.querySelector('#home .homeHero');
+    if(!hero||document.getElementById('memberEntryBtn'))return;
+    const b=document.createElement('button');
+    b.id='memberEntryBtn';
+    b.className='secondary';
+    b.textContent='👤 สมาชิก / เข้าสู่ระบบ';
+    b.onclick=()=>location.href='member.html';
+    hero.appendChild(b);
+  }
+
+  function updateMemberEntry(){
+    const b=document.getElementById('memberEntryBtn');
+    if(!b)return;
+    b.textContent=user?'👤 บัญชีของฉัน ✓':'👤 สมาชิก / เข้าสู่ระบบ';
+  }
+
   function snapshotFood(){
     try{
       if(!current)return null;
@@ -130,16 +147,21 @@
 
   async function init(){
     try{
+      addMemberEntry();
       await loadSupabase();
       client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
       const {data}=await client.auth.getUser();
       user=data.user||null;
+      updateMemberEntry();
       client.auth.onAuthStateChange((_event,session)=>{
         user=session?.user||null;
+        updateMemberEntry();
         if(user)setTimeout(()=>loadCloudHistory({render:document.getElementById('history')?.classList.contains('active')}),0);
       });
       wrapActions();
       let tries=0;const timer=setInterval(()=>{
+        addMemberEntry();
+        updateMemberEntry();
         wrapActions();
         if(wrapped){clearInterval(timer);if(user)loadCloudHistory();}
         else if(++tries>40)clearInterval(timer);
