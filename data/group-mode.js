@@ -19,13 +19,21 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else setTimeout(init,0)
 })();
 
-// Load optional Beta modules from the one module already included by index.html.
+// Load Beta modules in deterministic order from the one module already included by index.html.
 (function(){
-  ['data/member-sync.js','data/nearby-restaurants.js'].forEach(src=>{
-    if(document.querySelector(`script[src="${src}"]`))return;
+  const load=src=>new Promise(resolve=>{
+    if(document.querySelector(`script[src="${src}"]`)||document.querySelector(`script[src$="/${src}"]`))return resolve();
     const s=document.createElement('script');
     s.src=src;
-    s.defer=true;
+    s.async=false;
+    s.onload=()=>resolve();
+    s.onerror=()=>resolve();
     document.body.appendChild(s);
   });
+  (async()=>{
+    await load('data/group-sync.js');
+    await load('data/group-remote.js');
+    await load('data/member-sync.js');
+    await load('data/nearby-restaurants.js');
+  })();
 })();
