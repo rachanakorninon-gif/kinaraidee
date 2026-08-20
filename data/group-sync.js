@@ -24,4 +24,12 @@
     n.dataset.kinaraideeNearby='1';
     document.head.appendChild(n);
   }
+
+  // Member cloud history: บันทึกเมนูที่กดชอบ/เลือกกินตามบัญชีที่ล็อกอิน
+  if(!document.querySelector('script[src$="data/member-sync.js"]')){
+    const m=document.createElement('script');
+    m.src='data/member-sync.js';
+    m.dataset.kinaraideeMemberSync='1';
+    document.head.appendChild(m);
+  }
 })();
