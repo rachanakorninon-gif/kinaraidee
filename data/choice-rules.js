@@ -21,14 +21,12 @@ const KINARAIDEE_CHOICE_RULES={
     if(this.proteinKeywords.some(k=>name.includes(k)))tags.add('โปรตีน');
     if(this.heavyKeywords.some(k=>name.includes(k)))tags.add('หนัก');
     if(this.friedKeywords.some(k=>name.includes(k)))tags.add('ของทอด');
-    // เบา ๆ ต้องไม่ชนกับเมนูหนักหรือของทอด
     if(tags.has('หนัก')||tags.has('ของทอด'))tags.delete('เบา');
     else if(this.lightKeywords.some(k=>name.includes(k)))tags.add('เบา');
     return [...tags];
   }
 };
 
-// เติมเมนูราคาประหยัดเพื่อให้ Choice ใหม่มีผลลัพธ์ในมื้อเช้า/ดึกและงบ 50 บาทมากขึ้น
 if(typeof EXPANDED_FOODS!=='undefined'){
   const extra=[
     ['ไข่ลวกขนมปัง','🥚',45,'ไม่เผ็ด','เช้า','โปรตีน,เบา','อาหารเช้า'],
@@ -48,8 +46,30 @@ if(typeof EXPANDED_FOODS!=='undefined'){
     ['ขนมปังไข่ดาว','🍳',50,'ไม่เผ็ด','เช้า,ดึก','ของทอด,โปรตีน,ต่างชาติ','ตะวันตก'],
     ['ซุปข้าวโพดถ้วยเล็ก','🌽',50,'ไม่เผ็ด','เช้า,กลางวัน,เย็น,ดึก','ซุป,เบา,ต่างชาติ','ตะวันตก']
   ];
-  const existing=new Set(EXPANDED_FOODS.map(x=>x[0]));
-  extra.forEach(x=>{if(!existing.has(x[0]))EXPANDED_FOODS.push(x)});
+  const existing=new Set(EXPANDED_FOODS.map(x=>String(x?.[0]||'').trim()));
+  extra.forEach(x=>{if(!existing.has(x[0])){EXPANDED_FOODS.push(x);existing.add(x[0])}});
+
+  // QA guard: ตัดรายการเสีย/ชื่อซ้ำก่อนระบบแนะนำเมนูใช้งานจริง
+  const validMeals=new Set(['เช้า','กลางวัน','เย็น','ดึก']);
+  const seen=new Set();
+  const clean=[];
+  const report={input:EXPANDED_FOODS.length,duplicates:0,invalid:0,output:0};
+  EXPANDED_FOODS.forEach(row=>{
+    if(!Array.isArray(row)||row.length<7){report.invalid++;return}
+    const name=String(row[0]||'').trim();
+    const price=Number(row[2]);
+    const meals=String(row[4]||'').split(',').map(x=>x.trim()).filter(Boolean);
+    if(!name||!Number.isFinite(price)||price<=0||!meals.length||meals.some(m=>!validMeals.has(m))){report.invalid++;return}
+    const key=name.toLocaleLowerCase('th-TH');
+    if(seen.has(key)){report.duplicates++;return}
+    seen.add(key);
+    row[0]=name;row[2]=Math.round(price);row[4]=[...new Set(meals)].join(',');
+    row[5]=[...new Set(String(row[5]||'').split(',').map(x=>x.trim()).filter(Boolean))].join(',');
+    clean.push(row);
+  });
+  EXPANDED_FOODS.splice(0,EXPANDED_FOODS.length,...clean);
+  report.output=clean.length;
+  if(typeof window!=='undefined')window.KINARAIDEE_CATALOG_QA=report;
 }
 
 if(typeof window!=='undefined'){
