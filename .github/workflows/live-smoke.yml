@@ -86,3 +86,27 @@ jobs:
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
           echo 'Live smoke test passed for latest PWA flow'
+
+      - name: Verify development files are not published
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          private_paths=(
+            '/README.md'
+            '/SECURITY.md'
+            '/BETA-DAILY-LOG.md'
+            '/RELEASE-CHECKLIST.md'
+            '/.github/workflows/pages.yml'
+            '/supabase/config.toml'
+          )
+          for path in "${private_paths[@]}"; do
+            url="$base$path"
+            code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"
+            echo "$path -> HTTP $code"
+            if [ "$code" = '200' ]; then
+              echo "Development-only path is unexpectedly public: $path"
+              exit 1
+            fi
+          done
+          echo 'Development-only files are not exposed by Pages artifact'
