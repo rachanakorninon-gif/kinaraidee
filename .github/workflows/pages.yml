@@ -42,14 +42,14 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
           node --check sw.js
           for file in data/*.js; do node --check "$file"; done
-      - name: Verify latest release wiring and PWA v11
+      - name: Verify latest release wiring and PWA v12
         shell: bash
         run: |
           set -euo pipefail
           grep -q 'data/home-surprise.js' index.html
           grep -q 'data/nearby-restaurants.js' index.html
           grep -q 'serviceWorker' index.html
-          grep -q 'kinaraidee-beta-v11' sw.js
+          grep -q 'kinaraidee-beta-v12' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
