@@ -76,11 +76,30 @@ jobs:
           set -euo pipefail
           grep -q "kinaraidee-beta-v11" sw.js
           grep -q "cache.addAll(SHELL)" sw.js
-          grep -q "'./data/home-surprise.js'" sw.js
-          grep -q "'./data/pwa-install.js'" sw.js
-          grep -q "'./data/nearby-restaurants.js'" sw.js
-          grep -q "'./data/group-mode.js'" sw.js
-          grep -q "'./data/member-sync.js'" sw.js
+          shell_paths=(
+            "'./'"
+            "'./index.html'"
+            "'./404.html'"
+            "'./manifest.webmanifest'"
+            "'./icon.svg'"
+            "'./feedback.html'"
+            "'./privacy.html'"
+            "'./partner.html'"
+            "'./robots.txt'"
+            "'./sitemap.xml'"
+            "'./data/foods-expanded.js'"
+            "'./data/choice-rules.js'"
+            "'./data/group-mode.js'"
+            "'./data/group-sync.js'"
+            "'./data/group-remote.js'"
+            "'./data/member-sync.js'"
+            "'./data/nearby-restaurants.js'"
+            "'./data/pwa-install.js'"
+            "'./data/home-surprise.js'"
+          )
+          for path in "${shell_paths[@]}"; do
+            grep -Fq "$path" sw.js || { echo "Missing PWA shell entry: $path"; exit 1; }
+          done
           if grep -q "Promise.allSettled" sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
 
       - name: Verify recovery and SEO files
@@ -101,7 +120,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.yml' '(service_role|sb_secret_|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
+          if grep -RInE --exclude-dir=.git --exclude='*.yml' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' .; then
             echo 'Potential secret found in public repository'
             exit 1
           fi
