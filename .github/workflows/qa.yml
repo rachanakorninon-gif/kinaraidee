@@ -101,7 +101,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='qa.yml' '(service_role|sb_secret_|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
+          if grep -RInE --exclude-dir=.git --exclude='*.yml' '(service_role|sb_secret_|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
             echo 'Potential secret found in public repository'
             exit 1
           fi
