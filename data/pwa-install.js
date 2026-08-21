@@ -2,6 +2,7 @@
 (function(){
   let deferredPrompt=null;
   function installed(){return window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true}
+  function loadScript(src){if(document.querySelector(`script[src="${src}"]`))return;const s=document.createElement('script');s.src=src;s.async=false;document.body.appendChild(s)}
   function ensureButton(){
     if(installed()||document.getElementById('installAppBtn'))return;
     const home=document.querySelector('#home .homeHero');
@@ -23,6 +24,7 @@
     const links=home.querySelector('.betaLinks');
     if(links)home.insertBefore(b,links);else home.appendChild(b);
   }
+  function init(){ensureButton();loadScript('data/home-surprise.js')}
   window.addEventListener('beforeinstallprompt',e=>{
     e.preventDefault();
     deferredPrompt=e;
@@ -35,5 +37,5 @@
     const b=document.getElementById('installAppBtn');
     if(b)b.remove();
   });
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureButton);else ensureButton();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
