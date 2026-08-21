@@ -14,6 +14,16 @@
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
+## Deployment & Release Evidence
+- [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
+- [ ] GitHub Pages deployment ของ release candidate สำเร็จและ trace กลับไปยัง commit ได้
+- [ ] `qa.yml`, `beta-check.yml`, `pages.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
+- [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v11`)
+- [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
+- [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
+- [ ] live asset/marker checks ผ่านตาม `LIVE-DEPLOYMENT-VERIFICATION.md`
+- [ ] automated smoke test ไม่ถูกใช้แทน real-device interaction test ที่จำเป็น
+
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง
@@ -85,6 +95,7 @@
 - Release candidate / commit SHA:
 - ผู้อนุมัติ:
 - Beta evidence:
+- Deployment/Live Smoke evidence:
 - Payment evidence (ถ้ามี Premium):
 - Partner evidence (ถ้ามี commission):
 - Privacy/Legal review:
