@@ -2,9 +2,14 @@
 
 ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
+## Release trace ที่ต้องบันทึกทุก run
+- App release baseline: `bb7b979421275995a6fee12f84b118d0c942037a`
+- Expected Service Worker cache: `kinaraidee-beta-v11`
+- หาก SHA ที่ deploy เป็น non-runtime descendant (เช่น evidence/workflow-only commit) ให้บันทึก SHA จริงและยืนยันว่า runtime app payload ไม่เปลี่ยน
+
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
-2. กรอกข้อมูลอุปกรณ์จริง
+2. กรอกข้อมูลอุปกรณ์จริงและ release/deployment trace
 3. รันทดสอบ TC-01 ถึง TC-15 และ NF-01 ถึง NF-10 เท่าที่อุปกรณ์รองรับ
 4. บันทึก PASS / FAIL / N/A เท่านั้น
 5. ทุก FAIL ต้องสร้าง Bug Issue หรือบันทึกรายละเอียด defect พร้อมหลักฐานถ้ามี
@@ -13,6 +18,15 @@
 ---
 
 ## Run Template
+
+### Release / deployment evidence
+- App release SHA: `bb7b979421275995a6fee12f84b118d0c942037a`
+- Deployed SHA:
+- GitHub Pages run URL / ID:
+- Live Smoke run URL / ID:
+- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
+- Expected SW/cache: `kinaraidee-beta-v11`
+- Runtime diff vs app release: None / Present / Not yet verified
 
 ### Device
 - วันที่/เวลา:
@@ -23,6 +37,7 @@
 - Installed PWA: Yes / No / N/A
 - Service Worker / cache generation ที่สังเกตได้:
 - Network: Wi-Fi / Mobile / Offline test
+- Screenshot / video evidence:
 
 ### Core Results
 | Test Case | Result | Notes / Issue |
@@ -81,4 +96,6 @@
 - Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง
 - New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องต้องผ่านบนอุปกรณ์จริงที่รองรับ
 - PWA/Offline/Install guidance ให้ตัดสินตาม platform support และบันทึก N/A เมื่อไม่รองรับจริง
+- ต้องมี Pages/Live Smoke evidence ที่ trace กลับไปยัง deployed SHA
+- ต้องบันทึก deployed SHA และยืนยันความสัมพันธ์กับ app release baseline
 - ห้ามปิดรอบจาก static review อย่างเดียว
