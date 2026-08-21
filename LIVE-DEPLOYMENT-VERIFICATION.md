@@ -21,7 +21,7 @@ Workflow ที่เกี่ยวข้อง:
 - `.github/workflows/qa.yml` — static/QA checks
 - `.github/workflows/beta-check.yml` — Beta readiness checks
 
-`live-smoke.yml` ตรวจจาก Public URL จริง ไม่ใช่เฉพาะไฟล์ใน repository และครอบคลุม public pages/assets, SEO markers, PWA assets, Service Worker cache generation, Surprise flow markers, recovery markers และ iPhone/iPad install guidance
+`live-smoke.yml` ตรวจจาก Public URL จริง ไม่ใช่เฉพาะไฟล์ใน repository และครอบคลุม public pages/assets, SEO markers, PWA assets, Service Worker cache generation, atomic app-shell install marker, Surprise flow markers, recovery markers และ iPhone/iPad install guidance
 
 > สำคัญ: การมี workflow file ไม่เท่ากับ workflow run ผ่าน ต้องมี run/result หรือหลักฐาน live test จริงก่อนทำเครื่องหมาย PASS
 
@@ -50,7 +50,9 @@ Workflow ที่เกี่ยวข้อง:
 - [ ] หน้า Live มีข้อความ/marker ของ “กินอะไรดี”
 - [ ] หน้า Live อ้างอิง `manifest.webmanifest`
 - [ ] หน้า Live register Service Worker
-- [ ] Live `sw.js` ใช้ cache generation ที่คาดไว้ (ปัจจุบัน `kinaraidee-beta-v10`)
+- [ ] Live `sw.js` ใช้ cache generation ที่คาดไว้ (ปัจจุบัน `kinaraidee-beta-v11`)
+- [ ] Live `sw.js` ใช้ atomic app-shell install ด้วย `cache.addAll(SHELL)`
+- [ ] Live `sw.js` ไม่มี `Promise.allSettled` ใน install path ที่อาจปล่อย partial shell cache
 - [ ] Surprise flow live asset มี busy/accessibility marker ที่คาดไว้
 - [ ] Recovery marker สำหรับ `visibilitychange` / `online` อยู่ใน live asset ที่เกี่ยวข้อง
 - [ ] iPadOS/Mac-like detection และปุ่ม “เข้าใจแล้ว” อยู่ใน live PWA guidance asset
@@ -77,7 +79,7 @@ Automated curl/grep ไม่สามารถแทน interaction test ต่
 - [ ] สลับแอป/ล็อกหน้าจอแล้วกลับมา ปุ่ม Surprise ไม่ค้าง
 - [ ] offline shell ทำงานตามขอบเขตที่ออกแบบ
 - [ ] กลับมา online แล้ว recovery ได้
-- [ ] update จาก cache รุ่นก่อนหน้าไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
+- [ ] update จาก cache รุ่นก่อนหน้าไป `v11` ไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
 
 ## Evidence
 - Device / OS / Browser:
