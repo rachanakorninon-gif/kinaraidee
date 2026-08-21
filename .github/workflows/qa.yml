@@ -81,6 +81,26 @@ jobs:
             exit 1
           fi
 
+      - name: Verify public form accessibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'role="radiogroup"' feedback.html
+          grep -q 'aria-checked="false"' feedback.html
+          grep -q 'aria-pressed="true"' feedback.html
+          grep -q 'aria-live="polite"' feedback.html
+          grep -q 'for="message"' feedback.html
+          grep -q 'for="restaurantName"' partner.html
+          grep -q 'for="contactName"' partner.html
+          grep -q 'for="phone"' partner.html
+          grep -q 'for="email"' partner.html
+          grep -q 'autocomplete="organization"' partner.html
+          grep -q 'autocomplete="tel"' partner.html
+          grep -q 'autocomplete="email"' partner.html
+          grep -q 'aria-live="polite"' partner.html
+          grep -q "setAttribute('aria-busy','true')" feedback.html
+          grep -q "setAttribute('aria-busy','true')" partner.html
+
       - name: Verify privacy notice matches beta data flows
         shell: bash
         run: |
@@ -92,11 +112,11 @@ jobs:
           grep -q "ระยะเวลาการเก็บและการลบข้อมูล" privacy.html
           grep -q "คำขอเกี่ยวกับข้อมูล" privacy.html
 
-      - name: Verify PWA shell and v11 update strategy
+      - name: Verify PWA shell and v12 update strategy
         shell: bash
         run: |
           set -euo pipefail
-          grep -q "kinaraidee-beta-v11" sw.js
+          grep -q "kinaraidee-beta-v12" sw.js
           grep -q "cache.addAll(SHELL)" sw.js
           shell_paths=(
             "'./'"
