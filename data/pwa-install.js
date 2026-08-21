@@ -2,7 +2,7 @@
 (function(){
   let deferredPrompt=null;
   function installed(){return window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true}
-  function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'')}
+  function isIOS(){const ua=navigator.userAgent||'';return /iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
   function loadScript(src){if(document.querySelector(`script[src="${src}"]`))return;const s=document.createElement('script');s.src=src;s.async=false;document.body.appendChild(s)}
   function ensureIOSHint(){
     if(installed()||!isIOS()||document.getElementById('iosInstallHint'))return;
@@ -11,7 +11,7 @@
     const d=document.createElement('div');
     d.id='iosInstallHint';
     d.style.cssText='margin:10px 0;padding:11px 13px;border-radius:14px;background:#f5f7ff;color:#44506a;font-size:13px;line-height:1.5';
-    d.textContent='iPhone/iPad: หากต้องการติดตั้งแอป ให้กดปุ่มแชร์ใน Safari แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”';
+    d.textContent='iPhone/iPad: หากต้องการติดตั้งแอป ให้เปิดใน Safari กดปุ่มแชร์ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”';
     const links=home.querySelector('.betaLinks');
     if(links)home.insertBefore(d,links);else home.appendChild(d);
   }
