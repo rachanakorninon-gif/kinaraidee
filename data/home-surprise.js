@@ -1,5 +1,6 @@
 // กินอะไรดี — instant “ไม่รู้เลย” action on the home screen
 (function(){
+  let busy=false;
   function inferMeal(){
     const h=new Date().getHours();
     if(h>=5&&h<11)return 'เช้า';
@@ -7,7 +8,17 @@
     if(h>=16&&h<22)return 'เย็น';
     return 'ดึก';
   }
+  function setBusy(on){
+    busy=on;
+    const b=document.getElementById('homeSurpriseBtn');
+    if(!b)return;
+    b.disabled=on;
+    b.style.opacity=on?'.7':'1';
+    b.textContent=on?'🎲 กำลังเลือกให้…':'🎲 ไม่รู้เลย — เลือกให้ฉันทันที';
+  }
   function runSurprise(){
+    if(busy)return;
+    setBusy(true);
     try{if(typeof resetPrefs==='function')resetPrefs()}catch(e){}
     try{
       prefs.meal=inferMeal();
@@ -16,9 +27,19 @@
       prefs.types=[];
       if(typeof show==='function')show('loading');
       setTimeout(()=>{
-        try{if(typeof recommendNow==='function')recommendNow();else if(typeof startFresh==='function')startFresh()}catch(e){if(typeof startFresh==='function')startFresh()}
+        try{
+          if(typeof recommendNow==='function')recommendNow();
+          else if(typeof startFresh==='function')startFresh();
+        }catch(e){
+          if(typeof startFresh==='function')startFresh();
+        }finally{
+          setBusy(false);
+        }
       },300);
-    }catch(e){if(typeof startFresh==='function')startFresh()}
+    }catch(e){
+      setBusy(false);
+      if(typeof startFresh==='function')startFresh();
+    }
   }
   function install(){
     const home=document.querySelector('#home .homeHero');
