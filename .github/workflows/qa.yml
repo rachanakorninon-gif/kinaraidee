@@ -21,8 +21,8 @@ jobs:
         run: |
           set -euo pipefail
           required=(
-            index.html privacy.html feedback.html partner.html
-            manifest.webmanifest icon.svg sw.js
+            index.html 404.html privacy.html feedback.html partner.html
+            manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml
             data/foods-expanded.js data/choice-rules.js
             data/nearby-restaurants.js data/group-mode.js
             data/group-sync.js data/group-remote.js data/member-sync.js
@@ -56,6 +56,20 @@ jobs:
           grep -q 'serviceWorker' index.html
           grep -q 'data/group-mode.js' data/nearby-restaurants.js
           grep -q 'data/pwa-install.js' data/nearby-restaurants.js
+
+      - name: Verify recovery and SEO files
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'kinaraidee' 404.html
+          grep -q 'sitemap.xml' robots.txt
+          grep -q '<urlset' sitemap.xml
+          grep -q 'privacy.html' sitemap.xml
+          grep -q 'feedback.html' sitemap.xml
+          grep -q 'partner.html' sitemap.xml
+          grep -q "'./404.html'" sw.js
+          grep -q "'./robots.txt'" sw.js
+          grep -q "'./sitemap.xml'" sw.js
 
       - name: Prevent secrets in public repository
         shell: bash
