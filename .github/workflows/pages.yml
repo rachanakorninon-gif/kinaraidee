@@ -15,7 +15,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  predeploy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check required release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            index.html 404.html privacy.html feedback.html partner.html
+            manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml
+            data/foods-expanded.js data/choice-rules.js
+            data/nearby-restaurants.js data/group-mode.js
+            data/group-sync.js data/group-remote.js data/member-sync.js
+            data/pwa-install.js data/home-surprise.js
+          )
+          for file in "${required[@]}"; do
+            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+          done
+      - name: Validate manifest and JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
+          node --check sw.js
+          for file in data/*.js; do node --check "$file"; done
+      - name: Verify latest release wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'data/home-surprise.js' index.html
+          grep -q 'data/nearby-restaurants.js' index.html
+          grep -q 'serviceWorker' index.html
+          grep -q 'kinaraidee-beta-v10' sw.js
+          grep -q "'./data/home-surprise.js'" sw.js
+          grep -q "'./data/pwa-install.js'" sw.js
+          grep -q 'aria-busy' data/home-surprise.js
+          grep -q 'pageshow' data/home-surprise.js
+          grep -q 'online' data/home-surprise.js
+      - name: Prevent private secrets in Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
+            echo 'Potential private secret found; deployment blocked.'
+            exit 1
+          fi
+          echo 'Predeploy validation passed'
+
   deploy:
+    needs: predeploy-check
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
