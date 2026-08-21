@@ -57,10 +57,24 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Live smoke test ตรวจหน้า public, PWA assets, recovery route และ SEO discovery files หลัง deploy
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
-- `BETA-CHECKLIST.md` ใช้เป็นเกณฑ์ readiness
-- `BETA-TESTER-GUIDE.md` ใช้ส่งให้ผู้ทดสอบจริง
 - GitHub Issue #1 ใช้ติดตาม real-device Beta test round
 - `.github/ISSUE_TEMPLATE/` มีแบบฟอร์ม bug report และ beta feedback
+
+## Public Beta Operations
+
+เอกสารหลักสำหรับเดิน Beta แบบใช้ข้อมูลจริง:
+
+- `BETA-CHECKLIST.md` — เกณฑ์ readiness ก่อน/ระหว่าง Beta
+- `BETA-TESTER-GUIDE.md` — คู่มือส่งให้ผู้ทดสอบจริง
+- `BETA-TESTER-RECRUITMENT.md` — ชุดข้อความและแนวทางรับผู้ทดสอบ
+- `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
+- `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
+- `BETA-RESULTS-TEMPLATE.md` — แบบสรุปผลจากข้อมูลผู้ใช้จริง
+- `MONETIZATION-PLAN.md` — ลำดับทดลองรายได้และ KPI
+- `RELEASE-CHECKLIST.md` — เกณฑ์ก่อนเปิดเชิงพาณิชย์
+- `SECURITY.md` — แนวทาง Security และการรายงานช่องโหว่
+
+หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง
 
 ## เกณฑ์ก่อน Go-Live เชิงพาณิชย์
 
