@@ -1,0 +1,64 @@
+name: Kinaraidee Beta QA
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required public files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            index.html privacy.html feedback.html partner.html
+            manifest.webmanifest icon.svg sw.js
+            data/foods-expanded.js data/choice-rules.js
+            data/nearby-restaurants.js
+          )
+          for file in "${required[@]}"; do
+            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+          done
+
+      - name: Validate web manifest JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check sw.js
+          for file in data/*.js; do
+            node --check "$file"
+          done
+
+      - name: Verify key beta links and modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'feedback.html' index.html
+          grep -q 'privacy.html' index.html
+          grep -q 'partner.html' index.html
+          grep -q 'manifest.webmanifest' index.html
+          grep -q 'data/nearby-restaurants.js' index.html
+          grep -q 'serviceWorker' index.html
+
+      - name: Prevent secrets in public repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='qa.yml' '(service_role|sb_secret_|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
+            echo 'Potential secret found in public repository'
+            exit 1
+          fi
+          echo 'No known private-key patterns found'
