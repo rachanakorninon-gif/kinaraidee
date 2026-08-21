@@ -1,7 +1,7 @@
-const CACHE='kinaraidee-beta-v3';
+const CACHE='kinaraidee-beta-v4';
 const SHELL=[
-  './','./index.html','./manifest.webmanifest','./icon.svg',
-  './feedback.html','./privacy.html','./partner.html',
+  './','./index.html','./404.html','./manifest.webmanifest','./icon.svg',
+  './feedback.html','./privacy.html','./partner.html','./robots.txt','./sitemap.xml',
   './data/foods-expanded.js','./data/choice-rules.js',
   './data/group-mode.js','./data/group-sync.js','./data/group-remote.js',
   './data/member-sync.js','./data/nearby-restaurants.js','./data/pwa-install.js'
