@@ -55,7 +55,24 @@ jobs:
           grep -q 'restaurant_requests' data/nearby-restaurants.js
           grep -q 'sb_publishable_' data/nearby-restaurants.js
 
-      - name: Validate surprise and PWA v11 integrity
+      - name: Validate public form accessibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'role="radiogroup"' feedback.html
+          grep -q 'aria-checked="false"' feedback.html
+          grep -q 'aria-pressed="true"' feedback.html
+          grep -q 'aria-live="polite"' feedback.html
+          grep -q 'for="message"' feedback.html
+          grep -q 'for="restaurantName"' partner.html
+          grep -q 'autocomplete="organization"' partner.html
+          grep -q 'autocomplete="tel"' partner.html
+          grep -q 'autocomplete="email"' partner.html
+          grep -q 'aria-live="polite"' partner.html
+          grep -q "setAttribute('aria-busy','true')" feedback.html
+          grep -q "setAttribute('aria-busy','true')" partner.html
+
+      - name: Validate surprise and PWA v12 integrity
         shell: bash
         run: |
           set -euo pipefail
@@ -63,7 +80,7 @@ jobs:
           grep -q 'if(busy)return' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
-          grep -q 'kinaraidee-beta-v11' sw.js
+          grep -q 'kinaraidee-beta-v12' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
