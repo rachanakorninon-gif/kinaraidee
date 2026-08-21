@@ -70,16 +70,18 @@ jobs:
           grep -q "online" data/home-surprise.js
           grep -q "setBusy(false)" data/home-surprise.js
 
-      - name: Verify PWA shell contains latest mobile modules
+      - name: Verify PWA shell and v11 update strategy
         shell: bash
         run: |
           set -euo pipefail
-          grep -q "kinaraidee-beta-v10" sw.js
+          grep -q "kinaraidee-beta-v11" sw.js
+          grep -q "cache.addAll(SHELL)" sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
           grep -q "'./data/nearby-restaurants.js'" sw.js
           grep -q "'./data/group-mode.js'" sw.js
           grep -q "'./data/member-sync.js'" sw.js
+          if grep -q "Promise.allSettled" sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
 
       - name: Verify recovery and SEO files
         shell: bash
