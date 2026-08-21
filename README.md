@@ -72,6 +72,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-TESTER-GUIDE.md` — คู่มือส่งให้ผู้ทดสอบจริง
 - `BETA-TESTER-RECRUITMENT.md` — ชุดข้อความและแนวทางรับผู้ทดสอบ
 - `BETA-QUICK-START.md` — คู่มือสั้นสำหรับผู้ทดสอบรอบแรก
+- `BETA-FEEDBACK-TEMPLATE.md` — แบบเก็บ Feedback/UX/Product insight/Bug จากผู้ทดสอบจริงอย่างเป็นระบบ
 - `BETA-TEST-CASES.md` — Test Case TC-01 ถึง TC-15 สำหรับอุปกรณ์จริง
 - `BETA-NEW-FLOW-TESTS.md` — Test Case NF-01 ถึง NF-10 สำหรับ Surprise/PWA/recovery/accessibility
 - `BETA-DEVICE-MATRIX.md` — ตาราง Android/iPhone/iPadOS และผล PASS/FAIL/N/A
