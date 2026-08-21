@@ -13,9 +13,11 @@
     const b=document.getElementById('homeSurpriseBtn');
     if(!b)return;
     b.disabled=on;
+    b.setAttribute('aria-busy',on?'true':'false');
     b.style.opacity=on?'.7':'1';
     b.textContent=on?'🎲 กำลังเลือกให้…':'🎲 ไม่รู้เลย — เลือกให้ฉันทันที';
   }
+  function recover(){setBusy(false)}
   function runSurprise(){
     if(busy)return;
     setBusy(true);
@@ -46,12 +48,17 @@
     if(!home||document.getElementById('homeSurpriseBtn'))return;
     const b=document.createElement('button');
     b.id='homeSurpriseBtn';
+    b.type='button';
     b.className='primary';
+    b.setAttribute('aria-label','ไม่รู้เลย ให้ระบบเลือกเมนูอาหารให้ทันที');
+    b.setAttribute('aria-busy','false');
     b.textContent='🎲 ไม่รู้เลย — เลือกให้ฉันทันที';
     b.style.background='#0f9d94';
     b.onclick=runSurprise;
     const group=[...home.querySelectorAll('button')].find(x=>x.textContent.includes('เลือกพร้อมกัน'));
     if(group)home.insertBefore(b,group);else home.appendChild(b);
   }
+  window.addEventListener('pageshow',recover);
+  window.addEventListener('online',recover);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
