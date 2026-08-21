@@ -70,6 +70,17 @@ jobs:
           grep -q "online" data/home-surprise.js
           grep -q "setBusy(false)" data/home-surprise.js
 
+      - name: Verify feedback error hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "Feedback submission failed" feedback.html
+          grep -q "ส่งความคิดเห็นไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" feedback.html
+          if grep -Fq "setMsg('ส่งไม่สำเร็จ: '+error.message)" feedback.html; then
+            echo 'Raw backend error is exposed to feedback users'
+            exit 1
+          fi
+
       - name: Verify PWA shell and v11 update strategy
         shell: bash
         run: |
