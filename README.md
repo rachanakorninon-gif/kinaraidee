@@ -10,8 +10,9 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 
 ## ฟีเจอร์ผู้ใช้
 
-- ปุ่ม “ไม่รู้เลย” สำหรับให้ระบบช่วยตัดสินใจ
-- เลือกมื้อ จำนวนคน งบประมาณ และประเภทอาหาร
+- ปุ่มหลัก “🎲 ไม่รู้เลย — เลือกให้ฉันทันที” เพื่อข้ามการตั้งค่าหลายขั้นและเข้าสู่คำแนะนำทันที
+- ปุ่ม Surprise มีการป้องกัน double tap, busy state, recovery หลังสลับแอป/ล็อกหน้าจอ/กลับมาออนไลน์ และ accessibility state
+- เลือกมื้อ จำนวนคน งบประมาณ และประเภทอาหารแบบปกติได้
 - แนะนำเมนูตามเงื่อนไขและเลือกใหม่ได้
 - ชอบเมนู / กินอันนี้ / ประวัติและสถิติบนอุปกรณ์
 - แชร์เมนู
@@ -22,6 +23,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - ลดความละเอียดพิกัดที่จัดเก็บเพื่อวิเคราะห์ demand
 - มีหน้านโยบายความเป็นส่วนตัวสำหรับช่วง Beta
 - ติดตั้งเป็น PWA บนอุปกรณ์ที่รองรับและมี offline app shell
+- iPhone/iPad Safari มีคำแนะนำติดตั้งแบบ Add to Home Screen พร้อมปุ่ม “เข้าใจแล้ว”; รองรับ iPadOS ที่รายงาน User Agent แบบ Mac
 
 ## ระบบสมาชิกและข้อมูลกลาง
 
@@ -55,9 +57,11 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - GitHub Pages deploy จาก branch `main` อัตโนมัติผ่าน GitHub Actions
 - Static QA ตรวจโครงสร้างและไฟล์สำคัญก่อน/ระหว่างการพัฒนา
 - Live smoke test ตรวจหน้า public, PWA assets, recovery route และ SEO discovery files หลัง deploy
+- Service Worker ปัจจุบันใช้ cache generation `kinaraidee-beta-v10`
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
 - GitHub Issue #1 ใช้ติดตาม real-device Beta test round
+- GitHub Issue #5 ใช้เป็น QA gate สำหรับ TC-01–TC-15 และ NF-01–NF-10
 - `.github/ISSUE_TEMPLATE/` มีแบบฟอร์ม bug report และ beta feedback
 
 ## Public Beta Operations
@@ -67,8 +71,10 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-CHECKLIST.md` — เกณฑ์ readiness ก่อน/ระหว่าง Beta
 - `BETA-TESTER-GUIDE.md` — คู่มือส่งให้ผู้ทดสอบจริง
 - `BETA-TESTER-RECRUITMENT.md` — ชุดข้อความและแนวทางรับผู้ทดสอบ
+- `BETA-QUICK-START.md` — คู่มือสั้นสำหรับผู้ทดสอบรอบแรก
 - `BETA-TEST-CASES.md` — Test Case TC-01 ถึง TC-15 สำหรับอุปกรณ์จริง
-- `BETA-DEVICE-MATRIX.md` — ตาราง Android/iPhone และผล PASS/FAIL/N/A
+- `BETA-NEW-FLOW-TESTS.md` — Test Case NF-01 ถึง NF-10 สำหรับ Surprise/PWA/recovery/accessibility
+- `BETA-DEVICE-MATRIX.md` — ตาราง Android/iPhone/iPadOS และผล PASS/FAIL/N/A
 - `BETA-RUN-LOG.md` — บันทึกการทดสอบจริงรายเครื่องและ defect
 - `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
 - `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
@@ -78,6 +84,16 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `SECURITY.md` — แนวทาง Security และการรายงานช่องโหว่
 
 หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง และห้ามทำเครื่องหมาย Test Case ผ่านโดยไม่ได้ทดสอบบนอุปกรณ์จริง
+
+## Gate ก่อนเพิ่มผู้ทดสอบ/Traffic
+
+- Android Chrome เครื่องจริงอย่างน้อย 3 รุ่น
+- iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่น
+- TC-01–TC-15 และ NF-01–NF-10 ผ่านตามกรณีที่รองรับ
+- ตรวจ iPadOS Safari เพิ่มเมื่อมีอุปกรณ์จริง โดยเฉพาะกรณี User Agent แบบ Mac
+- ตรวจ PWA update จาก cache รุ่นเก่ามา v10 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
+- ทุก FAIL มี defect ที่ตามแก้ได้
+- Blocker = 0 และ Critical = 0
 
 ## เกณฑ์ก่อน Go-Live เชิงพาณิชย์
 
