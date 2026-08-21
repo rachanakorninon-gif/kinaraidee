@@ -50,7 +50,7 @@ jobs:
             curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null
           done
 
-      - name: Check latest live app markers and PWA v11
+      - name: Check latest live app markers and PWA v12
         shell: bash
         run: |
           set -euo pipefail
@@ -68,7 +68,7 @@ jobs:
           grep -q 'home-surprise.js' <<<"$html"
           grep -q 'pwa-install.js' <<<"$html"
 
-          grep -q "kinaraidee-beta-v11" <<<"$sw"
+          grep -q "kinaraidee-beta-v12" <<<"$sw"
           grep -q "cache.addAll(SHELL)" <<<"$sw"
           grep -q "home-surprise.js" <<<"$sw"
           grep -q "pwa-install.js" <<<"$sw"
@@ -90,7 +90,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v11 flow'
+          echo 'Live smoke test passed for PWA v12 flow'
 
       - name: Verify development files are not published
         shell: bash
@@ -144,7 +144,7 @@ jobs:
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Expected Service Worker: `kinaraidee-beta-v11`'
+            echo '- Expected Service Worker: `kinaraidee-beta-v12`'
             echo '- App shell strategy checked: `cache.addAll(SHELL)`'
             echo '- Development-only exposure check: completed'
             echo
