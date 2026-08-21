@@ -76,10 +76,23 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Build clean Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html 404.html privacy.html feedback.html partner.html _site/
+          cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
+          cp -R data _site/data
+          echo 'Public Pages artifact:'
+          find _site -maxdepth 2 -type f | sort
+          test ! -e _site/.git
+          test ! -e _site/.github
+          test ! -e _site/supabase
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
