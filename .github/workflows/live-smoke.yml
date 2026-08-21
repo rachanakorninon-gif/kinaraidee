@@ -1,0 +1,54 @@
+name: Kinaraidee Live Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy Kinaraidee to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Pages propagation
+        run: sleep 15
+
+      - name: Check live public pages and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          paths=(
+            '/'
+            '/index.html'
+            '/privacy.html'
+            '/feedback.html'
+            '/partner.html'
+            '/manifest.webmanifest'
+            '/sw.js'
+            '/icon.svg'
+            '/data/foods-expanded.js'
+            '/data/choice-rules.js'
+            '/data/nearby-restaurants.js'
+            '/data/group-mode.js'
+            '/data/pwa-install.js'
+          )
+          for path in "${paths[@]}"; do
+            url="$base$path"
+            echo "Checking $url"
+            curl --fail --silent --show-error --location --retry 4 --retry-delay 5 --max-time 25 "$url" >/dev/null
+          done
+
+      - name: Check live app markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          html="$(curl --fail --silent --show-error --location --retry 4 --retry-delay 5 'https://rachanakorninon-gif.github.io/kinaraidee/')"
+          grep -q 'กินอะไรดี' <<<"$html"
+          grep -q 'manifest.webmanifest' <<<"$html"
+          grep -q 'serviceWorker' <<<"$html"
+          echo 'Live smoke test passed'
