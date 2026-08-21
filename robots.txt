@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rachanakorninon-gif.github.io/kinaraidee/sitemap.xml
