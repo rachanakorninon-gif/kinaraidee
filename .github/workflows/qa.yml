@@ -26,7 +26,7 @@ jobs:
             data/foods-expanded.js data/choice-rules.js
             data/nearby-restaurants.js data/group-mode.js
             data/group-sync.js data/group-remote.js data/member-sync.js
-            data/pwa-install.js
+            data/pwa-install.js data/home-surprise.js
           )
           for file in "${required[@]}"; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
@@ -53,9 +53,33 @@ jobs:
           grep -q 'partner.html' index.html
           grep -q 'manifest.webmanifest' index.html
           grep -q 'data/nearby-restaurants.js' index.html
+          grep -q 'data/home-surprise.js' index.html
           grep -q 'serviceWorker' index.html
           grep -q 'data/group-mode.js' data/nearby-restaurants.js
           grep -q 'data/pwa-install.js' data/nearby-restaurants.js
+
+      - name: Verify surprise busy state and recovery wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "id='homeSurpriseBtn'\|id=\"homeSurpriseBtn\"\|homeSurpriseBtn" data/home-surprise.js
+          grep -q "aria-busy" data/home-surprise.js
+          grep -q "กำลังเลือกให้" data/home-surprise.js
+          grep -q "if(busy)return" data/home-surprise.js
+          grep -q "pageshow" data/home-surprise.js
+          grep -q "online" data/home-surprise.js
+          grep -q "setBusy(false)" data/home-surprise.js
+
+      - name: Verify PWA shell contains latest mobile modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "kinaraidee-beta-v10" sw.js
+          grep -q "'./data/home-surprise.js'" sw.js
+          grep -q "'./data/pwa-install.js'" sw.js
+          grep -q "'./data/nearby-restaurants.js'" sw.js
+          grep -q "'./data/group-mode.js'" sw.js
+          grep -q "'./data/member-sync.js'" sw.js
 
       - name: Verify recovery and SEO files
         shell: bash
