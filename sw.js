@@ -1,10 +1,10 @@
-const CACHE='kinaraidee-beta-v2';
+const CACHE='kinaraidee-beta-v3';
 const SHELL=[
   './','./index.html','./manifest.webmanifest','./icon.svg',
   './feedback.html','./privacy.html','./partner.html',
   './data/foods-expanded.js','./data/choice-rules.js',
   './data/group-mode.js','./data/group-sync.js','./data/group-remote.js',
-  './data/member-sync.js','./data/nearby-restaurants.js'
+  './data/member-sync.js','./data/nearby-restaurants.js','./data/pwa-install.js'
 ];
 self.addEventListener('install',event=>event.waitUntil(
   caches.open(CACHE).then(cache=>Promise.allSettled(SHELL.map(url=>cache.add(url)))).then(()=>self.skipWaiting())
