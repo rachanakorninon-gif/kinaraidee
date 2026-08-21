@@ -77,6 +77,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-NEW-FLOW-TESTS.md` — Test Case NF-01 ถึง NF-10 สำหรับ Surprise/PWA/recovery/accessibility
 - `BETA-DEVICE-MATRIX.md` — ตาราง Android/iPhone/iPadOS และผล PASS/FAIL/N/A
 - `BETA-RUN-LOG.md` — บันทึกการทดสอบจริงรายเครื่องและ defect
+- `BETA-DAILY-LOG.md` — บันทึกการดำเนินงาน/QA/Feedback/demand รายวันและ weekly checkpoint
 - `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
 - `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
 - `BETA-RESULTS-TEMPLATE.md` — แบบสรุปผลจากข้อมูลผู้ใช้จริง
