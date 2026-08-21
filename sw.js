@@ -1,4 +1,4 @@
-const CACHE='kinaraidee-beta-v10';
+const CACHE='kinaraidee-beta-v11';
 const SHELL=[
   './','./index.html','./404.html','./manifest.webmanifest','./icon.svg',
   './feedback.html','./privacy.html','./partner.html','./robots.txt','./sitemap.xml',
@@ -7,24 +7,53 @@ const SHELL=[
   './data/member-sync.js','./data/nearby-restaurants.js','./data/pwa-install.js',
   './data/home-surprise.js'
 ];
+
 self.addEventListener('install',event=>event.waitUntil(
-  caches.open(CACHE).then(cache=>Promise.allSettled(SHELL.map(url=>cache.add(url)))).then(()=>self.skipWaiting())
+  caches.open(CACHE)
+    .then(cache=>cache.addAll(SHELL))
+    .then(()=>self.skipWaiting())
 ));
+
 self.addEventListener('activate',event=>event.waitUntil(
-  caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+  caches.keys()
+    .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+    .then(()=>self.clients.claim())
 ));
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const url=new URL(event.request.url);
-  if(url.origin!==location.origin)return;
+  if(url.origin!==self.location.origin)return;
+
   if(event.request.mode==='navigate'){
-    event.respondWith(fetch(event.request).then(response=>{
-      const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response;
-    }).catch(async()=>await caches.match(event.request)||await caches.match('./index.html')));
+    event.respondWith((async()=>{
+      try{
+        const response=await fetch(event.request);
+        if(response&&response.ok){
+          const cache=await caches.open(CACHE);
+          await cache.put(event.request,response.clone());
+        }
+        return response;
+      }catch(error){
+        return (await caches.match(event.request)) ||
+          (await caches.match('./index.html')) ||
+          (await caches.match('./404.html')) ||
+          Response.error();
+      }
+    })());
     return;
   }
-  event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{
-    if(response&&response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}
-    return response;
-  })));
+
+  event.respondWith((async()=>{
+    try{
+      const response=await fetch(event.request);
+      if(response&&response.ok){
+        const cache=await caches.open(CACHE);
+        await cache.put(event.request,response.clone());
+      }
+      return response;
+    }catch(error){
+      return (await caches.match(event.request)) || Response.error();
+    }
+  })());
 });
