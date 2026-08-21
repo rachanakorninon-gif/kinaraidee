@@ -3,9 +3,9 @@
 ใช้เอกสารนี้ยืนยันว่า Public Beta ที่ผู้ใช้เปิดจริงตรงกับ release candidate ใน repository โดยห้ามทำเครื่องหมาย PASS จากการคาดเดา
 
 ## Release candidate
-- Commit SHA:
-- วันที่ตรวจ:
-- ผู้ตรวจ:
+- Commit SHA: `bb7b979421275995a6fee12f84b118d0c942037a`
+- วันที่ตรวจ: 2026-08-22 (Asia/Bangkok)
+- ผู้ตรวจ: GitHub Actions + release evidence review
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
 
 ## GitHub Pages deployment evidence
@@ -14,12 +14,21 @@
 - [ ] `index.html` ถูกเผยแพร่จาก publishing source ที่ตั้งใจ
 - [ ] ไม่มี deployment error ที่ยังไม่ได้แก้
 
+> สถานะปัจจุบัน: **PENDING / BLOCKED FOR EVIDENCE** — ยังไม่พบ Pages push-triggered run / Live Smoke run ของ release commit นี้จากช่องทางตรวจที่เข้าถึงได้ จึงห้ามตีความว่า PASS หรือ FAIL
+
 ## Automated evidence ที่มีใน repository
 Workflow ที่เกี่ยวข้อง:
 - `.github/workflows/pages.yml` — deploy ไป GitHub Pages
 - `.github/workflows/live-smoke.yml` — รันหลัง Pages deploy สำเร็จ และมี `workflow_dispatch` สำหรับรันเอง
 - `.github/workflows/qa.yml` — static/QA checks
 - `.github/workflows/beta-check.yml` — Beta readiness checks
+
+### CI evidence ที่ยืนยันแล้วก่อน merge
+- PR #6 head commit: `f4b6d1dc9dbe95a11efe600c8a237bfb2783ee9b`
+- `Kinaraidee Beta QA` run `32534087192` — **SUCCESS**
+- `Beta integrity checks` run `32534087149` — **SUCCESS**
+- PR #6 ถูก squash-merge เข้า `main` เป็น release commit `bb7b979421275995a6fee12f84b118d0c942037a`
+- Release commit เพิ่ม `data/home-surprise.js` เข้า app shell และแก้ secret-scan self-match ใน QA/Beta workflows
 
 `live-smoke.yml` ตรวจจาก Public URL จริง ไม่ใช่เฉพาะไฟล์ใน repository และครอบคลุม public pages/assets, SEO markers, PWA assets, Service Worker cache generation, atomic app-shell install marker, Surprise flow markers, recovery markers และ iPhone/iPad install guidance
 
@@ -86,20 +95,20 @@ Automated curl/grep ไม่สามารถแทน interaction test ต่
 - [ ] update จาก cache รุ่นก่อนหน้าไป `v11` ไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
 
 ## Evidence
-- Device / OS / Browser:
-- Screenshot/Video:
-- Pages workflow run:
-- Live Smoke workflow run:
-- Live Smoke Job Summary / release commit:
-- QA/Beta workflow run:
-- Commit verified:
-- TC/NF ที่เกี่ยวข้อง:
-- Defect/Issue:
+- Device / OS / Browser: **PENDING — ต้องใช้ real device**
+- Screenshot/Video: **PENDING**
+- Pages workflow run: **PENDING — ยังยืนยัน push-triggered run ของ `bb7b9794...` ไม่ได้**
+- Live Smoke workflow run: **PENDING**
+- Live Smoke Job Summary / release commit: **PENDING**
+- QA/Beta workflow run: QA `32534087192` SUCCESS; Beta `32534087149` SUCCESS
+- Commit verified: `bb7b979421275995a6fee12f84b118d0c942037a`
+- TC/NF ที่เกี่ยวข้อง: **PENDING real-device evidence**
+- Defect/Issue: ไม่มี defect ใหม่จาก PR CI รอบที่ผ่าน; deployment/live evidence ยังไม่ครบ
 
 ## Result
 - [ ] PASS — Live deployment ตรงกับ release candidate, automated evidence ที่จำเป็นผ่าน และ real-device smoke test ที่เกี่ยวข้องผ่าน
 - [ ] FAIL — พบ defect; ห้ามตีความว่า deployment พร้อม
-- [ ] BLOCKED — ยังไม่มีช่องทาง/อุปกรณ์/workflow result/หลักฐานเพียงพอ
+- [x] BLOCKED — ยังไม่มีช่องทาง/อุปกรณ์/workflow result/หลักฐานเพียงพอ
 
 ### Interpretation rules
 - `statuses: []` หรือไม่มี commit-status จาก API **ไม่ใช่ PASS และไม่ใช่ FAIL โดยอัตโนมัติ**; ให้ถือว่า automated run evidence ยังไม่ถูกยืนยันจากช่องทางนั้น
