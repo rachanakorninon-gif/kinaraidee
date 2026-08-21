@@ -63,6 +63,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - GitHub Pages deploy จาก branch `main` อัตโนมัติผ่าน GitHub Actions
 - Static QA ตรวจโครงสร้างและไฟล์สำคัญก่อน/ระหว่างการพัฒนา
 - Live smoke test ตรวจหน้า public, PWA assets, recovery route และ SEO discovery files หลัง deploy
+- `LIVE-DEPLOYMENT-VERIFICATION.md` เป็น evidence gate สำหรับยืนยันว่า Public Beta ที่ออนไลน์ตรงกับ release candidate; ถ้ายังตรวจ live URL/อุปกรณ์จริงไม่ได้ให้ใช้สถานะ BLOCKED ไม่ใช่ PASS
 - Service Worker ปัจจุบันใช้ cache generation `kinaraidee-beta-v10`
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
@@ -87,17 +88,19 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
 - `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
 - `BETA-RESULTS-TEMPLATE.md` — แบบสรุปผลจากข้อมูลผู้ใช้จริง
+- `LIVE-DEPLOYMENT-VERIFICATION.md` — หลักฐาน deployment/live assets/core smoke/PWA-recovery ต่อ release candidate
 - `MONETIZATION-PLAN.md` — สมมติฐานรายได้, Revenue Experiment Record และ gate แยกตามโมเดล
 - `RELEASE-CHECKLIST.md` — Beta exit + Product/Payment/Partner/Privacy/Security/Operations evidence ก่อน Commercial GO
 - `SECURITY.md` — Security gate, incident response และแนวทางรายงานช่องโหว่
 
-หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง และห้ามทำเครื่องหมาย Test Case ผ่านโดยไม่ได้ทดสอบบนอุปกรณ์จริง
+หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง และห้ามทำเครื่องหมาย Test Case หรือ Live Deployment ผ่านโดยไม่ได้ตรวจหลักฐานจริง
 
 ## Gate ก่อนเพิ่มผู้ทดสอบ/Traffic
 
 - Android Chrome เครื่องจริงอย่างน้อย 3 รุ่น
 - iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่น
 - TC-01–TC-15 และ NF-01–NF-10 ผ่านตามกรณีที่รองรับ
+- Live deployment verification ของ release candidate ไม่เป็น FAIL/BLOCKED สำหรับรายการที่จำเป็นต่อรอบนั้น
 - ตรวจ iPadOS Safari เพิ่มเมื่อมีอุปกรณ์จริง โดยเฉพาะกรณี User Agent แบบ Mac
 - ตรวจ PWA update จาก cache รุ่นเก่ามา v10 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
 - ทุก FAIL มี defect ที่ตามแก้ได้
@@ -108,6 +111,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 ก่อนเปิดรับเงินจริง ต้องมีหลักฐานอย่างน้อย:
 - Beta Results มี Go decision จากข้อมูลผู้ใช้/อุปกรณ์จริง
 - Product core flow ไม่มี Blocker/Critical และไม่มี regression ใน release candidate
+- Live deployment ที่ผู้ใช้เข้าถึงถูกยืนยันว่าตรงกับ release candidate
 - Payment provider/merchant จริง + subscribe/renew/cancel/failure + entitlement/reconciliation เมื่อเปิด Premium
 - ร้านพาร์ตเนอร์จริง + agreement + verified click/conversion/reconciliation เมื่อเปิดรายได้ร้าน
 - Privacy Policy/Terms/contact/retention/consent ที่เหมาะกับ Production
