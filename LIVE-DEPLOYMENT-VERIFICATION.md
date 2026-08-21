@@ -23,6 +23,10 @@ Workflow ที่เกี่ยวข้อง:
 
 `live-smoke.yml` ตรวจจาก Public URL จริง ไม่ใช่เฉพาะไฟล์ใน repository และครอบคลุม public pages/assets, SEO markers, PWA assets, Service Worker cache generation, atomic app-shell install marker, Surprise flow markers, recovery markers และ iPhone/iPad install guidance
 
+เมื่อ `live-smoke.yml` ผ่านครบทุก verification step จะเขียน **Kinaraidee automated live evidence** ลง GitHub Actions Job Summary โดยบันทึก release commit ที่ตรวจ, trigger, source Pages deployment run, Public URL, cache generation และ app-shell strategy เพื่อให้ trace กลับไปยัง release candidate ได้ง่ายขึ้น
+
+> สำคัญ: Job Summary นี้เป็น automated live-asset evidence เท่านั้น ไม่แทน real-device TC/NF interaction test และไม่ใช่ Commercial GO approval
+
 > สำคัญ: การมี workflow file ไม่เท่ากับ workflow run ผ่าน ต้องมี run/result หรือหลักฐาน live test จริงก่อนทำเครื่องหมาย PASS
 
 ## Live asset checks
@@ -86,6 +90,7 @@ Automated curl/grep ไม่สามารถแทน interaction test ต่
 - Screenshot/Video:
 - Pages workflow run:
 - Live Smoke workflow run:
+- Live Smoke Job Summary / release commit:
 - QA/Beta workflow run:
 - Commit verified:
 - TC/NF ที่เกี่ยวข้อง:
@@ -99,5 +104,6 @@ Automated curl/grep ไม่สามารถแทน interaction test ต่
 ### Interpretation rules
 - `statuses: []` หรือไม่มี commit-status จาก API **ไม่ใช่ PASS และไม่ใช่ FAIL โดยอัตโนมัติ**; ให้ถือว่า automated run evidence ยังไม่ถูกยืนยันจากช่องทางนั้น
 - Workflow file มีอยู่ = ยืนยันได้เฉพาะว่า automation ถูกกำหนดไว้ ไม่ได้ยืนยันผล run
+- GitHub Actions Job Summary ที่เกิดหลัง live-smoke verification ผ่าน = ใช้เป็น traceable automated evidence ของ live assets ได้ แต่ไม่แทน real-device evidence
 - curl/grep smoke test ผ่าน = ยืนยัน asset/marker ระดับหนึ่ง แต่ไม่แทน TC/NF real-device interaction
 - PASS ต้อง trace กลับไปยัง release candidate/commit และหลักฐานที่ตรวจสอบย้อนหลังได้
