@@ -6,6 +6,8 @@
 
 แกนหลักสำหรับ Beta ทำงานแล้ว: เลือกเมนู → ดูร้านใกล้ตัว → ใช้ตำแหน่ง (เมื่อผู้ใช้อนุญาต) → ค้นหาร้านพาร์ตเนอร์ → fallback ไป Google Maps → เก็บ demand ของเมนูเพื่อวิเคราะห์ว่าควรเพิ่มร้านพาร์ตเนอร์ใด
 
+**สถานะนี้ไม่ได้หมายความว่าพร้อมเปิดรับเงินจริงแล้ว** การเปิด Premium/commission/partner package ต้องผ่าน real-device, Payment, Privacy/Legal และ Security gate ที่เกี่ยวข้องใน `RELEASE-CHECKLIST.md`
+
 Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 
 ## ฟีเจอร์ผู้ใช้
@@ -34,6 +36,8 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 
 ## ระบบร้านพาร์ตเนอร์และรายได้
 
+โครงสร้างรองรับการทดลองโมเดลรายได้ แต่ยังต้องใช้ร้าน/ธุรกรรม/ข้อตกลงจริงเพื่อ validate ก่อนนับเป็นรายได้:
+
 - แบบฟอร์มสมัครร้านพาร์ตเนอร์
 - Owner review / approve / reject / contacted
 - จัดการร้าน active / inactive
@@ -43,14 +47,16 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - บันทึก conversion และสถานะ pending / confirmed / cancelled
 - Owner dashboard / reports / conversion management
 - Audit log การแก้ไขร้านพาร์ตเนอร์
+- `MONETIZATION-PLAN.md` แยก hypothesis ราคาออกจากผลจริง และกำหนด Revenue Experiment Record
 
 ## Backend / Security
 
 - Supabase PostgreSQL + Row Level Security
 - Edge Functions สำหรับ group API และ partner API
 - `restaurant_requests` เปิดเฉพาะ INSERT ที่เป็น `source=app` และ `status=pending`; ไม่มี public SELECT ของพิกัดผู้ใช้
-- Publishable key ใช้ฝั่ง browser; secret/service role อยู่ฝั่ง backend เท่านั้น
-- ดู `SECURITY.md` สำหรับแนวทางรายงานช่องโหว่และข้อกำหนดก่อน Production
+- Publishable key ใช้ฝั่ง browser; secret/service role ต้องอยู่ฝั่ง backend เท่านั้น
+- `SECURITY.md` กำหนด severity, Production Security Gate, negative tests และ Incident Response
+- Blocker/Critical ด้าน Security ที่ยังเปิดอยู่ = NO-GO สำหรับ Commercial Release
 
 ## Deployment / QA
 
@@ -81,9 +87,9 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
 - `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
 - `BETA-RESULTS-TEMPLATE.md` — แบบสรุปผลจากข้อมูลผู้ใช้จริง
-- `MONETIZATION-PLAN.md` — ลำดับทดลองรายได้และ KPI
-- `RELEASE-CHECKLIST.md` — เกณฑ์ก่อนเปิดเชิงพาณิชย์
-- `SECURITY.md` — แนวทาง Security และการรายงานช่องโหว่
+- `MONETIZATION-PLAN.md` — สมมติฐานรายได้, Revenue Experiment Record และ gate แยกตามโมเดล
+- `RELEASE-CHECKLIST.md` — Beta exit + Product/Payment/Partner/Privacy/Security/Operations evidence ก่อน Commercial GO
+- `SECURITY.md` — Security gate, incident response และแนวทางรายงานช่องโหว่
 
 หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง และห้ามทำเครื่องหมาย Test Case ผ่านโดยไม่ได้ทดสอบบนอุปกรณ์จริง
 
@@ -97,14 +103,18 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - ทุก FAIL มี defect ที่ตามแก้ได้
 - Blocker = 0 และ Critical = 0
 
-## เกณฑ์ก่อน Go-Live เชิงพาณิชย์
+## Commercial Readiness — ยังต้องพิสูจน์ด้วยข้อมูลจริง
 
-- ไม่มี Blocker/Critical ที่ยังเปิดอยู่
-- flow หลักผ่านการทดสอบบน Android Chrome และ iPhone Safari จริง
-- geolocation และ Google Maps fallback ผ่านการทดสอบจริง
-- PWA ติดตั้ง/เปิดจากไอคอนได้บนแพลตฟอร์มที่รองรับ
-- Feedback และ Partner application ส่งข้อมูลได้จริง
-- ตรวจ RLS / secret handling / privacy อีกครั้งก่อนรับข้อมูลและเงินจริง
+ก่อนเปิดรับเงินจริง ต้องมีหลักฐานอย่างน้อย:
+- Beta Results มี Go decision จากข้อมูลผู้ใช้/อุปกรณ์จริง
+- Product core flow ไม่มี Blocker/Critical และไม่มี regression ใน release candidate
+- Payment provider/merchant จริง + subscribe/renew/cancel/failure + entitlement/reconciliation เมื่อเปิด Premium
+- ร้านพาร์ตเนอร์จริง + agreement + verified click/conversion/reconciliation เมื่อเปิดรายได้ร้าน
+- Privacy Policy/Terms/contact/retention/consent ที่เหมาะกับ Production
+- RLS/auth/admin/Edge Function negative tests และ secret handling ผ่าน Security gate
+- monitoring, support, backup/recovery และ rollback path พร้อม
+
+แต่ละโมเดลรายได้เปิดแยกกันได้เมื่อ gate ของโมเดลนั้นผ่าน ไม่จำเป็นต้องเปิด Premium, Partner Plan, Commission, Sponsored และ Insights พร้อมกันทั้งหมด
 
 ## สิ่งที่ต้องมีจากภายนอกก่อน Production เชิงพาณิชย์
 
@@ -115,4 +125,4 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 3. ข้อกำหนดทางกฎหมาย/นโยบายฉบับ Production และช่องทางติดต่อเจ้าของบริการ
 4. บัญชี App Store / Google Play หากจะเผยแพร่เป็น native app
 
-จนกว่าจะมีรายการเหล่านี้ ระบบเหมาะสำหรับ Public Beta เพื่อทดสอบผู้ใช้จริง เก็บ feedback และวัด demand ของเมนู/ร้านก่อนเปิดเชิงพาณิชย์
+จนกว่าจะมีรายการที่จำเป็นต่อโมเดลรายได้ที่เลือก ระบบเหมาะสำหรับ Public Beta เพื่อทดสอบผู้ใช้จริง เก็บ feedback วัด demand และพิสูจน์สมมติฐานก่อนเปิดเชิงพาณิชย์
