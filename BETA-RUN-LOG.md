@@ -1,11 +1,11 @@
 # กินอะไรดี — Beta Run Log
 
-ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-DEVICE-MATRIX.md`
+ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
 2. กรอกข้อมูลอุปกรณ์จริง
-3. รันทดสอบ TC-01 ถึง TC-15 เท่าที่อุปกรณ์รองรับ
+3. รันทดสอบ TC-01 ถึง TC-15 และ NF-01 ถึง NF-10 เท่าที่อุปกรณ์รองรับ
 4. บันทึก PASS / FAIL / N/A เท่านั้น
 5. ทุก FAIL ต้องสร้าง Bug Issue หรือบันทึกรายละเอียด defect พร้อมหลักฐานถ้ามี
 6. ห้ามกรอกผลจากการคาดเดา
@@ -20,9 +20,11 @@
 - Device model:
 - OS / version:
 - Browser / version:
+- Installed PWA: Yes / No / N/A
+- Service Worker / cache generation ที่สังเกตได้:
 - Network: Wi-Fi / Mobile / Offline test
 
-### Results
+### Core Results
 | Test Case | Result | Notes / Issue |
 |---|---|---|
 | TC-01 เปิดแอป |  |  |
@@ -41,6 +43,20 @@
 | TC-14 Offline shell |  |  |
 | TC-15 404 recovery |  |  |
 
+### New Flow Results
+| Test Case | Result | Notes / Issue |
+|---|---|---|
+| NF-01 Surprise one-tap |  |  |
+| NF-02 Double-tap protection |  |  |
+| NF-03 Start new surprise round |  |  |
+| NF-04 Android PWA update |  |  |
+| NF-05 iPhone/iPad install guidance |  |  |
+| NF-06 Offline after update |  |  |
+| NF-07 Upgrade from older cache |  |  |
+| NF-08 Recovery after interruption |  |  |
+| NF-09 Accessibility state |  |  |
+| NF-10 Online recovery |  |  |
+
 ### Defects found
 - Blocker:
 - Critical:
@@ -49,7 +65,9 @@
 
 ### Final status for this device
 - [ ] PASS core flow
+- [ ] PASS new flow
 - [ ] FAIL core flow
+- [ ] FAIL new flow
 - [ ] Needs retest after fix
 
 ### Notes
@@ -61,4 +79,6 @@
 - iPhone Safari ผ่านอย่างน้อย 2 รุ่น
 - ไม่มี Blocker/Critical ที่ยังเปิดอยู่
 - Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง
-- PWA/Offline ให้ตัดสินตาม platform support และบันทึก N/A เมื่อไม่รองรับจริง
+- New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องต้องผ่านบนอุปกรณ์จริงที่รองรับ
+- PWA/Offline/Install guidance ให้ตัดสินตาม platform support และบันทึก N/A เมื่อไม่รองรับจริง
+- ห้ามปิดรอบจาก static review อย่างเดียว
