@@ -1,31 +1,74 @@
 # Security Policy — กินอะไรดี
 
-โครงการนี้อยู่ในช่วง Public Beta และให้ความสำคัญกับการปกป้องข้อมูลผู้ใช้และข้อมูลร้านพาร์ตเนอร์
+โครงการนี้อยู่ในช่วง Public Beta และให้ความสำคัญกับการปกป้องข้อมูลผู้ใช้ ข้อมูลตำแหน่ง บัญชีสมาชิก และข้อมูลร้านพาร์ตเนอร์
 
 ## ถ้าพบช่องโหว่
-กรุณาอย่าโพสต์ข้อมูลที่ทำให้ผู้อื่นนำช่องโหว่ไปใช้ซ้ำได้ทันที เช่น token, key, ข้อมูลส่วนบุคคล, ขั้นตอนโจมตีแบบครบถ้วน หรือข้อมูลที่ดึงออกมาจากระบบ
+อย่าโพสต์ข้อมูลที่ทำให้ผู้อื่นนำช่องโหว่ไปใช้ซ้ำได้ทันที เช่น token, key, password, session, ข้อมูลส่วนบุคคล, พิกัดละเอียด หรือขั้นตอนโจมตีแบบครบถ้วน
 
-ให้เปิด GitHub Issue โดยระบุหัวข้อว่า `Security report` และใส่เฉพาะข้อมูลขั้นต่ำที่ไม่เปิดเผยข้อมูลลับ เช่น
+หากยังไม่มี private security-reporting channel ให้เปิด GitHub Issue โดยระบุหัวข้อว่า `Security report` และใส่ **เฉพาะข้อมูลขั้นต่ำที่ปลอดภัยต่อการเปิดเผย** เช่น
 - ส่วนของระบบที่ได้รับผลกระทบ
 - ผลกระทบที่คาดว่าจะเกิดขึ้น
 - เบราว์เซอร์/อุปกรณ์ที่ใช้
-- ขั้นตอนแบบย่อที่เพียงพอให้ทีมทำซ้ำได้โดยไม่เผยแพร่ secret
+- เวลาที่พบโดยประมาณ
+- ขั้นตอนแบบย่อที่ไม่เผย credential/PII
 
-หากรายงานมี credential, token, key หรือข้อมูลส่วนบุคคล ให้หลีกเลี่ยงการใส่ค่าเหล่านั้นลงใน Issue สาธารณะ
+หากรายละเอียดจำเป็นต้องมี credential, token, key, personal data, raw request ที่มีข้อมูลลับ หรือหลักฐานจากผู้ใช้จริง **ห้ามใส่ข้อมูลนั้นใน Issue สาธารณะ** ให้รอช่องทาง private ที่เจ้าของโครงการกำหนด
+
+## Severity
+- **Blocker:** มีความเสี่ยงร้ายแรงต่อผู้ใช้/ข้อมูล/ระบบ และควรหยุดเพิ่ม traffic หรือปิด flow ที่ได้รับผลกระทบทันที
+- **Critical:** เข้าถึง/แก้ข้อมูลสำคัญโดยไม่ได้รับอนุญาต, secret รั่ว, auth/admin bypass หรือผลกระทบสูงที่ทำซ้ำได้
+- **Major:** ช่องโหว่มีผลจริงแต่ขอบเขตจำกัดหรือมีเงื่อนไขเฉพาะ
+- **Minor:** hardening/configuration issue ที่ความเสี่ยงต่ำแต่ควรแก้
+
+Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหรับ Commercial Release
 
 ## ขอบเขตสำคัญ
-โปรดให้ความสำคัญกับปัญหาประเภทต่อไปนี้เป็นพิเศษ
-- การอ่านหรือแก้ข้อมูลที่ควรถูกจำกัดด้วย RLS
-- การเข้าถึงข้อมูลร้านพาร์ตเนอร์หรือใบสมัครโดยไม่ได้รับอนุญาต
-- การรั่วไหลของ secret/service-role key
-- การปลอม request เพื่อสร้างข้อมูลหรือสแปมระบบ
-- XSS, injection, open redirect หรือการนำผู้ใช้ไปปลายทางที่ไม่คาดคิด
-- การเปิดเผยตำแหน่งผู้ใช้ละเอียดเกินกว่าที่นโยบายกำหนด
+ให้ความสำคัญกับปัญหาประเภทต่อไปนี้เป็นพิเศษ
+- การอ่าน/สร้าง/แก้/ลบข้อมูลที่ควรถูกจำกัดด้วย Supabase RLS
+- auth/session/password recovery ที่ทำให้เข้าบัญชีอื่นได้
+- owner/admin authorization bypass
+- การเข้าถึงข้อมูลร้านพาร์ตเนอร์ ใบสมัคร conversion หรือ audit log โดยไม่ได้รับอนุญาต
+- การรั่วไหลของ service-role key, private key, provider secret หรือ credential
+- การปลอม request เพื่อสร้างข้อมูล, conversion, commission, click หรือสแปมระบบ
+- XSS, injection, unsafe HTML, open redirect หรือ destination URL ที่นำผู้ใช้ไปปลายทางไม่คาดคิด
+- การเปิดเผยตำแหน่งผู้ใช้ละเอียดเกินนโยบาย หรือ public SELECT ของข้อมูล location
+- CORS/endpoint configuration ที่เปิด write/admin operation เกินจำเป็น
+- dependency หรือ third-party compromise ที่กระทบ public build/backend
 
 ## หลักการสำหรับ repository สาธารณะ
-- ห้าม commit service-role key, private key, password หรือ credential อื่น ๆ
-- publishable/anon key ใช้ได้เฉพาะเมื่อ backend policy ถูกออกแบบให้ public client ใช้งานได้อย่างปลอดภัย
-- ทุก endpoint ที่แก้ข้อมูลสำคัญควรตรวจสิทธิ์และ validate payload ฝั่ง server/database
+- ห้าม commit service-role key, private key, password, access token หรือ credential อื่น ๆ
+- publishable/anon key ใช้ได้เฉพาะเมื่อ backend/RLS policy ถูกออกแบบให้ public client ใช้งานได้อย่างปลอดภัย
+- secret ต้องอยู่ใน provider secret store/environment ฝั่ง backend ที่เหมาะสม
+- ทุก endpoint ที่แก้ข้อมูลสำคัญต้องตรวจ authorization และ validate payload ฝั่ง server/database
+- client-side role, price, commission, entitlement หรือ conversion status ห้ามถือเป็นข้อมูลที่เชื่อถือได้โดยลำพัง
+- log และ error message ไม่ควรเปิด token, secret, session หรือ PII
 
-## การตอบสนอง
-รายงานที่มีความเสี่ยงสูงควรถูกจัดเป็น Blocker หรือ Critical ในรอบ Beta และแก้ก่อนเปิด Production เชิงพาณิชย์
+## Production Security Gate
+ก่อนเปิดรับเงินจริง ให้มีหลักฐานตรวจอย่างน้อย:
+- [ ] RLS ทุก Production table ด้วย anonymous/authenticated/owner role ตามที่เกี่ยวข้อง
+- [ ] negative test ว่าผู้ใช้ A อ่าน/แก้ข้อมูลผู้ใช้ B ไม่ได้
+- [ ] owner/admin endpoints ปฏิเสธผู้ใช้ทั่วไป
+- [ ] password recovery/session expiry/sign-out ทำงานตามที่ออกแบบ
+- [ ] repository/public build ไม่มี secret
+- [ ] Edge Functions/API validate auth + payload สำหรับ operation สำคัญ
+- [ ] location/restaurant request data ไม่มี public read ที่ไม่ตั้งใจ
+- [ ] partner click/conversion ไม่สามารถตั้ง confirmed/commission จาก browser โดยไม่มี server verification
+- [ ] dependency/security findings ระดับ Critical ถูกปิด
+- [ ] rollback/disable path สำหรับ flow ที่มีความเสี่ยงพร้อมใช้งาน
+
+บันทึกผลไว้กับ `RELEASE-CHECKLIST.md` และอ้างอิง commit/issue/test evidence ที่ตรวจสอบย้อนหลังได้
+
+## Incident Response ขั้นต่ำ
+เมื่อพบเหตุที่อาจกระทบข้อมูลหรือเงินจริง:
+1. จำกัดผลกระทบก่อน เช่น หยุด deploy/traffic/partner/payment flow ที่เกี่ยวข้อง
+2. เก็บหลักฐานที่จำเป็นโดยไม่เผย secret หรือข้อมูลผู้ใช้เพิ่ม
+3. ประเมินขอบเขต: ระบบ/ผู้ใช้/ช่วงเวลา/ข้อมูลที่อาจได้รับผลกระทบ
+4. rotate/revoke credential ที่สงสัยว่ารั่ว
+5. แก้ root cause และทำ regression/negative test
+6. บันทึก incident, commit ที่แก้, วิธีตรวจ และ known residual risk
+7. ประเมินหน้าที่แจ้งผู้ใช้/คู่ค้า/หน่วยงานตามกฎหมายและนโยบายที่ใช้จริงก่อน Production
+
+## การตอบสนองในช่วง Beta
+รายงานความเสี่ยงสูงต้องถูกจัดลำดับก่อน feature work ที่ไม่จำเป็น และ Blocker/Critical ต้องแก้ + retest ก่อนเพิ่มผู้ทดสอบหรือ traffic
+
+ห้ามทำเครื่องหมาย security test ผ่านจาก static review เพียงอย่างเดียวเมื่อ test นั้นต้องพิสูจน์ authorization, RLS หรือ behavior ของระบบจริง
