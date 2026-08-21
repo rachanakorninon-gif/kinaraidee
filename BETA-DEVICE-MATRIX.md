@@ -2,6 +2,16 @@
 
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
+## Release trace สำหรับรอบนี้
+- App release baseline: `bb7b979421275995a6fee12f84b118d0c942037a`
+- Expected Service Worker cache: `kinaraidee-beta-v11`
+- Deployed SHA:
+- GitHub Pages run URL / ID:
+- Live Smoke run URL / ID:
+- Runtime diff vs app release: None / Present / Not yet verified
+
+> หาก `main` หรือ deployed SHA เป็น evidence/workflow-only descendant ให้บันทึก SHA จริงและยืนยันว่าไม่มี runtime app file เปลี่ยนก่อนใช้ผลจาก matrix นี้เป็น release evidence
+
 ## Android Chrome
 
 | Device | Android | Chrome | TC-01 | TC-02 | TC-03 | TC-08 | TC-09 | TC-10 | TC-13 | TC-14 | NF-01 | NF-02 | NF-04 | NF-08 | NF-09 | NF-10 | SW/Cache | Notes |
@@ -51,6 +61,8 @@
 - iPhone Safari อย่างน้อย 2 รุ่นต้องผ่าน core flow
 - New Flow NF-01–NF-10 ต้องมีผลทดสอบตาม platform ที่เกี่ยวข้อง
 - Service Worker/PWA update ต้องตรวจจาก cache รุ่นก่อนหน้าอย่างน้อยหนึ่งอุปกรณ์จริง
+- ต้องมี Pages/Live Smoke evidence ที่ trace ไปยัง deployed SHA
+- ต้องยืนยัน deployed SHA ว่าตรงกับ app release baseline หรือเป็น non-runtime descendant ที่ payload เท่ากัน
 - Blocker/Critical ต้องเป็น 0 ก่อนเพิ่ม traffic
 - ทุก FAIL ต้องมี defect/Issue หรือบันทึกเหตุผลที่ตามแก้ได้
 
