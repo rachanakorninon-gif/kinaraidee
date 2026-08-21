@@ -67,6 +67,9 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `BETA-CHECKLIST.md` — เกณฑ์ readiness ก่อน/ระหว่าง Beta
 - `BETA-TESTER-GUIDE.md` — คู่มือส่งให้ผู้ทดสอบจริง
 - `BETA-TESTER-RECRUITMENT.md` — ชุดข้อความและแนวทางรับผู้ทดสอบ
+- `BETA-TEST-CASES.md` — Test Case TC-01 ถึง TC-15 สำหรับอุปกรณ์จริง
+- `BETA-DEVICE-MATRIX.md` — ตาราง Android/iPhone และผล PASS/FAIL/N/A
+- `BETA-RUN-LOG.md` — บันทึกการทดสอบจริงรายเครื่องและ defect
 - `BETA-METRICS.md` — ตัวชี้วัด Product/Retention/Demand/Quality
 - `BETA-30-DAY-PLAN.md` — แผนดำเนิน Public Beta 30 วัน
 - `BETA-RESULTS-TEMPLATE.md` — แบบสรุปผลจากข้อมูลผู้ใช้จริง
@@ -74,7 +77,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - `RELEASE-CHECKLIST.md` — เกณฑ์ก่อนเปิดเชิงพาณิชย์
 - `SECURITY.md` — แนวทาง Security และการรายงานช่องโหว่
 
-หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง
+หลักการสำคัญ: ห้ามเติมตัวเลข Beta, conversion หรือรายได้สมมติแทนข้อมูลที่วัดได้จริง และห้ามทำเครื่องหมาย Test Case ผ่านโดยไม่ได้ทดสอบบนอุปกรณ์จริง
 
 ## เกณฑ์ก่อน Go-Live เชิงพาณิชย์
 
