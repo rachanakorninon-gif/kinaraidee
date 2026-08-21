@@ -10,21 +10,31 @@
 - เริ่มเห็น demand ของเมนู/พื้นที่จากข้อมูลจริง
 - รวบรวมหลักฐานสำหรับตัดสินใจเรื่อง restaurant partner และ Premium
 
+## กติกาการบันทึกทุกวัน
+- ใช้ `BETA-DAILY-LOG.md` เป็นบันทึกหลักรายวัน
+- ทุกผล Test Case จริงต้องไปอยู่ใน `BETA-RUN-LOG.md` และ `BETA-DEVICE-MATRIX.md`
+- ทุก Feedback ที่นำไปใช้ตัดสินใจต้องอ้างอิง `BETA-FEEDBACK-TEMPLATE.md` หรือข้อมูลจริงในระบบ
+- ทุก FAIL ระดับสำคัญต้องมี defect/Issue ที่ตามแก้ได้
+- เมื่อครบ 7 วัน ให้ทำ Weekly checkpoint จาก Daily Log + Run Log + Feedback + metrics ที่วัดได้จริง
+
 ## วัน 1–3 — Readiness Gate
 - ตรวจ `BETA-CHECKLIST.md`
 - เตรียม tester ด้วย `BETA-TESTER-RECRUITMENT.md`
 - ส่ง `BETA-QUICK-START.md` / `BETA-TESTER-GUIDE.md`
 - ทดสอบ TC-01–TC-15 และ NF-01–NF-10 บนอุปกรณ์จริงที่หาได้
 - บันทึกทุกผลใน `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
+- บันทึกภาพรวมประจำวันใน `BETA-DAILY-LOG.md`
 - Blocker/Critical ต้องถูกเปิดเป็น defect และแก้ก่อนเพิ่ม traffic
 
 ## วัน 4–7 — Small Beta Cohort
 - เริ่มผู้ทดสอบกลุ่มเล็กก่อน
 - เก็บ Feedback ด้วย `BETA-FEEDBACK-TEMPLATE.md`
+- บันทึก traffic/tester/feedback/QA signal ประจำวันใน `BETA-DAILY-LOG.md`
 - เน้นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และดูว่าผู้ใช้เข้าใจโดยไม่ต้องสอนหรือไม่
 - ตรวจ double tap, busy state, recovery และ mobile usability
 - ตรวจ Location, ร้านใกล้คุณ, partner result และ Google Maps fallback
 - อย่าเพิ่มผู้ทดสอบจำนวนมากถ้ายังมีปัญหา core flow
+- จบวันที่ 7 ให้ทำ Weekly checkpoint ครั้งที่ 1
 
 ## วัน 8–14 — Fix & Learn
 - จัดกลุ่ม Feedback ซ้ำ: UX / Recommendation / Restaurant / PWA / Bug
@@ -33,6 +43,8 @@
 - ตรวจ PWA update จาก cache รุ่นเก่ามารุ่นปัจจุบันโดยไม่บังคับล้างข้อมูล
 - ตรวจ iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว”
 - ทบทวน `BETA-METRICS.md` โดยใช้เฉพาะข้อมูลที่ระบบวัดได้จริง
+- บันทึก decision รายวันว่าควรเดินหน้าต่อ/หยุดเพิ่ม traffic/retest อะไร
+- จบวันที่ 14 ให้ทำ Weekly checkpoint ครั้งที่ 2
 
 ## วัน 15–21 — Controlled Expansion
 ขยายผู้ทดสอบเมื่อ:
@@ -47,16 +59,20 @@
 - ดูเมนู/พื้นที่ที่มี restaurant demand สูง
 - เริ่มคุยกับร้านจริงในพื้นที่ที่มี demand โดยยังไม่สร้าง conversion สมมติ
 - เก็บ Premium interest จากคำตอบผู้ใช้จริง
+- บันทึกเหตุผลการเพิ่ม/ไม่เพิ่ม traffic ใน `BETA-DAILY-LOG.md`
+- จบวันที่ 21 ให้ทำ Weekly checkpoint ครั้งที่ 3
 
 ## วัน 22–27 — Monetization Validation
 - ใช้ `MONETIZATION-PLAN.md` เป็นกรอบ
 - ประเมิน restaurant partner model จากความสนใจจริง: per-click / percent / fixed-order / package
 - ประเมิน Premium feature ที่ผู้ใช้บอกว่ายอมจ่าย
 - ถ้ามีการทดลองราคา ให้บันทึกราคาและจำนวนผู้ตอบจริง
+- บันทึก partner/Premium signal ที่ยืนยันได้ใน Daily Log
 - ห้ามเปิดรับเงินจริงจน payment/privacy/security/commercial gate พร้อม
 
 ## วัน 28–30 — Beta Review
 - กรอก `BETA-RESULTS-TEMPLATE.md`
+- ใช้ข้อมูลจาก `BETA-DAILY-LOG.md`, `BETA-RUN-LOG.md`, `BETA-DEVICE-MATRIX.md`, `BETA-FEEDBACK-TEMPLATE.md` และ metrics ที่วัดได้จริง
 - สรุป TC/NF จากผลจริง
 - สรุป Blocker/Critical/Major/Minor
 - สรุปสิ่งที่ผู้ใช้ชอบ จุดหลุด และ feature requests
@@ -73,4 +89,4 @@
 - Production policy/contact information พร้อม
 
 ## เอกสารอ้างอิงหลัก
-`BETA-CHECKLIST.md`, `BETA-TESTER-GUIDE.md`, `BETA-TESTER-RECRUITMENT.md`, `BETA-QUICK-START.md`, `BETA-FEEDBACK-TEMPLATE.md`, `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-METRICS.md`, `BETA-RESULTS-TEMPLATE.md`, `MONETIZATION-PLAN.md`, `RELEASE-CHECKLIST.md`, `SECURITY.md`
+`BETA-CHECKLIST.md`, `BETA-TESTER-GUIDE.md`, `BETA-TESTER-RECRUITMENT.md`, `BETA-QUICK-START.md`, `BETA-FEEDBACK-TEMPLATE.md`, `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-DAILY-LOG.md`, `BETA-METRICS.md`, `BETA-RESULTS-TEMPLATE.md`, `MONETIZATION-PLAN.md`, `RELEASE-CHECKLIST.md`, `SECURITY.md`
