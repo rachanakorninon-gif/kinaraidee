@@ -50,7 +50,7 @@ jobs:
             curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null
           done
 
-      - name: Check latest live app markers
+      - name: Check latest live app markers and PWA v11
         shell: bash
         run: |
           set -euo pipefail
@@ -68,13 +68,18 @@ jobs:
           grep -q 'home-surprise.js' <<<"$html"
           grep -q 'pwa-install.js' <<<"$html"
 
-          grep -q "kinaraidee-beta-v10" <<<"$sw"
+          grep -q "kinaraidee-beta-v11" <<<"$sw"
+          grep -q "cache.addAll(SHELL)" <<<"$sw"
           grep -q "home-surprise.js" <<<"$sw"
           grep -q "pwa-install.js" <<<"$sw"
+          if grep -q 'Promise.allSettled' <<<"$sw"; then
+            echo 'Live Service Worker unexpectedly uses non-atomic shell install'
+            exit 1
+          fi
 
           grep -q "aria-busy" <<<"$surprise"
           grep -q "กำลังเลือกให้" <<<"$surprise"
-          grep -q "visibilitychange" <<<"$surprise"
+          grep -q "pageshow" <<<"$surprise"
           grep -q "online" <<<"$surprise"
 
           grep -q "เข้าใจแล้ว" <<<"$pwa"
@@ -85,7 +90,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for latest PWA flow'
+          echo 'Live smoke test passed for PWA v11 flow'
 
       - name: Verify development files are not published
         shell: bash
