@@ -78,7 +78,8 @@
 - [ ] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ
 - [ ] Owner dashboard ใช้งานได้จริงกับข้อมูล Production
 - [ ] ขั้นตอนรับและตอบ bug/support พร้อมช่องทางติดต่อ
-- [ ] Release rollback procedure ถูกเขียนและทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัย
+- [x] Rollback procedure ถูกเขียนไว้ใน `ROLLBACK-RUNBOOK.md` (เอกสารพร้อมใช้งาน; **ไม่ได้แปลว่า drill ผ่าน**)
+- [ ] ทดลอง rollback อย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและกรอก Evidence Record จริงใน `ROLLBACK-RUNBOOK.md`
 - [ ] ระบุผู้มีสิทธิ์ deploy/แก้ Production
 - [ ] มีวิธีหยุด Premium/partner traffic ชั่วคราวหากเกิด incident
 
