@@ -24,7 +24,9 @@ jobs:
             index.html privacy.html feedback.html partner.html
             manifest.webmanifest icon.svg sw.js
             data/foods-expanded.js data/choice-rules.js
-            data/nearby-restaurants.js
+            data/nearby-restaurants.js data/group-mode.js
+            data/group-sync.js data/group-remote.js data/member-sync.js
+            data/pwa-install.js
           )
           for file in "${required[@]}"; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
@@ -52,6 +54,8 @@ jobs:
           grep -q 'manifest.webmanifest' index.html
           grep -q 'data/nearby-restaurants.js' index.html
           grep -q 'serviceWorker' index.html
+          grep -q 'data/group-mode.js' data/nearby-restaurants.js
+          grep -q 'data/pwa-install.js' data/nearby-restaurants.js
 
       - name: Prevent secrets in public repository
         shell: bash
