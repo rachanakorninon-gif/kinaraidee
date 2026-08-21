@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for Pages propagation
-        run: sleep 15
+        run: sleep 20
 
       - name: Check live public pages and assets
         shell: bash
@@ -25,6 +25,7 @@ jobs:
           paths=(
             '/'
             '/index.html'
+            '/404.html'
             '/privacy.html'
             '/feedback.html'
             '/partner.html'
@@ -37,28 +38,51 @@ jobs:
             '/data/choice-rules.js'
             '/data/nearby-restaurants.js'
             '/data/group-mode.js'
+            '/data/group-sync.js'
+            '/data/group-remote.js'
+            '/data/member-sync.js'
             '/data/pwa-install.js'
+            '/data/home-surprise.js'
           )
           for path in "${paths[@]}"; do
             url="$base$path"
             echo "Checking $url"
-            curl --fail --silent --show-error --location --retry 4 --retry-delay 5 --max-time 25 "$url" >/dev/null
+            curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null
           done
 
-      - name: Check live app and SEO markers
+      - name: Check latest live app markers
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          html="$(curl --fail --silent --show-error --location --retry 4 --retry-delay 5 "$base/")"
-          robots="$(curl --fail --silent --show-error --location --retry 4 --retry-delay 5 "$base/robots.txt")"
-          sitemap="$(curl --fail --silent --show-error --location --retry 4 --retry-delay 5 "$base/sitemap.xml")"
+          html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
+          sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
+          surprise="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/home-surprise.js")"
+          pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
+          robots="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/robots.txt")"
+          sitemap="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sitemap.xml")"
+
           grep -q 'กินอะไรดี' <<<"$html"
           grep -q 'manifest.webmanifest' <<<"$html"
           grep -q 'serviceWorker' <<<"$html"
+          grep -q 'home-surprise.js' <<<"$html"
+          grep -q 'pwa-install.js' <<<"$html"
+
+          grep -q "kinaraidee-beta-v10" <<<"$sw"
+          grep -q "home-surprise.js" <<<"$sw"
+          grep -q "pwa-install.js" <<<"$sw"
+
+          grep -q "aria-busy" <<<"$surprise"
+          grep -q "กำลังเลือกให้" <<<"$surprise"
+          grep -q "visibilitychange" <<<"$surprise"
+          grep -q "online" <<<"$surprise"
+
+          grep -q "เข้าใจแล้ว" <<<"$pwa"
+          grep -q "MacIntel" <<<"$pwa"
+
           grep -q 'sitemap.xml' <<<"$robots"
           grep -q '<urlset' <<<"$sitemap"
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed'
+          echo 'Live smoke test passed for latest PWA flow'
