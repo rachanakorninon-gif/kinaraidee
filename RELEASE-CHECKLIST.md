@@ -4,6 +4,12 @@
 
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
+## Current runtime candidate
+- App release baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
+- Expected Service Worker cache: `kinaraidee-beta-v12`
+- PR #14 pre-merge CI: Beta integrity `32537715302` SUCCESS; Kinaraidee Beta QA `32537715337` SUCCESS
+- Pages / Live Smoke / real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
+
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
 - [ ] `BETA-DAILY-LOG.md` / `BETA-RUN-LOG.md` มีหลักฐานรอบทดสอบที่ใช้ตัดสินใจ
@@ -11,6 +17,7 @@
 - [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่นผ่าน core flow ตามกรณีที่รองรับ
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
+- [ ] TC-11, TC-12, NF-07 และ accessibility ที่ได้รับผลจาก PR #14 ถูก retest บน release `f08d069a...`
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
@@ -18,7 +25,7 @@
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
 - [ ] GitHub Pages deployment ของ release candidate สำเร็จและ trace กลับไปยัง commit ได้
 - [ ] `qa.yml`, `beta-check.yml`, `pages.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
-- [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v11`)
+- [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v12`)
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
 - [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
 - [ ] live asset/marker checks ผ่านตาม `LIVE-DEPLOYMENT-VERIFICATION.md`
@@ -27,9 +34,10 @@
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง
+- [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
-- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่าผ่านการทดสอบ
+- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v12 ผ่านการทดสอบ
 - [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ
 - [ ] Feedback flow ใช้งานจริงได้
 - [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
@@ -65,6 +73,7 @@
 
 ## Security
 - [ ] ตรวจ Supabase RLS ทุกตาราง Production ด้วย role ที่เกี่ยวข้อง
+- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11
 - [ ] ไม่มี service-role/secret/private key อยู่ใน browser, repository หรือ public build
 - [ ] rotate secret ที่เคยใช้ใน test หากจำเป็น
 - [ ] ทดสอบ auth / sign-out / password recovery / session expiry
