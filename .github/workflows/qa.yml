@@ -81,6 +81,17 @@ jobs:
             exit 1
           fi
 
+      - name: Verify privacy notice matches beta data flows
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "ข้อมูลเบราว์เซอร์" privacy.html
+          grep -q "รหัส session" privacy.html
+          grep -q "3 ตำแหน่งทศนิยม" privacy.html
+          grep -q "Supabase" privacy.html
+          grep -q "ระยะเวลาการเก็บและการลบข้อมูล" privacy.html
+          grep -q "คำขอเกี่ยวกับข้อมูล" privacy.html
+
       - name: Verify PWA shell and v11 update strategy
         shell: bash
         run: |
