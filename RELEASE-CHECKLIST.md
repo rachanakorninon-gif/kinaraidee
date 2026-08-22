@@ -5,13 +5,15 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current runtime release: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
+- Current runtime release: `21c56f2e84760fada6cebfa464be767facb56b34` (PR #37 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Pre-merge CI ของ head `e4bf276702be06baaf1c5abd41097f8122b4793b`: Release Consistency `32557712768` SUCCESS; Beta integrity `32557712762` SUCCESS; Beta QA `32557712761` SUCCESS
+- Runtime change ล่าสุด: `data/member-sync.js` แก้ cloud-history timestamp shape ให้มี local `at` field และ fallback timestamp เพื่อป้องกัน `Invalid Date`
+- Regression guard: `.github/workflows/history-sync-regression.yml` ตรวจ JavaScript syntax, cloud-to-local history schema และ renderer timestamp contract
+- Historical partner/privacy runtime: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
-- Runtime change จาก `83f8f363...`: Partner application submission บันทึก `privacy_notice_version='2026-08-21'` และ `privacy_acknowledged_at` เพื่อให้การรับทราบ Privacy notice ตรวจสอบย้อนหลังได้; Service Worker cache generation ยังเป็น v13
-- Pages / Live Smoke / real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
+- Partner privacy acknowledgement implementation จาก PR #28 ยังคงอยู่ใน runtime lineage; Service Worker cache generation ยังเป็น v13
+- Pages / Live Smoke / member-history real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -21,19 +23,20 @@
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยน
-- [ ] TC-12 Partner application ถูก retest บน `0624d7e4...` หลังเพิ่ม privacy acknowledgement evidence fields
+- [ ] TC-12 Partner application ถูก retest บน runtime lineage หลังเพิ่ม privacy acknowledgement evidence fields
+- [ ] Member cloud history ถูก retest บน `21c56f2e...` โดยยืนยันว่าไม่แสดง `Invalid Date` และ liked/picked state map ถูกต้อง
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
 - [ ] GitHub Pages deployment ของ release candidate สำเร็จและ trace กลับไปยัง commit ได้
-- [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
+- [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml`, `history-sync-regression.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
 - [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v13`)
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
 - [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
 - [ ] live asset/marker checks ผ่านตาม `LIVE-DEPLOYMENT-VERIFICATION.md`
-- [ ] automated smoke test ไม่ถูกใช้แทน real-device interaction test ที่จำเป็น
+- [ ] automated smoke/static regression test ไม่ถูกใช้แทน real-device interaction test ที่จำเป็น
 
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test
@@ -43,6 +46,7 @@
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องหลังเปลี่ยนเป็น DOM nodes/`textContent` บน Android/iPhone ที่ใช้ทดสอบ
 - [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุด
+- [ ] Member history sync แสดง timestamp/date ถูกต้องหลัง sign-in/sync และไม่เกิด `Invalid Date`
 - [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v13 ผ่านการทดสอบ
 - [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ
 - [ ] Feedback flow ใช้งานจริงได้
@@ -74,7 +78,7 @@
 - [ ] ระบุวัตถุประสงค์การใช้ location / analytics / partner tracking / account data
 - [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้
 - [ ] ตรวจ consent/notice ที่จำเป็นก่อนเริ่ม analytics หรือ tracking ที่ต้องขอความยินยอม
-- [x] Beta Partner application บันทึก Privacy notice version และ acknowledgement timestamp แล้วใน runtime `0624d7e4...`; ข้อนี้เป็น implementation evidence เท่านั้น ไม่แทน Production Privacy/PDPA review
+- [x] Beta Partner application บันทึก Privacy notice version และ acknowledgement timestamp แล้วใน runtime lineage จาก `0624d7e4...`; ข้อนี้เป็น implementation evidence เท่านั้น ไม่แทน Production Privacy/PDPA review
 - [ ] ตรวจข้อกำหนด PDPA และกฎหมาย/ข้อกำหนดที่เกี่ยวข้องก่อนรับข้อมูลเชิงพาณิชย์
 - [ ] ข้อความราคา/ต่ออายุ/ยกเลิก Premium ไม่ทำให้ผู้ใช้เข้าใจผิด
 
@@ -88,7 +92,7 @@
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
 - [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
-- [x] Partner-card renderer เปลี่ยนเป็น DOM nodes/`textContent` ใน v13 runtime `83f8f363...`; pre-merge static/integrity/consistency CI ผ่านครบ แต่ยังต้องมี live/runtime และ real-device evidence ก่อนถือว่า release gate ผ่าน
+- [x] Partner-card renderer เปลี่ยนเป็น DOM nodes/`textContent` ใน v13 runtime `83f8f363...`; implementation/static evidence มีแล้ว แต่ยังต้องมี live/runtime และ real-device evidence ก่อนถือว่า release gate ผ่าน
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
