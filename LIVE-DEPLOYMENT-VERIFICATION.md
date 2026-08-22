@@ -4,10 +4,13 @@
 
 ## Release candidate ปัจจุบัน
 - Runtime commit SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
+- Current `main` descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
 - Expected Service Worker cache: `kinaraidee-beta-v12`
 - วันที่ reset evidence: 2026-08-22 (Asia/Bangkok)
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
 - Runtime change จาก candidate ก่อนหน้า: Feedback/Partner accessibility semantics + Service Worker cache generation v12
+
+`23a0e4fb...` เป็น non-runtime descendant ที่ merge PR #19 และเปลี่ยนเฉพาะ `.github/workflows/qa.yml` เพื่อเพิ่ม release-marker drift gate; ไม่มี runtime asset ของ Public Beta เปลี่ยนใน commit นี้ ดังนั้น runtime candidate ยังคงเป็น `f08d069a...`
 
 ## CI evidence ที่ยืนยันแล้วสำหรับ candidate นี้
 PR #14 head `397100eec329bf4b1744e5c7a829a575d94fdb17` ผ่านก่อน merge:
@@ -17,6 +20,16 @@ PR #14 head `397100eec329bf4b1744e5c7a829a575d94fdb17` ผ่านก่อน 
 
 CI ข้างต้นยืนยัน static/integrity checks เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint หรือ real-device behavior
 
+### Release-marker drift protection
+PR #19 ถูก merge เข้า `main` เป็น `23a0e4fb83593b9d0217aa6576b711d3b96340de` และเพิ่ม QA step ที่ derive canonical PWA release marker จาก `sw.js` แล้วบังคับให้ไฟล์ต่อไปนี้อ้าง marker เดียวกัน:
+- `.github/workflows/qa.yml`
+- `.github/workflows/beta-check.yml`
+- `.github/workflows/pages.yml`
+- `.github/workflows/live-smoke.yml`
+- `README.md`
+
+รายการนี้เป็น preventive QA evidence เท่านั้น ไม่ใช่หลักฐานว่า Pages/Live Smoke/real-device ผ่าน
+
 ## GitHub Pages / Live Smoke evidence
 - [ ] GitHub Pages deployment ของ `f08d069a...` หรือ non-runtime descendant ที่พิสูจน์ว่า payload เท่ากัน มีสถานะสำเร็จ
 - [ ] บันทึก Pages workflow run URL / ID และ deployed SHA
@@ -24,7 +37,7 @@ CI ข้างต้นยืนยัน static/integrity checks เท่า�
 - [ ] บันทึก Live Smoke workflow run URL / ID และ Job Summary ถ้ามี
 - [ ] Public URL เสิร์ฟ runtime assets ของ release candidate ปัจจุบัน
 
-> สถานะปัจจุบัน: **PENDING / BLOCKED FOR EVIDENCE** — connector ที่ใช้ในรอบนี้อ่าน PR-triggered CI ได้ แต่ยังไม่ยืนยัน push-triggered Pages/Live Smoke run ของ `f08d069a...` จึงห้ามตีความว่า deployment ผ่านหรือ fail
+> สถานะปัจจุบัน: **PENDING / BLOCKED FOR EVIDENCE** — connector ที่ใช้ในรอบนี้ยังไม่ยืนยัน push-triggered Pages/Live Smoke run ของ candidate หรือ descendant ล่าสุด จึงห้ามตีความว่า deployment ผ่านหรือ fail
 
 ## Live asset checks
 ต้องตรวจจาก Public URL จริงหรือผล `live-smoke.yml` ที่ trace ได้:
@@ -53,6 +66,8 @@ Automated workflow ไม่แทนรายการนี้:
 - [ ] upgrade จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v12` สำเร็จโดยไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
 
 ## Evidence record
+- Runtime candidate SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
+- Current non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
