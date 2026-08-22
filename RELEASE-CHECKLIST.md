@@ -5,8 +5,9 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current candidate: PR #26 (`security/partner-render-textcontent`); บันทึก final merge SHA หลัง CI ผ่านและ merge
+- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
+- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
 - v13 runtime change: partner/fallback card rendering เปลี่ยนจาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump PWA cache generation
 - Pages / Live Smoke / real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
@@ -83,7 +84,7 @@
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
 - [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
-- [ ] PR #26 เปลี่ยน partner-card renderer เป็น DOM nodes/`textContent`; ติ๊กผ่านหลัง CI/merge และ live/runtime evidence ของ v13 ยืนยันแล้ว
+- [x] Partner-card renderer เปลี่ยนเป็น DOM nodes/`textContent` ใน v13 runtime `83f8f363...`; pre-merge static/integrity/consistency CI ผ่านครบ แต่ยังต้องมี live/runtime และ real-device evidence ก่อนถือว่า release gate ผ่าน
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
