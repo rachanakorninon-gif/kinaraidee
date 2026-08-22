@@ -22,7 +22,9 @@ jobs:
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
           expected_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          expected_runtime="$(sed -nE 's/^- Current browser\/PWA runtime candidate: `([0-9a-f]{40})`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           test -n "$expected_marker" || { echo 'Unable to derive expected Service Worker marker'; exit 1; }
+          test -n "$expected_runtime" || { echo 'Unable to derive current runtime candidate from CURRENT-RELEASE.md'; exit 1; }
 
           paths=(
             '/'
@@ -31,6 +33,7 @@ jobs:
             '/privacy.html'
             '/feedback.html'
             '/partner.html'
+            '/deployment-check.html'
             '/manifest.webmanifest'
             '/sw.js'
             '/release-meta.json'
@@ -47,6 +50,8 @@ jobs:
 
           live_html="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/")"
           live_manifest="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/manifest.webmanifest")"
+          live_probe="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/deployment-check.html")"
+          live_surprise="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/data/home-surprise.js")"
           live_sw="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/sw.js")"
           release_meta="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/release-meta.json")"
           live_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$live_sw")"
@@ -60,6 +65,14 @@ jobs:
           grep -Fq 'data/nearby-restaurants.js' <<<"$live_html" || { echo 'Live homepage is missing nearby restaurant wiring'; exit 1; }
           node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!m.name||!m.start_url||!m.display)process.exit(2);" <<<"$live_manifest" || { echo 'Live manifest is invalid or missing required PWA fields'; exit 1; }
 
+          grep -Fq 'surprise-a11y-v1' <<<"$live_probe" || { echo 'Live deployment probe is missing the Surprise accessibility release marker'; exit 1; }
+          grep -Fq 'homeSurpriseStatus' <<<"$live_surprise" || { echo 'Live Surprise asset is missing the screen-reader status region'; exit 1; }
+          grep -Fq "status.setAttribute('role','status')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing role=status'; exit 1; }
+          grep -Fq "status.setAttribute('aria-live','assertive')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing assertive live-region wiring'; exit 1; }
+          grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing aria-busy state wiring'; exit 1; }
+          grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing aria-disabled state wiring'; exit 1; }
+          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$live_surprise" || { echo 'Live Surprise asset is missing the busy announcement text'; exit 1; }
+
           test "$live_marker" = "$expected_marker" || { echo "Live marker $live_marker does not match repository marker $expected_marker"; exit 1; }
           test "$meta_marker" = "$live_marker" || { echo "release-meta marker $meta_marker does not match live Service Worker marker $live_marker"; exit 1; }
           test -n "$deployed_sha" || { echo 'release-meta.json does not contain a valid deployed SHA'; exit 1; }
@@ -71,24 +84,32 @@ jobs:
 
           echo "DEPLOYED_SHA=$deployed_sha" >> "$GITHUB_ENV"
           echo "LIVE_MARKER=$live_marker" >> "$GITHUB_ENV"
+          echo "EXPECTED_RUNTIME_SHA=$expected_runtime" >> "$GITHUB_ENV"
 
-      - name: Verify deployed SHA belongs to current main history
+      - name: Verify deployed SHA belongs to current main history and contains runtime candidate
         shell: bash
         run: |
           set -euo pipefail
           test -n "${DEPLOYED_SHA:-}" || { echo 'Missing deployed SHA from release metadata check'; exit 1; }
+          test -n "${EXPECTED_RUNTIME_SHA:-}" || { echo 'Missing expected runtime candidate SHA'; exit 1; }
           git fetch --no-tags --depth=200 origin main
-          if ! git cat-file -e "$DEPLOYED_SHA^{commit}" 2>/dev/null; then
-            git fetch --no-tags --depth=1 origin "$DEPLOYED_SHA" || {
-              echo "Unable to fetch deployed SHA $DEPLOYED_SHA from repository"
-              exit 1
-            }
-          fi
+          for sha in "$DEPLOYED_SHA" "$EXPECTED_RUNTIME_SHA"; do
+            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$sha" || {
+                echo "Unable to fetch SHA $sha from repository"
+                exit 1
+              }
+            fi
+          done
           git merge-base --is-ancestor "$DEPLOYED_SHA" "origin/main" || {
             echo "Deployed SHA $DEPLOYED_SHA is not an ancestor of current main"
             exit 1
           }
-          echo "Deployed SHA $DEPLOYED_SHA is traceable to current main history"
+          git merge-base --is-ancestor "$EXPECTED_RUNTIME_SHA" "$DEPLOYED_SHA" || {
+            echo "Deployed SHA $DEPLOYED_SHA does not contain current runtime candidate $EXPECTED_RUNTIME_SHA"
+            exit 1
+          }
+          echo "Deployed SHA $DEPLOYED_SHA is traceable to current main and contains runtime candidate $EXPECTED_RUNTIME_SHA"
 
       - name: Verify development-only paths remain private
         shell: bash
@@ -120,9 +141,10 @@ jobs:
             echo '## Public Beta synthetic monitor'
             echo
             echo "- Repository commit: \`${GITHUB_SHA}\`"
+            echo "- Expected runtime candidate: \`${EXPECTED_RUNTIME_SHA:-unavailable}\`"
             echo "- Deployed SHA from release-meta: \`${DEPLOYED_SHA:-unavailable}\`"
             echo "- Live Service Worker marker: \`${LIVE_MARKER:-unavailable}\`"
             echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, release-meta/SW consistency, deployed-SHA ancestry, atomic Service Worker install, development-only path exposure'
-            echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, accessibility, payment, partner, privacy/legal, or production security evidence.'
+            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, Surprise accessibility source markers, release-meta/SW consistency, deployed-SHA ancestry + runtime-candidate lineage, atomic Service Worker install, development-only path exposure'
+            echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, TalkBack/VoiceOver behavior, payment, partner, privacy/legal, or production security evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
