@@ -6,8 +6,10 @@
 
 ## Current source/runtime state
 
-- Current `main`: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
+- Current `main`: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44).
+- Current runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
 - Latest runtime change: restore completed live-group result bridge after the Android 2/2-vote real-device failure.
+- Commits after PR #42 through PR #44 add release/docs/deployment observability and do not change the public runtime payload; PR #44 adds `release-meta.json` SHA tracing and deployed group-bridge checks.
 - PWA cache marker remains: `kinaraidee-beta-v13`.
 - PR #42 restores `useRemoteVotes(votes, setup)`, exports `window.KINARAIDEE_GROUP_MODE.showRemoteResult`, and restores deterministic group module loading so `group-remote.js` can hand completed remote votes back to the group result renderer.
 - PR #42 also adds the dedicated `Group Result Regression` workflow.
@@ -34,9 +36,9 @@ These are CI/static evidence only. They do not replace GitHub Pages deployment e
 
 Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
-The merged group-result runtime is `6fadf04f...`, but this file still does not contain a verified GitHub Pages deployment workflow run and corresponding Live Smoke run that trace the deployed public release back to this commit or a runtime-equivalent descendant.
+PR #44 adds deployment observability so Pages publishes `release-meta.json` with the deployed commit SHA and PWA cache marker, while Live Smoke verifies that SHA against the successful Pages workflow-run head when triggered from deployment. It also verifies the completed live-group result bridge on deployed assets.
 
-Do not infer complete deployment-gate success merely from merged commits, CI, or successful real-device behavior.
+This implementation improves traceability but does not itself prove that a Pages run and matching Live Smoke run have succeeded for `6fadf04f...` or runtime-equivalent descendant `907ea6b1...`. Do not infer complete deployment-gate success from merged workflow code alone.
 
 ## Real-device regression status
 
@@ -75,11 +77,11 @@ These observations are evidence for that device/session only; they do not satisf
 
 ## Public Beta gate impact
 
-Progress has improved materially because the signed-in Android history regressions (#38 and #40) have same-device fix verification, and the newly discovered live-group final-result defect now has a merged source fix plus dedicated regression CI. Public Beta is still **NOT COMPLETE** because the remaining gate includes at minimum:
+Progress has improved materially because the signed-in Android history regressions (#38 and #40) have same-device fix verification, the live-group final-result defect has a merged source fix plus dedicated regression CI, and PR #44 now provides deployed-SHA trace plumbing. Public Beta is still **NOT COMPLETE** because the remaining gate includes at minimum:
 
 - real-device retest of the live-group final-result path after PR #42 is confirmed deployed,
 - GitHub Pages deployment workflow evidence for the current runtime or runtime-equivalent descendant,
-- corresponding Live Smoke evidence traced to that deployment,
+- corresponding Live Smoke evidence traced to that deployment and `release-meta.json`,
 - required device matrix completion: Android Chrome on at least 3 device models and iPhone Safari on at least 2 device models,
 - remaining TC-01–TC-15 / NF-01–NF-10 cases that are not yet backed by real-device evidence,
 - any remaining release checklist items that explicitly require real workflow/device evidence.
@@ -101,4 +103,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. For current work, use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `907ea6b1...` is the current non-runtime descendant that adds deployment traceability. Use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
