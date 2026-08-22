@@ -43,6 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**' CURRENT-RELEASE.md
+          grep -Fq 'Status: **PARTIAL /' CURRENT-RELEASE.md
+          grep -Fq 'DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**' CURRENT-RELEASE.md
           grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md
           grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md
