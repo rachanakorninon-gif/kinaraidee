@@ -5,17 +5,19 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current runtime release: `d2b8dc08d908fb6034a1958d2260c8886ad96804` (PR #41 merged)
+- Current runtime release: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (PR #42 merged)
+- Current non-runtime descendant on `main`: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (PR #44 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Runtime change ล่าสุด: `data/member-sync.js` เพิ่ม member-history write/read race hardening โดยป้องกัน stale cloud snapshot ทับ optimistic history และ reconcile หลัง write สำเร็จ
-- PR #37 baseline ก่อนหน้าแก้ cloud-history timestamp shape (`created_at` → numeric `at` + fallback) เพื่อป้องกัน `Invalid Date`
-- Regression guard: `.github/workflows/history-sync-regression.yml` ตรวจ syntax, cloud-to-local schema/timestamp contract และ write/read race guard
+- Runtime change ล่าสุด: restore completed live-group result bridge หลัง Android 2/2-vote final-result failure โดยคืน remote-result bridge และ deterministic group module loading
+- PR #41 baseline ก่อนหน้าเพิ่ม member-history write/read race hardening; PR #37 แก้ cloud-history timestamp shape (`created_at` → numeric `at` + fallback) เพื่อป้องกัน `Invalid Date`
+- Regression guards: `.github/workflows/group-result-regression.yml` สำหรับ live-group bridge และ `.github/workflows/history-sync-regression.yml` สำหรับ member-history sync
+- PR #44 เพิ่ม Pages `release-meta.json` และ Live Smoke deployed-SHA/group-bridge trace; เป็น deployment observability ไม่ใช่ runtime PASS evidence
+- Historical member-history race-hardening runtime: `d2b8dc08d908fb6034a1958d2260c8886ad96804` (PR #41 merged)
 - Historical member-history timestamp runtime: `21c56f2e84760fada6cebfa464be767facb56b34` (PR #37 merged)
 - Historical partner/privacy runtime: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
-- Partner privacy acknowledgement implementation จาก PR #28 ยังคงอยู่ใน runtime lineage; Service Worker cache generation ยังเป็น v13
-- CI/static evidence ของ PR #41 มีบันทึกใน `CURRENT-RELEASE.md`; Android same-device regression evidence สำหรับ Issues #38/#40 มีแล้ว
+- CI/static evidence ของ PR #42 มีบันทึกใน `CURRENT-RELEASE.md`; Android same-device regression evidence สำหรับ Issues #38/#40 มีแล้ว แต่ group final-result หลัง PR #42 ยังต้อง retest จริง
 - Pages / Live Smoke trace และ full real-device matrix สำหรับ candidate นี้ยังต้องยืนยันด้วยผลจริงก่อนติ๊ก release gate ผ่าน
 
 ## Beta Exit Evidence
@@ -25,6 +27,7 @@
 - [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่นผ่าน core flow ตามกรณีที่รองรับ
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
+- [ ] Live-group completed 2/2 vote → final-result path ถูก retest หลัง PR #42 และแสดงผลกลุ่มจริงโดยไม่เด้งกลับหน้าแรก
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยน
 - [ ] TC-12 Partner application ถูก retest บน runtime lineage หลังเพิ่ม privacy acknowledgement evidence fields
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
@@ -34,9 +37,11 @@
 
 ## Deployment & Release Evidence
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
-- [ ] GitHub Pages deployment ของ `d2b8dc08...` หรือ runtime-equivalent descendant สำเร็จและ trace กลับไปยัง commit ได้
-- [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml`, `history-sync-regression.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
+- [ ] GitHub Pages deployment ของ `6fadf04f...` หรือ runtime-equivalent descendant สำเร็จและ trace กลับไปยัง commit ได้
+- [ ] Public `release-meta.json` มี deployed SHA ตรงกับ Pages run ที่ใช้เป็นหลักฐาน และ `pwa_cache` เป็น `kinaraidee-beta-v13`
+- [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml`, `group-result-regression.yml`, `history-sync-regression.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
 - [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v13`)
+- [ ] Live Smoke ตรวจ completed group-result bridge บน deployed `data/group-mode.js` / `data/group-remote.js` และ trace กลับไปยัง deployment เดียวกัน
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
 - [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
 - [ ] live asset/marker checks ผ่านตาม `LIVE-DEPLOYMENT-VERIFICATION.md`
@@ -45,6 +50,7 @@
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง
+- [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow หลัง PR #42 โดย final result แสดงจริง
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test ตาม matrix
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
