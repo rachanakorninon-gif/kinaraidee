@@ -2,7 +2,7 @@
 (function(){
   const SUPABASE_URL='https://cuspfvfzprlgtvtdyilh.supabase.co';
   const SUPABASE_KEY='sb_publishable_PGmPJ6_8tNIWm7zfF6qEng_0emmWchx';
-  let client=null,user=null,wrapped=false,loading=false;
+  let client=null,user=null,wrapped=false,loading=false,pendingWrites=0,writeGeneration=0;
 
   function loadSupabase(){
     return new Promise((resolve,reject)=>{
@@ -33,6 +33,10 @@
     b.textContent=user?'👤 บัญชีของฉัน ✓':'👤 สมาชิก / เข้าสู่ระบบ';
   }
 
+  function historyIsActive(){
+    return !!document.getElementById('history')?.classList.contains('active');
+  }
+
   function snapshotFood(){
     try{
       if(!current)return null;
@@ -49,10 +53,25 @@
   }
 
   async function saveAction(action,food){
-    if(!client||!user||!food?.food_name)return;
-    const row={user_id:user.id,...food,action};
-    const {error}=await client.from('member_food_history').insert(row);
-    if(error)console.warn('Kinaraidee member history:',error.message);
+    if(!client||!user||!food?.food_name)return false;
+    pendingWrites++;
+    writeGeneration++;
+    let saved=false;
+    try{
+      const row={user_id:user.id,...food,action};
+      const {error}=await client.from('member_food_history').insert(row);
+      if(error)throw error;
+      saved=true;
+      return true;
+    }catch(e){
+      console.warn('Kinaraidee member history:',e?.message||e);
+      return false;
+    }finally{
+      pendingWrites=Math.max(0,pendingWrites-1);
+      if(saved&&pendingWrites===0){
+        setTimeout(()=>loadCloudHistory({render:historyIsActive()}),0);
+      }
+    }
   }
 
   function rowToLocal(r){
@@ -76,7 +95,8 @@
   }
 
   async function loadCloudHistory(opts={}){
-    if(!client||!user||loading)return false;
+    if(!client||!user||loading||pendingWrites>0)return false;
+    const generationAtStart=writeGeneration;
     loading=true;
     try{
       const {data,error}=await client.from('member_food_history')
@@ -84,6 +104,9 @@
         .order('created_at',{ascending:false})
         .limit(60);
       if(error)throw error;
+      // A member action may have started while this request was in flight.
+      // Never let an older server snapshot overwrite a newer optimistic local write.
+      if(pendingWrites>0||writeGeneration!==generationAtStart)return false;
       const rows=(data||[]).map(rowToLocal);
       try{
         history=rows;
@@ -162,7 +185,7 @@
       client.auth.onAuthStateChange((_event,session)=>{
         user=session?.user||null;
         updateMemberEntry();
-        if(user)setTimeout(()=>loadCloudHistory({render:document.getElementById('history')?.classList.contains('active')}),0);
+        if(user)setTimeout(()=>loadCloudHistory({render:historyIsActive()}),0);
       });
       wrapActions();
       let tries=0;const timer=setInterval(()=>{
