@@ -1,0 +1,48 @@
+name: Kinaraidee Release Metadata Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-meta-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Pages derives release metadata from canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          pages='.github/workflows/pages.yml'
+          grep -Fq "marker=\"\$(sed -n \"s/^const CACHE='\\(kinaraidee-beta-v[0-9][0-9]*\\)';$/\\1/p\" sw.js)\"" "$pages"
+          grep -Fq "printf '{\"sha\":\"%s\",\"pwa_cache\":\"%s\"}\\n' \"\$GITHUB_SHA\" \"\$marker\" > _site/release-meta.json" "$pages"
+          grep -Fq 'test -s _site/release-meta.json' "$pages"
+          grep -Fq 'grep -Fq "$GITHUB_SHA" _site/release-meta.json' "$pages"
+          grep -Fq 'grep -Fq "$marker" _site/release-meta.json' "$pages"
+
+      - name: Verify Live Smoke parses and cross-checks deployed metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          smoke='.github/workflows/live-smoke.yml'
+          grep -Fq "release_meta=\"\$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 \"\$base/release-meta.json\")\"" "$smoke"
+          grep -Fq "JSON.parse(fs.readFileSync(0,'utf8'))" "$smoke"
+          grep -Fq "^[0-9a-f]{40}$" "$smoke"
+          grep -Fq 'test "$live_cache" = "$meta_cache"' "$smoke"
+          grep -Fq 'test "$deployed_sha" = "$DEPLOY_HEAD_SHA"' "$smoke"
+          grep -Fq 'Completed live-group result bridge: checked on deployed assets' "$smoke"
+
+      - name: Verify current release evidence remains cautious
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**' CURRENT-RELEASE.md
+          grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md
