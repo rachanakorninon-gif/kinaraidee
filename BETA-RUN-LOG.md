@@ -3,11 +3,12 @@
 ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
 ## Release trace ที่ต้องบันทึกทุก run
-- Current release candidate: PR #25 (`security/partner-card-textcontent-v13`); บันทึก final merge SHA หลัง merge ก่อนเริ่ม real-device run
+- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
+- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
 - Runtime change จาก v12: partner/fallback cards เปลี่ยน data-driven rendering เป็น DOM nodes/`textContent` เพื่อ defense-in-depth ต่อ stored DOM XSS และ bump PWA cache generation
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`; ห้ามนำผล v12 มาแทน v13 สำหรับ nearby partner rendering, PWA update หรือ flow ที่ได้รับผลกระทบโดยไม่ retest
-- หาก SHA ที่ deploy เป็น non-runtime descendant ให้บันทึก SHA จริงและยืนยัน runtime payload เทียบกับ final v13 runtime SHA
+- หาก SHA ที่ deploy เป็น non-runtime descendant ให้บันทึก SHA จริงและยืนยัน runtime payload เทียบกับ `83f8f363...`
 
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
@@ -22,7 +23,7 @@
 ## Run Template
 
 ### Release / deployment evidence
-- App release SHA:
+- App release SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
 - Deployed SHA:
 - GitHub Pages run URL / ID:
 - Live Smoke run URL / ID:
