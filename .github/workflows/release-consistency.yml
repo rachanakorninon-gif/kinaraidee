@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate canonical PWA release marker
         shell: bash
@@ -72,6 +74,33 @@ jobs:
           }
 
           echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records a reviewed release baseline without overclaiming deployment readiness'
+
+      - name: Validate declared browser runtime candidate lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          reviewed="$(sed -n 's/^- Latest reviewed `main`: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+
+          test -n "$reviewed" || { echo 'Unable to parse latest reviewed main SHA from CURRENT-RELEASE.md'; exit 1; }
+          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RELEASE.md'; exit 1; }
+
+          git cat-file -e "$reviewed^{commit}" || { echo "Reviewed SHA is not present in repository history: $reviewed"; exit 1; }
+          git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$reviewed" HEAD || { echo "Reviewed SHA is not an ancestor of HEAD: $reviewed"; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
+
+          changed="$(git diff --name-only "$candidate"..HEAD -- \
+            index.html 404.html privacy.html feedback.html partner.html \
+            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          if [ -n "$changed" ]; then
+            echo 'Browser/PWA runtime files changed after the declared candidate; CURRENT-RELEASE.md must advance the runtime candidate before release:'
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+
+          echo "Declared runtime candidate $candidate is an ancestor of HEAD and no browser/PWA runtime files changed after it"
 
       - name: Validate atomic app-shell strategy
         shell: bash
