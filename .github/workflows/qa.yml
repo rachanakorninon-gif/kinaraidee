@@ -203,8 +203,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
-          unsafe="$(printf '%s\n' "$matches" | grep -vE "Deno\.env\.get\(['\"]SUPABASE_SERVICE_ROLE_KEY['\"]\)" || true)"
+          # Split sentinel text so repository-wide scanning includes workflows without matching this detector source.
+          pattern='(service_''role|sb_''secret_|SUPABASE_''SERVICE_ROLE|PRIVATE_''KEY-----)'
+          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' "$pattern" . || true)"
+          safe_env='Deno\.env\.get\(['"'"'\"]SUPABASE_''SERVICE_ROLE_KEY['"'"'\"]\)'
+          unsafe="$(printf '%s\n' "$matches" | grep -vE "$safe_env" || true)"
           if [ -n "$unsafe" ]; then
             printf '%s\n' "$unsafe"
             echo 'Potential secret found in public repository or workflow configuration'
