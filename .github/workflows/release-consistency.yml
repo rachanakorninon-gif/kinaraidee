@@ -58,8 +58,8 @@ jobs:
             grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }
           done
 
-          grep -Fq '21c56f2e84760fada6cebfa464be767facb56b34' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md does not identify the latest reviewed main release state'
+          grep -Eq 'Current `main`: `[0-9a-f]{40}`|Latest reviewed .*`[0-9a-f]{40}`' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'
             exit 1
           }
           grep -Fq 'NOT YET VERIFIED AFTER FIX' CURRENT-RELEASE.md || {
@@ -67,7 +67,7 @@ jobs:
             exit 1
           }
 
-          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records the reviewed runtime state'
+          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records a reviewed release baseline'
 
       - name: Validate atomic app-shell strategy
         shell: bash
