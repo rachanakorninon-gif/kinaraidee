@@ -5,15 +5,18 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current runtime release: `21c56f2e84760fada6cebfa464be767facb56b34` (PR #37 merged)
+- Current runtime release: `d2b8dc08d908fb6034a1958d2260c8886ad96804` (PR #41 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Runtime change ล่าสุด: `data/member-sync.js` แก้ cloud-history timestamp shape ให้มี local `at` field และ fallback timestamp เพื่อป้องกัน `Invalid Date`
-- Regression guard: `.github/workflows/history-sync-regression.yml` ตรวจ JavaScript syntax, cloud-to-local history schema และ renderer timestamp contract
+- Runtime change ล่าสุด: `data/member-sync.js` เพิ่ม member-history write/read race hardening โดยป้องกัน stale cloud snapshot ทับ optimistic history และ reconcile หลัง write สำเร็จ
+- PR #37 baseline ก่อนหน้าแก้ cloud-history timestamp shape (`created_at` → numeric `at` + fallback) เพื่อป้องกัน `Invalid Date`
+- Regression guard: `.github/workflows/history-sync-regression.yml` ตรวจ syntax, cloud-to-local schema/timestamp contract และ write/read race guard
+- Historical member-history timestamp runtime: `21c56f2e84760fada6cebfa464be767facb56b34` (PR #37 merged)
 - Historical partner/privacy runtime: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
 - Partner privacy acknowledgement implementation จาก PR #28 ยังคงอยู่ใน runtime lineage; Service Worker cache generation ยังเป็น v13
-- Pages / Live Smoke / member-history real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
+- CI/static evidence ของ PR #41 มีบันทึกใน `CURRENT-RELEASE.md`; Android same-device regression evidence สำหรับ Issues #38/#40 มีแล้ว
+- Pages / Live Smoke trace และ full real-device matrix สำหรับ candidate นี้ยังต้องยืนยันด้วยผลจริงก่อนติ๊ก release gate ผ่าน
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -24,13 +27,14 @@
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยน
 - [ ] TC-12 Partner application ถูก retest บน runtime lineage หลังเพิ่ม privacy acknowledgement evidence fields
-- [ ] Member cloud history ถูก retest บน `21c56f2e...` โดยยืนยันว่าไม่แสดง `Invalid Date` และ liked/picked state map ถูกต้อง
+- [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
+- [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด ไม่อาศัย Android session เดียว
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
-- [ ] GitHub Pages deployment ของ release candidate สำเร็จและ trace กลับไปยัง commit ได้
+- [ ] GitHub Pages deployment ของ `d2b8dc08...` หรือ runtime-equivalent descendant สำเร็จและ trace กลับไปยัง commit ได้
 - [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml`, `history-sync-regression.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
 - [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v13`)
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
@@ -39,15 +43,16 @@
 - [ ] automated smoke/static regression test ไม่ถูกใช้แทน real-device interaction test ที่จำเป็น
 
 ## Product
-- [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test
+- [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
-- [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test
+- [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test ตาม matrix
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องหลังเปลี่ยนเป็น DOM nodes/`textContent` บน Android/iPhone ที่ใช้ทดสอบ
-- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุด
-- [ ] Member history sync แสดง timestamp/date ถูกต้องหลัง sign-in/sync และไม่เกิด `Invalid Date`
-- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v13 ผ่านการทดสอบ
+- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุดที่ trace deployment ได้
+- [x] Android same-device member-history defects #38/#40 ผ่าน retest หลัง fixes ตาม evidence ที่บันทึก
+- [ ] Member history sync/write-race behavior ผ่านบน device matrix ที่จำเป็นและไม่มี regression หลัง release candidate ล่าสุด
+- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v13 ผ่านการทดสอบตาม platform ที่กำหนด
 - [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ
 - [ ] Feedback flow ใช้งานจริงได้
 - [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
