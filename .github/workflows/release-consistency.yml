@@ -62,12 +62,16 @@ jobs:
             echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'
             exit 1
           }
-          grep -Fq 'NOT YET VERIFIED AFTER FIX' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve explicit post-fix real-device verification status until evidence updates it'
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve an explicit incomplete Public Beta gate while required evidence remains open'
+            exit 1
+          }
+          grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve the deployment-evidence caution'
             exit 1
           }
 
-          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records a reviewed release baseline'
+          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records a reviewed release baseline without overclaiming deployment readiness'
 
       - name: Validate atomic app-shell strategy
         shell: bash
