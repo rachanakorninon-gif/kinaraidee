@@ -22,10 +22,10 @@ jobs:
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
+          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
           for path in "${paths[@]}"; do url="$base$path"; echo "Checking $url"; curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null; done
 
-      - name: Check latest live app markers and PWA v13
+      - name: Check latest live app markers, group bridge, and PWA v13
         shell: bash
         run: |
           set -euo pipefail
@@ -33,6 +33,9 @@ jobs:
           html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
           sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
           nearby="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/nearby-restaurants.js")"
+          group_mode="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/group-mode.js")"
+          group_remote="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/group-remote.js")"
+          release_meta="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/release-meta.json")"
           surprise="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/home-surprise.js")"
           pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
           partner="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/partner.html")"
@@ -48,6 +51,15 @@ jobs:
           grep -q 'home-surprise.js' <<<"$sw"
           grep -q 'pwa-install.js' <<<"$sw"
           if grep -q 'Promise.allSettled' <<<"$sw"; then echo 'Live Service Worker unexpectedly uses non-atomic shell install'; exit 1; fi
+          grep -Fq 'function useRemoteVotes(votes,setup)' <<<"$group_mode"
+          grep -Fq 'window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}' <<<"$group_mode"
+          grep -Fq "await load('data/group-sync.js')" <<<"$group_mode"
+          grep -Fq "await load('data/group-remote.js')" <<<"$group_mode"
+          grep -Fq 'window.KINARAIDEE_GROUP_MODE?.showRemoteResult' <<<"$group_remote"
+          grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$group_remote"
+          grep -Fq 'renderGroupResult();return true' <<<"$group_mode"
+          grep -Eq '"sha":"[0-9a-f]{40}"' <<<"$release_meta"
+          grep -Fq '"pwa_cache":"kinaraidee-beta-v13"' <<<"$release_meta"
           grep -q 'box.replaceChildren()' <<<"$nearby"
           grep -q "name.textContent=String(r.name" <<<"$nearby"
           grep -q 'aria-busy' <<<"$surprise"
@@ -64,7 +76,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 flow with partner privacy evidence wiring'
+          echo 'Live smoke test passed for PWA v13 with completed group-result bridge and release metadata'
 
       - name: Verify development files are not published
         shell: bash
@@ -85,15 +97,30 @@ jobs:
           SERVER_URL: ${{ github.server_url }}
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then verified_sha="$DEPLOY_HEAD_SHA"; source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"; trigger='successful Pages workflow_run'; else verified_sha="$CURRENT_SHA"; source_run='manual workflow_dispatch'; trigger='manual workflow_dispatch'; fi
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          release_meta="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/release-meta.json")"
+          deployed_sha="$(sed -n 's/.*"sha":"\([0-9a-f]\{40\}\)".*/\1/p' <<<"$release_meta")"
+          test -n "$deployed_sha" || { echo 'Unable to derive deployed SHA from release-meta.json'; exit 1; }
+          if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then
+            verified_sha="$DEPLOY_HEAD_SHA"
+            source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"
+            trigger='successful Pages workflow_run'
+            test "$deployed_sha" = "$DEPLOY_HEAD_SHA" || { echo "Live release-meta SHA $deployed_sha does not match Pages head SHA $DEPLOY_HEAD_SHA"; exit 1; }
+          else
+            verified_sha="$deployed_sha"
+            source_run='manual workflow_dispatch'
+            trigger='manual workflow_dispatch against currently deployed artifact'
+          fi
           {
             echo '## Kinaraidee automated live evidence'
             echo
             echo "- Release commit checked: \`$verified_sha\`"
+            echo "- Public release-meta SHA: \`$deployed_sha\`"
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
             echo '- Expected Service Worker: `kinaraidee-beta-v13`'
+            echo '- Completed live-group result bridge: checked on deployed assets'
             echo '- Partner renderer safety markers: checked'
             echo '- Partner privacy acknowledgement wiring: checked'
             echo '- App shell strategy checked: `cache.addAll(SHELL)`'

@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -59,6 +59,17 @@ jobs:
             echo 'Cloud history exposes display date but not the local timestamp field required by the renderer.'
             exit 1
           fi
+      - name: Verify completed live-group result bridge before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "function useRemoteVotes(votes,setup)" data/group-mode.js
+          grep -Fq "window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}" data/group-mode.js
+          grep -Fq "await load('data/group-sync.js')" data/group-mode.js
+          grep -Fq "await load('data/group-remote.js')" data/group-mode.js
+          grep -Fq "window.KINARAIDEE_GROUP_MODE?.showRemoteResult" data/group-remote.js
+          grep -Fq "remoteShowResult.onclick=showOnlineResult" data/group-remote.js
+          grep -Fq "renderGroupResult();return true" data/group-mode.js
       - name: Verify latest release wiring and PWA v13
         shell: bash
         run: |
@@ -119,7 +130,10 @@ jobs:
           cp index.html 404.html privacy.html feedback.html partner.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
+          printf '{"sha":"%s","pwa_cache":"kinaraidee-beta-v13"}\n' "$GITHUB_SHA" > _site/release-meta.json
           find _site -maxdepth 2 -type f | sort
+          test -s _site/release-meta.json
+          grep -Fq "$GITHUB_SHA" _site/release-meta.json
           test ! -e _site/.git
           test ! -e _site/.github
           test ! -e _site/supabase
