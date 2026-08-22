@@ -25,7 +25,7 @@ jobs:
           paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/deployment-check.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
           for path in "${paths[@]}"; do url="$base$path"; echo "Checking $url"; curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null; done
 
-      - name: Check latest live app markers, group bridge, deployment probe, and PWA v13
+      - name: Check latest live app markers, accessibility contract, group bridge, deployment probe, and PWA v13
         shell: bash
         run: |
           set -euo pipefail
@@ -48,8 +48,12 @@ jobs:
           grep -q 'home-surprise.js' <<<"$html"
           grep -q 'pwa-install.js' <<<"$html"
           grep -Fq '2026-08-23-group-result-bridge' <<<"$probe"
+          grep -Fq 'surprise-a11y-v1' <<<"$probe"
           grep -Fq 'showRemoteResult:useRemoteVotes' <<<"$probe"
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$probe"
+          grep -Fq 'homeSurpriseStatus' <<<"$probe"
+          grep -Fq "aria-live','assertive" <<<"$probe"
+          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$probe"
           grep -q 'kinaraidee-beta-v13' <<<"$sw"
           grep -q 'cache.addAll(SHELL)' <<<"$sw"
           grep -q 'home-surprise.js' <<<"$sw"
@@ -70,8 +74,12 @@ jobs:
           test "$live_cache" = "$meta_cache" || { echo "Live sw.js cache marker $live_cache does not match release-meta $meta_cache"; exit 1; }
           grep -q 'box.replaceChildren()' <<<"$nearby"
           grep -q "name.textContent=String(r.name" <<<"$nearby"
-          grep -q 'aria-busy' <<<"$surprise"
-          grep -q 'กำลังเลือกให้' <<<"$surprise"
+          grep -Fq 'homeSurpriseStatus' <<<"$surprise"
+          grep -Fq "status.setAttribute('role','status')" <<<"$surprise"
+          grep -Fq "status.setAttribute('aria-live','assertive')" <<<"$surprise"
+          grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" <<<"$surprise"
+          grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$surprise"
+          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$surprise"
           grep -q 'pageshow' <<<"$surprise"
           grep -q 'online' <<<"$surprise"
           grep -q 'เข้าใจแล้ว' <<<"$pwa"
@@ -84,7 +92,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 with completed group-result bridge, deployment probe, and release metadata'
+          echo 'Live smoke test passed for PWA v13 with Surprise accessibility source contract, completed group-result bridge, deployment probe, and release metadata'
 
       - name: Verify development files are not published
         shell: bash
@@ -133,11 +141,12 @@ jobs:
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
             echo '- Human-readable deployment probe: `/deployment-check.html` checked'
             echo "- Service Worker cache marker: \`$live_cache\` (matches release-meta.json)"
+            echo '- Surprise accessibility source contract: checked on deployed probe and `data/home-surprise.js`'
             echo '- Completed live-group result bridge: checked on deployed assets'
             echo '- Partner renderer safety markers: checked'
             echo '- Partner privacy acknowledgement wiring: checked'
             echo '- App shell strategy checked: `cache.addAll(SHELL)`'
             echo '- Development-only exposure check: completed'
             echo
-            echo '> This summary is automated live-asset evidence only. It does not replace real-device TC/NF interaction testing or Commercial GO approval.'
+            echo '> This summary is automated live-asset evidence only. It does not replace real-device TC/NF interaction testing, TalkBack/VoiceOver retest, or Commercial GO approval.'
           } >> "$GITHUB_STEP_SUMMARY"
