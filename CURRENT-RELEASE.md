@@ -46,7 +46,7 @@ Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
 PR #44 adds deployment observability so Pages publishes `release-meta.json` with the deployed commit SHA and PWA cache marker, while Live Smoke verifies that SHA against the successful Pages workflow-run head when triggered from deployment. It also verifies the completed live-group result bridge on deployed assets.
 
-The source head has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `7e1eeef4...` shows no public runtime asset changes, so `7e1eeef4...` is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer deployment-gate success from source lineage alone.
+The source head has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `7e1eeef4...` shows no public runtime asset changes, so `7e1eeef4...` is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer complete deployment-gate success from source lineage alone.
 
 ## Real-device regression status
 
