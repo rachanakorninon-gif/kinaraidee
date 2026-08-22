@@ -6,12 +6,13 @@
 
 ## Current source/runtime state
 
-- Latest reviewed source SHA: `c9b837ab44555c07876d0c81e3d25946bc20cb8f` (merge of PR #47).
+- Latest reviewed source SHA: `b78f636d2494808cc5317d0e25a25bc0478a407f`.
 - Current runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
-- Reviewed non-runtime descendant: `c9b837ab44555c07876d0c81e3d25946bc20cb8f`; repository compare from PR #42 to this baseline is 21 commits ahead and changes only release/deployment/monitoring workflows plus release-tracking documents, not public runtime assets.
-- Later commits that modify only this release-tracking document must not be treated as a runtime change; verify runtime equivalence with repository compare when needed instead of trying to make this file self-reference its own newest commit.
+- Reviewed non-runtime descendant: `b78f636d2494808cc5317d0e25a25bc0478a407f`; repository compare from PR #42 to this baseline is 23 commits ahead and changes only release/deployment/monitoring workflows plus release-tracking and hardening documents, not public runtime assets.
+- Later commits that modify only release-tracking or planning documents must not be treated as a runtime change; verify runtime equivalence with repository compare when needed instead of trying to make this file self-reference its own newest commit.
 - Deployment-trace implementation baseline: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44), which added `release-meta.json` SHA tracing and deployed group-bridge checks.
 - Release-metadata regression baseline: `c9b837ab44555c07876d0c81e3d25946bc20cb8f` (merge of PR #47), which adds a static contract gate for Pages metadata generation and Live Smoke SHA/cache cross-checking without changing public runtime behavior.
+- Group API hardening planning baseline: `b78f636d2494808cc5317d0e25a25bc0478a407f`, which adds `GROUP-API-HARDENING-PLAN.md`; this is inspection/planning evidence only and does not claim retention, abuse-control, monitoring, privacy/legal, load-test, or real-device PASS.
 - Latest runtime change: restore completed live-group result bridge after the Android 2/2-vote real-device failure.
 - PWA cache marker remains: `kinaraidee-beta-v13`.
 - PR #42 restores `useRemoteVotes(votes, setup)`, exports `window.KINARAIDEE_GROUP_MODE.showRemoteResult`, and restores deterministic group module loading so `group-remote.js` can hand completed remote votes back to the group result renderer.
@@ -49,7 +50,7 @@ PR #46 head `3b2f3dc9d7ffb29b91ae4ac045ce43f3cd97fb65` completed successfully fo
 - Group Result Regression run `32568329183`
 - History Sync Regression run `32568329184`
 
-These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, or real-device interaction testing. The combined-status endpoint returned no status entries for merge commit `c9b837ab...`, so PR #47/main workflow success is not claimed here without a separately inspectable run result.
+These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, or real-device interaction testing. No workflow success is inferred for later merge/document-only commits unless an inspectable run result is available.
 
 ## Deployment evidence
 
@@ -59,7 +60,7 @@ PR #44 adds deployment observability so Pages publishes `release-meta.json` with
 
 PR #47 adds a regression contract that checks the Pages metadata-generation wiring and the Live Smoke deployed-SHA/cache cross-check wiring remain present. This is static workflow-contract evidence only; it does not prove a Pages or Live Smoke run succeeded.
 
-The reviewed source baseline has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `c9b837ab...` shows no public runtime asset changes, so that reviewed baseline is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer complete deployment-gate success from source lineage alone.
+The reviewed source baseline has moved beyond PR #44 only through workflow/documentation/planning changes. Compare `6fadf04f...` -> `b78f636d...` shows no public runtime asset changes, so that reviewed baseline is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer complete deployment-gate success from source lineage alone.
 
 ## Real-device regression status
 
@@ -116,6 +117,7 @@ Commercial launch remains **NO-GO** while required evidence or decisions are out
 - Public Beta technical/device acceptance and deployment/live trace,
 - Supabase Auth leaked-password protection follow-up (Issue #11),
 - `main` branch protection / required-check governance (Issue #35),
+- Group API retention/deletion policy, anonymous abuse-control strategy, monitoring baseline and related Privacy/Operations decisions (`GROUP-API-HARDENING-PLAN.md` / Issue #45),
 - Production Privacy/Terms/controller/contact/retention/legal review decisions,
 - Production operations ownership, monitoring, backup/recovery drill evidence,
 - Payment/Premium and partner commercial terms only if/when those business flows are actually enabled.
@@ -124,4 +126,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `c9b837ab...` is the latest reviewed runtime-equivalent non-runtime baseline, `907ea6b1...` is the PR #44 deployment-trace implementation baseline, and PR #47 provides the release-metadata regression contract. Later documentation-only descendants do not change that runtime candidate. Use this file plus repository compare, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `b78f636d...` is the latest reviewed runtime-equivalent non-runtime baseline, `907ea6b1...` is the PR #44 deployment-trace implementation baseline, PR #47 provides the release-metadata regression contract, and `b78f636d...` also records the Group API hardening decision gates. Later documentation-only descendants do not change that runtime candidate. Use this file plus repository compare, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
