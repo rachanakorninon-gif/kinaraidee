@@ -4,13 +4,13 @@
 
 ## Release candidate ปัจจุบัน
 - Runtime commit SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Last reviewed non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
+- Last reviewed non-runtime descendant: `08ff98387d2f8c457d3ad1bc148dcad11ad6d715`
 - Expected Service Worker cache: `kinaraidee-beta-v12`
 - วันที่ reset evidence: 2026-08-22 (Asia/Bangkok)
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
 - Runtime change จาก candidate ก่อนหน้า: Feedback/Partner accessibility semantics + Service Worker cache generation v12
 
-`23a0e4fb...` เป็น non-runtime descendant ที่ตรวจแล้วว่าไม่มี runtime asset ของ Public Beta เปลี่ยนจาก `f08d069a...`
+`08ff9838...` เป็น non-runtime descendant ที่ตรวจ compare จาก `f08d069a...` แล้วพบเฉพาะ workflow และเอกสาร (`.github/workflows/*`, `README.md`, Beta/Release evidence docs และ `ROLLBACK-RUNBOOK.md`) โดยไม่มี public runtime asset เช่น `index.html`, `sw.js`, `data/*.js`, manifest หรือ public HTML เปลี่ยน ดังนั้น runtime payload candidate ยังคงเป็น `f08d069a...`
 
 คำว่า **Last reviewed non-runtime descendant** เป็นจุดอ้างอิงที่ตรวจ diff แล้ว ไม่ได้หมายความว่าเป็น HEAD ปัจจุบันของ `main` เสมอไป เพราะ evidence/workflow/docs-only commits ใหม่อาจตามหลังได้โดยไม่เปลี่ยน runtime payload ก่อนใช้ descendant ใดเป็น release evidence ต้องตรวจ diff จาก runtime candidate และบันทึก **Deployed SHA** จริงด้านล่าง
 
@@ -68,7 +68,7 @@ Automated workflow ไม่แทนรายการนี้:
 
 ## Evidence record
 - Runtime candidate SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Last reviewed non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
+- Last reviewed non-runtime descendant: `08ff98387d2f8c457d3ad1bc148dcad11ad6d715`
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
