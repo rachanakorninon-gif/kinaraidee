@@ -20,13 +20,13 @@ jobs:
           set -euo pipefail
           required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
-      - name: Block private credential patterns
+      - name: Block private credential patterns including workflows
         shell: bash
         run: |
           set -euo pipefail
-          matches="$(grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude='*.md' '(sb[_]secret_|service[_]role|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
+          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' '(sb[_]secret_|service[_]role|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
           unsafe="$(printf '%s\n' "$matches" | grep -vE "Deno\.env\.get\(['\"]SUPABASE_SERVICE_ROLE_KEY['\"]\)" || true)"
-          if [ -n "$unsafe" ]; then printf '%s\n' "$unsafe"; echo 'Potential private credential pattern found in repository.'; exit 1; fi
+          if [ -n "$unsafe" ]; then printf '%s\n' "$unsafe"; echo 'Potential private credential pattern found in repository or workflow configuration.'; exit 1; fi
       - name: Validate public app wiring
         shell: bash
         run: |
