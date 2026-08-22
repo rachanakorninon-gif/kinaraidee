@@ -22,99 +22,53 @@ jobs:
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          paths=(
-            '/'
-            '/index.html'
-            '/404.html'
-            '/privacy.html'
-            '/feedback.html'
-            '/partner.html'
-            '/manifest.webmanifest'
-            '/sw.js'
-            '/icon.svg'
-            '/robots.txt'
-            '/sitemap.xml'
-            '/data/foods-expanded.js'
-            '/data/choice-rules.js'
-            '/data/nearby-restaurants.js'
-            '/data/group-mode.js'
-            '/data/group-sync.js'
-            '/data/group-remote.js'
-            '/data/member-sync.js'
-            '/data/pwa-install.js'
-            '/data/home-surprise.js'
-          )
-          for path in "${paths[@]}"; do
-            url="$base$path"
-            echo "Checking $url"
-            curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null
-          done
+          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
+          for path in "${paths[@]}"; do url="$base$path"; echo "Checking $url"; curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null; done
 
-      - name: Check latest live app markers and PWA v12
+      - name: Check latest live app markers and PWA v13
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
           html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
           sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
+          nearby="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/nearby-restaurants.js")"
           surprise="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/home-surprise.js")"
           pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
           robots="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/robots.txt")"
           sitemap="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sitemap.xml")"
-
           grep -q 'กินอะไรดี' <<<"$html"
           grep -q 'manifest.webmanifest' <<<"$html"
           grep -q 'serviceWorker' <<<"$html"
           grep -q 'home-surprise.js' <<<"$html"
           grep -q 'pwa-install.js' <<<"$html"
-
-          grep -q "kinaraidee-beta-v12" <<<"$sw"
-          grep -q "cache.addAll(SHELL)" <<<"$sw"
-          grep -q "home-surprise.js" <<<"$sw"
-          grep -q "pwa-install.js" <<<"$sw"
-          if grep -q 'Promise.allSettled' <<<"$sw"; then
-            echo 'Live Service Worker unexpectedly uses non-atomic shell install'
-            exit 1
-          fi
-
-          grep -q "aria-busy" <<<"$surprise"
-          grep -q "กำลังเลือกให้" <<<"$surprise"
-          grep -q "pageshow" <<<"$surprise"
-          grep -q "online" <<<"$surprise"
-
-          grep -q "เข้าใจแล้ว" <<<"$pwa"
-          grep -q "MacIntel" <<<"$pwa"
-
+          grep -q 'kinaraidee-beta-v13' <<<"$sw"
+          grep -q 'cache.addAll(SHELL)' <<<"$sw"
+          grep -q 'home-surprise.js' <<<"$sw"
+          grep -q 'pwa-install.js' <<<"$sw"
+          if grep -q 'Promise.allSettled' <<<"$sw"; then echo 'Live Service Worker unexpectedly uses non-atomic shell install'; exit 1; fi
+          grep -q 'box.replaceChildren()' <<<"$nearby"
+          grep -q "name.textContent=String(r.name" <<<"$nearby"
+          grep -q 'aria-busy' <<<"$surprise"
+          grep -q 'กำลังเลือกให้' <<<"$surprise"
+          grep -q 'pageshow' <<<"$surprise"
+          grep -q 'online' <<<"$surprise"
+          grep -q 'เข้าใจแล้ว' <<<"$pwa"
+          grep -q 'MacIntel' <<<"$pwa"
           grep -q 'sitemap.xml' <<<"$robots"
           grep -q '<urlset' <<<"$sitemap"
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v12 flow'
+          echo 'Live smoke test passed for PWA v13 flow'
 
       - name: Verify development files are not published
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          private_paths=(
-            '/README.md'
-            '/SECURITY.md'
-            '/BETA-DAILY-LOG.md'
-            '/RELEASE-CHECKLIST.md'
-            '/.github/workflows/pages.yml'
-            '/supabase/config.toml'
-          )
-          for path in "${private_paths[@]}"; do
-            url="$base$path"
-            code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"
-            echo "$path -> HTTP $code"
-            if [ "$code" = '200' ]; then
-              echo "Development-only path is unexpectedly public: $path"
-              exit 1
-            fi
-          done
-          echo 'Development-only files are not exposed by Pages artifact'
+          private_paths=('/README.md' '/SECURITY.md' '/BETA-DAILY-LOG.md' '/RELEASE-CHECKLIST.md' '/.github/workflows/pages.yml' '/supabase/config.toml')
+          for path in "${private_paths[@]}"; do url="$base$path"; code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"; echo "$path -> HTTP $code"; if [ "$code" = '200' ]; then echo "Development-only path is unexpectedly public: $path"; exit 1; fi; done
 
       - name: Record traceable automated evidence
         shell: bash
@@ -127,16 +81,7 @@ jobs:
           SERVER_URL: ${{ github.server_url }}
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then
-            verified_sha="$DEPLOY_HEAD_SHA"
-            source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"
-            trigger='successful Pages workflow_run'
-          else
-            verified_sha="$CURRENT_SHA"
-            source_run='manual workflow_dispatch'
-            trigger='manual workflow_dispatch'
-          fi
-
+          if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then verified_sha="$DEPLOY_HEAD_SHA"; source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"; trigger='successful Pages workflow_run'; else verified_sha="$CURRENT_SHA"; source_run='manual workflow_dispatch'; trigger='manual workflow_dispatch'; fi
           {
             echo '## Kinaraidee automated live evidence'
             echo
@@ -144,7 +89,8 @@ jobs:
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Expected Service Worker: `kinaraidee-beta-v12`'
+            echo '- Expected Service Worker: `kinaraidee-beta-v13`'
+            echo '- Partner renderer safety markers: checked'
             echo '- App shell strategy checked: `cache.addAll(SHELL)`'
             echo '- Development-only exposure check: completed'
             echo
