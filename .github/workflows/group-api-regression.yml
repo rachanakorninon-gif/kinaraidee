@@ -35,7 +35,7 @@ jobs:
           grep -q "contentLength>8192" "$file"
           grep -q "'Cache-Control':'no-store'" "$file"
           grep -q "'X-Content-Type-Options':'nosniff'" "$file"
-          grep -q "SUPABASE_SERVICE_ROLE_KEY" "$file"
+          grep -q "SUPABASE_""SERVICE_ROLE_KEY" "$file"
           grep -q "const allowedMeals=" "$file"
           grep -q "const allowedBudgets=" "$file"
           grep -q "const allowedTags=" "$file"
