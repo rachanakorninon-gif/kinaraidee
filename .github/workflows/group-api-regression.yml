@@ -1,0 +1,68 @@
+name: Kinaraidee Group API Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'supabase/functions/group-api/**'
+      - '.github/workflows/group-api-regression.yml'
+  pull_request:
+    paths:
+      - 'supabase/functions/group-api/**'
+      - '.github/workflows/group-api-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Group API security invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/functions/group-api/index.ts'
+          test -s "$file"
+
+          grep -q "Access-Control-Allow-Methods':'POST, OPTIONS'" "$file"
+          grep -q "req.method!=='POST'" "$file"
+          grep -q "contentLength>8192" "$file"
+          grep -q "'Cache-Control':'no-store'" "$file"
+          grep -q "'X-Content-Type-Options':'nosniff'" "$file"
+          grep -q "SUPABASE_""SERVICE_ROLE_KEY" "$file"
+          grep -q "const allowedMeals=" "$file"
+          grep -q "const allowedBudgets=" "$file"
+          grep -q "const allowedTags=" "$file"
+          grep -q "size<2||size>6" "$file"
+          grep -q "tags.length>3" "$file"
+          grep -q "room_full" "$file"
+          grep -q "host_token!==hostToken" "$file"
+          grep -q "room.status!=='open'" "$file"
+          grep -q "new Date(room.expires_at)<=new Date()" "$file"
+          grep -q "onConflict:'room_id,voter_id'" "$file"
+
+          if grep -qE "SUPABASE_(SERVICE_ROLE|SECRET).*['\"]" "$file"; then
+            echo 'Possible hard-coded privileged Supabase credential reference detected.'
+            exit 1
+          fi
+
+          echo 'Group API source contract checks passed.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Group API source regression gate'
+            echo
+            echo '- Checks the committed Group API source for method, size, input, room-state, host-token and response-hardening invariants.'
+            echo '- Checks for the server-side service-role environment variable reference without treating it as a deploy credential.'
+            echo '- This is static source-contract evidence only.'
+            echo '- It does not prove Supabase deployment/version, retention cleanup, abuse controls, production traffic behavior, load/security testing, or real-device group flow.'
+          } >> "$GITHUB_STEP_SUMMARY"
