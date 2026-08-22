@@ -21,6 +21,12 @@
 
 Baseline นี้เป็น source/runtime inspection เท่านั้น ไม่ใช่ real-device, load-test, abuse-test หรือ privacy/legal PASS
 
+### Static source-contract regression gate
+
+Repository มี `.github/workflows/group-api-regression.yml` เพื่อกัน regression ของ invariants ที่ตรวจจาก source ได้ เช่น POST/OPTIONS-only behavior, 8 KiB body limit, response hardening, allowlists, room size/tag limits, room state/expiry checks, host-token authorization, room-full guard และ `(room_id,voter_id)` upsert contract
+
+Gate นี้เป็น **static source-contract evidence only** ไม่ยืนยันว่า Supabase Edge Function เวอร์ชันใดถูก deploy จริง และไม่แทน retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow
+
 ## Open hardening gaps
 
 ### 1. Retention and deletion
