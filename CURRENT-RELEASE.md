@@ -6,10 +6,11 @@
 
 ## Current source/runtime state
 
-- Current `main`: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44).
+- Current `main`: `7e1eeef4732c3a2bb03065ff254bf2f36260cee5`.
 - Current runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
+- Current non-runtime descendant: `7e1eeef4732c3a2bb03065ff254bf2f36260cee5`; compare from PR #42 to this head changes only release workflows and release-tracking documents, not public runtime assets.
+- Deployment-trace implementation baseline: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44), which added `release-meta.json` SHA tracing and deployed group-bridge checks.
 - Latest runtime change: restore completed live-group result bridge after the Android 2/2-vote real-device failure.
-- Commits after PR #42 through PR #44 add release/docs/deployment observability and do not change the public runtime payload; PR #44 adds `release-meta.json` SHA tracing and deployed group-bridge checks.
 - PWA cache marker remains: `kinaraidee-beta-v13`.
 - PR #42 restores `useRemoteVotes(votes, setup)`, exports `window.KINARAIDEE_GROUP_MODE.showRemoteResult`, and restores deterministic group module loading so `group-remote.js` can hand completed remote votes back to the group result renderer.
 - PR #42 also adds the dedicated `Group Result Regression` workflow.
@@ -28,7 +29,14 @@ PR #42 head `d0afde6a6c6b819bfd078ebb4222738a7dad878b` completed successfully fo
 - History Sync Regression run `32566703316`
 - Release Consistency run `32566703318`
 
-PR #42 validation also corrected two CI-gate defects discovered during the fix: generic secret scans self-matching the Security Hygiene detector source, and stale transient assertions in Release Consistency.
+PR #44 head `827eee4fb4bcc41e9a0c2f334ee2149b4ab073f3` completed successfully for:
+
+- Beta integrity run `32567793339`
+- Beta QA run `32567793315`
+- Release Consistency run `32567793333`
+- Security Hygiene run `32567793354`
+- Group Result Regression run `32567793327`
+- History Sync Regression run `32567793341`
 
 These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, or real-device interaction testing.
 
@@ -38,7 +46,7 @@ Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
 PR #44 adds deployment observability so Pages publishes `release-meta.json` with the deployed commit SHA and PWA cache marker, while Live Smoke verifies that SHA against the successful Pages workflow-run head when triggered from deployment. It also verifies the completed live-group result bridge on deployed assets.
 
-This implementation improves traceability but does not itself prove that a Pages run and matching Live Smoke run have succeeded for `6fadf04f...` or runtime-equivalent descendant `907ea6b1...`. Do not infer complete deployment-gate success from merged workflow code alone.
+The source head has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `7e1eeef4...` shows no public runtime asset changes, so `7e1eeef4...` is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer complete deployment-gate success from source lineage alone.
 
 ## Real-device regression status
 
@@ -103,4 +111,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `907ea6b1...` is the current non-runtime descendant that adds deployment traceability. Use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `7e1eeef4...` is the current runtime-equivalent non-runtime descendant, while `907ea6b1...` is the PR #44 deployment-trace implementation baseline. Use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
