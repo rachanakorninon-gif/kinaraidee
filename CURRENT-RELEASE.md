@@ -6,12 +6,14 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `d20529a924305636a62e19960de453227555bfee` (merge PR #59).
+- Latest reviewed `main`: `984e5d8c9e9f14efcbf3451e98ddad639590421b` (merge PR #60).
 - Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #58 เป็น runtime change ล่าสุด: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
 - PR #58 เพิ่ม `.github/workflows/surprise-accessibility-regression.yml` เป็น static contract guard; static PASS ไม่แทน TalkBack/VoiceOver real-device evidence.
 - PR #59 `d20529a9...` เปลี่ยนเฉพาะ `deployment-check.html` เพื่อให้ public probe ตรวจ marker ของ Surprise accessibility fix; ไม่เปลี่ยน core app behavior เพิ่มจาก PR #58.
+- PR #60 `984e5d8c...` เพิ่ม Pages predeploy/Live Smoke checks สำหรับ Surprise accessibility source contract และคืน explicit Public Beta incomplete invariant; ไม่เปลี่ยน browser/PWA runtime behavior.
+- Repository compare จาก PR #59 `d20529a9...` ถึง PR #60 `984e5d8c...` เปลี่ยนเฉพาะ `.github/workflows/pages.yml`, `.github/workflows/live-smoke.yml`, `CURRENT-RELEASE.md` และ `LIVE-DEPLOYMENT-VERIFICATION.md`; ไม่มี browser/PWA runtime asset เปลี่ยน.
 - PR #42 `6fadf04f...` ยังคงเป็น historical live-group result bridge baseline.
 - PR #37 แก้ member cloud-history timestamp mapping/fallback; PR #41 เพิ่ม stale-snapshot/write-race protection.
 - PR #53 เพิ่ม public diagnostic `deployment-check.html`; PR #54 sync Android real-device evidence ที่มีจริง.
@@ -34,6 +36,7 @@ Deployment observability ปัจจุบันประกอบด้วย:
 - Pages สร้าง `release-meta.json` ที่มี deployed SHA และ PWA cache marker.
 - Live Smoke ตรวจ deployed SHA/cache marker และ runtime markers ที่กำหนด.
 - `deployment-check.html` ตรวจ live-group bridge และตั้งแต่ PR #59 ตรวจ Surprise accessibility source markers เพิ่ม.
+- PR #60 เพิ่ม predeploy/live checks ที่บังคับ Surprise accessibility source markers ก่อน/หลัง deploy แต่ workflow configuration หรือ source contract ยังไม่เท่ากับ successful deployment evidence.
 - Release Metadata Regression ตรวจ contract ของ metadata/deployment-trace wiring แบบ static.
 
 Do not infer complete deployment-gate success from source, PR/CI success, or the presence of deployment observability files alone.
@@ -99,9 +102,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 ## Supersession rule
 
 - Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี runtime app change ใหม่.
-- Current source descendant = PR #59 / `d20529a9...`; PR #59 เป็น deployment-probe change และไม่ supersede runtime behavior ของ PR #58.
+- Current source descendant = PR #60 / `984e5d8c...`; commits หลัง PR #59 ถึง PR #60 เป็น workflow/release-evidence changes และไม่ supersede runtime behavior ของ PR #58.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
-- Deployment-observability baseline เริ่มจาก PR #53 และถูกขยายโดย PR #59.
+- Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59 และ deployment checks ถูกเสริมใน PR #60.
 - Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
 - Group API backend deployment/source evidence ต้องติดตามแยกจาก browser/PWA deployment.
 - เมื่อมี commit ใหม่ ให้ใช้ repository diff/PR files แยกว่าเป็น runtime app, diagnostic/deployment asset, QA evidence, workflow/docs หรือ backend change ก่อนย้าย candidate/evidence state.
