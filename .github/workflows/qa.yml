@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           grep -q 'box.replaceChildren()' data/nearby-restaurants.js
           grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
-          grep -q "muted.textContent=String(r.address" data/nearby-restaurants.js
+          grep -q "detail.textContent=String(r.address" data/nearby-restaurants.js
           if grep -q 'c.innerHTML=.*r.name' data/nearby-restaurants.js; then
             echo 'Partner name is rendered through innerHTML'
             exit 1
