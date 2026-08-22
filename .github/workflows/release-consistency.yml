@@ -34,6 +34,7 @@ jobs:
             'README.md'
           )
           evidence=(
+            'CURRENT-RELEASE.md'
             'LIVE-DEPLOYMENT-VERIFICATION.md'
             'BETA-RUN-LOG.md'
             'BETA-DEVICE-MATRIX.md'
@@ -57,7 +58,16 @@ jobs:
             grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }
           done
 
-          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and may retain historical markers with context'
+          grep -Fq '21c56f2e84760fada6cebfa464be767facb56b34' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md does not identify the latest reviewed main release state'
+            exit 1
+          }
+          grep -Fq 'NOT YET VERIFIED AFTER FIX' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve explicit post-fix real-device verification status until evidence updates it'
+            exit 1
+          }
+
+          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records the reviewed runtime state'
 
       - name: Validate atomic app-shell strategy
         shell: bash
