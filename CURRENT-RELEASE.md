@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `be1288b9984b3923adf23d2fcd96eebb98378a92` (release-lineage/deploy guard; no browser/PWA runtime change).
+- Latest reviewed `main`: `77bbffd5f77723aacb9153891c019877c71b5944` (merge PR #62; QA/workflow-only runtime-lineage regression coverage; no browser/PWA runtime change).
 - Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #58 เป็น runtime change ล่าสุด: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
@@ -16,7 +16,8 @@
 - PR #61 `557010fb...` harden Public Beta synthetic monitor ให้ deployed SHA ต้องมี runtime candidate ปัจจุบันอยู่ใน lineage และตรวจ Surprise accessibility source markers บน live assets; เป็น monitoring/workflow evidence ไม่ใช่ runtime change หรือ device PASS.
 - `d258cb49...` เพิ่ม Release Consistency guard ที่ fail เมื่อ `CURRENT-RELEASE.md` ประกาศ runtime candidate เก่าแต่มี browser/PWA runtime files เปลี่ยนหลัง candidate.
 - `be1288b99...` เพิ่ม Pages predeploy guard แบบเดียวกัน เพื่อ block deployment หาก declared runtime candidate stale เมื่อเทียบกับ browser/PWA runtime files.
-- Guards เหล่านี้ใช้ full git history (`fetch-depth: 0`) และตรวจ ancestry/diff ก่อนยอมรับ release lineage; การมี guard ไม่เท่ากับ successful workflow/deployment evidence.
+- PR #62 `77bbffd5...` เพิ่ม `.github/workflows/runtime-lineage-regression.yml` เพื่อ self-test ว่า candidate ปัจจุบัน clean, docs-only descendant ไม่ถูกนับเป็น runtime drift, synthetic runtime change ถูกตรวจจับ และ production lineage guards ยัง wired อยู่; ไม่เปลี่ยน browser/PWA runtime.
+- Guards เหล่านี้ใช้ full git history (`fetch-depth: 0`) และตรวจ ancestry/diff ก่อนยอมรับ release lineage; การมี guard ไม่เท่ากับ successful deployment evidence.
 - PR #42 `6fadf04f...` ยังคงเป็น historical live-group result bridge baseline.
 - PR #37 แก้ member cloud-history timestamp mapping/fallback; PR #41 เพิ่ม stale-snapshot/write-race protection.
 - PR #53 เพิ่ม public diagnostic `deployment-check.html`; PR #54 sync Android real-device evidence ที่มีจริง.
@@ -28,7 +29,9 @@
 
 PR #58 มี static accessibility regression guard อยู่ใน source และตรวจ contract ของ `data/home-surprise.js`; อย่างไรก็ตาม workflow file/implementation ไม่เท่ากับ successful run evidence จนกว่าจะมี run result ที่ตรวจย้อนกลับได้.
 
-Release-lineage guards หลัง PR #61 ป้องกัน stale declared runtime candidate ใน source/workflow configuration แต่ยังไม่ถือว่า workflow run, Pages deploy หรือ Live Smoke ผ่านจนกว่าจะมีผล run ที่ตรวจได้.
+PR #62 head `76e6e47672c4fdec3e1772b9e6eb0a87adc52e3a` มี inspectable pull-request workflow evidence: `Runtime Lineage Regression`, `Kinaraidee Beta QA`, `Beta integrity checks`, `Kinaraidee Release Consistency`, `Kinaraidee Security Hygiene`, `Credential Scanner Regression`, `Surprise Accessibility Regression`, `Group Result Regression`, `Kinaraidee Release Metadata Regression` และ `Kinaraidee History Sync Regression` จบด้วย `success`. ขอบเขต evidence นี้ยืนยันเฉพาะ CI/static/workflow contract ของ PR #62 ไม่ใช่ Pages deploy, Live Smoke, Public URL หรือ real-device PASS.
+
+Release-lineage guards หลัง PR #61/PR #62 ป้องกัน stale declared runtime candidate ใน source/workflow configuration และมี regression self-test สำหรับ guard behavior แล้ว แต่ยังไม่ถือว่า Pages deploy หรือ Live Smoke ผ่านจนกว่าจะมีผล run ที่ตรวจได้.
 
 CI/static evidence ไม่แทน push-triggered GitHub Pages deployment, corresponding Live Smoke, Public URL verification หรือ real-device interaction/assistive-technology testing.
 
@@ -44,6 +47,7 @@ Deployment observability ปัจจุบันประกอบด้วย:
 - PR #60 เพิ่ม predeploy/live checks ที่บังคับ Surprise accessibility source markers ก่อน/หลัง deploy แต่ workflow configuration หรือ source contract ยังไม่เท่ากับ successful deployment evidence.
 - PR #61 เพิ่ม synthetic monitor lineage requirement ว่า deployed SHA ต้องเป็น descendant ของ current runtime candidate และอยู่ใน current `main` history.
 - Release Consistency และ Pages predeploy ปัจจุบัน block stale declared runtime candidate เมื่อ browser/PWA runtime files เปลี่ยนหลัง candidate.
+- PR #62 เพิ่ม regression self-test สำหรับ runtime-lineage guard logic; ไม่ใช่ deployment evidence.
 - Release Metadata Regression ตรวจ contract ของ metadata/deployment-trace wiring แบบ static.
 
 Do not infer complete deployment-gate success from source, PR/CI success, workflow guards, or the presence of deployment observability files alone.
@@ -109,7 +113,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 ## Supersession rule
 
 - Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี runtime app change ใหม่.
-- Latest reviewed source baseline = `be1288b99...`; descendants หลัง PR #58 ที่ระบุข้างต้นเป็น diagnostic/workflow/release-evidence changes และไม่ supersede runtime behavior ของ PR #58.
+- Latest reviewed source baseline = `77bbffd5...`; PR #62 เป็น QA/workflow-only descendant และไม่ supersede runtime behavior ของ PR #58. Commit ที่อัปเดตเอกสารนี้เองเป็น docs-only descendant ของ baseline ดังกล่าว.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59/#60/#61 และ stale-runtime deployment guards ล่าสุด.
 - Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
