@@ -21,17 +21,23 @@
 
 Baseline นี้เป็น source/runtime inspection เท่านั้น ไม่ใช่ real-device, load-test, abuse-test หรือ privacy/legal PASS
 
-### Verified deployment/source parity — 2026-08-23
+### Historical deployment/source parity — re-verification required after PR #63
 
-PR #52 บันทึกหลักฐานที่ตรวจสอบได้ว่า Supabase `group-api` ซึ่งอยู่สถานะ ACTIVE version 2 ณ เวลาตรวจ ตรงกับ source mirror `supabase/functions/group-api/index.ts` ที่ตรวจใน repository โดย Supabase รายงาน deployed SHA-256 `4f12e48c55a782dbc00b13d739a2a4c72e22e751e9d16dc8e87fd89d4c5cb7bd` และ merge evidence อยู่ที่ `0caa8dd283dcb404f80f0296e92b8c4b652cb95e`.
+PR #52 เคยบันทึกหลักฐานว่า Supabase `group-api` ซึ่งอยู่สถานะ ACTIVE version 2 ณ เวลาตรวจ ตรงกับ source mirror `supabase/functions/group-api/index.ts` ที่ตรวจใน repository โดย Supabase รายงาน deployed SHA-256 `4f12e48c55a782dbc00b13d739a2a4c72e22e751e9d16dc8e87fd89d4c5cb7bd` และ merge evidence อยู่ที่ `0caa8dd283dcb404f80f0296e92b8c4b652cb95e`.
 
-หลักฐานนี้ยกระดับสถานะจาก “มี source mirror แต่ยังไม่รู้ว่า deploy ตรงกันหรือไม่” เป็น **deployment/source parity verified สำหรับ Group API v2 ณ จุดตรวจ** เท่านั้น ไม่ได้ยืนยัน retention/deletion, rate limiting/abuse control, monitoring baseline, load/security testing, Privacy/Legal approval, real-device final-result flow หรือ Commercial GO และต้องตรวจใหม่หาก source หรือ deployed function เปลี่ยนภายหลัง
+PR #63 ถูก merge เข้า `main` ที่ `f683f8291e57501e0fde75b0e689324d0a65dfb4` และเปลี่ยน backend source โดยเพิ่ม privacy-safe structured operational events สำหรับ create/read/vote/close success/rejection/failure outcomes พร้อม regression guard ที่ห้าม event logging อ้าง room ID, host token, voter ID, tags, request headers หรือ request payloads โดยตรง
+
+ดังนั้น parity evidence ของ v2 ก่อน PR #63 เป็น **historical evidence เท่านั้น** และต้องสร้าง deployment/version/source evidence ใหม่ก่อนอ้างว่าฟังก์ชันที่ ACTIVE อยู่มี observability source ล่าสุดนี้จริง
+
+PR #63 head `527cfa0c0fc11d026f549132004b04d71f400662` มี inspectable PR CI evidence ว่า workflow สำคัญ รวม `Kinaraidee Group API Regression`, `Kinaraidee Security Hygiene`, Beta QA/integrity, Release Consistency และ regression suites ที่เกี่ยวข้อง จบด้วย `success`. ขอบเขตนี้เป็น source/CI evidence เท่านั้น ไม่ใช่ Supabase deploy, live log ingestion หรือ alerting evidence
 
 ### Static source-contract regression gate
 
 Repository มี `.github/workflows/group-api-regression.yml` เพื่อกัน regression ของ invariants ที่ตรวจจาก source ได้ เช่น POST/OPTIONS-only behavior, 8 KiB body limit, response hardening, allowlists, room size/tag limits, room state/expiry checks, host-token authorization, room-full guard และ `(room_id,voter_id)` upsert contract
 
-Gate นี้เป็น **static source-contract evidence only** และไม่แทน retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow แม้ deployment/source parity ของ v2 จะถูกยืนยันแยกต่างหากแล้วก็ตาม
+หลัง PR #63 gate เดียวกันตรวจ observability contract เพิ่ม: ต้องมี structured operational event markers สำหรับ create/vote/read/close outcomes และ reject direct sensitive identifiers/payload references ใน logging calls
+
+Gate นี้เป็น **static source-contract evidence only** และไม่แทน Supabase deployment/version, live log ingestion, alerting, retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow
 
 ## Open hardening gaps
 
@@ -69,19 +75,18 @@ Gate นี้เป็น **static source-contract evidence only** และไ
 
 ### 3. Monitoring
 
-สามารถออกแบบได้โดยไม่ต้องสร้างผลสมมติ แต่การตั้ง threshold ต้องอาศัย traffic จริง
+PR #63 เพิ่ม implementation ระดับ source สำหรับ privacy-safe operational events แล้ว แต่สถานะยังเป็น **SOURCE IMPLEMENTED / LIVE INGESTION + BASELINE NOT VERIFIED**
 
-เหตุการณ์ขั้นต่ำที่ควรสังเกต:
+เหตุการณ์ที่ source ปัจจุบันครอบคลุมรวม create/read/vote/close success, rejection/failure, `room_full`, `room_closed`, forbidden host-token attempts, `db_error`, request-too-large, invalid JSON/payload และ unknown action โดย payload จำกัดไว้ที่ bounded operational fields เช่น reason, size, voteCount และ isUpdate
 
-- room creation success/reject
-- vote success/reject
-- `room_full`
-- `room_closed` / expired access
-- `forbidden` host-token attempts
-- `db_error`
-- request-too-large / invalid payload
+ห้ามเติม count, rate, latency, error budget หรือ alert threshold จนกว่าจะวัดจริง และห้ามนับ PR/CI/static marker ว่าเป็น live monitoring evidence
 
-ห้ามเติม count, rate, latency, error budget หรือ alert threshold จนกว่าจะวัดจริง
+ขั้นต่อไปของ monitoring ต้องมี:
+
+- deploy current backend source และบันทึก version/source parity ใหม่
+- verify ว่า structured events เข้า log/observability destination จริงโดยไม่เปิดเผย sensitive identifiers
+- เก็บ traffic/error baseline จริงก่อนกำหนด threshold
+- ระบุ owner, alert channel และ escalation/support path ที่ใช้งานจริง
 
 ### 4. Security invariants to preserve
 
@@ -93,6 +98,7 @@ Gate นี้เป็น **static source-contract evidence only** และไ
 - active rooms ต้องไม่ถูก cleanup โดย mistake
 - input allowlists/room-size/tag limits ต้องไม่ถูกผ่อนโดยไม่มีเหตุผลและ test
 - RLS/privilege model ต้องไม่ถูกขยายเพียงเพื่อให้ cleanup/rate limiting ทำงาน
+- operational logs ต้องไม่บันทึก room IDs, host tokens, voter IDs, tags, IP addresses, request headers/bodies หรือ user-supplied payload โดยตรง
 
 ## Safe implementation sequence
 
@@ -100,11 +106,11 @@ Gate นี้เป็น **static source-contract evidence only** และไ
 2. เลือก abuse-control requirement จาก expected traffic และ privacy constraints
 3. ทำ schema/function change ใน development-safe path
 4. ทดสอบ positive + negative cases รวม active/expired/closed/full/invalid/forbidden
-5. Re-run Supabase Security + Performance Advisors หลัง DDL change
+5. Re-run Supabase Security + Performance Advisors หลัง DDL/backend change ตามที่เกี่ยวข้อง
 6. Commit migration/function source ที่ตรวจสอบได้เข้า repository
-7. Deploy และบันทึก deployment/version evidenceจริง; สำหรับ ACTIVE v2 baseline ณ 2026-08-23 มี parity evidence แล้ว แต่ต้องสร้าง evidence ใหม่เมื่อมี backend change ถัดไป
-8. ทำ real-device group regression โดยเฉพาะ create → join → vote → 2/2 → final result
-9. เก็บ monitoring baseline จาก traffic จริงก่อนตั้ง alert threshold
+7. Deploy และบันทึก deployment/version/source evidence ใหม่ทุกครั้งที่ backend source เปลี่ยน; parity evidence ก่อน PR #63 ห้ามใช้แทน current deployment proof
+8. Verify privacy-safe operational events จาก live function และเก็บ monitoring baseline จริงก่อนตั้ง alert threshold
+9. ทำ real-device group regression โดยเฉพาะ create → join → vote → 2/2 → final result
 
 ## Current blockers / decisions required
 
@@ -113,10 +119,11 @@ Gate นี้เป็น **static source-contract evidence only** และไ
 - approved retention period
 - cleanup implementation + verification
 - approved anonymous abuse-control strategy
-- monitoring/metrics implementation และ baseline จริงตามที่จำเป็น
+- current Group API deployment/version/source parity หลัง PR #63
+- live monitoring/log-ingestion verification + baseline จริงตามที่จำเป็น
 - Privacy/Operations docs ที่สะท้อน policy จริง
-- Security/Performance Advisor re-check หลัง backend changes
+- Security/Performance Advisor re-check หลัง backend changes ตามขอบเขตที่เกี่ยวข้อง
 
-Group API v2 deployment/source parity ที่ยืนยันแล้วช่วยปิดเฉพาะช่องว่างเรื่อง “source ที่ตรวจตรงกับ deployment ที่ ACTIVE หรือไม่” ณ จุดตรวจ ไม่ได้ปิด blocker ข้างต้น
+Observability implementation และ PR CI ของ PR #63 ช่วยปิดเฉพาะช่องว่างด้าน source instrumentation/static guard ไม่ได้ปิด deployment, monitoring baseline, retention, abuse-control, Privacy/Legal, load/security, real-device หรือ Commercial GO gate
 
-ไม่มีข้อความในเอกสารนี้ที่หมายถึง Production, privacy, security, load, abuse-control หรือ real-device PASS
+ไม่มีข้อความในเอกสารนี้ที่หมายถึง Production, privacy, security, load, abuse-control, live monitoring หรือ real-device PASS
