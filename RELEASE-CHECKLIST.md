@@ -81,7 +81,7 @@
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
 - [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
-- [ ] เปลี่ยน partner-card renderer จาก dynamic `innerHTML` เป็น DOM nodes/`textContent` ใน runtime release ถัดไปเพื่อ defense-in-depth
+- [x] Partner-card renderer เปลี่ยนจาก dynamic `innerHTML` เป็น DOM nodes/`textContent` สำหรับชื่อ/ที่อยู่ร้านและ fallback menu text เพื่อ defense-in-depth; implementation อยู่ใน PR/commit ของ runtime change และยังต้องผ่าน QA/real-device ตาม release gate ก่อนนับเป็น release evidence
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
