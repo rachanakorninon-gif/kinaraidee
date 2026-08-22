@@ -32,6 +32,28 @@ jobs:
           fi
           echo 'No high-risk credential patterns found.'
 
+      - name: Regression-test credential detector
+        shell: bash
+        run: |
+          set -euo pipefail
+          pattern='(sb_''secret_[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|sk_live_[A-Za-z0-9]{16,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN (RSA |EC |OPENSSH )?PRIV''ATE KEY-----)'
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+
+          # Build synthetic detector fixtures at runtime so no secret-shaped payload is committed.
+          printf '%s\n' "ghp_$(printf 'A%.0s' {1..24})" > "$tmp"
+          grep -qE "$pattern" "$tmp"
+
+          printf '%s\n' "sb_secret_$(printf 'B%.0s' {1..24})" > "$tmp"
+          grep -qE "$pattern" "$tmp"
+
+          printf '%s\n' 'harmless-placeholder-without-secret-payload' > "$tmp"
+          if grep -qE "$pattern" "$tmp"; then
+            echo 'Credential detector produced a false positive on the harmless fixture.'
+            exit 1
+          fi
+          echo 'Credential detector regression self-test passed.'
+
       - name: Reject dangerous workflow permission shortcuts
         shell: bash
         run: |
@@ -66,6 +88,7 @@ jobs:
             echo '## Repository security hygiene'
             echo
             echo '- Scans common private credential/token formats with payload-length checks to avoid documentation false positives.'
+            echo '- Regression-tests the detector against runtime-generated positive and negative fixtures.'
             echo '- Rejects write-all and pull_request_target under the current beta policy.'
             echo '- Requires explicit top-level workflow permissions.'
             echo '- This is defense-in-depth and does not replace GitHub secret scanning, branch protection, Supabase Auth hardening, or manual security review.'
