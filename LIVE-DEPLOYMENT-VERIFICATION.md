@@ -4,13 +4,15 @@
 
 ## Release candidate ปัจจุบัน
 - Runtime commit SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Current `main` descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
+- Last reviewed non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
 - Expected Service Worker cache: `kinaraidee-beta-v12`
 - วันที่ reset evidence: 2026-08-22 (Asia/Bangkok)
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
 - Runtime change จาก candidate ก่อนหน้า: Feedback/Partner accessibility semantics + Service Worker cache generation v12
 
-`23a0e4fb...` เป็น non-runtime descendant ที่ merge PR #19 และเปลี่ยนเฉพาะ `.github/workflows/qa.yml` เพื่อเพิ่ม release-marker drift gate; ไม่มี runtime asset ของ Public Beta เปลี่ยนใน commit นี้ ดังนั้น runtime candidate ยังคงเป็น `f08d069a...`
+`23a0e4fb...` เป็น non-runtime descendant ที่ตรวจแล้วว่าไม่มี runtime asset ของ Public Beta เปลี่ยนจาก `f08d069a...`
+
+คำว่า **Last reviewed non-runtime descendant** เป็นจุดอ้างอิงที่ตรวจ diff แล้ว ไม่ได้หมายความว่าเป็น HEAD ปัจจุบันของ `main` เสมอไป เพราะ evidence/workflow/docs-only commits ใหม่อาจตามหลังได้โดยไม่เปลี่ยน runtime payload ก่อนใช้ descendant ใดเป็น release evidence ต้องตรวจ diff จาก runtime candidate และบันทึก **Deployed SHA** จริงด้านล่าง
 
 ## CI evidence ที่ยืนยันแล้วสำหรับ candidate นี้
 PR #14 head `397100eec329bf4b1744e5c7a829a575d94fdb17` ผ่านก่อน merge:
@@ -21,12 +23,11 @@ PR #14 head `397100eec329bf4b1744e5c7a829a575d94fdb17` ผ่านก่อน 
 CI ข้างต้นยืนยัน static/integrity checks เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint หรือ real-device behavior
 
 ### Release-marker drift protection
-PR #19 ถูก merge เข้า `main` เป็น `23a0e4fb83593b9d0217aa6576b711d3b96340de` และเพิ่ม QA step ที่ derive canonical PWA release marker จาก `sw.js` แล้วบังคับให้ไฟล์ต่อไปนี้อ้าง marker เดียวกัน:
-- `.github/workflows/qa.yml`
-- `.github/workflows/beta-check.yml`
-- `.github/workflows/pages.yml`
-- `.github/workflows/live-smoke.yml`
-- `README.md`
+PR #19 เพิ่ม QA gate ที่ derive canonical PWA release marker จาก `sw.js`; commit `afa4fde5...` ขยาย gate ไปยัง release-evidence docs และ `8f38bb4f...` เพิ่ม workflow consistency แยกต่างหาก
+
+กติกาที่ต้องรักษา:
+- runtime/workflow/README ที่อธิบาย release ปัจจุบันต้องใช้ canonical marker เดียวกับ `sw.js`
+- release-evidence docs ต้องอ้าง canonical marker ปัจจุบัน แต่อนุญาต marker รุ่นเก่าที่เก็บไว้เป็น historical baseline พร้อมบริบท
 
 รายการนี้เป็น preventive QA evidence เท่านั้น ไม่ใช่หลักฐานว่า Pages/Live Smoke/real-device ผ่าน
 
@@ -67,7 +68,7 @@ Automated workflow ไม่แทนรายการนี้:
 
 ## Evidence record
 - Runtime candidate SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Current non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
+- Last reviewed non-runtime descendant: `23a0e4fb83593b9d0217aa6576b711d3b96340de`
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
@@ -91,3 +92,4 @@ Automated workflow ไม่แทนรายการนี้:
 - Live Smoke success ไม่แทน real-device interaction
 - ผล v11 / `bb7b9794...` ห้ามถูกยกมาเป็นผล v12 โดยอัตโนมัติสำหรับ flow ที่ runtime เปลี่ยน
 - หาก deployed SHA เป็น non-runtime descendant ต้องยืนยัน diff ว่า runtime payload เท่ากับ `f08d069a...` ก่อนใช้เป็น release evidence
+- ห้ามอัปเดตช่อง descendant เพียงเพื่อให้ตรงกับ HEAD ของ `main`; อัปเดตเมื่อมีการตรวจ diff จริงหรือเมื่อบันทึก deployment evidence ใหม่
