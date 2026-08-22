@@ -51,6 +51,8 @@ Deployment observability ปัจจุบันประกอบด้วย:
 - PR #53 เพิ่ม `deployment-check.html`, publish ผ่าน Pages artifact และบังคับ Live Smoke ให้ตรวจ probe/bridge markers บน public site.
 - Release Metadata Regression ตรวจ contract ของ metadata/deployment-trace wiring แบบ static.
 
+Do not infer complete deployment-gate success from source, PR/CI success, or the presence of deployment observability files alone.
+
 ยังห้ามสรุป deployment gate ว่า PASS จนกว่าจะมี inspectable successful Pages run และ corresponding Live Smoke run ที่ trace กลับไปยัง deployment เดียวกัน. PR/CI success หรือการมี `deployment-check.html` ใน source ไม่ใช่หลักฐานแทนสองรายการนี้.
 
 ## Real-device regression status
@@ -75,6 +77,8 @@ PR #54/Issue #5 บันทึก scoped same-device PASS evidence สำหร
 Device model, Android version และ Chrome version ไม่ได้ถูก capture จึงห้ามเดาเติม และผลนี้ไม่เท่ากับ full device matrix PASS. NF-07 old-cache upgrade และ NF-09 accessibility/assistive-technology evidence ยังเปิดอยู่.
 
 ## Public Beta gate impact
+
+Public Beta is still **NOT COMPLETE** while required deployment and device evidence remains open.
 
 Public Beta ยัง **NOT COMPLETE**. ขั้นต่ำที่ยังต้องมีหลักฐานจริง:
 
