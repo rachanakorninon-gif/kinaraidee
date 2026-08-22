@@ -1,0 +1,68 @@
+name: Kinaraidee Release Consistency
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate canonical PWA release marker
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
+          test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
+          echo "Canonical marker: $marker"
+
+          tracked=(
+            '.github/workflows/qa.yml'
+            '.github/workflows/beta-check.yml'
+            '.github/workflows/pages.yml'
+            '.github/workflows/live-smoke.yml'
+            'README.md'
+            'LIVE-DEPLOYMENT-VERIFICATION.md'
+            'BETA-RUN-LOG.md'
+            'BETA-DEVICE-MATRIX.md'
+            'RELEASE-CHECKLIST.md'
+          )
+
+          for file in "${tracked[@]}"; do
+            test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
+            grep -Fq "$marker" "$file" || {
+              echo "Release marker drift: $file does not reference $marker"
+              exit 1
+            }
+
+            while IFS= read -r found; do
+              [ -z "$found" ] && continue
+              if [ "$found" != "$marker" ]; then
+                echo "Stale release marker in $file: $found (expected only $marker)"
+                exit 1
+              fi
+            done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
+          done
+
+          echo 'All release-tracking files reference only the canonical PWA marker'
+
+      - name: Validate atomic app-shell strategy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'cache.addAll(SHELL)' sw.js || { echo 'Atomic app-shell install is missing'; exit 1; }
+          if grep -Fq 'Promise.allSettled' sw.js; then
+            echo 'Partial app-shell install strategy detected'
+            exit 1
+          fi
+          echo 'Atomic app-shell strategy verified'
