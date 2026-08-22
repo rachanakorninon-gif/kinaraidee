@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then echo 'Potential private credential pattern found in repository.'; exit 1; fi
+          if grep -RInE --exclude-dir=.git --exclude='*.md' '(sb[_]secret_|service[_]role|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' .; then echo 'Potential private credential pattern found in repository.'; exit 1; fi
       - name: Validate public app wiring
         shell: bash
         run: |
