@@ -44,7 +44,7 @@ jobs:
           printf '%s\n' "ghp_$(printf 'A%.0s' {1..24})" > "$tmp"
           grep -qE "$pattern" "$tmp"
 
-          printf '%s\n' "sb_secret_$(printf 'B%.0s' {1..24})" > "$tmp"
+          printf '%s\n' "sb_""secret_$(printf 'B%.0s' {1..24})" > "$tmp"
           grep -qE "$pattern" "$tmp"
 
           printf '%s\n' 'harmless-placeholder-without-secret-payload' > "$tmp"
