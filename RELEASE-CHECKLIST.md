@@ -80,6 +80,8 @@
 - [ ] ทดสอบ owner/admin authorization และ negative cases
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
+- [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
+- [ ] เปลี่ยน partner-card renderer จาก dynamic `innerHTML` เป็น DOM nodes/`textContent` ใน runtime release ถัดไปเพื่อ defense-in-depth
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
