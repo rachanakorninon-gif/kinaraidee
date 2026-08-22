@@ -1,136 +1,116 @@
 # Kinaraidee — Current Release State
 
-เอกสารนี้เป็นจุดอ้างอิงสั้น ๆ สำหรับสถานะ release ปัจจุบัน เพื่อป้องกันการตีความเอกสาร QA/Commercial ที่อาจยังมี release trace รุ่นก่อนหน้าอยู่ระหว่างการอัปเดต
+เอกสารนี้เป็นจุดอ้างอิงสั้น ๆ สำหรับสถานะ release ปัจจุบัน เพื่อป้องกันการตีความเอกสาร QA/Commercial ที่ล้าสมัย
 
-หลักการ: ข้อมูล deployment, real-device result, ผู้ใช้, conversion, partner หรือรายได้ จะถูกระบุว่า PASS/พร้อมใช้งานได้เมื่อมีหลักฐานจริงเท่านั้น
+หลักการ: deployment, real-device result, ผู้ใช้, conversion, partner, revenue หรือ commercial readiness จะถูกระบุว่า PASS/พร้อมใช้งานได้เมื่อมีหลักฐานจริงเท่านั้น
 
 ## Current source/runtime state
 
-- Latest reviewed source SHA: `75cb1334e9194b8708f6b666d2923028c1aa495b`.
+- Latest reviewed source SHA: `a7e93997c136fb3b2dcb3510fd21e28f42cd7429` (merge of PR #54).
 - Current browser runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
-- Repository compare `b78f636d2494808cc5317d0e25a25bc0478a407f` -> `281ebe23099fbfa1f5f88bbcda26fc946bc01d13` is 12 commits ahead and changes `.github/workflows/beta-check.yml`, `.github/workflows/qa.yml`, `CURRENT-RELEASE.md`, and adds `supabase/functions/group-api/index.ts`.
-- Repository compare `281ebe23099fbfa1f5f88bbcda26fc946bc01d13` -> `8d3abcf2a8d4839240394eeea57f71ba4c7a6e66` is 9 commits ahead and changes only QA/security workflows plus release/hardening documentation: `.github/workflows/credential-scanner-regression.yml`, `.github/workflows/group-api-regression.yml`, `.github/workflows/security-hygiene.yml`, `CURRENT-RELEASE.md`, and `GROUP-API-HARDENING-PLAN.md`.
-- Repository compare `8d3abcf2a8d4839240394eeea57f71ba4c7a6e66` -> `75cb1334e9194b8708f6b666d2923028c1aa495b` is 4 commits ahead and changes only `CURRENT-RELEASE.md`, `GROUP-API-HARDENING-PLAN.md`, and the new `GROUP-API-DEPLOYMENT-EVIDENCE.md`.
-- No public browser runtime asset is changed by these reviewed compares, so the browser/PWA candidate remains runtime-equivalent to PR #42.
-- Group API deployment/source parity has now been separately verified for the inspected deployed `group-api` v2 payload and recorded in `GROUP-API-DEPLOYMENT-EVIDENCE.md`. This evidence is backend-specific and does not prove browser deployment, real-device Group behavior, abuse-control readiness, retention readiness, or Commercial GO.
-- QA/security hardening adds Group API source-contract regression coverage and credential-scanner regression coverage; this is static source/CI protection only and does not create browser deployment, real-device, security-advisor, or commercial PASS evidence.
-- Later commits that modify only release-tracking or planning documents must not be treated as a runtime change; verify runtime equivalence with repository compare when needed instead of trying to make this file self-reference its own newest commit.
-- Deployment-trace implementation baseline: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44), which added `release-meta.json` SHA tracing and deployed group-bridge checks.
-- Release-metadata regression baseline: `c9b837ab44555c07876d0c81e3d25946bc20cb8f` (merge of PR #47), which adds a static contract gate for Pages metadata generation and Live Smoke SHA/cache cross-checking without changing public runtime behavior.
-- Group API hardening planning baseline: `b78f636d2494808cc5317d0e25a25bc0478a407f`, which adds `GROUP-API-HARDENING-PLAN.md`; retention, abuse-control, monitoring, privacy/legal, load-test, and real-device gates remain separate from the now-recorded v2 deployment/source parity evidence.
-- Latest browser runtime change: restore completed live-group result bridge after the Android 2/2-vote real-device failure.
-- PWA cache marker remains: `kinaraidee-beta-v13`.
-- PR #42 restores `useRemoteVotes(votes, setup)`, exports `window.KINARAIDEE_GROUP_MODE.showRemoteResult`, and restores deterministic group module loading so `group-remote.js` can hand completed remote votes back to the group result renderer.
-- PR #42 also adds the dedicated `Group Result Regression` workflow.
-- PR #37 previously fixed cloud-history schema mapping (`created_at` -> numeric `at`, plus `liked` / `accepted`).
-- PR #41 tracks pending member-history writes and a write generation, prevents stale cloud snapshots from replacing newer optimistic history, and reconciles from cloud after a successful write.
-- Dedicated history regression workflow: `Kinaraidee History Sync Regression`.
+- PWA cache marker: `kinaraidee-beta-v13`.
+- PR #42 restores the completed live-group result bridge (`useRemoteVotes`, `showRemoteResult`, deterministic group module loading) and adds Group Result Regression CI.
+- PR #37 fixes cloud-history timestamp/action mapping; PR #41 hardens member-history write/read races.
+- PR #44 adds deployed SHA / `release-meta.json` tracing and deployed group-bridge checks.
+- PR #47 adds static release-metadata regression coverage.
+- PR #53 adds human-readable `deployment-check.html` plus Pages/Live Smoke probe wiring. It changes deployment diagnostics/workflows, not core browser behavior.
+- PR #54 synchronizes `BETA-DEVICE-MATRIX.md` and `BETA-RUN-LOG.md` with actual Android evidence already recorded in Issue #5; it is documentation/evidence only.
+- Supabase `group-api` v2 source/deployment parity was separately verified and recorded in `GROUP-API-DEPLOYMENT-EVIDENCE.md`; that evidence is backend-specific and does not prove browser deployment, real-device behavior, abuse-control readiness, retention readiness, or Commercial GO.
+
+Later workflow/docs/backend-source descendants must not be treated as browser runtime changes without a repository diff showing public app assets changed.
 
 ## Verified CI evidence
 
-PR #42 head `d0afde6a6c6b819bfd078ebb4222738a7dad878b` completed successfully for:
+### PR #42 runtime fix
+Head `d0afde6a6c6b819bfd078ebb4222738a7dad878b` completed successfully for Beta integrity `32566703357`, Beta QA `32566703324`, Security Hygiene `32566703331`, Group Result Regression `32566703337`, History Sync Regression `32566703316`, and Release Consistency `32566703318`.
 
-- Beta integrity run `32566703357`
-- Beta QA run `32566703324`
-- Security Hygiene run `32566703331`
-- Group Result Regression run `32566703337`
-- History Sync Regression run `32566703316`
-- Release Consistency run `32566703318`
+### PR #53 deployment probe
+Head `f3c6d6f7d905b39e99b92ae181b3175de5761ad1` completed successfully for:
+- Security Hygiene `32589443121`
+- Release Metadata Regression `32589443150`
+- Release Consistency `32589443112`
+- Group Result Regression `32589443111`
+- History Sync Regression `32589443118`
+- Beta integrity `32589443151`
+- Credential Scanner Regression `32589443114`
+- Beta QA `32589443133`
 
-PR #44 head `827eee4fb4bcc41e9a0c2f334ee2149b4ab073f3` completed successfully for:
+### PR #54 QA evidence synchronization
+Head `839b8517e2d96aa3de25674b5f22a9503c2e47b2` completed successfully for:
+- Security Hygiene `32591528640`
+- Beta integrity `32591528593`
+- Credential Scanner Regression `32591528503`
+- Group Result Regression `32591528512`
+- Release Metadata Regression `32591528637`
+- Release Consistency `32591528534`
+- Beta QA `32591528504`
+- History Sync Regression `32591528516`
 
-- Beta integrity run `32567793339`
-- Beta QA run `32567793315`
-- Release Consistency run `32567793333`
-- Security Hygiene run `32567793354`
-- Group Result Regression run `32567793327`
-- History Sync Regression run `32567793341`
+These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, Edge Function deployment evidence, or real-device testing.
 
-PR #46 head `3b2f3dc9d7ffb29b91ae4ac045ce43f3cd97fb65` completed successfully for:
-
-- Beta integrity run `32568329210`
-- Beta QA run `32568329190`
-- Release Consistency run `32568329179`
-- Security Hygiene run `32568329200`
-- Group Result Regression run `32568329183`
-- History Sync Regression run `32568329184`
-
-These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, Edge Function deployment evidence, or real-device interaction testing. No workflow or deployment success is inferred for later commits unless an inspectable run/deployment result is available.
-
-## Deployment evidence
+## Browser deployment evidence
 
 Status: **PARTIAL / BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
-PR #44 adds deployment observability so Pages publishes `release-meta.json` with the deployed commit SHA and PWA cache marker, while Live Smoke verifies that SHA against the successful Pages workflow-run head when triggered from deployment. It also verifies the completed live-group result bridge on deployed assets.
+PR #44 and PR #53 provide the plumbing to verify deployed SHA, cache marker, and live group-result bridge markers. The Android deployment recheck that directly navigated to `/release-meta.json` fell through the custom Pages recovery path, so public deployed SHA was not independently confirmed from that attempt. PR #53 therefore added `/deployment-check.html` as a human-readable diagnostic.
 
-PR #47 adds a regression contract that checks the Pages metadata-generation wiring and the Live Smoke deployed-SHA/cache cross-check wiring remain present. This is static workflow-contract evidence only; it does not prove a Pages or Live Smoke run succeeded.
+Still required:
+- successful GitHub Pages deployment workflow evidence for the current runtime or runtime-equivalent descendant,
+- Pages workflow run URL / ID and deployed SHA,
+- public `/deployment-check.html` observed on the deployed site with the PR #42 bridge markers and `kinaraidee-beta-v13`,
+- corresponding Live Smoke success traced to the same deployment,
+- public `data/member-sync.js` trace confirming the PR #37 + PR #41 lineage.
 
-`GROUP-API-DEPLOYMENT-EVIDENCE.md` records separately verified deployment/source parity for the inspected Supabase `group-api` v2 payload, including ACTIVE status, version 2, `verify_jwt=false`, and source parity with `supabase/functions/group-api/index.ts` at the time of inspection. That evidence is valid only for the inspected backend payload and must not be generalized into Pages/Live Smoke, real-device, load, retention, abuse-control, privacy/legal, or commercial readiness.
-
-The current reviewed source remains browser-runtime-equivalent to PR #42 because the reviewed compares after the runtime candidate change only workflows/docs plus backend Group API source lineage and evidence, with no public PWA/browser asset change. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer complete deployment-gate success from source lineage alone.
+Do not infer complete deployment-gate success from source lineage, PR CI, workflow configuration, or the existence of the diagnostic page in the repository alone.
 
 ## Real-device regression status
 
-### Group live result — completed 2/2 vote path
+### Android device #1
 
-Status: **FIX MERGED / REAL-DEVICE RETEST REQUIRED**
-
-Android real-device testing reached a live room with 2/2 votes complete. Room creation, invite sharing, second-participant sync, and the completed-vote state were observed successfully. Tapping `🎉 ดูผลโหวตกลุ่ม` then returned the tester to the home screen instead of showing the group result, so the end-to-end Group flow was recorded as FAIL at the final-result step.
-
-Source inspection found that `group-remote.js` still invoked the remote-result bridge while the simplified `group-mode.js` no longer exported it. PR #42 restores that bridge and its module initialization order. The affected final-result path must be retested on the same Android device after the merged runtime is confirmed available; pre-fix 2/2 evidence must not be promoted to a final-result PASS automatically.
-
-### Issue #38 — `Invalid Date` after cloud sync
-
-Status: **FIXED / SAME-DEVICE RETEST RECORDED**
-
-The Android signed-in history regression was retested after the fix reached the installed PWA. History rendered valid Thai-local date/time values instead of `Invalid Date`, and subsequent account/history checks remained internally consistent. Issue #38 is closed based on recorded real-device evidence.
-
-### Issue #40 — favorite loss after lock/resume
-
-Status: **FIXED / SAME-DEVICE RETEST RECORDED**
-
-The Android reproduction path (fresh result -> lock/suspend -> resume -> like -> History) was retested after PR #41. The newly liked item remained in History and the previous favorite-loss symptom did not recur. Issue #40 is closed based on recorded same-device evidence.
-
-Additional Android recovery evidence from the same assisted QA session includes:
-
-- offline -> online recovery without app failure,
-- external Google Maps round-trip with result state retained,
-- favorite/history persistence after recovery,
-- logout/login persistence of signed-in history counts,
-- standalone PWA close/reopen session persistence,
-- denied-location path continuing to Google Maps fallback without crash or blank screen,
+Actual-device evidence recorded in Issue #5 and synchronized to `BETA-DEVICE-MATRIX.md` / `BETA-RUN-LOG.md` includes scoped PASS observations for:
+- home/app shell, Surprise one-tap, guided flow, reroll,
+- History and Favorite persistence, including focused #38 / #40 retests,
+- denied-location fallback and Google Maps fallback,
+- PWA install/standalone reopen,
+- offline cold start, offline recommendation, and offline→online recovery,
+- Feedback submit with backend row confirmation,
+- Partner validation + privacy consent submit with backend `privacy_notice_version` and `privacy_acknowledged_at` confirmation,
 - 404 recovery,
-- live-group room creation, invite sharing, participant sync, and 2/2 completion before the final-result defect was encountered.
+- background/resume + lock/unlock result-state persistence,
+- post-fix live-group **2/2 final result + repeated reroll + handoff to normal result** on the same Android session.
 
-These observations are evidence for that device/session only; they do not satisfy the full multi-device matrix by themselves.
+The narrow Android #1 live-group final-result regression is therefore no longer listed as awaiting device retest. This does **not** satisfy the multi-device matrix and does not prove the deployed Pages SHA.
+
+Items still unverified/incomplete on Android #1 include exact isolated TC-08 allow-location evidence, NF-04 update-specific evidence, NF-07 upgrade from a pre-v13 cache, and NF-09 assistive accessibility/semantics evidence.
 
 ## Public Beta gate impact
 
-Progress has improved materially because the signed-in Android history regressions (#38 and #40) have same-device fix verification, the live-group final-result defect has a merged source fix plus dedicated regression CI, PR #44 provides deployed-SHA trace plumbing, and Group API v2 deployment/source parity now has a separate evidence record. Public Beta is still **NOT COMPLETE** because the remaining gate includes at minimum:
+Public Beta is still **NOT COMPLETE**.
 
-- real-device retest of the live-group final-result path after PR #42 is confirmed deployed,
-- GitHub Pages deployment workflow evidence for the current runtime or runtime-equivalent descendant,
-- corresponding Live Smoke evidence traced to that deployment and `release-meta.json`,
-- required device matrix completion: Android Chrome on at least 3 device models and iPhone Safari on at least 2 device models,
-- remaining TC-01–TC-15 / NF-01–NF-10 cases that are not yet backed by real-device evidence,
-- any remaining release checklist items that explicitly require real workflow/device evidence.
+Remaining minimum gates include:
+- GitHub Pages + Live Smoke deployed-SHA trace for the runtime/runtime-equivalent descendant,
+- Android Chrome coverage on at least 3 device models; current evidence represents only one Android device/session and its exact model/version was not captured,
+- iPhone Safari coverage on at least 2 device models,
+- remaining TC-01–TC-15 / NF-01–NF-10 platform-specific evidence,
+- NF-07 upgrade from an older cache to `kinaraidee-beta-v13`,
+- NF-09 accessibility/semantics evidence,
+- no unresolved Blocker/Critical release defect.
 
 Issue #5 remains the primary Beta QA execution tracker.
 
 ## Commercial Readiness impact
 
 Commercial launch remains **NO-GO** while required evidence or decisions are outstanding, including at minimum:
-
 - Public Beta technical/device acceptance and deployment/live trace,
 - Supabase Auth leaked-password protection follow-up (Issue #11),
 - `main` branch protection / required-check governance (Issue #35),
-- Group API retention/deletion policy, anonymous abuse-control strategy, monitoring baseline and related Privacy/Operations decisions (`GROUP-API-HARDENING-PLAN.md` / Issue #45),
+- Group API retention/deletion policy, anonymous abuse/rate controls, monitoring baseline, and related Privacy/Operations decisions (Issue #45),
 - Production Privacy/Terms/controller/contact/retention/legal review decisions,
 - Production operations ownership, monitoring, backup/recovery drill evidence,
 - Payment/Premium and partner commercial terms only if/when those business flows are actually enabled.
 
-No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete browser deployment PASS, full device-matrix PASS, or readiness claim beyond the scoped Group API deployment/source parity evidence is implied by this document.
+No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete browser deployment PASS, full device-matrix PASS, or commercial GO is implied by this document.
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current browser runtime work uses `6fadf04f...`; `75cb1334...` is the latest reviewed source baseline and remains browser-runtime-equivalent while containing QA/security hardening, Group API hardening documentation, and scoped Group API v2 deployment/source parity evidence. `907ea6b1...` is the PR #44 deployment-trace implementation baseline, PR #47 provides the release-metadata regression contract, and `b78f636d...` records the Group API hardening decision gates. Use this file plus repository compare, `GROUP-API-DEPLOYMENT-EVIDENCE.md`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Older release traces that name PR #28, PR #37, or PR #41 as the current browser candidate are historical baselines. The browser runtime candidate is PR #42 (`6fadf04f...`) while later reviewed descendants through PR #54 are QA/deployment diagnostics/docs/backend-source evidence unless a repository diff shows public app runtime files changed. Use this file together with Issue #5, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `GROUP-API-DEPLOYMENT-EVIDENCE.md`, and the open Commercial Readiness issues until the remaining gates are closed.
