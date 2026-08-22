@@ -1,0 +1,54 @@
+name: Kinaraidee History Sync Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  history-sync-shape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check member sync JavaScript syntax
+        run: node --check data/member-sync.js
+
+      - name: Verify cloud history maps to local history schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "const parsedAt=Date.parse(r.created_at);" data/member-sync.js
+          grep -Fq "const liked=r.action==='liked';" data/member-sync.js
+          grep -Fq "const accepted=r.action==='picked';" data/member-sync.js
+          grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js
+          grep -Fq "liked," data/member-sync.js
+          grep -Fq "accepted," data/member-sync.js
+          if grep -Fq "date:new Date(r.created_at).toLocaleString('th-TH')" data/member-sync.js && ! grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js; then
+            echo 'Cloud history exposes display date but not local timestamp field.'
+            exit 1
+          fi
+
+      - name: Verify renderer still consumes local timestamp
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "new Date(h.at).toLocaleString('th-TH')" index.html
+
+      - name: Record scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Member history sync regression'
+            echo
+            echo '- Protects the cloud-to-local history schema used by the main history renderer.'
+            echo '- Specifically prevents the Android real-device Invalid Date regression caused by a missing `at` field.'
+            echo '- Also verifies liked/picked actions map back to local liked/accepted booleans.'
+          } >> "$GITHUB_STEP_SUMMARY"
