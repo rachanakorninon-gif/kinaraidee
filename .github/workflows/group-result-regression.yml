@@ -1,0 +1,44 @@
+name: Group Result Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  group-result-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check group JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check data/group-mode.js
+          node --check data/group-sync.js
+          node --check data/group-remote.js
+
+      - name: Verify remote-result bridge remains wired
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "function useRemoteVotes(votes,setup)" data/group-mode.js
+          grep -Fq "window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}" data/group-mode.js
+          grep -Fq "window.KINARAIDEE_GROUP_MODE?.showRemoteResult" data/group-remote.js
+          grep -Fq "await load('data/group-sync.js')" data/group-mode.js
+          grep -Fq "await load('data/group-remote.js')" data/group-mode.js
+          grep -Fq "remoteShowResult.onclick=showOnlineResult" data/group-remote.js
+
+      - name: Verify completed live room can reach group result screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "renderGroupResult();return true" data/group-mode.js
+          grep -Fq "showScreen('groupResult')" data/group-mode.js
+          grep -Fq "if(votes.length<h.size)return alert" data/group-remote.js
