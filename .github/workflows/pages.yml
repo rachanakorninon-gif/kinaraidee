@@ -46,6 +46,19 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
           node --check sw.js
           for file in data/*.js; do node --check "$file"; done
+      - name: Verify member history sync contract before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "const parsedAt=Date.parse(r.created_at);" data/member-sync.js
+          grep -Fq "const liked=r.action==='liked';" data/member-sync.js
+          grep -Fq "const accepted=r.action==='picked';" data/member-sync.js
+          grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js
+          grep -Fq "new Date(h.at).toLocaleString('th-TH')" index.html
+          if grep -Fq "date:new Date(r.created_at).toLocaleString('th-TH')" data/member-sync.js && ! grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js; then
+            echo 'Cloud history exposes display date but not the local timestamp field required by the renderer.'
+            exit 1
+          fi
       - name: Verify latest release wiring and PWA v13
         shell: bash
         run: |
