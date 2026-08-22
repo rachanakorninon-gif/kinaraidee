@@ -3,8 +3,9 @@
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
 ## Release trace สำหรับรอบนี้
-- Current release candidate: PR #25 (`security/partner-card-textcontent-v13`); บันทึก final merge SHA หลัง merge
+- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
+- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
 - Historical runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
 - Earlier baseline: `bb7b979421275995a6fee12f84b118d0c942037a` / `kinaraidee-beta-v11`
 - Deployed SHA:
@@ -14,7 +15,7 @@
 
 > v13 เปลี่ยน partner/fallback card renderer จาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump Service Worker cache generation ดังนั้นผล v12 ห้ามถูกยกมาเป็นผล v13 โดยอัตโนมัติสำหรับ TC-10/nearby partner rendering, NF-07 และ PWA/update flow ที่ได้รับผลกระทบ
 
-> หาก `main` หรือ deployed SHA เป็น evidence/workflow-only descendant ให้บันทึก SHA จริงและยืนยันว่าไม่มี runtime app file เปลี่ยนจาก final v13 runtime SHA ก่อนใช้ผลจาก matrix นี้เป็น release evidence
+> หาก `main` หรือ deployed SHA เป็น evidence/workflow-only descendant ให้บันทึก SHA จริงและยืนยันว่าไม่มี runtime app file เปลี่ยนจาก `83f8f363...` ก่อนใช้ผลจาก matrix นี้เป็น release evidence
 
 ## Android Chrome
 
