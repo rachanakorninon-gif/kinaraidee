@@ -45,7 +45,7 @@ jobs:
           grep -q 'box.replaceChildren()' data/nearby-restaurants.js
           grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
           grep -q "detail.textContent=String(r.address" data/nearby-restaurants.js
-      - name: Validate public form accessibility
+      - name: Validate public form accessibility and privacy acknowledgement
         shell: bash
         run: |
           set -euo pipefail
@@ -56,6 +56,9 @@ jobs:
           grep -q 'autocomplete="tel"' partner.html
           grep -q 'autocomplete="email"' partner.html
           grep -q 'aria-live="polite"' partner.html
+          grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
+          grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
+          grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
       - name: Validate surprise and PWA v13 integrity
         shell: bash
         run: |

@@ -93,7 +93,7 @@ jobs:
             exit 1
           fi
 
-      - name: Verify public form accessibility
+      - name: Verify public form accessibility and privacy acknowledgement
         shell: bash
         run: |
           set -euo pipefail
@@ -112,6 +112,9 @@ jobs:
           grep -q 'aria-live="polite"' partner.html
           grep -q "setAttribute('aria-busy','true')" feedback.html
           grep -q "setAttribute('aria-busy','true')" partner.html
+          grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
+          grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
+          grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
 
       - name: Verify privacy notice matches beta data flows
         shell: bash
