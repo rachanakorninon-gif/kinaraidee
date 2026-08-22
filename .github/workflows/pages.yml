@@ -49,6 +49,9 @@ jobs:
           grep -q 'aria-busy' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
+          grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
+          grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
+          grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
           if grep -q 'Promise.allSettled' sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
       - name: Block deploy on release evidence marker drift
         shell: bash
