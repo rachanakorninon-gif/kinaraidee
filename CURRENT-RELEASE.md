@@ -6,9 +6,9 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `fec93ff742a1a3c4ef7633464834d7c5358ae6fa` (docs follow-up after PR #63; browser/PWA runtime unchanged, Group API backend source lineage changed by PR #63).
+- Latest reviewed `main`: `38969eb04c49c690587efa16cc7dd10cd0d91aa7` (docs follow-up after PR #63; browser/PWA runtime unchanged, Group API backend source lineage changed by PR #63).
 - Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
-- Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); current Supabase deployment/source parity requires re-verification after this backend change.
+- Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #58 เป็น runtime change ล่าสุดของ browser/PWA: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
 - PR #58 เพิ่ม `.github/workflows/surprise-accessibility-regression.yml` เป็น static contract guard; static PASS ไม่แทน TalkBack/VoiceOver real-device evidence.
@@ -18,12 +18,12 @@
 - `d258cb49...` เพิ่ม Release Consistency guard ที่ fail เมื่อ `CURRENT-RELEASE.md` ประกาศ runtime candidate เก่าแต่มี browser/PWA runtime files เปลี่ยนหลัง candidate.
 - `be1288b99...` เพิ่ม Pages predeploy guard แบบเดียวกัน เพื่อ block deployment หาก declared runtime candidate stale เมื่อเทียบกับ browser/PWA runtime files.
 - PR #62 `77bbffd5...` เพิ่ม `.github/workflows/runtime-lineage-regression.yml` เพื่อ self-test ว่า candidate ปัจจุบัน clean, docs-only descendant ไม่ถูกนับเป็น runtime drift, synthetic runtime change ถูกตรวจจับ และ production lineage guards ยัง wired อยู่; ไม่เปลี่ยน browser/PWA runtime.
-- PR #63 `f683f829...` เปลี่ยน Group API backend source โดยเพิ่ม privacy-safe structured operational events และ regression guard ที่ป้องกัน logging ของ sensitive identifiers/payload references; ไม่เปลี่ยน browser/PWA runtime แต่ทำให้ historical Supabase v2 source-parity evidence ต้อง re-verify.
+- PR #63 `f683f829...` เปลี่ยน Group API backend source โดยเพิ่ม privacy-safe structured operational events และ regression guard ที่ป้องกัน logging ของ sensitive identifiers/payload references; source นี้ถูก deploy และตรวจย้อนกลับได้ใน Supabase `group-api` version 3 โดยคง `verify_jwt=false` ตาม invite-flow เดิม.
 - Guards เหล่านี้ใช้ full git history (`fetch-depth: 0`) และตรวจ ancestry/diff ก่อนยอมรับ release lineage; การมี guard ไม่เท่ากับ successful deployment evidence.
 - PR #42 `6fadf04f...` ยังคงเป็น historical live-group result bridge baseline.
 - PR #37 แก้ member cloud-history timestamp mapping/fallback; PR #41 เพิ่ม stale-snapshot/write-race protection.
 - PR #53 เพิ่ม public diagnostic `deployment-check.html`; PR #54 sync Android real-device evidence ที่มีจริง.
-- Group API source/deployment lineage แยกจาก browser runtime; `GROUP-API-DEPLOYMENT-EVIDENCE.md` ระบุ historical parity และสถานะ re-verification required หลัง PR #63.
+- Group API source/deployment lineage แยกจาก browser runtime; `GROUP-API-DEPLOYMENT-EVIDENCE.md` ระบุ historical v2 parity และ current verified v3 parity หลัง PR #63.
 
 ## Verified CI/static evidence
 
@@ -33,15 +33,17 @@ PR #58 มี static accessibility regression guard อยู่ใน source �
 
 PR #62 head `76e6e47672c4fdec3e1772b9e6eb0a87adc52e3a` มี inspectable pull-request workflow evidence: `Runtime Lineage Regression`, `Kinaraidee Beta QA`, `Beta integrity checks`, `Kinaraidee Release Consistency`, `Kinaraidee Security Hygiene`, `Credential Scanner Regression`, `Surprise Accessibility Regression`, `Group Result Regression`, `Kinaraidee Release Metadata Regression` และ `Kinaraidee History Sync Regression` จบด้วย `success`. ขอบเขต evidence นี้ยืนยันเฉพาะ CI/static/workflow contract ของ PR #62 ไม่ใช่ Pages deploy, Live Smoke, Public URL หรือ real-device PASS.
 
-PR #63 head `527cfa0c0fc11d026f549132004b04d71f400662` มี inspectable pull-request CI evidence ว่า `Kinaraidee Group API Regression`, `Kinaraidee Security Hygiene`, Beta QA/integrity, Release Consistency และ regression suites ที่เกี่ยวข้องจบด้วย `success`. ขอบเขตนี้เป็น source/CI evidence ของ backend observability contract เท่านั้น ไม่ใช่ Supabase deployment, live log ingestion, alerting หรือ production monitoring PASS.
+PR #63 head `527cfa0c0fc11d026f549132004b04d71f400662` มี inspectable pull-request CI evidence ว่า `Kinaraidee Group API Regression`, `Kinaraidee Security Hygiene`, Beta QA/integrity, Release Consistency และ regression suites ที่เกี่ยวข้องจบด้วย `success`. ขอบเขตนี้เป็น source/CI evidence ของ backend observability contract; deployment/source parity ต้องอาศัย Supabase inspection แยกต่างหาก.
+
+หลัง PR #63 มี Supabase inspection ใหม่ยืนยันว่า `group-api` version 3 เป็น `ACTIVE`, `verify_jwt=false`, และ deployed `index.ts` มี source candidate เดียวกับ repository รวม privacy-safe `logEvent(...)` wiring. หลักฐานนี้ยืนยัน source/deployment parity เท่านั้น ไม่ใช่ live log-ingestion quality, alerting หรือ monitoring baseline PASS.
 
 Release-lineage guards หลัง PR #61/PR #62 ป้องกัน stale declared browser/PWA runtime candidate ใน source/workflow configuration และมี regression self-test สำหรับ guard behavior แล้ว แต่ยังไม่ถือว่า Pages deploy หรือ Live Smoke ผ่านจนกว่าจะมีผล run ที่ตรวจได้.
 
-CI/static evidence ไม่แทน push-triggered GitHub Pages deployment, corresponding Live Smoke, Public URL verification, Supabase Edge Function deployment/source parity หรือ real-device interaction/assistive-technology testing.
+CI/static evidence ไม่แทน push-triggered GitHub Pages deployment, corresponding Live Smoke, Public URL verification หรือ real-device interaction/assistive-technology testing.
 
 ## Deployment evidence
 
-Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+Status: **PARTIAL / BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
 Deployment observability ปัจจุบันประกอบด้วย:
 
@@ -53,13 +55,13 @@ Deployment observability ปัจจุบันประกอบด้วย:
 - Release Consistency และ Pages predeploy ปัจจุบัน block stale declared runtime candidate เมื่อ browser/PWA runtime files เปลี่ยนหลัง candidate.
 - PR #62 เพิ่ม regression self-test สำหรับ runtime-lineage guard logic; ไม่ใช่ deployment evidence.
 - Release Metadata Regression ตรวจ contract ของ metadata/deployment-trace wiring แบบ static.
-- Group API historical deployed/source parity evidence ของ Supabase v2 ถูก supersede ในเชิง source โดย PR #63; ต้อง deploy/inspect ใหม่ก่อนอ้าง current parity และต้อง verify live operational-event ingestion แยกต่างหาก.
+- Group API source candidate จาก PR #63 ถูก deploy เป็น Supabase `group-api` version 3 และ post-deploy source inspection ยืนยัน current source/deployment parity; live operational-event ingestion/alerting ยังต้องพิสูจน์แยก.
 
 Do not infer complete deployment-gate success from source, PR/CI success, workflow guards, or the presence of deployment observability files alone.
 
 ยังห้ามสรุป browser deployment gate ว่า PASS จนกว่าจะมี inspectable successful Pages run และ corresponding Live Smoke run ที่ trace กลับไปยัง deployment เดียวกันของ PR #58 หรือ descendant ที่พิสูจน์ว่า runtime-equivalent.
 
-ยังห้ามสรุป Group API deployment/source parity หลัง PR #63 ว่า PASS จนกว่าจะมี Supabase deployment/version/source inspection ใหม่ที่ตรวจย้อนกลับได้.
+Group API current source/deployment parity หลัง PR #63 มีหลักฐานตรวจแล้วสำหรับ version 3 แต่ยังห้ามสรุป monitoring/operations readiness จนกว่าจะมี live ingestion/retention/abuse-control evidence ที่เกี่ยวข้อง.
 
 ## Real-device regression status
 
@@ -108,7 +110,7 @@ Commercial launch ยัง **NO-GO** ขณะหลักฐาน/การ�
 - Public Beta technical/device/accessibility acceptance + Pages/Live Smoke trace,
 - Supabase Auth leaked-password protection follow-up,
 - `main` branch protection / required-check governance,
-- Group API current deployment/source parity after PR #63, live observability ingestion, retention/deletion policy, anonymous abuse-control strategy, monitoring baseline และ Privacy/Operations decisions,
+- Group API live observability ingestion, retention/deletion policy, anonymous abuse-control strategy, monitoring baseline และ Privacy/Operations decisions,
 - Production Privacy/Terms/controller/contact/retention/legal decisions,
 - Production monitoring/support/backup/recovery/rollback drill evidence,
 - Payment/Premium และ partner commercial evidence เฉพาะโมเดลที่เลือกเปิดจริง.
@@ -120,8 +122,8 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 ## Supersession rule
 
 - Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี browser/PWA runtime app change ใหม่.
-- Current Group API source candidate = PR #63 / `f683f829...`; historical Supabase v2 parity ต้อง re-verify ก่อนถือว่า deployed source ตรงกับ candidate นี้.
-- Latest reviewed source baseline = `fec93ff7...`; commits หลัง PR #62 มี backend Group API source/QA/docs lineage แต่ไม่ supersede browser/PWA runtime behavior ของ PR #58.
+- Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity ถูก re-verify หลัง deploy source candidate นี้.
+- Latest reviewed source baseline = `38969eb0...`; commits หลัง PR #62 มี backend Group API source/QA/docs lineage แต่ไม่ supersede browser/PWA runtime behavior ของ PR #58.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59/#60/#61 และ stale-runtime deployment guards ล่าสุด.
 - Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
