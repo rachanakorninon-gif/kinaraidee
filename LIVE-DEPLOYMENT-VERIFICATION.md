@@ -3,7 +3,9 @@
 ใช้เอกสารนี้ยืนยันว่า Public Beta ที่ผู้ใช้เปิดจริงตรงกับ release candidate ใน repository โดยห้ามทำเครื่องหมาย PASS จากการคาดเดา, static review หรือ workflow configuration เพียงอย่างเดียว
 
 ## Release candidate ปัจจุบัน
-- Runtime candidate: PR #25 (`security/partner-card-textcontent-v13`); ต้องบันทึก final merge SHA หลัง merge
+- Runtime release SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
+- Pre-merge head: `4d79b19e68f35efc599de7482cdd933b9812ae45`
+- Pre-merge CI: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
 - Expected Service Worker cache: `kinaraidee-beta-v13`
 - วันที่ reset evidence: 2026-08-22 (Asia/Bangkok)
@@ -13,20 +15,21 @@
 v12 และ evidence ที่อ้าง `f08d069a...` / `kinaraidee-beta-v12` เป็น historical evidence เท่านั้น ไม่ใช่หลักฐานของ v13 สำหรับ nearby partner rendering, PWA update หรือ flow ที่ได้รับผลกระทบ
 
 ## CI evidence
-ก่อน merge PR #25 ต้องมี CI ปัจจุบันของ head ผ่านอย่างน้อย:
-- `Beta integrity checks`
-- `Kinaraidee Beta QA`
-- `Kinaraidee Release Consistency`
+PR #26 head `4d79b19e68f35efc599de7482cdd933b9812ae45` ผ่านก่อน merge:
+- `Kinaraidee Release Consistency` run `32555118263` — **SUCCESS**
+- `Beta integrity checks` run `32555118264` — **SUCCESS**
+- `Kinaraidee Beta QA` run `32555118259` — **SUCCESS**
+- merge เข้า `main` เป็น `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
 
 CI ยืนยัน static/integrity/consistency checks เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint หรือ real-device behavior
 
 ### Release-marker drift protection
 กติกาที่ต้องรักษา:
 - runtime/workflow/README ที่อธิบาย release ปัจจุบันต้องใช้ canonical marker เดียวกับ `sw.js`
-- release-evidence docs ต้องอ้าง canonical markerปัจจุบัน แต่อนุญาต marker รุ่นเก่าที่เก็บไว้เป็น historical baseline พร้อมบริบท
+- release-evidence docs ต้องอ้าง canonical marker ปัจจุบัน แต่อนุญาต marker รุ่นเก่าที่เก็บไว้เป็น historical baseline พร้อมบริบท
 
 ## GitHub Pages / Live Smoke evidence
-- [ ] GitHub Pages deployment ของ final v13 merge SHA หรือ non-runtime descendant ที่พิสูจน์ว่า payload เท่ากันมีสถานะสำเร็จ
+- [ ] GitHub Pages deployment ของ `83f8f363...` หรือ non-runtime descendant ที่พิสูจน์ว่า payload เท่ากันมีสถานะสำเร็จ
 - [ ] บันทึก Pages workflow run URL / ID และ deployed SHA
 - [ ] Live Smoke run สำเร็จและ trace กลับไปยัง deployment เดียวกัน
 - [ ] บันทึก Live Smoke workflow run URL / ID และ Job Summary ถ้ามี
@@ -57,7 +60,7 @@ Automated workflow ไม่แทนรายการนี้:
 - [ ] upgrade จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v13` สำเร็จโดยไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
 
 ## Evidence record
-- Runtime candidate SHA:
+- Runtime candidate SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
@@ -79,4 +82,4 @@ Automated workflow ไม่แทนรายการนี้:
 - PR CI success ไม่แทน Pages/Live Smoke
 - Live Smoke success ไม่แทน real-device interaction
 - ผล v12 / `f08d069a...` ห้ามถูกยกมาเป็นผล v13 โดยอัตโนมัติสำหรับ flow ที่ runtime เปลี่ยน
-- หาก deployed SHA เป็น non-runtime descendant ต้องยืนยัน diff ว่า runtime payload เท่ากับ final v13 runtime SHA ก่อนใช้เป็น release evidence
+- หาก deployed SHA เป็น non-runtime descendant ต้องยืนยัน diff ว่า runtime payload เท่ากับ `83f8f363...` ก่อนใช้เป็น release evidence
