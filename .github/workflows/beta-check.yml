@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           grep -q 'box.replaceChildren()' data/nearby-restaurants.js
           grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
-          grep -q "muted.textContent=String(r.address" data/nearby-restaurants.js
+          grep -q "detail.textContent=String(r.address" data/nearby-restaurants.js
       - name: Validate public form accessibility
         shell: bash
         run: |
