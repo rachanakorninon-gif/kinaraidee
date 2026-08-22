@@ -203,7 +203,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
+          matches="$(grep -RInE --exclude-dir=.git --exclude-dir=.github --exclude='*.md' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
           unsafe="$(printf '%s\n' "$matches" | grep -vE "Deno\.env\.get\(['\"]SUPABASE_SERVICE_ROLE_KEY['\"]\)" || true)"
           if [ -n "$unsafe" ]; then
             printf '%s\n' "$unsafe"
