@@ -16,13 +16,13 @@ jobs:
       - name: Checkout current release metadata
         uses: actions/checkout@v4
 
-      - name: Check public beta availability and release marker
+      - name: Check public beta availability and release metadata
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          expected_marker="$(grep -oE 'kinaraidee-beta-v[0-9]+' sw.js | head -n1)"
-          test -n "$expected_marker"
+          expected_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$expected_marker" || { echo 'Unable to derive expected Service Worker marker'; exit 1; }
 
           paths=(
             '/'
@@ -33,6 +33,7 @@ jobs:
             '/partner.html'
             '/manifest.webmanifest'
             '/sw.js'
+            '/release-meta.json'
             '/data/home-surprise.js'
             '/data/nearby-restaurants.js'
           )
@@ -45,12 +46,40 @@ jobs:
           done
 
           live_sw="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/sw.js")"
-          grep -q "$expected_marker" <<<"$live_sw"
+          release_meta="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/release-meta.json")"
+          live_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$live_sw")"
+          deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
+          meta_marker="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
+
+          test "$live_marker" = "$expected_marker" || { echo "Live marker $live_marker does not match repository marker $expected_marker"; exit 1; }
+          test "$meta_marker" = "$live_marker" || { echo "release-meta marker $meta_marker does not match live Service Worker marker $live_marker"; exit 1; }
+          test -n "$deployed_sha" || { echo 'release-meta.json does not contain a valid deployed SHA'; exit 1; }
           grep -q 'cache.addAll(SHELL)' <<<"$live_sw"
           if grep -q 'Promise.allSettled' <<<"$live_sw"; then
             echo 'Live service worker is using a non-atomic shell install strategy.'
             exit 1
           fi
+
+          echo "DEPLOYED_SHA=$deployed_sha" >> "$GITHUB_ENV"
+          echo "LIVE_MARKER=$live_marker" >> "$GITHUB_ENV"
+
+      - name: Verify deployed SHA belongs to current main history
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${DEPLOYED_SHA:-}" || { echo 'Missing deployed SHA from release metadata check'; exit 1; }
+          git fetch --no-tags --depth=200 origin main
+          if ! git cat-file -e "$DEPLOYED_SHA^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$DEPLOYED_SHA" || {
+              echo "Unable to fetch deployed SHA $DEPLOYED_SHA from repository"
+              exit 1
+            }
+          fi
+          git merge-base --is-ancestor "$DEPLOYED_SHA" "origin/main" || {
+            echo "Deployed SHA $DEPLOYED_SHA is not an ancestor of current main"
+            exit 1
+          }
+          echo "Deployed SHA $DEPLOYED_SHA is traceable to current main history"
 
       - name: Verify development-only paths remain private
         shell: bash
@@ -82,7 +111,9 @@ jobs:
             echo '## Public Beta synthetic monitor'
             echo
             echo "- Repository commit: \`${GITHUB_SHA}\`"
+            echo "- Deployed SHA from release-meta: \`${DEPLOYED_SHA:-unavailable}\`"
+            echo "- Live Service Worker marker: \`${LIVE_MARKER:-unavailable}\`"
             echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Scope: HTTP availability, current Service Worker marker/atomic install, development-only path exposure'
+            echo '- Scope: HTTP availability, release-meta/SW consistency, deployed-SHA ancestry, atomic Service Worker install, development-only path exposure'
             echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, accessibility, payment, partner, privacy/legal, or production security evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
