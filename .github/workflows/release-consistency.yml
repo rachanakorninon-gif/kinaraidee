@@ -26,35 +26,38 @@ jobs:
           test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
           echo "Canonical marker: $marker"
 
-          tracked=(
+          strict=(
             '.github/workflows/qa.yml'
             '.github/workflows/beta-check.yml'
             '.github/workflows/pages.yml'
             '.github/workflows/live-smoke.yml'
             'README.md'
+          )
+          evidence=(
             'LIVE-DEPLOYMENT-VERIFICATION.md'
             'BETA-RUN-LOG.md'
             'BETA-DEVICE-MATRIX.md'
             'RELEASE-CHECKLIST.md'
           )
 
-          for file in "${tracked[@]}"; do
+          for file in "${strict[@]}"; do
             test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
-            grep -Fq "$marker" "$file" || {
-              echo "Release marker drift: $file does not reference $marker"
-              exit 1
-            }
-
+            grep -Fq "$marker" "$file" || { echo "Release marker drift: $file does not reference $marker"; exit 1; }
             while IFS= read -r found; do
               [ -z "$found" ] && continue
               if [ "$found" != "$marker" ]; then
-                echo "Stale release marker in $file: $found (expected only $marker)"
+                echo "Stale active release marker in $file: $found (expected only $marker)"
                 exit 1
               fi
             done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
           done
 
-          echo 'All release-tracking files reference only the canonical PWA marker'
+          for file in "${evidence[@]}"; do
+            test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }
+            grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }
+          done
+
+          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and may retain historical markers with context'
 
       - name: Validate atomic app-shell strategy
         shell: bash
