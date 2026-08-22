@@ -6,10 +6,12 @@
 
 ## Current source/runtime state
 
-- Latest reviewed source SHA: `281ebe23099fbfa1f5f88bbcda26fc946bc01d13`.
+- Latest reviewed source SHA: `8d3abcf2a8d4839240394eeea57f71ba4c7a6e66`.
 - Current browser runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
 - Repository compare `b78f636d2494808cc5317d0e25a25bc0478a407f` -> `281ebe23099fbfa1f5f88bbcda26fc946bc01d13` is 12 commits ahead and changes `.github/workflows/beta-check.yml`, `.github/workflows/qa.yml`, `CURRENT-RELEASE.md`, and adds `supabase/functions/group-api/index.ts`.
-- No public browser runtime asset is changed by that 12-commit compare, so the browser/PWA candidate remains runtime-equivalent to PR #42. The added Group API source file is backend source lineage and must not be treated as proof that the corresponding Edge Function version was deployed.
+- Repository compare `281ebe23099fbfa1f5f88bbcda26fc946bc01d13` -> `8d3abcf2a8d4839240394eeea57f71ba4c7a6e66` is 9 commits ahead and changes only QA/security workflows plus release/hardening documentation: `.github/workflows/credential-scanner-regression.yml`, `.github/workflows/group-api-regression.yml`, `.github/workflows/security-hygiene.yml`, `CURRENT-RELEASE.md`, and `GROUP-API-HARDENING-PLAN.md`.
+- No public browser runtime asset is changed by either reviewed compare, so the browser/PWA candidate remains runtime-equivalent to PR #42. The Group API source lineage remains backend-specific and must not be treated as proof that the corresponding Edge Function version was deployed.
+- The latest 9-commit QA/security hardening adds Group API source-contract regression coverage and credential-scanner regression coverage; this is static source/CI protection only and does not create deployment, real-device, security-advisor, or commercial PASS evidence.
 - Later commits that modify only release-tracking or planning documents must not be treated as a runtime change; verify runtime equivalence with repository compare when needed instead of trying to make this file self-reference its own newest commit.
 - Deployment-trace implementation baseline: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44), which added `release-meta.json` SHA tracing and deployed group-bridge checks.
 - Release-metadata regression baseline: `c9b837ab44555c07876d0c81e3d25946bc20cb8f` (merge of PR #47), which adds a static contract gate for Pages metadata generation and Live Smoke SHA/cache cross-checking without changing public runtime behavior.
@@ -61,7 +63,7 @@ PR #44 adds deployment observability so Pages publishes `release-meta.json` with
 
 PR #47 adds a regression contract that checks the Pages metadata-generation wiring and the Live Smoke deployed-SHA/cache cross-check wiring remain present. This is static workflow-contract evidence only; it does not prove a Pages or Live Smoke run succeeded.
 
-The current reviewed source remains browser-runtime-equivalent to PR #42 because the compare after the previous reviewed baseline changes workflows/docs plus backend Group API source but no public PWA/browser asset. This does **not** prove a Pages deployment, matching Live Smoke run, or Group API Edge Function deployment succeeded. Do not infer complete deployment-gate success from source lineage alone.
+The current reviewed source remains browser-runtime-equivalent to PR #42 because the reviewed compares after the runtime candidate change only workflows/docs plus backend Group API source lineage and QA/security regression coverage, with no public PWA/browser asset change. This does **not** prove a Pages deployment, matching Live Smoke run, or Group API Edge Function deployment succeeded. Do not infer complete deployment-gate success from source lineage alone.
 
 ## Real-device regression status
 
@@ -127,4 +129,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current browser runtime work uses `6fadf04f...`; `281ebe23...` is the latest reviewed source baseline and is browser-runtime-equivalent while also containing backend Group API source lineage that must be verified separately for deployment. `907ea6b1...` is the PR #44 deployment-trace implementation baseline, PR #47 provides the release-metadata regression contract, and `b78f636d...` records the Group API hardening decision gates. Use this file plus repository compare, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current browser runtime work uses `6fadf04f...`; `8d3abcf2...` is the latest reviewed source baseline and remains browser-runtime-equivalent while containing QA/security hardening plus the previously introduced backend Group API source lineage that must be verified separately for deployment. `907ea6b1...` is the PR #44 deployment-trace implementation baseline, PR #47 provides the release-metadata regression contract, and `b78f636d...` records the Group API hardening decision gates. Use this file plus repository compare, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
