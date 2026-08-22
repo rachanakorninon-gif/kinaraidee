@@ -35,6 +35,19 @@ jobs:
             exit 1
           fi
 
+      - name: Verify optimistic writes cannot be overwritten by stale cloud snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "pendingWrites=0,writeGeneration=0" data/member-sync.js
+          grep -Fq "pendingWrites++;" data/member-sync.js
+          grep -Fq "writeGeneration++;" data/member-sync.js
+          grep -Fq "if(!client||!user||loading||pendingWrites>0)return false;" data/member-sync.js
+          grep -Fq "const generationAtStart=writeGeneration;" data/member-sync.js
+          grep -Fq "if(pendingWrites>0||writeGeneration!==generationAtStart)return false;" data/member-sync.js
+          grep -Fq "if(saved&&pendingWrites===0)" data/member-sync.js
+          grep -Fq "loadCloudHistory({render:historyIsActive()})" data/member-sync.js
+
       - name: Verify renderer still consumes local timestamp
         shell: bash
         run: |
@@ -49,6 +62,7 @@ jobs:
             echo '## Member history sync regression'
             echo
             echo '- Protects the cloud-to-local history schema used by the main history renderer.'
-            echo '- Specifically prevents the Android real-device Invalid Date regression caused by a missing `at` field.'
-            echo '- Also verifies liked/picked actions map back to local liked/accepted booleans.'
+            echo '- Prevents the Android real-device Invalid Date regression caused by a missing `at` field.'
+            echo '- Verifies liked/picked actions map back to local liked/accepted booleans.'
+            echo '- Prevents an in-flight or pending member write from being overwritten by an older cloud snapshot after resume/network recovery.'
           } >> "$GITHUB_STEP_SUMMARY"
