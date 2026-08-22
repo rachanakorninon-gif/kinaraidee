@@ -21,11 +21,17 @@
 
 Baseline นี้เป็น source/runtime inspection เท่านั้น ไม่ใช่ real-device, load-test, abuse-test หรือ privacy/legal PASS
 
+### Verified deployment/source parity — 2026-08-23
+
+PR #52 บันทึกหลักฐานที่ตรวจสอบได้ว่า Supabase `group-api` ซึ่งอยู่สถานะ ACTIVE version 2 ณ เวลาตรวจ ตรงกับ source mirror `supabase/functions/group-api/index.ts` ที่ตรวจใน repository โดย Supabase รายงาน deployed SHA-256 `4f12e48c55a782dbc00b13d739a2a4c72e22e751e9d16dc8e87fd89d4c5cb7bd` และ merge evidence อยู่ที่ `0caa8dd283dcb404f80f0296e92b8c4b652cb95e`.
+
+หลักฐานนี้ยกระดับสถานะจาก “มี source mirror แต่ยังไม่รู้ว่า deploy ตรงกันหรือไม่” เป็น **deployment/source parity verified สำหรับ Group API v2 ณ จุดตรวจ** เท่านั้น ไม่ได้ยืนยัน retention/deletion, rate limiting/abuse control, monitoring baseline, load/security testing, Privacy/Legal approval, real-device final-result flow หรือ Commercial GO และต้องตรวจใหม่หาก source หรือ deployed function เปลี่ยนภายหลัง
+
 ### Static source-contract regression gate
 
 Repository มี `.github/workflows/group-api-regression.yml` เพื่อกัน regression ของ invariants ที่ตรวจจาก source ได้ เช่น POST/OPTIONS-only behavior, 8 KiB body limit, response hardening, allowlists, room size/tag limits, room state/expiry checks, host-token authorization, room-full guard และ `(room_id,voter_id)` upsert contract
 
-Gate นี้เป็น **static source-contract evidence only** ไม่ยืนยันว่า Supabase Edge Function เวอร์ชันใดถูก deploy จริง และไม่แทน retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow
+Gate นี้เป็น **static source-contract evidence only** และไม่แทน retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow แม้ deployment/source parity ของ v2 จะถูกยืนยันแยกต่างหากแล้วก็ตาม
 
 ## Open hardening gaps
 
@@ -96,7 +102,7 @@ Gate นี้เป็น **static source-contract evidence only** ไม่ย
 4. ทดสอบ positive + negative cases รวม active/expired/closed/full/invalid/forbidden
 5. Re-run Supabase Security + Performance Advisors หลัง DDL change
 6. Commit migration/function source ที่ตรวจสอบได้เข้า repository
-7. Deploy และบันทึก deployment/version evidence จริง
+7. Deploy และบันทึก deployment/version evidenceจริง; สำหรับ ACTIVE v2 baseline ณ 2026-08-23 มี parity evidence แล้ว แต่ต้องสร้าง evidence ใหม่เมื่อมี backend change ถัดไป
 8. ทำ real-device group regression โดยเฉพาะ create → join → vote → 2/2 → final result
 9. เก็บ monitoring baseline จาก traffic จริงก่อนตั้ง alert threshold
 
@@ -110,5 +116,7 @@ Gate นี้เป็น **static source-contract evidence only** ไม่ย
 - monitoring/metrics implementation และ baseline จริงตามที่จำเป็น
 - Privacy/Operations docs ที่สะท้อน policy จริง
 - Security/Performance Advisor re-check หลัง backend changes
+
+Group API v2 deployment/source parity ที่ยืนยันแล้วช่วยปิดเฉพาะช่องว่างเรื่อง “source ที่ตรวจตรงกับ deployment ที่ ACTIVE หรือไม่” ณ จุดตรวจ ไม่ได้ปิด blocker ข้างต้น
 
 ไม่มีข้อความในเอกสารนี้ที่หมายถึง Production, privacy, security, load, abuse-control หรือ real-device PASS
