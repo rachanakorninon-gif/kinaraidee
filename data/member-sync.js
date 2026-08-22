@@ -56,11 +56,17 @@
   }
 
   function rowToLocal(r){
+    const parsedAt=Date.parse(r.created_at);
+    const liked=r.action==='liked';
+    const accepted=r.action==='picked';
     return {
       name:r.food_name,
       emoji:r.food_emoji||'🍽️',
-      type:r.action==='liked'?'ชอบ':'เลือกกิน',
-      date:new Date(r.created_at).toLocaleString('th-TH'),
+      liked,
+      accepted,
+      type:liked?'ชอบ':'เลือกกิน',
+      at:Number.isFinite(parsedAt)?parsedAt:Date.now(),
+      date:new Date(Number.isFinite(parsedAt)?parsedAt:Date.now()).toLocaleString('th-TH'),
       mode:(Number(r.people)||1)>1?'group':'single',
       people:Number(r.people)||1,
       meal:r.meal||'',
