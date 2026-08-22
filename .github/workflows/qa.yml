@@ -158,6 +158,10 @@ jobs:
             '.github/workflows/pages.yml'
             '.github/workflows/live-smoke.yml'
             'README.md'
+            'LIVE-DEPLOYMENT-VERIFICATION.md'
+            'BETA-RUN-LOG.md'
+            'BETA-DEVICE-MATRIX.md'
+            'RELEASE-CHECKLIST.md'
           )
           for file in "${tracked[@]}"; do
             grep -Fq "$marker" "$file" || {
