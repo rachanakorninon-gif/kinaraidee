@@ -24,8 +24,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' '(sb[_]secret_|service[_]role|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' . || true)"
-          unsafe="$(printf '%s\n' "$matches" | grep -vE "Deno\.env\.get\(['\"]SUPABASE_SERVICE_ROLE_KEY['\"]\)" || true)"
+          # Split sentinel text so scanning workflow YAML does not flag the detector source itself.
+          pattern='(sb_''secret_|service_''role|SUPABASE_''SERVICE_ROLE|PRIVATE_''KEY-----)'
+          matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' "$pattern" . || true)"
+          safe_env='Deno\.env\.get\(['"'"'\"]SUPABASE_''SERVICE_ROLE_KEY['"'"'\"]\)'
+          unsafe="$(printf '%s\n' "$matches" | grep -vE "$safe_env" || true)"
           if [ -n "$unsafe" ]; then printf '%s\n' "$unsafe"; echo 'Potential private credential pattern found in repository or workflow configuration.'; exit 1; fi
       - name: Validate public app wiring
         shell: bash
