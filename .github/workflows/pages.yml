@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check required release files
         shell: bash
         run: |
@@ -127,6 +129,21 @@ jobs:
           grep -Eq 'Current `main`: `[0-9a-f]{40}`|Latest reviewed .*`[0-9a-f]{40}`' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'; exit 1; }
           grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the incomplete Public Beta gate'; exit 1; }
           grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the deployment-evidence caution'; exit 1; }
+      - name: Block deploy when declared browser runtime candidate is stale
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RELEASE.md'; exit 1; }
+          git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of deployment HEAD: $candidate"; exit 1; }
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          if [ -n "$changed" ]; then
+            echo 'Deployment blocked: browser/PWA runtime files changed after the declared candidate:'
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+          echo "Deployment runtime lineage matches declared candidate $candidate"
       - name: Prevent private secrets before Pages deploy
         shell: bash
         run: |
