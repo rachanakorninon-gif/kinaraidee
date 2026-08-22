@@ -19,6 +19,7 @@
 - `sw.js` ใช้ `kinaraidee-beta-v13`
 - `sw.js` ใช้ atomic `cache.addAll(SHELL)`
 - PR #28 merge commit `0624d7e4...` เปลี่ยน runtime `partner.html` และ release-gate assertions
+- ตรวจ compare `0624d7e4...` → `092e1d4b35259b2634252ae5f3b1802108fa2649` แล้ว: 7 commits ที่ตามมาเปลี่ยนเฉพาะ `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `LIVE-DEPLOYMENT-VERIFICATION.md` และ `RELEASE-CHECKLIST.md`; ไม่มี public runtime asset เปลี่ยน ดังนั้น `092e1d4b...` เป็น non-runtime descendant ของ candidate นี้
 
 Repository/static evidence ยืนยัน implementation และ guard wiring เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint, form submission จริง หรือ real-device behavior
 
