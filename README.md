@@ -55,6 +55,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Edge Functions สำหรับ group API และ partner API
 - `restaurant_requests` เปิดเฉพาะ INSERT ที่เป็น `source=app` และ `status=pending`; ไม่มี public SELECT ของพิกัดผู้ใช้
 - Publishable key ใช้ฝั่ง browser; secret/service role ต้องอยู่ฝั่ง backend เท่านั้น
+- การ์ดร้านพาร์ตเนอร์ render ข้อมูลจาก backend ด้วย DOM nodes/`textContent` แทน data-driven `innerHTML`
 - `SECURITY.md` กำหนด severity, Production Security Gate, negative tests และ Incident Response
 - Blocker/Critical ด้าน Security ที่ยังเปิดอยู่ = NO-GO สำหรับ Commercial Release
 
@@ -64,8 +65,8 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Static QA ตรวจโครงสร้างและไฟล์สำคัญก่อน/ระหว่างการพัฒนา
 - Live smoke test ตรวจหน้า public, PWA assets, recovery route และ SEO discovery files หลัง deploy
 - `LIVE-DEPLOYMENT-VERIFICATION.md` เป็น evidence gate สำหรับยืนยันว่า Public Beta ที่ออนไลน์ตรงกับ release candidate; ถ้ายังตรวจ live URL/อุปกรณ์จริงไม่ได้ให้ใช้สถานะ BLOCKED ไม่ใช่ PASS
-- Service Worker ปัจจุบันใช้ cache generation `kinaraidee-beta-v12`
-- v12 ใช้ atomic app-shell install ด้วย `cache.addAll(SHELL)`; ถ้า shell file ใดโหลดไม่สำเร็จ install จะไม่ถือว่าสมบูรณ์
+- Service Worker ปัจจุบันใช้ cache generation `kinaraidee-beta-v13`
+- v13 ใช้ atomic app-shell install ด้วย `cache.addAll(SHELL)`; ถ้า shell file ใดโหลดไม่สำเร็จ install จะไม่ถือว่าสมบูรณ์
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
 - GitHub Issue #1 ใช้ติดตาม real-device Beta test round
@@ -104,7 +105,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - TC-01–TC-15 และ NF-01–NF-10 ผ่านตามกรณีที่รองรับ
 - Live deployment verification ของ release candidate ไม่เป็น FAIL/BLOCKED สำหรับรายการที่จำเป็นต่อรอบนั้น
 - ตรวจ iPadOS Safari เพิ่มเมื่อมีอุปกรณ์จริง โดยเฉพาะกรณี User Agent แบบ Mac
-- ตรวจ PWA update จาก cache รุ่นเก่ามา v12 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
+- ตรวจ PWA update จาก cache รุ่นเก่ามา v13 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
 - ทุก FAIL มี defect ที่ตามแก้ได้
 - Blocker = 0 และ Critical = 0
 
