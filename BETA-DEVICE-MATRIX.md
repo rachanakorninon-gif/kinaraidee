@@ -3,19 +3,22 @@
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
 ## Release trace สำหรับรอบนี้
-- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
+- Current runtime release: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
-- Historical runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
+- Pre-merge CI ของ head `e4bf276702be06baaf1c5abd41097f8122b4793b`: Release Consistency `32557712768` SUCCESS; Beta integrity `32557712762` SUCCESS; Beta QA `32557712761` SUCCESS
+- Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
+- Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
 - Earlier baseline: `bb7b979421275995a6fee12f84b118d0c942037a` / `kinaraidee-beta-v11`
 - Deployed SHA:
 - GitHub Pages run URL / ID:
 - Live Smoke run URL / ID:
 - Runtime diff vs app release: None / Present / Not yet verified
 
-> v13 เปลี่ยน partner/fallback card renderer จาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump Service Worker cache generation ดังนั้นผล v12 ห้ามถูกยกมาเป็นผล v13 โดยอัตโนมัติสำหรับ TC-10/nearby partner rendering, NF-07 และ PWA/update flow ที่ได้รับผลกระทบ
+> v13 renderer baseline `83f8f363...` เปลี่ยน partner/fallback card renderer จาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump Service Worker cache generation ดังนั้นผล v12 ห้ามถูกยกมาเป็นผล v13 โดยอัตโนมัติสำหรับ TC-10/nearby partner rendering, NF-07 และ PWA/update flow ที่ได้รับผลกระทบ
 
-> หาก `main` หรือ deployed SHA เป็น evidence/workflow-only descendant ให้บันทึก SHA จริงและยืนยันว่าไม่มี runtime app file เปลี่ยนจาก `83f8f363...` ก่อนใช้ผลจาก matrix นี้เป็น release evidence
+> runtime `0624d7e4...` เพิ่ม privacy acknowledgement evidence ใน Partner application โดยไม่เปลี่ยน cache generation ดังนั้น TC-12 ต้อง retest บน candidate นี้และตรวจว่า submission ใหม่ส่ง `privacy_notice_version` และ `privacy_acknowledged_at` ตาม design
+
+> หาก `main` หรือ deployed SHA เป็น evidence/workflow-only descendant ให้บันทึก SHA จริงและยืนยันว่าไม่มี runtime app file เปลี่ยนจาก `0624d7e4...` ก่อนใช้ผลจาก matrix นี้เป็น release evidence
 
 ## Android Chrome
 
@@ -48,9 +51,9 @@
 - TC-05 กินอันนี้ / ประวัติ
 - TC-06 เมนูโปรด
 - TC-07 แชร์
-- TC-10 Google Maps / nearby partner flow — ต้อง retest บน v13
+- TC-10 Google Maps / nearby partner flow — ต้องมี evidence บน v13 payload
 - TC-11 Feedback
-- TC-12 Partner application
+- TC-12 Partner application — ต้อง retest บน `0624d7e4...` และตรวจ privacy acknowledgement evidence
 - TC-15 404 recovery
 - NF-03 กลับหน้าแรกแล้วสุ่มใหม่
 - NF-06 Offline after update

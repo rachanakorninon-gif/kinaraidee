@@ -3,12 +3,13 @@
 ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
 ## Release trace ที่ต้องบันทึกทุก run
-- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
+- Current runtime release: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
-- Runtime change จาก v12: partner/fallback cards เปลี่ยน data-driven rendering เป็น DOM nodes/`textContent` เพื่อ defense-in-depth ต่อ stored DOM XSS และ bump PWA cache generation
+- Pre-merge CI ของ head `e4bf276702be06baaf1c5abd41097f8122b4793b`: Release Consistency `32557712768` SUCCESS; Beta integrity `32557712762` SUCCESS; Beta QA `32557712761` SUCCESS
+- Runtime change จาก `83f8f363...`: Partner application submission เพิ่ม `privacy_notice_version='2026-08-21'` และ `privacy_acknowledged_at`; cache generation ไม่เปลี่ยนจาก v13
+- Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`; TC-10 renderer evidence จาก baseline นี้ยังต้อง trace ให้ตรง deployed payload แต่ TC-12 ต้อง retest บน `0624d7e4...`
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`; ห้ามนำผล v12 มาแทน v13 สำหรับ nearby partner rendering, PWA update หรือ flow ที่ได้รับผลกระทบโดยไม่ retest
-- หาก SHA ที่ deploy เป็น non-runtime descendant ให้บันทึก SHA จริงและยืนยัน runtime payload เทียบกับ `83f8f363...`
+- หาก SHA ที่ deploy เป็น non-runtime descendant ให้บันทึก SHA จริงและยืนยัน runtime payload เทียบกับ `0624d7e4...`
 
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
@@ -23,7 +24,7 @@
 ## Run Template
 
 ### Release / deployment evidence
-- App release SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
+- App release SHA: `0624d7e4928e75d617137db0dba22825e7ba9f5a`
 - Deployed SHA:
 - GitHub Pages run URL / ID:
 - Live Smoke run URL / ID:
@@ -56,7 +57,7 @@
 | TC-09 Location ปฏิเสธ |  |  |
 | TC-10 Google Maps fallback |  |  |
 | TC-11 Feedback |  |  |
-| TC-12 Partner application |  |  |
+| TC-12 Partner application |  | ตรวจ privacy acknowledgement evidence สำหรับ runtime `0624d7e4...` |
 | TC-13 PWA |  |  |
 | TC-14 Offline shell |  |  |
 | TC-15 404 recovery |  |  |
@@ -97,8 +98,9 @@
 - iPhone Safari ผ่านอย่างน้อย 2 รุ่น
 - ไม่มี Blocker/Critical ที่ยังเปิดอยู่
 - Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง
-- TC-10/nearby partner rendering ต้อง retest บน v13 เพราะ renderer เปลี่ยนจาก v12
+- TC-10/nearby partner rendering ต้องมี evidence บน v13 payload ที่ deploy จริง
 - TC-11 Feedback และ TC-12 Partner application ต้องมีหลักฐานจาก release candidate ที่ deploy จริง
+- TC-12 ต้อง retest บน `0624d7e4...` เพราะ submission payload เพิ่ม privacy acknowledgement evidence fields
 - New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องต้องผ่านบนอุปกรณ์จริงที่รองรับ
 - NF-07 ต้องครอบคลุมการ update จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v13`
 - NF-09 ต้องตรวจ state ของ Surprise และ public forms ที่เกี่ยวข้องบน assistive technology/semantics ที่ platform รองรับ
