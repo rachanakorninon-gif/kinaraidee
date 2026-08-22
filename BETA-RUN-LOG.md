@@ -3,10 +3,11 @@
 ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
 ## Release trace ที่ต้องบันทึกทุก run
-- App release baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Expected Service Worker cache: `kinaraidee-beta-v12`
-- Runtime change จาก baseline ก่อนหน้า `bb7b979421275995a6fee12f84b118d0c942037a`: public Feedback/Partner accessibility semantics + PWA cache generation; ห้ามนำผล real-device ของ v11 มาแทน v12 โดยไม่ retest กรณีที่ได้รับผลกระทบ
-- หาก SHA ที่ deploy เป็น non-runtime descendant (เช่น evidence/workflow-only commit) ให้บันทึก SHA จริงและยืนยันว่า runtime app payload ไม่เปลี่ยนจาก `f08d069a...`
+- Current release candidate: PR #25 (`security/partner-card-textcontent-v13`); บันทึก final merge SHA หลัง merge ก่อนเริ่ม real-device run
+- Expected Service Worker cache: `kinaraidee-beta-v13`
+- Runtime change จาก v12: partner/fallback cards เปลี่ยน data-driven rendering เป็น DOM nodes/`textContent` เพื่อ defense-in-depth ต่อ stored DOM XSS และ bump PWA cache generation
+- Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`; ห้ามนำผล v12 มาแทน v13 สำหรับ nearby partner rendering, PWA update หรือ flow ที่ได้รับผลกระทบโดยไม่ retest
+- หาก SHA ที่ deploy เป็น non-runtime descendant ให้บันทึก SHA จริงและยืนยัน runtime payload เทียบกับ final v13 runtime SHA
 
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
@@ -21,12 +22,12 @@
 ## Run Template
 
 ### Release / deployment evidence
-- App release SHA: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
+- App release SHA:
 - Deployed SHA:
 - GitHub Pages run URL / ID:
 - Live Smoke run URL / ID:
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
-- Expected SW/cache: `kinaraidee-beta-v12`
+- Expected SW/cache: `kinaraidee-beta-v13`
 - Runtime diff vs app release: None / Present / Not yet verified
 
 ### Device
@@ -95,9 +96,10 @@
 - iPhone Safari ผ่านอย่างน้อย 2 รุ่น
 - ไม่มี Blocker/Critical ที่ยังเปิดอยู่
 - Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง
-- TC-11 Feedback และ TC-12 Partner application ต้อง retest บน release `f08d069a...` เพราะ public form runtime เปลี่ยนจาก v11
+- TC-10/nearby partner rendering ต้อง retest บน v13 เพราะ renderer เปลี่ยนจาก v12
+- TC-11 Feedback และ TC-12 Partner application ต้องมีหลักฐานจาก release candidate ที่ deploy จริง
 - New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องต้องผ่านบนอุปกรณ์จริงที่รองรับ
-- NF-07 ต้องครอบคลุมการ update จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v12`
+- NF-07 ต้องครอบคลุมการ update จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v13`
 - NF-09 ต้องตรวจ state ของ Surprise และ public forms ที่เกี่ยวข้องบน assistive technology/semantics ที่ platform รองรับ
 - PWA/Offline/Install guidance ให้ตัดสินตาม platform support และบันทึก N/A เมื่อไม่รองรับจริง
 - ต้องมี Pages/Live Smoke evidence ที่ trace กลับไปยัง deployed SHA
