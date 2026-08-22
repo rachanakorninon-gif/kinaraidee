@@ -3,6 +3,19 @@ name: Deploy Kinaraidee to GitHub Pages
 on:
   push:
     branches: ["main"]
+    paths:
+      - 'index.html'
+      - '404.html'
+      - 'privacy.html'
+      - 'feedback.html'
+      - 'partner.html'
+      - 'manifest.webmanifest'
+      - 'icon.svg'
+      - 'sw.js'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'data/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
