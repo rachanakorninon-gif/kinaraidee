@@ -98,13 +98,16 @@ jobs:
           test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
           test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
           strict=('.github/workflows/qa.yml' '.github/workflows/beta-check.yml' '.github/workflows/pages.yml' '.github/workflows/live-smoke.yml' 'README.md')
-          evidence=('LIVE-DEPLOYMENT-VERIFICATION.md' 'BETA-RUN-LOG.md' 'BETA-DEVICE-MATRIX.md' 'RELEASE-CHECKLIST.md')
+          evidence=('CURRENT-RELEASE.md' 'LIVE-DEPLOYMENT-VERIFICATION.md' 'BETA-RUN-LOG.md' 'BETA-DEVICE-MATRIX.md' 'RELEASE-CHECKLIST.md')
           for file in "${strict[@]}"; do
             test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
             grep -Fq "$marker" "$file" || { echo "Release marker drift: $file does not reference $marker"; exit 1; }
             while IFS= read -r found; do [ -z "$found" ] && continue; if [ "$found" != "$marker" ]; then echo "Stale active release marker in $file: $found (expected only $marker)"; exit 1; fi; done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
           done
           for file in "${evidence[@]}"; do test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }; grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }; done
+          grep -Eq 'Current `main`: `[0-9a-f]{40}`|Latest reviewed .*`[0-9a-f]{40}`' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'; exit 1; }
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the incomplete Public Beta gate'; exit 1; }
+          grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the deployment-evidence caution'; exit 1; }
       - name: Prevent private secrets before Pages deploy
         shell: bash
         run: |
@@ -130,10 +133,13 @@ jobs:
           cp index.html 404.html privacy.html feedback.html partner.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
-          printf '{"sha":"%s","pwa_cache":"kinaraidee-beta-v13"}\n' "$GITHUB_SHA" > _site/release-meta.json
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive release marker for release-meta.json'; exit 1; }
+          printf '{"sha":"%s","pwa_cache":"%s"}\n' "$GITHUB_SHA" "$marker" > _site/release-meta.json
           find _site -maxdepth 2 -type f | sort
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
+          grep -Fq "$marker" _site/release-meta.json
           test ! -e _site/.git
           test ! -e _site/.github
           test ! -e _site/supabase
