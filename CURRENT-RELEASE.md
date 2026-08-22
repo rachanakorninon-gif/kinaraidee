@@ -65,6 +65,8 @@ PR #54/Issue #5 บันทึก scoped same-device evidence สำหรั�
 
 ## Public Beta gate impact
 
+Public Beta is still **NOT COMPLETE**.
+
 Public Beta ยัง **NOT COMPLETE**. ขั้นต่ำที่ยังต้องมีหลักฐานจริง:
 
 - successful GitHub Pages deployment trace สำหรับ PR #58 หรือ runtime-equivalent descendant,
