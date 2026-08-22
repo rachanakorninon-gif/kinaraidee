@@ -1,0 +1,39 @@
+name: Surprise Accessibility Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-surprise-announcement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Surprise accessibility announcement contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check data/home-surprise.js
+          grep -Fq "const READY_LABEL='ไม่รู้เลย ให้ระบบเลือกเมนูอาหารให้ทันที';" data/home-surprise.js
+          grep -Fq "const BUSY_MESSAGE='กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่';" data/home-surprise.js
+          grep -Fq "status.setAttribute('role','status')" data/home-surprise.js
+          grep -Fq "status.setAttribute('aria-live','assertive')" data/home-surprise.js
+          grep -Fq "status.setAttribute('aria-atomic','true')" data/home-surprise.js
+          grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" data/home-surprise.js
+          grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" data/home-surprise.js
+          grep -Fq "b.setAttribute('aria-label',on?BUSY_MESSAGE:READY_LABEL)" data/home-surprise.js
+          grep -Fq "status.textContent=on?BUSY_MESSAGE:''" data/home-surprise.js
+          grep -Fq "if(busy)return" data/home-surprise.js
+          grep -Fq "setBusy(false)" data/home-surprise.js
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'Static regression guard passed.'
+          echo 'TalkBack/VoiceOver announcement behavior still requires real assistive-technology retest before Issue #57 can close.'
