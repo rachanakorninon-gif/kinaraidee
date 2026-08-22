@@ -1,0 +1,59 @@
+# Kinaraidee — Monitoring Runbook
+
+เอกสารนี้กำหนดขอบเขต monitoring สำหรับ Public Beta และหลักฐานที่ต้องมี ก่อนนับ Operations monitoring เป็นพร้อมใช้งานเชิงพาณิชย์
+
+## Automated synthetic monitoring
+
+Workflow: `.github/workflows/public-beta-monitor.yml`
+
+ตรวจทุก 6 ชั่วโมงและสั่งรันเองได้ โดยตรวจเฉพาะสิ่งที่พิสูจน์อัตโนมัติได้:
+
+- Public Beta URL และหน้า/asset สำคัญตอบ HTTP สำเร็จ
+- `sw.js` ออนไลน์ใช้ release marker เดียวกับ `main`
+- Service Worker ใช้ atomic app-shell install (`cache.addAll(SHELL)`)
+- ไม่พบ `Promise.allSettled` ใน live Service Worker
+- development-only paths ที่กำหนดไม่ตอบ HTTP 200
+
+## สิ่งที่ workflow นี้ไม่พิสูจน์
+
+ผล SUCCESS ของ synthetic monitor **ห้าม** ใช้แทน:
+
+- real-device TC-01–TC-15 / NF-01–NF-10
+- การทดสอบ PWA install/update/offline บนอุปกรณ์จริง
+- accessibility test บนอุปกรณ์/assistive technology จริง
+- Payment, entitlement, webhook หรือ reconciliation
+- Partner conversion/commission verification
+- Privacy/Legal review หรือ consent correctness
+- Production Security gate / RLS / authorization negative tests
+
+## Evidence ที่ใช้ได้
+
+เมื่อ workflow รันจริง ให้เก็บอย่างน้อย:
+
+- Workflow run URL / run ID
+- repository commit SHA ที่ run อ้างอิง
+- วันที่/เวลา run
+- conclusion จริง (`success` / `failure` / `cancelled`)
+- Job Summary หรือ logs ที่ trace กลับไปยัง run ได้
+
+ห้ามกรอก SUCCESS หรือ PASS ลง release evidence หากยังไม่ได้ตรวจ run จริง
+
+## เมื่อ monitor FAIL
+
+1. อย่าตีความทันทีว่าเป็น runtime defect; แยก transient network/GitHub Pages propagation ออกจาก defect จริง
+2. ตรวจ path/marker ที่ fail จาก logs
+3. ถ้า Public Beta กระทบผู้ใช้จริง ให้เปิด defect/incident ที่ trace กลับไปยัง run
+4. ถ้าเป็น release regression ให้ใช้ `ROLLBACK-RUNBOOK.md`
+5. หลังแก้ ให้รัน monitor ใหม่และบันทึก run ใหม่เป็น evidence; ห้ามแก้ไขผล run เก่าให้เป็น PASS
+
+## Commercial monitoring gate
+
+การมี workflow และ runbook นี้หมายถึง **monitoring mechanism exists** เท่านั้น ยังไม่ถือว่า Operations gate ผ่าน จนกว่าจะมี:
+
+- อย่างน้อยหนึ่ง run จริงที่ตรวจสอบย้อนหลังได้
+- ผู้รับผิดชอบ incident/alert ที่ระบุจริง
+- ช่องทางรับรู้ failure ที่ใช้งานจริง
+- ขั้นตอน escalation/support ที่ทดสอบหรือยืนยันการเข้าถึงได้
+- monitoring/error reporting ที่ครอบคลุมส่วน Production ที่เปิดใช้จริง (เช่น payment/backend เมื่อเปิดใช้งาน)
+
+ดังนั้น `RELEASE-CHECKLIST.md` ต้องคง Production monitoring เป็นรายการที่ยังไม่ผ่านจนกว่าหลักฐานเหล่านี้ครบ
