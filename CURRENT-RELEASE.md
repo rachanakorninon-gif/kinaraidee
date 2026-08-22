@@ -6,56 +6,69 @@
 
 ## Current source/runtime state
 
-- Current `main` after member-history fix: `21c56f2e84760fada6cebfa464be767facb56b34` (merge of PR #37)
-- Latest runtime-changing commit in that fix: `9d5133324dc272a1072c1538ec8606ee574f05a5`
-- PWA cache marker remains: `kinaraidee-beta-v13`
-- Runtime delta from the previous tracked candidate `0624d7e4928e75d617137db0dba22825e7ba9f5a`: signed-in cloud history now maps Supabase `created_at` to local numeric `at` and restores `liked` / `accepted` flags so the existing history renderer receives the same schema as local-only history.
-- Dedicated regression workflow added by PR #37: `Kinaraidee History Sync Regression`.
+- Current `main`: `d2b8dc08d908fb6034a1958d2260c8886ad96804` (merge of PR #41)
+- Latest runtime change: member-history write/read race hardening from PR #41.
+- PWA cache marker remains: `kinaraidee-beta-v13`.
+- PR #37 previously fixed cloud-history schema mapping (`created_at` -> numeric `at`, plus `liked` / `accepted`).
+- PR #41 now tracks pending member-history writes and a write generation, prevents stale cloud snapshots from replacing newer optimistic history, and reconciles from cloud after a successful write.
+- Dedicated regression workflow: `Kinaraidee History Sync Regression`.
 
-## Verified CI evidence for PR #37 head
+## Verified CI evidence
 
-PR #37 head `49aae3a7f6207c75ddeded3ce6f482251c926069` completed successfully for:
+PR #41 head `e035263260fb5df25a408f76c16e39ff419c1ffc` completed successfully for:
 
-- History Sync Regression run `32562684630`
-- Beta QA run `32562684566`
-- Release Consistency run `32562684574`
-- Beta integrity run `32562684582`
-- Security Hygiene run `32562684559`
+- History Sync Regression run `32564035800`
+- Beta QA run `32564035735`
+- Release Consistency run `32564035733`
+- Beta integrity run `32564035786`
+- Security Hygiene run `32564035728`
 
-These are static/CI evidence only. They do not replace live deployment evidence or real-device interaction testing.
+These are CI/static evidence only. They do not replace GitHub Pages deployment evidence, Live Smoke evidence, or real-device interaction testing.
 
 ## Deployment evidence
 
-Status: **PENDING / NOT RECORDED HERE YET**
+Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
-Before using `21c56f2e...` as a Public Beta release candidate, record evidence that GitHub Pages deployed this commit or a descendant whose runtime payload includes the history fix, and record the corresponding Live Smoke result.
+Real-device testing on 2026-08-22 demonstrated behavior from the PR #41 history-race fix in the installed Android PWA, including the same-device lock/resume favorite regression path. However, this file still does not contain a verified GitHub Pages deployment workflow run and corresponding Live Smoke run that trace the deployed public release back to `d2b8dc08...` or a runtime-equivalent descendant.
 
-Do not infer deployment success merely from a merged PR or workflow configuration.
+Do not infer complete deployment-gate success merely from merged commits, CI, or successful real-device behavior.
 
 ## Real-device regression status
 
-A real Android session before PR #37 reproduced `Invalid Date` in signed-in cloud-synced history. The code fix is merged, but the same-device post-deployment regression is still required before Issue #38 may be closed.
+### Issue #38 — `Invalid Date` after cloud sync
 
-Required retest:
+Status: **FIXED / SAME-DEVICE RETEST RECORDED**
 
-1. Open the deployed app online so `data/member-sync.js` can refresh.
-2. Sign in to the same member flow used for the defect.
-3. Open history and verify every cloud-synced row shows a valid date/time rather than `Invalid Date`.
-4. Verify liked/picked counts remain correct after cloud reload.
-5. Preserve device/browser/deployed-SHA evidence and link it from Issue #38 / Beta run evidence.
+The Android signed-in history regression was retested after the fix reached the installed PWA. History rendered valid Thai-local date/time values instead of `Invalid Date`, and subsequent account/history checks remained internally consistent. Issue #38 is closed based on recorded real-device evidence.
 
-Status: **NOT YET VERIFIED AFTER FIX**.
+### Issue #40 — favorite loss after lock/resume
+
+Status: **FIXED / SAME-DEVICE RETEST RECORDED**
+
+The Android reproduction path (fresh result -> lock/suspend -> resume -> like -> History) was retested after PR #41. The newly liked item remained in History and the previous favorite-loss symptom did not recur. Issue #40 is closed based on recorded same-device evidence.
+
+Additional Android recovery evidence from the same assisted QA session includes:
+
+- offline -> online recovery without app failure,
+- external Google Maps round-trip with result state retained,
+- favorite/history persistence after recovery,
+- logout/login persistence of signed-in history counts,
+- standalone PWA close/reopen session persistence,
+- denied-location path continuing to Google Maps fallback without crash or blank screen.
+
+These observations are evidence for that device/session only; they do not satisfy the full multi-device matrix by themselves.
 
 ## Public Beta gate impact
 
-Until the post-fix real-device retest and deployment trace are recorded:
+Progress has improved materially because the two signed-in Android history regressions (#38 and #40) now have real-device fix verification. Public Beta is still **NOT COMPLETE** because the remaining gate includes at minimum:
 
-- Issue #38 remains open.
-- Issue #5 technical real-device gate remains incomplete.
-- Issue #1 Beta launch acceptance remains incomplete.
-- Recruitment/measurement in Issue #3 must not treat the history regression as closed.
+- GitHub Pages deployment workflow evidence for the current runtime or runtime-equivalent descendant.
+- Corresponding Live Smoke evidence traced to that deployment.
+- Required device matrix completion: Android Chrome on at least 3 device models and iPhone Safari on at least 2 device models.
+- Remaining TC-01–TC-15 / NF-01–NF-10 cases that are not yet backed by real-device evidence.
+- Any remaining release checklist items that explicitly require real workflow/device evidence.
 
-The Android Partner application validation/privacy path tested in the assisted QA session is useful evidence for that device session, but it does not by itself satisfy the complete device matrix or deployment trace requirements.
+Issue #5 remains the primary Beta QA execution tracker.
 
 ## Commercial Readiness impact
 
@@ -68,8 +81,8 @@ Commercial launch remains **NO-GO** while required evidence or decisions are out
 - Production operations ownership, monitoring, backup/recovery drill evidence.
 - Payment/Premium and partner commercial terms only if/when those business flows are actually enabled.
 
-No user-count, conversion, revenue, payment success, partner readiness, legal approval, deployment PASS, or real-device PASS is implied by this document.
+No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete deployment PASS, or full device-matrix PASS is implied by this document.
 
 ## Supersession rule
 
-Where an older tracker says the “current runtime release” is `0624d7e4...`, treat that SHA as the previous candidate baseline. For current work, use this file plus the latest `main` history and open issues until those trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...` or `21c56f2e...`, treat those SHAs as previous candidate baselines. For current work, use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
