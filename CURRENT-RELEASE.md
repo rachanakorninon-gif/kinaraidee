@@ -6,9 +6,9 @@
 
 ## Current source/runtime state
 
-- Current `main`: `d4a3e6b3507e952482766d1ada4c27a28f8875f9`.
+- Current `main`: `7e1eeef4732c3a2bb03065ff254bf2f36260cee5`.
 - Current runtime candidate: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (merge of PR #42).
-- Current non-runtime descendant: `d4a3e6b3507e952482766d1ada4c27a28f8875f9`; compare from PR #42 to this head changes only release workflows and release-tracking documents, not public runtime assets.
+- Current non-runtime descendant: `7e1eeef4732c3a2bb03065ff254bf2f36260cee5`; compare from PR #42 to this head changes only release workflows and release-tracking documents, not public runtime assets.
 - Deployment-trace implementation baseline: `907ea6b1b44ae3d7ec0bc82323ac96716b46cae0` (merge of PR #44), which added `release-meta.json` SHA tracing and deployed group-bridge checks.
 - Latest runtime change: restore completed live-group result bridge after the Android 2/2-vote real-device failure.
 - PWA cache marker remains: `kinaraidee-beta-v13`.
@@ -46,7 +46,7 @@ Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
 PR #44 adds deployment observability so Pages publishes `release-meta.json` with the deployed commit SHA and PWA cache marker, while Live Smoke verifies that SHA against the successful Pages workflow-run head when triggered from deployment. It also verifies the completed live-group result bridge on deployed assets.
 
-The source head has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `d4a3e6b3...` shows no public runtime asset changes, so `d4a3e6b3...` is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer deployment-gate success from source lineage alone.
+The source head has moved beyond PR #44 only through workflow/documentation changes. Compare `6fadf04f...` -> `7e1eeef4...` shows no public runtime asset changes, so `7e1eeef4...` is runtime-equivalent to the PR #42 candidate. This does **not** prove a Pages deployment or matching Live Smoke run succeeded. Do not infer deployment-gate success from source lineage alone.
 
 ## Real-device regression status
 
@@ -111,4 +111,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `d4a3e6b3...` is the current runtime-equivalent non-runtime descendant, while `907ea6b1...` is the PR #44 deployment-trace implementation baseline. Use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
+Where an older tracker says the current runtime is `0624d7e4...`, `21c56f2e...`, or `d2b8dc08...`, treat those SHAs as previous candidate baselines. Current runtime work uses `6fadf04f...`; `7e1eeef4...` is the current runtime-equivalent non-runtime descendant, while `907ea6b1...` is the PR #44 deployment-trace implementation baseline. Use this file plus latest `main`, Issue #5, and the open Commercial Readiness issues until all secondary trackers are refreshed.
