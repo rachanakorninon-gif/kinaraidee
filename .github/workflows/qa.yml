@@ -203,7 +203,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.yml' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' .; then
+          if grep -RInE --exclude-dir=.git --exclude='*.md' '(service[_]role|sb[_]secret_|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' .; then
             echo 'Potential secret found in public repository'
             exit 1
           fi
