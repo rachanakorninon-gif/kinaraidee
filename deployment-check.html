@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ตรวจสอบเวอร์ชันกินอะไรดี</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c;margin:0;padding:24px}
+    main{max-width:720px;margin:auto;background:white;border:1px solid #eadfce;border-radius:24px;padding:24px;box-shadow:0 8px 30px #0000000d}
+    h1{font-size:1.7rem;margin-top:0}.row{padding:16px 0;border-top:1px solid #eee}.ok{color:#087f5b}.bad{color:#b42318}.wait{color:#6b625b}code{word-break:break-all}button{font:inherit;padding:12px 16px;border-radius:14px;border:1px solid #d7c9b7;background:#fff;cursor:pointer}
+  </style>
+</head>
+<body>
+<main>
+  <h1>🔎 ตรวจสอบเวอร์ชัน “กินอะไรดี”</h1>
+  <p>หน้านี้ใช้ตรวจว่าโค้ดแก้ผลโหวตกลุ่มขึ้นเว็บจริงหรือยัง โดยไม่เปลี่ยนข้อมูลผู้ใช้</p>
+  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge</div></div>
+  <div class="row"><strong>Group result bridge</strong><div id="bridge" class="wait">กำลังตรวจ…</div></div>
+  <div class="row"><strong>PWA cache</strong><div id="cache" class="wait">กำลังตรวจ…</div></div>
+  <div class="row"><strong>release-meta.json</strong><div id="meta" class="wait">กำลังตรวจ…</div></div>
+  <div class="row"><button id="again" type="button">ตรวจใหม่</button></div>
+</main>
+<script>
+(async()=>{
+  const $=id=>document.getElementById(id);
+  const set=(id,text,ok)=>{const el=$(id);el.textContent=text;el.className=ok===true?'ok':ok===false?'bad':'wait'};
+  async function text(path){const sep=path.includes('?')?'&':'?';const r=await fetch(path+sep+'probe='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}
+  async function run(){
+    set('bridge','กำลังตรวจ…');set('cache','กำลังตรวจ…');set('meta','กำลังตรวจ…');
+    try{
+      const [mode,remote,sw]=await Promise.all([text('./data/group-mode.js'),text('./data/group-remote.js'),text('./sw.js')]);
+      const bridge=mode.includes('function useRemoteVotes(votes,setup)')&&mode.includes('showRemoteResult:useRemoteVotes')&&remote.includes('remoteShowResult.onclick=showOnlineResult');
+      set('bridge',bridge?'PASS — พบโค้ดแก้ผลโหวตกลุ่ม':'FAIL — ยังไม่พบโค้ดแก้ผลโหวตกลุ่ม',bridge);
+      const m=sw.match(/const CACHE='(kinaraidee-beta-v\d+)'/);const cache=m?m[1]:'ไม่พบ marker';set('cache',cache,cache==='kinaraidee-beta-v13');
+    }catch(e){set('bridge','ตรวจ runtime ไม่สำเร็จ: '+e.message,false);set('cache','ตรวจไม่ได้',false)}
+    try{
+      const raw=await text('./release-meta.json');const m=JSON.parse(raw);const valid=/^[0-9a-f]{40}$/.test(String(m.sha||''));set('meta',valid?('SHA '+m.sha+' · '+m.pwa_cache):'ไฟล์มีอยู่แต่รูปแบบไม่ถูกต้อง',valid);
+    }catch(e){set('meta','ยังไม่มี release-meta.json บน public site ('+e.message+')',null)}
+  }
+  $('again').addEventListener('click',run);run();
+})();
+</script>
+</body>
+</html>

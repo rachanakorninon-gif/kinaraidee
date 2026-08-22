@@ -9,6 +9,7 @@ on:
       - 'privacy.html'
       - 'feedback.html'
       - 'partner.html'
+      - 'deployment-check.html'
       - 'manifest.webmanifest'
       - 'icon.svg'
       - 'sw.js'
@@ -37,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          required=(index.html 404.html privacy.html feedback.html partner.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -70,6 +71,15 @@ jobs:
           grep -Fq "window.KINARAIDEE_GROUP_MODE?.showRemoteResult" data/group-remote.js
           grep -Fq "remoteShowResult.onclick=showOnlineResult" data/group-remote.js
           grep -Fq "renderGroupResult();return true" data/group-mode.js
+      - name: Verify human-readable deployment probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq '2026-08-23-group-result-bridge' deployment-check.html
+          grep -Fq "fetch('./data/group-mode.js'" deployment-check.html || grep -Fq "text('./data/group-mode.js')" deployment-check.html
+          grep -Fq 'showRemoteResult:useRemoteVotes' deployment-check.html
+          grep -Fq 'remoteShowResult.onclick=showOnlineResult' deployment-check.html
+          grep -Fq 'kinaraidee-beta-v13' deployment-check.html
       - name: Verify latest release wiring and PWA v13
         shell: bash
         run: |
@@ -130,13 +140,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html deployment-check.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive release marker for release-meta.json'; exit 1; }
           printf '{"sha":"%s","pwa_cache":"%s"}\n' "$GITHUB_SHA" "$marker" > _site/release-meta.json
           find _site -maxdepth 2 -type f | sort
+          test -s _site/deployment-check.html
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
           grep -Fq "$marker" _site/release-meta.json
