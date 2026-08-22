@@ -87,9 +87,12 @@
 - [ ] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ
 - [ ] Owner dashboard ใช้งานได้จริงกับข้อมูล Production
 - [ ] ขั้นตอนรับและตอบ bug/support พร้อมช่องทางติดต่อ
-- [ ] Release rollback procedure ถูกเขียนและทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัย
+- [x] Release rollback procedure ถูกเขียนไว้ใน `ROLLBACK-RUNBOOK.md`
+- [ ] Rollback procedure ถูกทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและมี Evidence Record จริง
 - [ ] ระบุผู้มีสิทธิ์ deploy/แก้ Production
 - [ ] มีวิธีหยุด Premium/partner traffic ชั่วคราวหากเกิด incident
+
+หมายเหตุ: การมี `ROLLBACK-RUNBOOK.md` อย่างเดียวไม่ถือว่า rollback readiness ผ่าน ต้องมี drill จริงตามเกณฑ์ใน runbook ก่อน
 
 ## Store Distribution (ถ้าต้องการ native store)
 - [ ] Google Play developer account
