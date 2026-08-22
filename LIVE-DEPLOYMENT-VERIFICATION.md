@@ -4,6 +4,8 @@
 
 ## Release candidate ปัจจุบัน
 - Runtime release SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
+- Current reviewed `main` descendant: `6d30b211665f30be45a077d4cec8ab0a91dff552` (PR #27 merged; docs-only descendant)
+- Runtime-equivalence check: compare `83f8f363...` → `6d30b211...` = 5 commits ahead, 0 behind; changed files only `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `LIVE-DEPLOYMENT-VERIFICATION.md`, `RELEASE-CHECKLIST.md`; ไม่มี runtime app/workflow file เปลี่ยน
 - Pre-merge head: `4d79b19e68f35efc599de7482cdd933b9812ae45`
 - Pre-merge CI: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
@@ -22,6 +24,15 @@ PR #26 head `4d79b19e68f35efc599de7482cdd933b9812ae45` ผ่านก่อน 
 - merge เข้า `main` เป็น `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
 
 CI ยืนยัน static/integrity/consistency checks เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint หรือ real-device behavior
+
+### Reviewed non-runtime descendant evidence
+GitHub compare ระหว่าง runtime release `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` และ reviewed `main` `6d30b211665f30be45a077d4cec8ab0a91dff552` แสดงว่า `main` ahead 5 / behind 0 และเปลี่ยนเฉพาะ:
+- `BETA-DEVICE-MATRIX.md`
+- `BETA-RUN-LOG.md`
+- `LIVE-DEPLOYMENT-VERIFICATION.md`
+- `RELEASE-CHECKLIST.md`
+
+ดังนั้น ณ SHA ที่ตรวจนี้ runtime payload ยังเทียบเท่า v13 runtime release สำหรับวัตถุประสงค์ release tracing เท่านั้น ข้อนี้ **ไม่ใช่หลักฐานว่า GitHub Pages deploy สำเร็จหรือ Public URL เสิร์ฟ SHA นี้แล้ว**
 
 ### Release-marker drift protection
 กติกาที่ต้องรักษา:
@@ -61,6 +72,8 @@ Automated workflow ไม่แทนรายการนี้:
 
 ## Evidence record
 - Runtime candidate SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
+- Last reviewed equivalent `main` SHA: `6d30b211665f30be45a077d4cec8ab0a91dff552`
+- Runtime-equivalence evidence: compare `83f8f363...` → `6d30b211...`; docs-only file set above
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
