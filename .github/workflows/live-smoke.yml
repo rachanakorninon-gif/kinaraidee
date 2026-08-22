@@ -58,8 +58,12 @@ jobs:
           grep -Fq 'window.KINARAIDEE_GROUP_MODE?.showRemoteResult' <<<"$group_remote"
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$group_remote"
           grep -Fq 'renderGroupResult();return true' <<<"$group_mode"
-          grep -Eq '"sha":"[0-9a-f]{40}"' <<<"$release_meta"
-          grep -Fq '"pwa_cache":"kinaraidee-beta-v13"' <<<"$release_meta"
+          deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
+          meta_cache="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
+          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
+          test -n "$deployed_sha" || { echo 'release-meta.json has no valid deployed SHA'; exit 1; }
+          test "$meta_cache" = 'kinaraidee-beta-v13' || { echo "Unexpected release-meta PWA cache: $meta_cache"; exit 1; }
+          test "$live_cache" = "$meta_cache" || { echo "Live sw.js cache marker $live_cache does not match release-meta $meta_cache"; exit 1; }
           grep -q 'box.replaceChildren()' <<<"$nearby"
           grep -q "name.textContent=String(r.name" <<<"$nearby"
           grep -q 'aria-busy' <<<"$surprise"
@@ -99,8 +103,12 @@ jobs:
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
           release_meta="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/release-meta.json")"
-          deployed_sha="$(sed -n 's/.*"sha":"\([0-9a-f]\{40\}\)".*/\1/p' <<<"$release_meta")"
+          sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
+          deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
+          meta_cache="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
+          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
           test -n "$deployed_sha" || { echo 'Unable to derive deployed SHA from release-meta.json'; exit 1; }
+          test "$meta_cache" = "$live_cache" || { echo "release-meta cache $meta_cache does not match live sw.js cache $live_cache"; exit 1; }
           if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then
             verified_sha="$DEPLOY_HEAD_SHA"
             source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"
@@ -119,7 +127,7 @@ jobs:
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Expected Service Worker: `kinaraidee-beta-v13`'
+            echo "- Service Worker cache marker: \`$live_cache\` (matches release-meta.json)"
             echo '- Completed live-group result bridge: checked on deployed assets'
             echo '- Partner renderer safety markers: checked'
             echo '- Partner privacy acknowledgement wiring: checked'
