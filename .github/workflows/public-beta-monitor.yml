@@ -1,0 +1,88 @@
+name: Kinaraidee Public Beta Monitor
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout current release metadata
+        uses: actions/checkout@v4
+
+      - name: Check public beta availability and release marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          expected_marker="$(grep -oE 'kinaraidee-beta-v[0-9]+' sw.js | head -n1)"
+          test -n "$expected_marker"
+
+          paths=(
+            '/'
+            '/index.html'
+            '/404.html'
+            '/privacy.html'
+            '/feedback.html'
+            '/partner.html'
+            '/manifest.webmanifest'
+            '/sw.js'
+            '/data/home-surprise.js'
+            '/data/nearby-restaurants.js'
+          )
+
+          for path in "${paths[@]}"; do
+            url="$base$path"
+            echo "Checking $url"
+            curl --fail --silent --show-error --location \
+              --retry 3 --retry-delay 5 --max-time 25 "$url" >/dev/null
+          done
+
+          live_sw="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/sw.js")"
+          grep -q "$expected_marker" <<<"$live_sw"
+          grep -q 'cache.addAll(SHELL)' <<<"$live_sw"
+          if grep -q 'Promise.allSettled' <<<"$live_sw"; then
+            echo 'Live service worker is using a non-atomic shell install strategy.'
+            exit 1
+          fi
+
+      - name: Verify development-only paths remain private
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          private_paths=(
+            '/README.md'
+            '/SECURITY.md'
+            '/RELEASE-CHECKLIST.md'
+            '/.github/workflows/pages.yml'
+            '/supabase/config.toml'
+          )
+
+          for path in "${private_paths[@]}"; do
+            code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 25 "$base$path")"
+            echo "$path -> HTTP $code"
+            if [ "$code" = '200' ]; then
+              echo "Development-only path is unexpectedly public: $path"
+              exit 1
+            fi
+          done
+
+      - name: Record monitor scope
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Public Beta synthetic monitor'
+            echo
+            echo "- Repository commit: \`${GITHUB_SHA}\`"
+            echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/'
+            echo '- Scope: HTTP availability, current Service Worker marker/atomic install, development-only path exposure'
+            echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, accessibility, payment, partner, privacy/legal, or production security evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
