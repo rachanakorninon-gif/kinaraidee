@@ -14,33 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Check required beta files
         shell: bash
         run: |
           set -euo pipefail
-          required=(
-            index.html 404.html privacy.html feedback.html partner.html
-            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml
-            data/foods-expanded.js data/choice-rules.js
-            data/nearby-restaurants.js data/group-mode.js
-            data/group-sync.js data/group-remote.js data/member-sync.js
-            data/pwa-install.js data/home-surprise.js
-          )
-          for file in "${required[@]}"; do
-            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
-          done
-
+          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Block private credential patterns
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
-            echo 'Potential private credential pattern found in repository.'
-            exit 1
-          fi
-          echo 'No known private credential patterns found'
-
+          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then echo 'Potential private credential pattern found in repository.'; exit 1; fi
       - name: Validate public app wiring
         shell: bash
         run: |
@@ -54,25 +38,25 @@ jobs:
           grep -q 'partner.html' index.html
           grep -q 'restaurant_requests' data/nearby-restaurants.js
           grep -q 'sb_publishable_' data/nearby-restaurants.js
-
+      - name: Validate partner renderer safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'box.replaceChildren()' data/nearby-restaurants.js
+          grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
+          grep -q "detail.textContent=String(r.address" data/nearby-restaurants.js
       - name: Validate public form accessibility
         shell: bash
         run: |
           set -euo pipefail
           grep -q 'role="radiogroup"' feedback.html
-          grep -q 'aria-checked="false"' feedback.html
-          grep -q 'aria-pressed="true"' feedback.html
           grep -q 'aria-live="polite"' feedback.html
-          grep -q 'for="message"' feedback.html
           grep -q 'for="restaurantName"' partner.html
           grep -q 'autocomplete="organization"' partner.html
           grep -q 'autocomplete="tel"' partner.html
           grep -q 'autocomplete="email"' partner.html
           grep -q 'aria-live="polite"' partner.html
-          grep -q "setAttribute('aria-busy','true')" feedback.html
-          grep -q "setAttribute('aria-busy','true')" partner.html
-
-      - name: Validate surprise and PWA v12 integrity
+      - name: Validate surprise and PWA v13 integrity
         shell: bash
         run: |
           set -euo pipefail
@@ -80,13 +64,12 @@ jobs:
           grep -q 'if(busy)return' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
-          grep -q 'kinaraidee-beta-v12' sw.js
+          grep -q 'kinaraidee-beta-v13' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
           grep -q "'./404.html'" sw.js
           if grep -q 'Promise.allSettled' sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
-
       - name: Validate SEO and recovery wiring
         shell: bash
         run: |

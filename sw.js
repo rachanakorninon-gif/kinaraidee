@@ -1,4 +1,4 @@
-const CACHE='kinaraidee-beta-v12';
+const CACHE='kinaraidee-beta-v13';
 const SHELL=[
   './','./index.html','./404.html','./manifest.webmanifest','./icon.svg',
   './feedback.html','./privacy.html','./partner.html','./robots.txt','./sitemap.xml',

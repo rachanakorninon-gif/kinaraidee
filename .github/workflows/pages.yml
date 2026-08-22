@@ -24,17 +24,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(
-            index.html 404.html privacy.html feedback.html partner.html
-            manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml
-            data/foods-expanded.js data/choice-rules.js
-            data/nearby-restaurants.js data/group-mode.js
-            data/group-sync.js data/group-remote.js data/member-sync.js
-            data/pwa-install.js data/home-surprise.js
-          )
-          for file in "${required[@]}"; do
-            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
-          done
+          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
         run: |
@@ -42,17 +33,19 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
           node --check sw.js
           for file in data/*.js; do node --check "$file"; done
-      - name: Verify latest release wiring and PWA v12
+      - name: Verify latest release wiring and PWA v13
         shell: bash
         run: |
           set -euo pipefail
           grep -q 'data/home-surprise.js' index.html
           grep -q 'data/nearby-restaurants.js' index.html
           grep -q 'serviceWorker' index.html
-          grep -q 'kinaraidee-beta-v12' sw.js
+          grep -q 'kinaraidee-beta-v13' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
+          grep -q 'box.replaceChildren()' data/nearby-restaurants.js
+          grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
           grep -q 'aria-busy' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
@@ -64,44 +57,19 @@ jobs:
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
           test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
-          strict=(
-            '.github/workflows/qa.yml'
-            '.github/workflows/beta-check.yml'
-            '.github/workflows/pages.yml'
-            '.github/workflows/live-smoke.yml'
-            'README.md'
-          )
-          evidence=(
-            'LIVE-DEPLOYMENT-VERIFICATION.md'
-            'BETA-RUN-LOG.md'
-            'BETA-DEVICE-MATRIX.md'
-            'RELEASE-CHECKLIST.md'
-          )
+          strict=('.github/workflows/qa.yml' '.github/workflows/beta-check.yml' '.github/workflows/pages.yml' '.github/workflows/live-smoke.yml' 'README.md')
+          evidence=('LIVE-DEPLOYMENT-VERIFICATION.md' 'BETA-RUN-LOG.md' 'BETA-DEVICE-MATRIX.md' 'RELEASE-CHECKLIST.md')
           for file in "${strict[@]}"; do
             test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
             grep -Fq "$marker" "$file" || { echo "Release marker drift: $file does not reference $marker"; exit 1; }
-            while IFS= read -r found; do
-              [ -z "$found" ] && continue
-              if [ "$found" != "$marker" ]; then
-                echo "Stale active release marker in $file: $found (expected only $marker)"
-                exit 1
-              fi
-            done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
+            while IFS= read -r found; do [ -z "$found" ] && continue; if [ "$found" != "$marker" ]; then echo "Stale active release marker in $file: $found (expected only $marker)"; exit 1; fi; done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
           done
-          for file in "${evidence[@]}"; do
-            test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }
-            grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }
-          done
-          echo 'Release marker consistency verified for deploy; historical evidence markers are allowed in evidence docs'
+          for file in "${evidence[@]}"; do test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }; grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }; done
       - name: Prevent private secrets in Pages artifact
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then
-            echo 'Potential private secret found; deployment blocked.'
-            exit 1
-          fi
-          echo 'Predeploy validation passed'
+          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then echo 'Potential private secret found; deployment blocked.'; exit 1; fi
 
   deploy:
     needs: predeploy-check
@@ -122,7 +90,6 @@ jobs:
           cp index.html 404.html privacy.html feedback.html partner.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
-          echo 'Public Pages artifact:'
           find _site -maxdepth 2 -type f | sort
           test ! -e _site/.git
           test ! -e _site/.github

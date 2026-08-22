@@ -58,6 +58,18 @@ jobs:
           grep -q 'data/group-mode.js' data/nearby-restaurants.js
           grep -q 'data/pwa-install.js' data/nearby-restaurants.js
 
+      - name: Verify partner card rendering is text-safe
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'box.replaceChildren()' data/nearby-restaurants.js
+          grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
+          grep -q "detail.textContent=String(r.address" data/nearby-restaurants.js
+          if grep -q 'c.innerHTML=.*r.name' data/nearby-restaurants.js; then
+            echo 'Partner name is rendered through innerHTML'
+            exit 1
+          fi
+
       - name: Verify surprise busy state and recovery wiring
         shell: bash
         run: |
@@ -112,11 +124,11 @@ jobs:
           grep -q "ระยะเวลาการเก็บและการลบข้อมูล" privacy.html
           grep -q "คำขอเกี่ยวกับข้อมูล" privacy.html
 
-      - name: Verify PWA shell and v12 update strategy
+      - name: Verify PWA shell and v13 update strategy
         shell: bash
         run: |
           set -euo pipefail
-          grep -q "kinaraidee-beta-v12" sw.js
+          grep -q "kinaraidee-beta-v13" sw.js
           grep -q "cache.addAll(SHELL)" sw.js
           shell_paths=(
             "'./'"
