@@ -94,11 +94,11 @@ jobs:
             while IFS= read -r found; do [ -z "$found" ] && continue; if [ "$found" != "$marker" ]; then echo "Stale active release marker in $file: $found (expected only $marker)"; exit 1; fi; done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
           done
           for file in "${evidence[@]}"; do test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }; grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }; done
-      - name: Prevent private secrets in Pages artifact
+      - name: Prevent private secrets before Pages deploy
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='*.yml' '(sb_secret_|service_role|SUPABASE_SERVICE_ROLE|PRIVATE_KEY-----)' .; then echo 'Potential private secret found; deployment blocked.'; exit 1; fi
+          if grep -RInE --exclude-dir=.git --exclude='*.md' '(sb[_]secret_|service[_]role|SUPABASE[_]SERVICE[_]ROLE|PRIVATE[_]KEY-----)' .; then echo 'Potential private secret found; deployment blocked.'; exit 1; fi
 
   deploy:
     needs: predeploy-check
