@@ -57,6 +57,39 @@ jobs:
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
           if grep -q 'Promise.allSettled' sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
+      - name: Block deploy on release evidence marker drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
+          test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
+          tracked=(
+            '.github/workflows/qa.yml'
+            '.github/workflows/beta-check.yml'
+            '.github/workflows/pages.yml'
+            '.github/workflows/live-smoke.yml'
+            'README.md'
+            'LIVE-DEPLOYMENT-VERIFICATION.md'
+            'BETA-RUN-LOG.md'
+            'BETA-DEVICE-MATRIX.md'
+            'RELEASE-CHECKLIST.md'
+          )
+          for file in "${tracked[@]}"; do
+            test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
+            grep -Fq "$marker" "$file" || {
+              echo "Release marker drift: $file does not reference $marker"
+              exit 1
+            }
+            while IFS= read -r found; do
+              [ -z "$found" ] && continue
+              if [ "$found" != "$marker" ]; then
+                echo "Stale release marker in $file: $found (expected only $marker)"
+                exit 1
+              fi
+            done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
+          done
+          echo 'Release evidence marker consistency verified for deploy'
       - name: Prevent private secrets in Pages artifact
         shell: bash
         run: |
