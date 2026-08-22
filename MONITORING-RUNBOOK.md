@@ -9,6 +9,8 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 ตรวจทุก 6 ชั่วโมงและสั่งรันเองได้ โดยตรวจเฉพาะสิ่งที่พิสูจน์อัตโนมัติได้:
 
 - Public Beta URL และหน้า/asset สำคัญตอบ HTTP สำเร็จ
+- Homepage ออนไลน์ยังมี app identity และ wiring หลักของ manifest, Service Worker, Surprise flow และ nearby restaurants
+- `manifest.webmanifest` ออนไลน์ parse เป็น JSON ได้และมี `name`, `start_url`, `display`
 - `sw.js` ออนไลน์ใช้ release marker เดียวกับ `main`
 - `release-meta.json` ออนไลน์มี deployed SHA รูปแบบถูกต้องและ PWA cache marker ตรงกับ `sw.js`
 - deployed SHA จาก `release-meta.json` trace กลับมาเป็น ancestor ของ `main` ปัจจุบันได้ เพื่อป้องกัน metadata ที่ชี้ไปยัง commit นอก release lineage
@@ -48,7 +50,7 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 ## เมื่อ monitor FAIL
 
 1. อย่าตีความทันทีว่าเป็น runtime defect; แยก transient network/GitHub Pages propagation ออกจาก defect จริง
-2. ตรวจ path/marker/release-meta/deployed-SHA lineage ที่ fail จาก logs
+2. ตรวจ path/homepage wiring/manifest/marker/release-meta/deployed-SHA lineage ที่ fail จาก logs
 3. ถ้า Public Beta กระทบผู้ใช้จริง ให้เปิด defect/incident ที่ trace กลับไปยัง run
 4. ถ้าเป็น release regression ให้ใช้ `ROLLBACK-RUNBOOK.md`
 5. หลังแก้ ให้รัน monitor ใหม่และบันทึก run ใหม่เป็น evidence; ห้ามแก้ไขผล run เก่าให้เป็น PASS
