@@ -55,6 +55,34 @@ jobs:
 
           echo 'Group API source contract checks passed.'
 
+      - name: Verify privacy-safe observability contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/functions/group-api/index.ts'
+
+          grep -Fq "const logEvent=" "$file"
+          grep -Fq "component:'group-api'" "$file"
+          grep -Fq "create_room_succeeded" "$file"
+          grep -Fq "submit_vote_succeeded" "$file"
+          grep -Fq "submit_vote_rejected" "$file"
+          grep -Fq "get_votes_succeeded" "$file"
+          grep -Fq "close_room_succeeded" "$file"
+          grep -Fq "request_rejected" "$file"
+
+          # Event logging may contain bounded operational counters/reasons only.
+          # Reject direct logging of sensitive/user-supplied identifiers or payloads.
+          if grep -E "logEvent\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags|req\.headers|req\.json|contentLength)" "$file"; then
+            echo 'Privacy-sensitive value referenced in Group API event logging.'
+            exit 1
+          fi
+          if grep -E "console\.(log|info|warn|error)\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags)" "$file"; then
+            echo 'Direct sensitive identifier logging detected.'
+            exit 1
+          fi
+
+          echo 'Privacy-safe observability contract checks passed.'
+
       - name: Record evidence boundary
         if: always()
         shell: bash
@@ -65,6 +93,8 @@ jobs:
             echo '- Checks the committed Group API source for method, size, input, room-state, host-token and response-hardening invariants.'
             echo '- Checks for the server-side service-role environment variable reference without treating it as a deploy credential.'
             echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
+            echo '- Requires structured operational event markers for create/vote/read/close outcomes.'
+            echo '- Rejects event logging that directly includes room IDs, host tokens, voter IDs, tags, request headers or request payloads.'
             echo '- This is static source-contract evidence only.'
-            echo '- It does not prove Supabase deployment/version, retention cleanup, abuse controls, production traffic behavior, load/security testing, or real-device group flow.'
+            echo '- It does not prove Supabase deployment/version, live log ingestion, alerting, retention cleanup, abuse controls, production traffic behavior, load/security testing, or real-device group flow.'
           } >> "$GITHUB_STEP_SUMMARY"
