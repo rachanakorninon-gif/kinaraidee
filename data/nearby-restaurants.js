@@ -2,7 +2,7 @@
 (function(){
   const PARTNER_API='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/partner-api';
   const SUPABASE_URL='https://cuspfvfzprlgtvtdyilh.supabase.co';
-  const SUPABASE_KEY='sb_publishable_PGmPJ6_8tNIWm7zfF6qEng_0emmWChx';
+  const SUPABASE_KEY='sb_publishable_PGmPJ6_8tNIWm7zfF6qEng_0emmWchx';
   const SEARCH_RADIUS_KM=5, DEDUP_MS=30000;
   let targetFood=null,lastCoords=null,lastSaved={key:'',at:0};
   function sessionId(){const k='kinaraideeNearbySession';let v=localStorage.getItem(k);if(!v){v=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));localStorage.setItem(k,v)}return v}
