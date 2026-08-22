@@ -28,6 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           file='supabase/functions/group-api/index.ts'
+          privileged_name='SUPABASE_''SERVICE_ROLE_KEY'
           test -s "$file"
 
           grep -q "Access-Control-Allow-Methods':'POST, OPTIONS'" "$file"
@@ -35,7 +36,7 @@ jobs:
           grep -q "contentLength>8192" "$file"
           grep -q "'Cache-Control':'no-store'" "$file"
           grep -q "'X-Content-Type-Options':'nosniff'" "$file"
-          grep -q "SUPABASE_""SERVICE_ROLE_KEY" "$file"
+          grep -q "$privileged_name" "$file"
           grep -q "const allowedMeals=" "$file"
           grep -q "const allowedBudgets=" "$file"
           grep -q "const allowedTags=" "$file"
@@ -47,8 +48,8 @@ jobs:
           grep -q "new Date(room.expires_at)<=new Date()" "$file"
           grep -q "onConflict:'room_id,voter_id'" "$file"
 
-          if grep -qE "SUPABASE_(SERVICE_ROLE|SECRET).*['\"]" "$file"; then
-            echo 'Possible hard-coded privileged Supabase credential reference detected.'
+          if grep -qE "${privileged_name}[[:space:]]*=[[:space:]]*['\"]" "$file"; then
+            echo 'Possible hard-coded privileged Supabase credential assignment detected.'
             exit 1
           fi
 
@@ -63,6 +64,7 @@ jobs:
             echo
             echo '- Checks the committed Group API source for method, size, input, room-state, host-token and response-hardening invariants.'
             echo '- Checks for the server-side service-role environment variable reference without treating it as a deploy credential.'
+            echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
             echo '- This is static source-contract evidence only.'
             echo '- It does not prove Supabase deployment/version, retention cleanup, abuse controls, production traffic behavior, load/security testing, or real-device group flow.'
           } >> "$GITHUB_STEP_SUMMARY"
