@@ -35,6 +35,7 @@ jobs:
           nearby="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/nearby-restaurants.js")"
           surprise="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/home-surprise.js")"
           pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
+          partner="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/partner.html")"
           robots="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/robots.txt")"
           sitemap="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sitemap.xml")"
           grep -q 'กินอะไรดี' <<<"$html"
@@ -55,12 +56,15 @@ jobs:
           grep -q 'online' <<<"$surprise"
           grep -q 'เข้าใจแล้ว' <<<"$pwa"
           grep -q 'MacIntel' <<<"$pwa"
+          grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" <<<"$partner"
+          grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' <<<"$partner"
+          grep -q 'privacy_acknowledged_at:new Date().toISOString()' <<<"$partner"
           grep -q 'sitemap.xml' <<<"$robots"
           grep -q '<urlset' <<<"$sitemap"
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 flow'
+          echo 'Live smoke test passed for PWA v13 flow with partner privacy evidence wiring'
 
       - name: Verify development files are not published
         shell: bash
@@ -91,6 +95,7 @@ jobs:
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
             echo '- Expected Service Worker: `kinaraidee-beta-v13`'
             echo '- Partner renderer safety markers: checked'
+            echo '- Partner privacy acknowledgement wiring: checked'
             echo '- App shell strategy checked: `cache.addAll(SHELL)`'
             echo '- Development-only exposure check: completed'
             echo
