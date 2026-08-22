@@ -5,9 +5,10 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- App release baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
-- Expected Service Worker cache: `kinaraidee-beta-v12`
-- PR #14 pre-merge CI: Beta integrity `32537715302` SUCCESS; Kinaraidee Beta QA `32537715337` SUCCESS
+- Current candidate: PR #25 (`security/partner-card-textcontent-v13`); บันทึก final merge SHA หลัง CI ผ่านและ merge
+- Expected Service Worker cache: `kinaraidee-beta-v13`
+- Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
+- v13 runtime change: partner/fallback card rendering เปลี่ยนจาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump PWA cache generation
 - Pages / Live Smoke / real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
 
 ## Beta Exit Evidence
@@ -17,15 +18,15 @@
 - [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่นผ่าน core flow ตามกรณีที่รองรับ
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
-- [ ] TC-11, TC-12, NF-07 และ accessibility ที่ได้รับผลจาก PR #14 ถูก retest บน release `f08d069a...`
+- [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยน
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
 - [ ] GitHub Pages deployment ของ release candidate สำเร็จและ trace กลับไปยัง commit ได้
-- [ ] `qa.yml`, `beta-check.yml`, `pages.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
-- [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v12`)
+- [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
+- [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v13`)
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
 - [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
 - [ ] live asset/marker checks ผ่านตาม `LIVE-DEPLOYMENT-VERIFICATION.md`
@@ -37,7 +38,8 @@
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
-- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v12 ผ่านการทดสอบ
+- [ ] partner/fallback cards render ถูกต้องหลังเปลี่ยนเป็น DOM nodes/`textContent` บน Android/iPhone ที่ใช้ทดสอบ
+- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v13 ผ่านการทดสอบ
 - [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ
 - [ ] Feedback flow ใช้งานจริงได้
 - [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
@@ -81,7 +83,7 @@
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
 - [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
-- [ ] เปลี่ยน partner-card renderer จาก dynamic `innerHTML` เป็น DOM nodes/`textContent` ใน runtime release ถัดไปเพื่อ defense-in-depth
+- [ ] PR #25 เปลี่ยน partner-card renderer เป็น DOM nodes/`textContent`; ติ๊กผ่านหลัง CI/merge และ live/runtime evidence ของ v13 ยืนยันแล้ว
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
