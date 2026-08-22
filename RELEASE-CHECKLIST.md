@@ -5,11 +5,12 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current runtime release: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
+- Current runtime release: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Pre-merge CI ของ head `4d79b19e68f35efc599de7482cdd933b9812ae45`: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
+- Pre-merge CI ของ head `e4bf276702be06baaf1c5abd41097f8122b4793b`: Release Consistency `32557712768` SUCCESS; Beta integrity `32557712762` SUCCESS; Beta QA `32557712761` SUCCESS
+- Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
-- v13 runtime change: partner/fallback card rendering เปลี่ยนจาก data-driven `innerHTML` เป็น DOM nodes/`textContent` และ bump PWA cache generation
+- Runtime change จาก `83f8f363...`: Partner application submission บันทึก `privacy_notice_version='2026-08-21'` และ `privacy_acknowledged_at` เพื่อให้การรับทราบ Privacy notice ตรวจสอบย้อนหลังได้; Service Worker cache generation ยังเป็น v13
 - Pages / Live Smoke / real-device evidence สำหรับ candidate นี้: ยังต้องยืนยันด้วยผลจริงก่อนติ๊กผ่าน
 
 ## Beta Exit Evidence
@@ -20,6 +21,7 @@
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยน
+- [ ] TC-12 Partner application ถูก retest บน `0624d7e4...` หลังเพิ่ม privacy acknowledgement evidence fields
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
@@ -40,6 +42,7 @@
 - [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องหลังเปลี่ยนเป็น DOM nodes/`textContent` บน Android/iPhone ที่ใช้ทดสอบ
+- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุด
 - [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา v13 ผ่านการทดสอบ
 - [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ
 - [ ] Feedback flow ใช้งานจริงได้
@@ -71,6 +74,7 @@
 - [ ] ระบุวัตถุประสงค์การใช้ location / analytics / partner tracking / account data
 - [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้
 - [ ] ตรวจ consent/notice ที่จำเป็นก่อนเริ่ม analytics หรือ tracking ที่ต้องขอความยินยอม
+- [x] Beta Partner application บันทึก Privacy notice version และ acknowledgement timestamp แล้วใน runtime `0624d7e4...`; ข้อนี้เป็น implementation evidence เท่านั้น ไม่แทน Production Privacy/PDPA review
 - [ ] ตรวจข้อกำหนด PDPA และกฎหมาย/ข้อกำหนดที่เกี่ยวข้องก่อนรับข้อมูลเชิงพาณิชย์
 - [ ] ข้อความราคา/ต่ออายุ/ยกเลิก Premium ไม่ทำให้ผู้ใช้เข้าใจผิด
 
