@@ -76,9 +76,13 @@ jobs:
         run: |
           set -euo pipefail
           grep -Fq '2026-08-23-group-result-bridge' deployment-check.html
+          grep -Fq 'surprise-a11y-v1' deployment-check.html
           grep -Fq "fetch('./data/group-mode.js'" deployment-check.html || grep -Fq "text('./data/group-mode.js')" deployment-check.html
           grep -Fq 'showRemoteResult:useRemoteVotes' deployment-check.html
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' deployment-check.html
+          grep -Fq 'homeSurpriseStatus' deployment-check.html
+          grep -Fq "aria-live','assertive" deployment-check.html
+          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' deployment-check.html
           grep -Fq 'kinaraidee-beta-v13' deployment-check.html
       - name: Verify latest release wiring and PWA v13
         shell: bash
@@ -93,7 +97,12 @@ jobs:
           grep -q "'./data/pwa-install.js'" sw.js
           grep -q 'box.replaceChildren()' data/nearby-restaurants.js
           grep -q "name.textContent=String(r.name" data/nearby-restaurants.js
-          grep -q 'aria-busy' data/home-surprise.js
+          grep -Fq 'homeSurpriseStatus' data/home-surprise.js
+          grep -Fq "status.setAttribute('role','status')" data/home-surprise.js
+          grep -Fq "status.setAttribute('aria-live','assertive')" data/home-surprise.js
+          grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" data/home-surprise.js
+          grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" data/home-surprise.js
+          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
