@@ -3,50 +3,39 @@
 ใช้เอกสารนี้ยืนยันว่า Public Beta ที่ผู้ใช้เปิดจริงตรงกับ release candidate ใน repository โดยห้ามทำเครื่องหมาย PASS จากการคาดเดา, static review หรือ workflow configuration เพียงอย่างเดียว
 
 ## Release candidate ปัจจุบัน
-- Runtime release SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
-- Current reviewed `main` descendant: `6d30b211665f30be45a077d4cec8ab0a91dff552` (PR #27 merged; docs-only descendant)
-- Runtime-equivalence check: compare `83f8f363...` → `6d30b211...` = 5 commits ahead, 0 behind; changed files only `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `LIVE-DEPLOYMENT-VERIFICATION.md`, `RELEASE-CHECKLIST.md`; ไม่มี runtime app/workflow file เปลี่ยน
-- Pre-merge head: `4d79b19e68f35efc599de7482cdd933b9812ae45`
-- Pre-merge CI: Release Consistency `32555118263` SUCCESS; Beta integrity `32555118264` SUCCESS; Beta QA `32555118259` SUCCESS
-- Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
+- Runtime candidate SHA: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
 - วันที่ reset evidence: 2026-08-22 (Asia/Bangkok)
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
-- Runtime change จาก v12: partner/fallback cards เปลี่ยน data-driven rendering เป็น DOM nodes/`textContent` และ Service Worker cache generation bump เป็น v13
+- v13 runtime lineage: partner/fallback cards ใช้ DOM nodes/`textContent`; PR #28 เพิ่ม partner privacy acknowledgement evidence wiring ใน `partner.html`
+- PR #28 ยังเพิ่ม QA/Pages/Live Smoke assertions สำหรับ `PRIVACY_NOTICE_VERSION`, `privacy_notice_version` และ `privacy_acknowledged_at`
+- Historical runtime ก่อน PR #28: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (partner renderer hardening)
+- Historical v12 baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f`
 
-v12 และ evidence ที่อ้าง `f08d069a...` / `kinaraidee-beta-v12` เป็น historical evidence เท่านั้น ไม่ใช่หลักฐานของ v13 สำหรับ nearby partner rendering, PWA update หรือ flow ที่ได้รับผลกระทบ
+ผล Pages/Live Smoke/real-device จาก candidate เก่าห้ามยกมาเป็นผลของ Partner application/privacy acknowledgement บน `0624d7e4...` โดยอัตโนมัติ
 
-## CI evidence
-PR #26 head `4d79b19e68f35efc599de7482cdd933b9812ae45` ผ่านก่อน merge:
-- `Kinaraidee Release Consistency` run `32555118263` — **SUCCESS**
-- `Beta integrity checks` run `32555118264` — **SUCCESS**
-- `Kinaraidee Beta QA` run `32555118259` — **SUCCESS**
-- merge เข้า `main` เป็น `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
+## Repository evidence
+ตรวจจาก `main` ปัจจุบัน:
+- `sw.js` ใช้ `kinaraidee-beta-v13`
+- `sw.js` ใช้ atomic `cache.addAll(SHELL)`
+- PR #28 merge commit `0624d7e4...` เปลี่ยน runtime `partner.html` และ release-gate assertions
 
-CI ยืนยัน static/integrity/consistency checks เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint หรือ real-device behavior
-
-### Reviewed non-runtime descendant evidence
-GitHub compare ระหว่าง runtime release `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` และ reviewed `main` `6d30b211665f30be45a077d4cec8ab0a91dff552` แสดงว่า `main` ahead 5 / behind 0 และเปลี่ยนเฉพาะ:
-- `BETA-DEVICE-MATRIX.md`
-- `BETA-RUN-LOG.md`
-- `LIVE-DEPLOYMENT-VERIFICATION.md`
-- `RELEASE-CHECKLIST.md`
-
-ดังนั้น ณ SHA ที่ตรวจนี้ runtime payload ยังเทียบเท่า v13 runtime release สำหรับวัตถุประสงค์ release tracing เท่านั้น ข้อนี้ **ไม่ใช่หลักฐานว่า GitHub Pages deploy สำเร็จหรือ Public URL เสิร์ฟ SHA นี้แล้ว**
+Repository/static evidence ยืนยัน implementation และ guard wiring เท่านั้น ไม่ยืนยัน Pages deployment, live endpoint, form submission จริง หรือ real-device behavior
 
 ### Release-marker drift protection
 กติกาที่ต้องรักษา:
 - runtime/workflow/README ที่อธิบาย release ปัจจุบันต้องใช้ canonical marker เดียวกับ `sw.js`
-- release-evidence docs ต้องอ้าง canonical marker ปัจจุบัน แต่อนุญาต marker รุ่นเก่าที่เก็บไว้เป็น historical baseline พร้อมบริบท
+- release-evidence docs ต้องอ้าง canonical marker ปัจจุบัน แต่ marker รุ่นเก่าเก็บได้เฉพาะเมื่อระบุเป็น historical baseline ชัดเจน
 
 ## GitHub Pages / Live Smoke evidence
-- [ ] GitHub Pages deployment ของ `83f8f363...` หรือ non-runtime descendant ที่พิสูจน์ว่า payload เท่ากันมีสถานะสำเร็จ
+- [ ] GitHub Pages deployment ของ `0624d7e4...` หรือ descendant ที่พิสูจน์ว่า runtime payload เท่ากันมีสถานะสำเร็จ
 - [ ] บันทึก Pages workflow run URL / ID และ deployed SHA
 - [ ] Live Smoke run สำเร็จและ trace กลับไปยัง deployment เดียวกัน
 - [ ] บันทึก Live Smoke workflow run URL / ID และ Job Summary ถ้ามี
 - [ ] Public URL เสิร์ฟ runtime assets ของ release candidate ปัจจุบัน
+- [ ] Live `partner.html` มี partner privacy acknowledgement wiring ของ PR #28
 
-> สถานะปัจจุบัน: **PENDING / BLOCKED FOR EVIDENCE** — ยังไม่มีหลักฐาน Pages/Live Smoke ของ v13 จึงห้ามตีความว่า deployment ผ่านหรือ fail
+> สถานะปัจจุบัน: **PENDING / BLOCKED FOR EVIDENCE** — ยังไม่มีหลักฐาน Pages/Live Smoke/real-device ของ candidate `0624d7e4...` ที่ตรวจสอบได้ครบ จึงห้ามตีความว่า deployment ผ่านหรือ fail
 
 ## Live asset checks
 ต้องตรวจจาก Public URL จริงหรือผล `live-smoke.yml` ที่ trace ได้:
@@ -56,7 +45,9 @@ GitHub compare ระหว่าง runtime release `83f8f36373f819fcaf3d5dde7f
 - [ ] `sw.js` โหลดได้และมี `kinaraidee-beta-v13`
 - [ ] `sw.js` ใช้ atomic shell install ด้วย `cache.addAll(SHELL)` และไม่มี `Promise.allSettled` ใน install path
 - [ ] `404.html`, `robots.txt`, `sitemap.xml`, `icon.svg` โหลดได้ตาม design
-- [ ] `data/nearby-restaurants.js` โหลดได้และมี `box.replaceChildren()` + `textContent` markers ของ safe partner renderer
+- [ ] `data/nearby-restaurants.js` โหลดได้และมี safe partner renderer markers
+- [ ] `partner.html` มี `PRIVACY_NOTICE_VERSION='2026-08-21'`
+- [ ] `partner.html` ส่ง `privacy_notice_version` และ `privacy_acknowledged_at` ตาม implementation
 - [ ] Surprise busy/recovery markers และ iPhone/iPad install-guidance markers ตรงกับ release candidate
 
 ## Real-device smoke — ต้องใช้เครื่องจริง
@@ -65,21 +56,21 @@ Automated workflow ไม่แทนรายการนี้:
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” ทำงานและป้องกัน double tap
 - [ ] busy state / interruption / online recovery ทำงานตาม design
 - [ ] Location allow/deny และ Google Maps fallback ใช้งานได้
-- [ ] nearby partner/fallback card render ถูกต้องบน Android/iPhone และไม่มี regression จากการเปลี่ยน renderer
-- [ ] Feedback form และ Partner application ส่งได้จริง
+- [ ] nearby partner/fallback card render ถูกต้องบน Android/iPhone
+- [ ] Feedback form ส่งได้จริง
+- [ ] Partner application ส่งได้จริงและ consent/privacy acknowledgement path ทำงานตามที่ออกแบบ
 - [ ] PWA install/standalone/offline shell ทำงานบน platform ที่รองรับ
 - [ ] upgrade จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v13` สำเร็จโดยไม่ต้องให้ผู้ใช้ล้างข้อมูลเอง
 
 ## Evidence record
-- Runtime candidate SHA: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1`
-- Last reviewed equivalent `main` SHA: `6d30b211665f30be45a077d4cec8ab0a91dff552`
-- Runtime-equivalence evidence: compare `83f8f363...` → `6d30b211...`; docs-only file set above
+- Runtime candidate SHA: `0624d7e4928e75d617137db0dba22825e7ba9f5a`
 - Deployed SHA:
 - Pages workflow run URL / ID:
 - Live Smoke workflow run URL / ID:
 - Live Smoke release commit / source deployment run:
 - Public URL checked:
 - Observed SW/cache generation:
+- Observed partner privacy notice version:
 - Device / OS / Browser:
 - Screenshot / video:
 - TC/NF results:
@@ -92,7 +83,8 @@ Automated workflow ไม่แทนรายการนี้:
 
 ## Interpretation rules
 - workflow file มีอยู่ ไม่เท่ากับ workflow run ผ่าน
-- PR CI success ไม่แทน Pages/Live Smoke
+- PR/static QA success ไม่แทน Pages/Live Smoke
 - Live Smoke success ไม่แทน real-device interaction
-- ผล v12 / `f08d069a...` ห้ามถูกยกมาเป็นผล v13 โดยอัตโนมัติสำหรับ flow ที่ runtime เปลี่ยน
-- หาก deployed SHA เป็น non-runtime descendant ต้องยืนยัน diff ว่า runtime payload เท่ากับ `83f8f363...` ก่อนใช้เป็น release evidence
+- form wiring อยู่ใน source ไม่เท่ากับ form submission จริงสำเร็จ
+- ผล candidate ก่อน PR #28 ห้ามถูกยกมาเป็นผลของ Partner application/privacy acknowledgement บน `0624d7e4...` โดยอัตโนมัติ
+- หาก deployed SHA เป็น descendant ต้องยืนยัน diff ว่า runtime payload ที่เกี่ยวข้องเท่ากับ `0624d7e4...` ก่อนใช้เป็น release evidence
