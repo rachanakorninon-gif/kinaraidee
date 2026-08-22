@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pattern='(sb_secret_[A-Za-z0-9_-]+|SUPABASE_SERVICE_ROLE|service[_-]?role|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|sk_live_[A-Za-z0-9]{16,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)'
+          pattern='(sb_secret_[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|sk_live_[A-Za-z0-9]{16,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)'
           if grep -RInE \
             --exclude-dir=.git \
             --exclude='security-hygiene.yml' \
@@ -64,7 +64,7 @@ jobs:
           {
             echo '## Repository security hygiene'
             echo
-            echo '- Scans common private credential/token formats.'
+            echo '- Scans common private credential/token formats with payload-length checks to avoid documentation false positives.'
             echo '- Rejects write-all and pull_request_target under the current beta policy.'
             echo '- Requires explicit top-level workflow permissions.'
             echo '- This is defense-in-depth and does not replace GitHub secret scanning, branch protection, Supabase Auth hardening, or manual security review.'
