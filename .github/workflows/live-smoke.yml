@@ -22,15 +22,16 @@ jobs:
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
+          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/deployment-check.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
           for path in "${paths[@]}"; do url="$base$path"; echo "Checking $url"; curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null; done
 
-      - name: Check latest live app markers, group bridge, and PWA v13
+      - name: Check latest live app markers, group bridge, deployment probe, and PWA v13
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
           html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
+          probe="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/deployment-check.html")"
           sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
           nearby="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/nearby-restaurants.js")"
           group_mode="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/group-mode.js")"
@@ -46,6 +47,9 @@ jobs:
           grep -q 'serviceWorker' <<<"$html"
           grep -q 'home-surprise.js' <<<"$html"
           grep -q 'pwa-install.js' <<<"$html"
+          grep -Fq '2026-08-23-group-result-bridge' <<<"$probe"
+          grep -Fq 'showRemoteResult:useRemoteVotes' <<<"$probe"
+          grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$probe"
           grep -q 'kinaraidee-beta-v13' <<<"$sw"
           grep -q 'cache.addAll(SHELL)' <<<"$sw"
           grep -q 'home-surprise.js' <<<"$sw"
@@ -80,7 +84,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 with completed group-result bridge and release metadata'
+          echo 'Live smoke test passed for PWA v13 with completed group-result bridge, deployment probe, and release metadata'
 
       - name: Verify development files are not published
         shell: bash
@@ -127,6 +131,7 @@ jobs:
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
+            echo '- Human-readable deployment probe: `/deployment-check.html` checked'
             echo "- Service Worker cache marker: \`$live_cache\` (matches release-meta.json)"
             echo '- Completed live-group result bridge: checked on deployed assets'
             echo '- Partner renderer safety markers: checked'
