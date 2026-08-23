@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` (PR #114 merge; repository-governance runbook + required-check contract descendant, with no browser/PWA, Group API or Supabase runtime-state change).
+- Latest reviewed `main`: `61323280ac45885658d36cadb1fcb4c85957d06a` (governance evidence refresh after PR #119; docs/evidence only, with no browser/PWA, Group API or Supabase runtime-state change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Supabase grant/RLS/security descendants through PR #112 changed database grants, policies/helpers, security verification workflows and evidence only. PR #114 adds governance documentation/regression protection only. None of these descendants change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/RLS/security descendants through PR #112 changed database grants, policies/helpers, security verification workflows and evidence only. PR #114 prepared governance documentation/regression protection; PR #119 and the subsequent `61323280...` refresh only updated governance evidence. None of these descendants change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -54,7 +54,7 @@ PR #110 was a temporary read-only Actions diagnostic used only to trace the exac
 
 Repository contract: `supabase/least-privilege-public-table-grants.sql`; static guard: `.github/workflows/supabase-grant-contract-regression.yml`; live negative probe: `.github/workflows/supabase-anon-access-probe.yml`; detailed evidence: `SUPABASE-GRANT-HARDENING-EVIDENCE.md`.
 
-Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does **not** prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
+Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does not prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
 
 ## Supabase authenticated RLS authorization evidence
 
@@ -71,12 +71,13 @@ Post-remediation connected verification confirms:
 - normal authenticated simulation is not treated as admin, sees exactly its own `beta_feedback` rows and is denied cross-user/unowned rows;
 - admin-owner simulation is recognized by the private helper and matches the full feedback scope expected by the admin path;
 - member profile/history simulations also matched own-row scope exactly and denied cross-user rows for `member_profiles`, `member_food_history` and `user_food_history`;
+- transaction-scoped negative mutation probes found cross-user `member_profiles` UPDATE = 0 rows and cross-user history DELETE operations = 0 rows, with the transaction rolled back and no user identifiers or row contents recorded in repository evidence;
 - `private.is_admin_dashboard_owner()` is `STABLE SECURITY DEFINER` with `search_path=''`, `anon` cannot execute it, and the public helper no longer exists;
 - the Security Advisor warning for an authenticated-callable public `SECURITY DEFINER` helper is no longer present.
 
-PR #112 merged as `722712a5997511998a09ce9ed401f71799bf9283`. Its head `32011345f4a646fd100427a3811b88d9226624fc` had 15 inspected successful PR checks, including new `Supabase Feedback RLS Contract Regression` run `32645461886`, Security Hygiene, Credential Scanner, Release Consistency/Metadata, Runtime Lineage and the existing Beta/PWA/accessibility/history/group/device-contract suites.
+PR #112 merged as `722712a5997511998a09ce9ed401f71799bf9283`. Later PR #117 and PR #118 added scoped authenticated read-isolation and cross-user mutation-negative evidence only; they did not change schema, policies, runtime or user data.
 
-Repository contract: `supabase/beta-feedback-admin-rls-contract.sql`; static guard: `.github/workflows/supabase-feedback-rls-contract-regression.yml`; detailed evidence: `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md`.
+Repository contract: `supabase/beta-feedback-admin-rls-contract.sql`; static guard: `.github/workflows/supabase-feedback-rls-contract-regression.yml`; detailed evidence: `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md` and `SUPABASE-RLS-NEGATIVE-EVIDENCE.md`.
 
 This is database-side role/JWT-claim simulation and live policy/configuration inspection. It does not claim a complete external authenticated-session/API lifecycle PASS or blanket privileged-backend authorization PASS.
 
@@ -116,12 +117,15 @@ The remaining device/accessibility gates are not replaced by CI or source inspec
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker, but the repository-side preparation is now explicit:
+Issue #35 remains a Commercial Governance blocker, but the repository-side preparation and evidence are explicit:
 
-- PR #114 merged as `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` after 15 successful PR checks.
+- PR #114 merged as `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` after 15 successful PR checks and established the governance runbook/required-check contract.
+- PR #119 merged as `1b12f44248566a2e2ffe245ed6e783caa6868322` after its inspected PR checks succeeded and refreshed the current-main governance evidence.
+- Subsequent commit `61323280ac45885658d36cadb1fcb4c85957d06a` changed only `GOVERNANCE-EVIDENCE.md`; compare against PR #119 merge shows no runtime/source change.
+- Fresh branch read-back at `61323280...` still reports `protected=false`, protection disabled and required-status-check enforcement `off`.
 - `GOVERNANCE-RUNBOOK.md` defines the recommended initial `main` protection/ruleset configuration and safe failure-blocking proof procedure.
 - Initial required-check candidates are `Kinaraidee Release Consistency / release-consistency`, `Beta integrity checks / validate`, `Kinaraidee Beta QA / static-qa`, and `Kinaraidee Security Hygiene / repository-security-hygiene`; all four currently run on every pull request without path filters.
-- `Governance Required Checks Regression` run `32646056459` passed on PR #114 and guards those workflow/job identities and universal PR triggers from drift.
+- `Governance Required Checks Regression` guards those workflow/job identities and universal PR triggers from drift.
 
 Status remains **PREPARED / NOT YET ENFORCED**. The connected GitHub surface still does not expose an administration write action for branch protection/rulesets, and current branch evidence remains unprotected. Workflow success or a prepared runbook does not equal governance enforcement.
 
@@ -153,8 +157,8 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed evidence baseline = `61323280ac45885658d36cadb1fcb4c85957d06a`; later evidence/documentation-only descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
-- Governance runbook/required-check contract is preparation evidence, not branch-protection enforcement PASS.
+- Governance runbook/required-check contract and evidence refreshes are preparation evidence, not branch-protection enforcement PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
