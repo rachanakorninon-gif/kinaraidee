@@ -6,16 +6,18 @@ This record captures the current repository-governance evidence without claiming
 
 ## Current observed state
 
-Fresh GitHub branch read-back on 2026-08-23 at `main` SHA `a597db1150a02cd703a5dd003d5dc5a3db458f6a` reports:
+Fresh GitHub branch read-back on 2026-08-24 (Asia/Bangkok automation review) at `main` SHA `1b12f44248566a2e2ffe245ed6e783caa6868322` reports:
 
 - `protected=false`;
 - protection `enabled=false`;
 - required status-check enforcement = `off`;
 - required contexts/checks are empty.
 
+PR #119 merged as `1b12f44248566a2e2ffe245ed6e783caa6868322` and changed only `GOVERNANCE-EVIDENCE.md`. Its scope explicitly preserved the existing browser/PWA and Group API runtime evidence boundaries.
+
 The current lineage also contains direct post-PR #114 commits on `main`, including `a04a2efc85048c4e0e04632f1632a3fb461856fb` and `a597db1150a02cd703a5dd003d5dc5a3db458f6a`. Their presence is consistent with the current absence of a pull-request enforcement rule. This is recorded as governance exposure evidence, not as an assertion about who intentionally bypassed a policy.
 
-Compare from PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` through `a597db1150a02cd703a5dd003d5dc5a3db458f6a` is 14 commits ahead and changes only governance/RLS evidence documents plus `.github/workflows/supabase-rls-negative-evidence-regression.yml`; it does not change the browser/PWA runtime candidate or Group API source candidate.
+PR #119 itself is evidence/documentation-only and does not change the browser/PWA runtime candidate, Group API source candidate, Supabase schema/data, deployment configuration, device result, user metric, conversion or revenue.
 
 Therefore Issue #35 remains a **Commercial Governance blocker**.
 
