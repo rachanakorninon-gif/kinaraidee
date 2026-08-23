@@ -40,13 +40,19 @@ jobs:
           grep -q "const allowedMeals=" "$file"
           grep -q "const allowedBudgets=" "$file"
           grep -q "const allowedTags=" "$file"
+          grep -Fq "const uuidPattern=" "$file"
+          grep -Fq "const hostTokenPattern=" "$file"
+          grep -Fq "const validRoomId=" "$file"
           grep -q "size<2||size>6" "$file"
+          grep -Fq "voterId.length>120" "$file"
           grep -q "tags.length>3" "$file"
           grep -q "room_full" "$file"
           grep -q "host_token!==hostToken" "$file"
           grep -q "room.status!=='open'" "$file"
           grep -q "new Date(room.expires_at)<=new Date()" "$file"
           grep -q "onConflict:'room_id,voter_id'" "$file"
+          test "$(grep -Fc "!validRoomId(roomId)" "$file")" -ge 4
+          test "$(grep -Fc "!hostTokenPattern.test(hostToken)" "$file")" -ge 2
 
           if grep -qE "${privileged_name}[[:space:]]*=[[:space:]]*['\"]" "$file"; then
             echo 'Possible hard-coded privileged Supabase credential assignment detected.'
@@ -69,6 +75,7 @@ jobs:
           grep -Fq "get_votes_succeeded" "$file"
           grep -Fq "close_room_succeeded" "$file"
           grep -Fq "request_rejected" "$file"
+          grep -Fq "invalid_room_id" "$file"
 
           # Event logging may contain bounded operational counters/reasons only.
           # Reject direct logging of sensitive/user-supplied identifiers or payloads.
@@ -91,10 +98,11 @@ jobs:
             echo '## Group API source regression gate'
             echo
             echo '- Checks the committed Group API source for method, size, input, room-state, host-token and response-hardening invariants.'
+            echo '- Requires UUID-shaped room IDs, 64-hex host-token shape on host-only actions, and rejection rather than silent truncation for voter IDs over 120 characters.'
             echo '- Checks for the server-side service-role environment variable reference without treating it as a deploy credential.'
             echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
             echo '- Requires structured operational event markers for create/vote/read/close outcomes.'
             echo '- Rejects event logging that directly includes room IDs, host tokens, voter IDs, tags, request headers or request payloads.'
             echo '- This is static source-contract evidence only.'
-            echo '- It does not prove Supabase deployment/version, live log ingestion, alerting, retention cleanup, abuse controls, production traffic behavior, load/security testing, or real-device group flow.'
+            echo '- It does not prove Supabase deployment/version, live application-log ingestion, alerting, retention cleanup, rate limiting, production traffic behavior, load/security testing, or real-device group flow.'
           } >> "$GITHUB_STEP_SUMMARY"
