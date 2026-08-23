@@ -1,0 +1,59 @@
+name: Group API v6 Live Probe Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/group-api-v6-live-probe-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-live-group-api-v6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify non-mutating live rejection contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/group-api'
+          body="$(mktemp)"
+          oversized="$(mktemp)"
+          trap 'rm -f "$body" "$oversized"' EXIT
+
+          expect(){
+            expected_status="$1"
+            expected_error="$2"
+            shift 2
+            : > "$body"
+            status="$(curl --silent --show-error --location --output "$body" --write-out '%{http_code}' "$@")"
+            test "$status" = "$expected_status" || { echo "Unexpected status: $status (expected $expected_status)"; cat "$body"; exit 1; }
+            grep -Fq "\"error\":\"$expected_error\"" "$body" || { echo "Unexpected response body"; cat "$body"; exit 1; }
+          }
+
+          expect 405 method_not_allowed "$url"
+          expect 400 invalid_room_id -H 'Content-Type: application/json' --data '{"action":"get_room","roomId":"not-a-uuid"}' "$url"
+          expect 400 invalid_vote -H 'Content-Type: application/json' --data '{"action":"submit_vote","roomId":"not-a-uuid","voterId":"probe","tags":[]}' "$url"
+          expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"get_votes","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
+          expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"close_room","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
+
+          long_voter="$(printf 'x%.0s' $(seq 1 121))"
+          payload="$(printf '{\"action\":\"submit_vote\",\"roomId\":\"00000000-0000-4000-8000-000000000000\",\"voterId\":\"%s\",\"tags\":[]}' "$long_voter")"
+          expect 400 invalid_vote -H 'Content-Type: application/json' --data "$payload" "$url"
+
+          printf '{"action":"unknown","padding":"' > "$oversized"
+          head -c 9000 /dev/zero | tr '\0' 'x' >> "$oversized"
+          printf '"}' >> "$oversized"
+          test "$(wc -c < "$oversized")" -gt 8192
+          expect 413 request_too_large --http1.1 -H 'Content-Type: application/json' -H 'Transfer-Encoding: chunked' --data-binary "@$oversized" "$url"
+
+          echo 'Live Group API v6 rejection contracts passed without successful write actions.'
+
+      - name: Evidence boundary
+        run: |
+          echo 'Temporary read-only diagnostic against the deployed public Group API.'
+          echo 'No successful create/vote/update/close action is sent.'
+          echo 'A success proves the current deployed endpoint preserves the rejection contract, including chunked oversized-body 413 behavior.'
+          echo 'It does not prove application structured-event ingestion, rate/quota controls, retention cleanup, load behavior, real-device behavior, or Commercial readiness.'
