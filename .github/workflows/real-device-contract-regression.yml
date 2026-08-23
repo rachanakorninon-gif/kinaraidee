@@ -1,0 +1,50 @@
+name: Real Device Contract Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify real-device evidence boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          tc='BETA-TEST-CASES.md'
+          nf='BETA-NEW-FLOW-TESTS.md'
+
+          # TC-08 must prove the permission-allow path, not infer it from Maps/coordinates.
+          grep -Fq 'site/app ยังไม่ได้รับ Location' "$tc"
+          grep -Fq 'allow-location path' "$tc"
+          grep -Fq 'Maps เปิดได้หรือเคยเห็นพิกัดเพียงอย่างเดียวไม่เพียงพอ' "$tc"
+
+          # NF-04/NF-07 must start from a verifiable pre-current-release baseline.
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive current PWA cache marker'; exit 1; }
+          grep -Fq "$marker" "$nf"
+          grep -Fq 'หากไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้' "$nf"
+          grep -Fq 'ยืนยันได้ว่าเคยโหลด cache generation ก่อน' "$nf"
+          grep -Fq 'Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น' "$nf"
+
+          # NF-09 must validate the assistive-tech environment and allow INCONCLUSIVE.
+          grep -Fq 'control มาตรฐานนอกแอป' "$nf"
+          grep -Fq 'action เกิดจริง' "$nf"
+          grep -Fq 'INCONCLUSIVE / TEST ENVIRONMENT' "$nf"
+          grep -Fq 'Source/static/synthetic accessibility checks' "$nf"
+
+          # Global anti-fabrication boundaries must remain explicit.
+          grep -Fq 'not captured' "$tc"
+          grep -Fq 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง' "$tc"
+          grep -Fq 'ห้ามทำเครื่องหมาย Pass จาก static review' "$nf"
+
+          echo 'Real-device acceptance contracts preserved'
