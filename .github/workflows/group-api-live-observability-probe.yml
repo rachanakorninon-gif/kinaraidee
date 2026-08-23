@@ -5,6 +5,8 @@ on:
     branches: ["main"]
     paths:
       - '.github/workflows/group-api-live-observability-probe.yml'
+  schedule:
+    - cron: '23 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -62,9 +64,18 @@ jobs:
 
           echo 'Live Group API rejection contracts, including the streamed actual-body 8 KiB guard, passed without creating/updating/closing any room or vote data.'
 
-      - name: Explain evidence boundary
+      - name: Record probe scope
+        if: always()
+        shell: bash
         run: |
-          echo 'This verifies deployed public rejection behavior only and deliberately performs no successful write action.'
-          echo 'The oversized-body probe uses chunked transfer to exercise the actual-byte guard rather than only the Content-Length early reject.'
-          echo 'Supabase log inspection is still required to distinguish platform invocation logging from application structured-event ingestion.'
-          echo 'This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
+          {
+            echo '## Group API live rejection probe'
+            echo
+            echo "- Trigger: \`${GITHUB_EVENT_NAME}\`"
+            echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo '- Schedule: every 6 hours at minute 23 UTC, plus workflow_dispatch and workflow-file pushes'
+            echo '- Scope: unsupported method, malformed identifiers/tokens, overlong voter ID and streamed chunked >8 KiB rejection contracts'
+            echo '- Mutation boundary: deliberately performs no successful create/vote/update/close action'
+            echo '- Supabase platform/application log inspection remains a separate evidence layer'
+            echo '- This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
