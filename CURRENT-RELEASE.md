@@ -25,7 +25,9 @@ Static source markers, workflow configuration, synthetic probes, and CI success 
 
 ## Deployment evidence
 
-Status: **PARTIAL / ACTIVE PAGES SOURCE CONFIRMED LEGACY; ADMIN MIGRATION TO GITHUB ACTIONS REQUIRED**
+Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+
+The active Pages source is confirmed as legacy branch publishing and requires a repository-admin migration to GitHub Actions before the existing artifact workflow can own deployment.
 
 Current public evidence confirms that the v2 Surprise accessibility source markers and current cache are being served. Public `release-meta.json` remains HTTP 404.
 
