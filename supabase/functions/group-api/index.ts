@@ -17,6 +17,9 @@ const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{
 const allowedMeals=['เช้า','กลางวัน','เย็น','ดึก']
 const allowedBudgets=[50,100,150,200,999]
 const allowedTags=['ข้าว','เส้น','เผ็ด','ของทอด','ของหวาน','หนัก','โปรตีน','เบา','ซุป','ต่างชาติ']
+const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const hostTokenPattern=/^[0-9a-f]{64}$/
+const validRoomId=(value:unknown)=>uuidPattern.test(String(value||''))
 const token=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','')
 
 // Privacy-safe operational event logging. Never include room IDs, host tokens,
@@ -63,7 +66,12 @@ Deno.serve(async(req)=>{
   }
 
   if(action==='get_room'){
-    const {data,error}=await supabase.from('group_rooms').select('id,meal,budget,size,status,expires_at').eq('id',b.roomId).single()
+    const roomId=String(b.roomId||'')
+    if(!validRoomId(roomId)){
+      logEvent('get_room_rejected',{reason:'invalid_room_id'})
+      return json({error:'invalid_room_id'},400)
+    }
+    const {data,error}=await supabase.from('group_rooms').select('id,meal,budget,size,status,expires_at').eq('id',roomId).single()
     if(error||!data){
       logEvent('get_room_rejected',{reason:'room_not_found'})
       return json({error:'room_not_found'},404)
@@ -78,8 +86,8 @@ Deno.serve(async(req)=>{
   }
 
   if(action==='submit_vote'){
-    const roomId=String(b.roomId||''), voterId=String(b.voterId||'').slice(0,120), tags=Array.isArray(b.tags)?[...new Set(b.tags.map(String))]:[]
-    if(!roomId||!voterId||tags.length>3||tags.some((x:string)=>!allowedTags.includes(x))){
+    const roomId=String(b.roomId||''), voterId=String(b.voterId||'').trim(), tags=Array.isArray(b.tags)?[...new Set(b.tags.map(String))]:[]
+    if(!validRoomId(roomId)||!voterId||voterId.length>120||tags.length>3||tags.some((x:string)=>!allowedTags.includes(x))){
       logEvent('submit_vote_rejected',{reason:'invalid_vote'})
       return json({error:'invalid_vote'},400)
     }
@@ -108,6 +116,10 @@ Deno.serve(async(req)=>{
 
   if(action==='get_votes'){
     const roomId=String(b.roomId||''), hostToken=String(b.hostToken||'')
+    if(!validRoomId(roomId)||!hostTokenPattern.test(hostToken)){
+      logEvent('get_votes_rejected',{reason:'forbidden'})
+      return json({error:'forbidden'},403)
+    }
     const {data:room}=await supabase.from('group_rooms').select('id,size,host_token,status,expires_at').eq('id',roomId).single()
     if(!room||room.host_token!==hostToken){
       logEvent('get_votes_rejected',{reason:'forbidden'})
@@ -128,6 +140,10 @@ Deno.serve(async(req)=>{
 
   if(action==='close_room'){
     const roomId=String(b.roomId||''), hostToken=String(b.hostToken||'')
+    if(!validRoomId(roomId)||!hostTokenPattern.test(hostToken)){
+      logEvent('close_room_rejected',{reason:'forbidden'})
+      return json({error:'forbidden'},403)
+    }
     const {data:room}=await supabase.from('group_rooms').select('id,host_token').eq('id',roomId).single()
     if(!room||room.host_token!==hostToken){
       logEvent('close_room_rejected',{reason:'forbidden'})
