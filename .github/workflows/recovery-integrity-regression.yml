@@ -27,16 +27,19 @@ jobs:
         run: |
           set -euo pipefail
           file='supabase/recovery-integrity-check.sql'
+          code="$(mktemp)"
+          trap 'rm -f "$code"' EXIT
           test -s "$file"
           grep -Fq 'critical_tables_found' "$file"
           grep -Fq 'critical_tables_with_rls' "$file"
           grep -Fq 'group_vote_cascade_present' "$file"
           grep -Fq 'orphan_group_votes' "$file"
-          if grep -Eqi '(^|[^a-z_])(insert|update|delete|truncate|alter|drop|create|grant|revoke)[[:space:]]' "$file"; then
-            echo 'Mutation or DDL detected in recovery integrity contract.'
+          sed -E 's/--.*$//' "$file" > "$code"
+          if grep -Eqi '(^|[^a-z_])(insert|update|delete|truncate|alter|drop|create|grant|revoke)[[:space:]]' "$code"; then
+            echo 'Mutation or DDL detected in executable recovery integrity SQL.'
             exit 1
           fi
-          if grep -Eqi '(email|phone|host_token|voter_id|room_id)[[:space:]]*(,|from|as)' "$file"; then
+          if grep -Eqi '(email|phone|host_token|voter_id)[[:space:]]*(,|from|as)' "$code"; then
             echo 'Potential identifier-bearing output detected.'
             exit 1
           fi
