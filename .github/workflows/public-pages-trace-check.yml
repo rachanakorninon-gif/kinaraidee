@@ -1,0 +1,48 @@
+name: Public Pages Trace Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-pages-trace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR76 Pages artifact is public
+        shell: bash
+        env:
+          EXPECTED_SHA: 95034bce89853fe87a4b399ca0a4a58c3e9e93d0
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          meta=''
+          probe=''
+          sw=''
+          for attempt in $(seq 1 18); do
+            echo "Public trace attempt $attempt/18"
+            if meta="$(curl --fail --silent --show-error --location --max-time 30 "$base/release-meta.json")" \
+              && probe="$(curl --fail --silent --show-error --location --max-time 30 "$base/deployment-check.html")" \
+              && sw="$(curl --fail --silent --show-error --location --max-time 30 "$base/sw.js")"; then
+              deployed="$(META="$meta" node -e "const m=JSON.parse(process.env.META);process.stdout.write(String(m.sha||''))")"
+              cache="$(META="$meta" node -e "const m=JSON.parse(process.env.META);process.stdout.write(String(m.pwa_cache||''))")"
+              if [ "$deployed" = "$EXPECTED_SHA" ] \
+                && [ "$cache" = 'kinaraidee-beta-v13' ] \
+                && grep -Fq 'pages-actions-source-v1' <<<"$probe" \
+                && grep -Fq "const CACHE='kinaraidee-beta-v13'" <<<"$sw"; then
+                echo "Public Pages trace PASS: $deployed · $cache"
+                exit 0
+              fi
+              echo "Not ready/mismatch yet: deployed=$deployed cache=$cache"
+            fi
+            sleep 10
+          done
+          echo 'Public Pages trace did not converge to the expected PR76 deployment.'
+          exit 1
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'This verifies public deployment metadata/source markers only.'
+          echo 'It does not replace real-device interaction or assistive-technology acceptance.'
