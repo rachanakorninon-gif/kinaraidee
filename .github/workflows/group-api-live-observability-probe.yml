@@ -21,7 +21,8 @@ jobs:
           set -euo pipefail
           url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/group-api'
           body="$(mktemp)"
-          trap 'rm -f "$body"' EXIT
+          oversized="$(mktemp)"
+          trap 'rm -f "$body" "$oversized"' EXIT
 
           expect(){
             expected_status="$1"
@@ -49,10 +50,20 @@ jobs:
           payload="$(printf '{\"action\":\"submit_vote\",\"roomId\":\"00000000-0000-4000-8000-000000000000\",\"voterId\":\"%s\",\"tags\":[]}' "$long_voter")"
           expect 400 invalid_vote -H 'Content-Type: application/json' --data "$payload" "$url"
 
-          echo 'Live Group API rejection contracts passed without creating/updating/closing any room or vote data.'
+          # v5 must enforce the 8 KiB contract against actual UTF-8 body bytes,
+          # not only Content-Length. Force HTTP/1.1 chunked transfer so no useful
+          # Content-Length is available to the application-level early check.
+          printf '{"action":"unknown","padding":"' > "$oversized"
+          head -c 9000 /dev/zero | tr '\0' 'x' >> "$oversized"
+          printf '"}' >> "$oversized"
+          test "$(wc -c < "$oversized")" -gt 8192
+          expect 413 request_too_large --http1.1 -H 'Content-Type: application/json' -H 'Transfer-Encoding: chunked' --data-binary "@$oversized" "$url"
+
+          echo 'Live Group API rejection contracts, including the v5 actual-body 8 KiB guard, passed without creating/updating/closing any room or vote data.'
 
       - name: Explain evidence boundary
         run: |
           echo 'This verifies deployed public rejection behavior only and deliberately performs no successful write action.'
+          echo 'The oversized-body probe uses chunked transfer to exercise the actual-byte guard rather than only the Content-Length early reject.'
           echo 'Supabase log inspection is still required to distinguish platform invocation logging from application structured-event ingestion.'
           echo 'This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
