@@ -6,12 +6,12 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `616a8f94bd1151ffeaf252bea31eb249273628ba` (PR #100; documentation/evidence-only descendant after current browser/PWA and Group API runtime candidates).
+- Latest reviewed `main`: `11bef92e9cda7e7fa3170e3c7666a99534c8ac8a` (PR #102; documentation-only descendant after current browser/PWA and Group API runtime candidates).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; later reviewed commits are workflow/evidence/backend/documentation changes.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; Supabase inspection verifies ACTIVE version 6 source/deployment parity against repository blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be`.
 - PR #95 / `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` changes only the non-mutating live-probe workflow wording for deployed Group API v6; it does not supersede the backend source candidate from PR #93.
-- PR #97 synchronized Group API v6 release/monitoring evidence, PR #99 captured a successful scheduled browser/PWA synthetic monitor run, and PR #100 synchronized beta device/run/checklist evidence boundaries. These are evidence/documentation changes only.
+- PR #97 synchronized Group API v6 release/monitoring evidence, PR #99 captured a successful scheduled browser/PWA synthetic monitor run, PR #100 synchronized beta device/run/checklist evidence boundaries, and PR #102 clarified Beta readiness acceptance gates. These are evidence/documentation changes only.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
 - PR #79 wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes the source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
@@ -27,6 +27,7 @@
 - PR #95 refreshed the canonical non-mutating live probe wording for the streamed v6 guard without changing successful product behavior.
 - PR #91 extended the rollback runbook with traceable Group API/Supabase evidence requirements; PR #92 extended the data-governance draft with verified Group room/vote schema boundaries. These are procedure/evidence preparation, not rollback-drill or retention-policy PASS.
 - PR #100 beta evidence documents now consistently use the current PR #79 deployment trace, v13 cache marker, Group API v6 evidence boundary, and NF-09 INCONCLUSIVE state without creating new device PASS.
+- PR #102 clarifies that a technical Beta build being available is not equivalent to Public Beta completion, and keeps real-device/accessibility/commercial acceptance gates explicit without creating new PASS evidence.
 - `SECURITY.md` treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make unchecked gates PASS.
 - Static source markers, workflow configuration, synthetic probes, policy text, and CI success do not replace real-device or production-security evidence.
 
@@ -92,7 +93,7 @@ The Group API v6 streaming change has source/deployment/live rejection evidence 
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker: fresh branch evidence at main `616a8f94bd1151ffeaf252bea31eb249273628ba` reports `protected=false`, protection disabled and required-status-check enforcement off. Workflow success does not equal governance enforcement. `SECURITY.md` requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
+Issue #35 remains a Commercial Governance blocker: latest reviewed documentation baseline is main `11bef92e9cda7e7fa3170e3c7666a99534c8ac8a`; the most recently verified branch-governance evidence remains `protected=false`, protection disabled and required-status-check enforcement off. Workflow success does not equal governance enforcement. `SECURITY.md` requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
 
 ## Public Beta gate impact
 
@@ -128,7 +129,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #100 / `616a8f94bd1151ffeaf252bea31eb249273628ba`; later evidence/documentation descendants do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = PR #102 / `11bef92e9cda7e7fa3170e3c7666a99534c8ac8a`; later evidence/documentation descendants do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
 - Scheduled Public Beta Monitor run `32626732416` is additional scoped synthetic browser/PWA evidence for the unchanged PR #79 runtime lineage; it does not prove Group API v6/current-main/full-system Production monitoring.
 - Supabase version 6 source/deployment parity and canonical non-mutating v6 rejection probe, including streamed chunked >8 KiB rejection, are verified for the Group API candidate; application structured-event ingestion remains unverified in the available log surface.
