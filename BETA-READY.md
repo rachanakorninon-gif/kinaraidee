@@ -1,8 +1,10 @@
-# กินอะไรดี — Beta Ready
+# กินอะไรดี — Beta Readiness
 
-สถานะ: พร้อมทดสอบกับผู้ใช้จริง (Beta MVP)
+สถานะปัจจุบัน: **TECHNICAL BETA BUILD AVAILABLE / PUBLIC BETA NOT COMPLETE**
 
-## เส้นทางหลักที่พร้อมใช้งาน
+เอกสารนี้สรุปสิ่งที่ตัวระบบมีอยู่แล้ว แต่ไม่ใช้แทน `CURRENT-RELEASE.md`, `BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md` หรือ `BETA-RUN-LOG.md` สำหรับการตัดสิน PASS/GO
+
+## เส้นทางหลักที่มีอยู่ในตัวระบบ
 
 - เลือกมื้อ จำนวนคน งบ และความชอบ
 - โหมด “ไม่รู้เลย” ให้ระบบเลือกเมนู
@@ -14,27 +16,56 @@
 - ติดตามการค้นหา/คลิกร้านสำหรับระบบพาร์ตเนอร์
 - หน้า feedback สำหรับผู้ทดสอบ
 - หน้า Privacy Policy สำหรับช่วง Beta
+- PWA/offline/update/install flows ตาม platform support
 
-## ความปลอดภัยที่ตั้งไว้
+รายการข้างต้นหมายถึง implementation มีอยู่ ไม่ได้หมายความว่าทุก flow ผ่าน real-device acceptance ครบทุก platform แล้ว
+
+## หลักฐาน deployment ปัจจุบัน
+
+- Browser/PWA runtime candidate ปัจจุบันมี GitHub Pages deployment trace และ corresponding automated Live Smoke ที่ยืนยันแล้วตาม `CURRENT-RELEASE.md`
+- Automated/static/deployment evidence ไม่แทน real-device, assistive-technology หรือ commercial acceptance
+
+## Gate ที่ยังต้องผ่านก่อนถือว่า Public Beta complete
+
+- Android Chrome ให้ครบอย่างน้อย 3 device models ตามเกณฑ์ปัจจุบัน
+- iPhone Safari ให้ครบอย่างน้อย 2 device models ตามเกณฑ์ปัจจุบัน
+- NF-05 real iPhone/iPad Safari install-hint evidence
+- NF-07 old-cache → current-cache upgrade บนอุปกรณ์จริง
+- NF-09 assistive-technology acceptance บน TalkBack/VoiceOver environment ที่ทำงานปกติ
+- TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง
+- Blocker/Critical ต้องเป็น 0 ตาม acceptance scope
+
+ห้ามกรอก PASS จาก CI, static review, source contract หรือผลจากอุปกรณ์คนละเครื่องแทนหลักฐานจริง
+
+## ความปลอดภัยที่ตั้งไว้แล้วบางส่วน
 
 - หน้าเว็บใช้เฉพาะ Supabase publishable key
-- ไม่มี secret/service-role key ใน repository สาธารณะ
-- restaurant_requests เปิดให้ public INSERT เฉพาะ source=app และ status=pending
-- ไม่เปิด public SELECT ตาราง restaurant_requests
+- ไม่มี secret/service-role credential ถูกตั้งใจให้ฝังใน public browser runtime
+- public table access ใช้ RLS/deny-by-default ตาม schema ที่เกี่ยวข้อง
 - พิกัด demand ที่จัดเก็บลดความละเอียดก่อนบันทึก
+- Group API มี source/deployment parity และ input/request hardening ที่บันทึกไว้ใน `CURRENT-RELEASE.md`
 
-## สิ่งที่ต้องมีจากโลกจริงก่อน Production
+หัวข้อนี้ไม่เท่ากับ Production Security PASS
 
-- ร้านพาร์ตเนอร์จริงและข้อตกลงค่าคอมมิชชัน
-- ผู้ให้บริการชำระเงินและบัญชีรับเงินสำหรับ Premium
-- Terms of Service / Privacy Policy ฉบับ Production ที่ผ่านการตรวจด้านกฎหมาย
-- บัญชี Google Play / App Store หากจะเผยแพร่เป็น native app
-- การทดสอบ Beta กับผู้ใช้จริงและแก้ defect จาก feedback
+## Gate ก่อน Commercial / Production
 
-## เกณฑ์จบ Beta
+- Public Beta technical/device/accessibility acceptance
+- Supabase leaked-password protection gate
+- `main` branch protection + required checks enforcement พร้อมหลักฐานว่า failing required check block merge ได้จริง
+- Group API retention/deletion policy, abuse controls, application-event observability และ monitoring baseline
+- Terms of Service / Privacy Policy / controller-contact / retention decisions ฉบับ Production
+- owner/on-call, monitoring, backup/recovery และ rollback/restore drill evidence
+- payment provider / merchant account และ subscription lifecycle evidence ก่อนรับค่าสมาชิกจริง
+- restaurant/affiliate partner commercial terms และหลักฐานจริงก่อนเปิด revenue model ที่เกี่ยวข้อง
+
+## เกณฑ์จบ Beta เชิงผลิตภัณฑ์
+
+เมื่อ technical acceptance ผ่านแล้ว จึงใช้ข้อมูลผู้ใช้จริงเพื่อประเมินต่อ เช่น:
 
 1. ผู้ใช้ใหม่ทำ flow เลือกเมนูจนถึงผลลัพธ์ได้โดยไม่ต้องมีคนสอน
 2. การค้นหาร้านและ Google Maps ใช้งานได้บนมือถือจริง
 3. demand ถูกบันทึกโดยไม่เปิดเผยข้อมูลตำแหน่งต่อผู้ใช้ทั่วไป
 4. feedback จากผู้ใช้จริงถูกเก็บและนำมาแก้ defect สำคัญ
-5. มีร้านพาร์ตเนอร์จริงอย่างน้อยชุดแรกก่อนเปิดระบบรายได้เต็มรูปแบบ
+5. ประเมิน partner/Premium จากข้อมูลจริงเท่านั้น โดยไม่สร้าง user count, conversion, revenue หรือ willingness-to-pay สมมติ
+
+สถานะ Go/No-Go ล่าสุดให้ยึด `CURRENT-RELEASE.md` เป็น source of truth
