@@ -41,6 +41,12 @@ Repository มี `.github/workflows/group-api-regression.yml` เพื่อ�
 
 Gate นี้เป็น **static source-contract evidence only** และไม่แทน Supabase deployment/version, live log ingestion, alerting, retention cleanup, abuse-control, production traffic, load/security testing หรือ real-device group flow
 
+### Retention diagnostic regression gate
+
+Repository มี `.github/workflows/group-retention-regression.yml` เพื่อป้องกัน `supabase/group-retention-diagnostic.sql` จากการเปลี่ยนจาก read-only diagnostic ไปเป็น mutation/DDL โดยไม่ตั้งใจ และตรวจว่า `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md` ยังคงระบุ evidence boundary เรื่อง policy, cleanup และ Commercial GO อย่างชัดเจน
+
+Gate นี้เป็น **static repository evidence only** ไม่ใช่การอนุมัติ retention period, ไม่ได้ execute cleanup, ไม่ได้ verify cascade deletion และไม่ใช่ Privacy/Legal หรือ Commercial PASS
+
 ## Open hardening gaps
 
 ### 1. Retention and deletion
@@ -49,6 +55,8 @@ Gate นี้เป็น **static source-contract evidence only** และไ
 
 - room มี `expires_at` และ API ปฏิเสธ room ที่หมดอายุ
 - expiration ไม่เท่ากับ deletion; expired room/vote rows ยังต้องมี purge mechanism หาก policy กำหนดให้ลบ
+- schema evidence ยืนยันว่า `group_votes.room_id` อ้าง `group_rooms(id)` ด้วย `ON DELETE CASCADE`; นี่เป็น cleanup design invariant แต่ยังไม่ใช่ cascade verification
+- repository มี read-only `supabase/group-retention-diagnostic.sql` สำหรับเก็บ baseline จริงโดยไม่เลือก retention period และมี CI guard ป้องกัน mutation/DDL ในไฟล์ diagnostic
 
 ก่อน implement ต้องมีการอนุมัติ:
 
