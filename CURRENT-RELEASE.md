@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` before this documentation sync: `d454dddd5262186f867f12d1a57fb1915fa4f0fa` (PR #72 merged; diagnostic/workflow-only change).
+- Latest reviewed `main`: `d454dddd5262186f867f12d1a57fb1915fa4f0fa` (reviewed source/evidence baseline before this documentation sync).
 - Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection confirms `group-api` ACTIVE version 3 with source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
