@@ -4,7 +4,7 @@ Evidence captured from the current Kinaraidee Supabase production project on 202
 
 ## What was inspected
 
-Read-only PostgreSQL catalog queries were used. No rows, policies, functions, schedules, or schema objects were changed.
+Read-only PostgreSQL catalog/data-count queries were used. No rows, policies, functions, schedules, or schema objects were changed.
 
 ### `group_rooms`
 
@@ -23,9 +23,26 @@ The 24-hour default is a room-expiry behavior, **not an approved data-retention 
 - foreign key `group_votes_room_id_fkey` is `FOREIGN KEY (room_id) REFERENCES group_rooms(id) ON DELETE CASCADE`
 - tags remain constrained to the existing allowlist and maximum cardinality 3
 
+## Time-stamped read-only baseline
+
+A read-only observation on 2026-08-23 found:
+
+- `group_rooms`: 16 total
+- expired rooms (`expires_at <= now()`): 13
+- active/not-yet-expired rooms: 3
+- joined `group_votes`: 14 total
+- votes attached to expired rooms: 8
+- votes attached to active rooms: 6
+- orphan votes after left join to `group_rooms`: 0
+- expired-room age range at observation time: approximately 1 day 12 hours 53 minutes to 2 days 7 hours 27 minutes
+
+These counts are a snapshot for planning and may change as the application is used. They are not a target, quota, retention threshold, approved deletion schedule, or cleanup result.
+
 ## Retention implications
 
 The schema provides a useful cleanup invariant: deleting an eligible `group_rooms` row should cascade its related `group_votes` rows at the database FK layer.
+
+The current snapshot also confirms that expiry alone is not deleting rows: expired rooms and votes attached to expired rooms remain present. This is expected under the current implementation and must **not** be interpreted as a defect or as permission to purge them before policy approval.
 
 This evidence does **not** prove a cleanup implementation is safe or complete. Before Issue #45 can mark cleanup verified, the project still needs:
 
@@ -37,4 +54,4 @@ This evidence does **not** prove a cleanup implementation is safe or complete. B
 
 ## Evidence boundary
 
-This file records current schema/catalog facts only. It is not evidence of an approved retention policy, executed purge, cleanup PASS, privacy/legal approval, production monitoring, abuse-control readiness, Public Beta completion, or Commercial GO.
+This file records current schema/catalog facts and a time-stamped read-only row-count baseline only. It is not evidence of an approved retention policy, executed purge, cleanup PASS, privacy/legal approval, production monitoring, complete abuse-control readiness, Public Beta completion, or Commercial GO.
