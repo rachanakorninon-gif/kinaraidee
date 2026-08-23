@@ -6,30 +6,38 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `d44bebad948c0e54a62bcd95129d46175514edce` (latest reviewed source/evidence baseline before this documentation sync).
+- Latest reviewed `main` before this documentation sync: `d454dddd5262186f867f12d1a57fb1915fa4f0fa` (PR #72 merged; diagnostic/workflow-only change).
 - Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection confirms `group-api` ACTIVE version 3 with source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 keeps the Surprise screen-reader live region outside hidden `.screen` containers and adds delayed busy-message write/clear behavior plus accessibility regression guards.
 - Public `deployment-check.html` has been observed on Android with `surprise-a11y-v2`, Group result bridge PASS, Surprise accessibility source probe PASS (`persistent live region`), and `kinaraidee-beta-v13`.
-- Public `release-meta.json` still returns HTTP 404; deployment-SHA trace defect is tracked in Issue #69.
+- PR #71 merged as `9e0b159c0435d67e3f5d244ed75c0a0f9d45f317` and adds a synthetic Service Worker old-cache activation regression. The CI simulation passes; this is not NF-07 real-device PASS.
+- PR #72 merged as `d454dddd5262186f867f12d1a57fb1915fa4f0fa` and adds a read-only GitHub Pages source diagnostic.
 
 ## Verified CI/static evidence
 
 PR #67 final PR head passed the triggered regression/security suites before merge, including Surprise Accessibility Regression, Runtime Lineage Regression, Release Consistency, Beta QA, Beta integrity, History Sync, Group Result, Security Hygiene, Credential Scanner, and Release Metadata Regression.
 
+PR #71's `PWA Cache Upgrade Regression` synthetic activation run passed. It exercises the actual `sw.js` activate handler in a VM with older Kinaraidee cache generations and verifies older caches are deleted, the current cache is preserved, and `clients.claim()` is reached. This guards implementation logic only; a real browser/device upgrade from an older installed cache remains required for NF-07.
+
 Static source markers, workflow configuration, synthetic probes, and CI success do not replace real-device or live-deployment evidence.
 
 ## Deployment evidence
 
-Status: **PARTIAL / PR #67 BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+Status: **PARTIAL / ACTIVE PAGES SOURCE CONFIRMED LEGACY; ADMIN MIGRATION TO GITHUB ACTIONS REQUIRED**
 
-Current public evidence confirms that the v2 Surprise accessibility source markers and current cache are being served. However:
+Current public evidence confirms that the v2 Surprise accessibility source markers and current cache are being served. Public `release-meta.json` remains HTTP 404.
 
-- public `release-meta.json` is still HTTP 404;
-- the deployed 40-character SHA cannot yet be verified from the public site;
-- a corresponding successful Pages deployment trace and Live Smoke trace for the same deployment are still required;
-- Issue #69 tracks the missing release metadata / active Pages deployment-path investigation.
+The root cause is now confirmed, not inferred:
+
+- PR #72 diagnostic workflow run `32619959819`, job `97146530212`, read the repository GitHub Pages API successfully.
+- Active Pages configuration reported `build_type: legacy`, source branch `main`, source path `/`.
+- This explains why committed root files such as `deployment-check.html` are public while `_site/release-meta.json`, which exists only inside `.github/workflows/pages.yml`'s generated artifact, is not published.
+- PR #73 attempted to switch the Pages site to `build_type: workflow` using a repository `GITHUB_TOKEN` with `Pages: write`; REST update returned HTTP 403. PR #73 was closed without merge and no Pages setting changed.
+- Issue #69 tracks this deployment-source blocker.
+
+Required next deployment action: a repository admin must change **Settings → Pages → Build and deployment → Source** from branch publishing to **GitHub Actions**. After that, the normal Pages artifact workflow must run successfully, public `release-meta.json` must expose the deployed 40-character SHA plus current cache marker, and the corresponding Live Smoke run must pass against the same deployment.
 
 Do not infer complete deployment-gate success from source, PR/CI success, public source markers, or the presence of deployment workflow files alone.
 
@@ -54,7 +62,7 @@ Issue #5 records scoped same-device evidence for core flows including guided/sur
 
 Exact device model, Android version, and Chrome version were not captured and must not be guessed. This remains one Android device/session only and does not satisfy the full device matrix.
 
-NF-07 old-cache upgrade remains unverified. NF-09 remains open/blocked as described above.
+NF-07 now has synthetic CI coverage for old-cache cleanup, but real-device old-cache → `kinaraidee-beta-v13` upgrade evidence remains unverified. NF-09 remains open/blocked as described above.
 
 ## Group API / operations evidence
 
@@ -68,8 +76,7 @@ NF-07 old-cache upgrade remains unverified. NF-09 remains open/blocked as descri
 
 - Connected Supabase organization is on the **Free** plan.
 - Security Advisor still reports `auth_leaked_password_protection` = WARN / disabled.
-- Supabase documentation indicates leaked-password protection is available on Pro Plan and above; Issue #11 is therefore a plan-dependent security/commercial gate under the current Free plan.
-- Acceptance path for #11: upgrade to a supporting plan, enable leaked-password protection, then rerun Security Advisor and record the WARN as cleared.
+- Leaked-password protection remains a plan-dependent security/commercial gate under the current plan; Issue #11 tracks the required plan/supporting-setting change and advisor recheck.
 - Remaining `rls_enabled_no_policy` findings are INFO-only for deny-by-default tables; do not make them permissive merely to silence lint.
 - Latest Performance Advisor result contains unused-index INFO findings only; no performance WARN is being claimed from that advisor result.
 
@@ -83,9 +90,9 @@ Public Beta is still **NOT COMPLETE**.
 
 Minimum open evidence includes:
 
-- Issue #69: successful Pages + corresponding Live Smoke trace with public valid `release-meta.json`/deployed SHA;
+- Issue #69: switch active Pages source to GitHub Actions, then obtain successful Pages + corresponding Live Smoke trace with public valid `release-meta.json`/deployed SHA;
 - NF-09 assistive-tech acceptance when a functioning TalkBack/VoiceOver environment is available;
-- NF-07 old-cache → current cache upgrade evidence;
+- NF-07 real-device old-cache → current cache upgrade evidence (synthetic CI guard exists but does not close this item);
 - Android Chrome on at least 3 device models total;
 - iPhone Safari on at least 2 device models total;
 - remaining TC-01–TC-15 / NF-01–NF-10 evidence and Blocker/Critical closure appropriate to Beta acceptance.
@@ -111,7 +118,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4`; deployed version-3 source parity is verified, live structured-event ingestion is not.
-- Latest reviewed `main` baseline = `d44bebad948c0e54a62bcd95129d46175514edce`; this documentation change does not supersede browser/PWA or Group API runtime behavior.
+- Latest reviewed source/evidence baseline before this documentation sync = `d454dddd5262186f867f12d1a57fb1915fa4f0fa`; this documentation change does not supersede browser/PWA or Group API runtime behavior.
 - Retention policy remains **NOT APPROVED**; schema defaults must not be treated as an approved deletion schedule.
 - Public v2 accessibility source probe evidence does not close NF-09 while the assistive-tech environment is malfunctioning.
-- Deployment metadata remains incomplete while public `release-meta.json` is 404.
+- Deployment metadata remains incomplete while the active Pages source is `legacy` and public `release-meta.json` is 404.
