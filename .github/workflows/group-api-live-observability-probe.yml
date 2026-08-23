@@ -1,0 +1,38 @@
+name: Group API Live Observability Probe
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - '.github/workflows/group-api-live-observability-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe-live-group-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger privacy-safe v3 rejection event
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/group-api'
+          body="$(mktemp)"
+          trap 'rm -f "$body"' EXIT
+
+          # GET is intentionally unsupported by group-api. The deployed v3 handler
+          # records only a bounded structured event:
+          # {component:"group-api", event:"request_rejected", reason:"method_not_allowed"}
+          # No room, voter, token, tag, IP, header or request-body data is supplied.
+          status="$(curl --silent --show-error --location --output "$body" --write-out '%{http_code}' "$url")"
+          test "$status" = '405' || { echo "Unexpected Group API probe status: $status"; cat "$body"; exit 1; }
+          grep -Fq '"error":"method_not_allowed"' "$body"
+          echo 'Live Group API endpoint returned the expected privacy-safe method rejection.'
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'This run only creates a non-mutating rejection event in the deployed Group API.'
+          echo 'Supabase log inspection is still required to prove structured application-event ingestion.'
+          echo 'This does not approve monitoring thresholds, retention policy, cleanup, anonymous rate limits, or Production readiness.'
