@@ -1,0 +1,72 @@
+name: Partner API Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/partner-api/index.ts'
+      - '.github/workflows/partner-api-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/functions/partner-api/index.ts'
+      - '.github/workflows/partner-api-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  partner-api-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Partner API bounded request contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/functions/partner-api/index.ts'
+          test -s "$file"
+          grep -Fq 'const maxRequestBytes=32768' "$file"
+          grep -Fq 'req.body.getReader()' "$file"
+          grep -Fq 'totalBytes+=value.byteLength' "$file"
+          grep -Fq "reader.cancel()" "$file"
+          grep -Fq "error:'request_too_large'" "$file"
+          grep -Fq "bodyResult.error==='request_too_large'?413:400" "$file"
+          grep -Fq "req.headers.get('content-length')" "$file"
+          grep -Fq "JSON.parse(bodyResult.text)" "$file"
+          if grep -Fq 'req.json()' "$file"; then
+            echo 'Direct unbounded req.json() detected.'
+            exit 1
+          fi
+          if grep -Fq 'await req.text()' "$file"; then
+            echo 'Full-body req.text() buffering detected.'
+            exit 1
+          fi
+
+      - name: Verify response hardening and auth boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/functions/partner-api/index.ts'
+          grep -Fq "'Cache-Control':'no-store'" "$file"
+          grep -Fq "'X-Content-Type-Options':'nosniff'" "$file"
+          grep -Fq "sb.auth.getUser(token)" "$file"
+          grep -Fq "admin_dashboard_owners" "$file"
+          grep -Fq "if(action==='find_partners')" "$file"
+          grep -Fq "if(action==='track_search')" "$file"
+          grep -Fq "if(action==='track_click')" "$file"
+          grep -Fq "if(action==='dashboard_summary')" "$file"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Partner API regression'
+            echo
+            echo '- Guards repository source against unbounded request-body parsing and requires a 32 KiB byte budget with early cancellation.'
+            echo '- Verifies no-store/nosniff response headers and preserves the existing owner-auth boundary markers.'
+            echo '- This is static source evidence only. It does not prove deployed source parity, live request behavior, complete anonymous rate limiting, retention approval, partner commercial readiness, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
