@@ -6,9 +6,10 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `ecb78c9511e74008752fd73c73256f88202a5165` (deployment-evidence documentation descendant).
+- Latest reviewed `main`: `058c41790970be91a397f01870210849e5a792c1` (security/governance documentation descendant).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
-- Compare `35fe4b7f...` → `ecb78c95...` shows only release/deployment evidence documentation changed; no browser/PWA runtime asset changed.
+- Compare `35fe4b7f...` → `058c4179...` shows only release/deployment/security evidence documentation changed; no browser/PWA runtime asset changed.
+- Compare previous reviewed baseline `ecb78c9511e74008752fd73c73256f88202a5165` → `058c41790970be91a397f01870210849e5a792c1` is 2 commits affecting only `CURRENT-RELEASE.md` and `SECURITY.md`.
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
@@ -20,7 +21,8 @@
 
 - PR #78 final head passed the main regression/security suites before merge, including Release Metadata Regression, Release Consistency, Runtime Lineage Regression, Beta QA, Beta integrity, Security Hygiene, Credential Scanner, Surprise Accessibility, PWA Cache Upgrade, iOS Install Hint, Group Result, Pages Source Diagnostic and History Sync.
 - PR #79 fixed the PWA install-helper bootstrap wiring discovered by the first matching Live Smoke failure and retained the synthetic iOS install-hint regression boundary.
-- Static source markers, workflow configuration, synthetic probes, and CI success do not replace real-device evidence.
+- `SECURITY.md` now explicitly treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make those unchecked gates PASS.
+- Static source markers, workflow configuration, synthetic probes, policy text, and CI success do not replace real-device or production-security evidence.
 
 ## Deployment evidence
 
@@ -70,7 +72,7 @@ NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker: `main` branch protection / required-check enforcement is disabled. Workflow success does not equal governance enforcement.
+Issue #35 remains a Commercial Governance blocker: `main` branch protection / required-check enforcement is disabled. Workflow success does not equal governance enforcement. `SECURITY.md` now explicitly requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
 
 ## Public Beta gate impact
 
@@ -106,7 +108,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `ecb78c9511e74008752fd73c73256f88202a5165`; changes after runtime candidate are evidence/docs only per repository compare.
+- Latest reviewed `main` baseline = `058c41790970be91a397f01870210849e5a792c1`; changes after runtime candidate are release/deployment/security evidence docs only per repository compare.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
