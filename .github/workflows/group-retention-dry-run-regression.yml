@@ -1,0 +1,73 @@
+name: Group Retention Dry-Run Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/group-retention-dry-run.sql'
+      - '.github/workflows/group-retention-dry-run-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/group-retention-dry-run.sql'
+      - '.github/workflows/group-retention-dry-run-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify dry-run remains non-mutating and policy-neutral
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/group-retention-dry-run.sql'
+          test -s "$file"
+
+          # A retention period must be supplied explicitly; the repository must not
+          # silently choose a Production policy value.
+          grep -Fq 'retention_after_expiry must be supplied explicitly' "$file"
+          grep -Fq ":'retention_after_expiry'::interval" "$file"
+
+          # The dry-run must stay read-only. Split mutation tokens to avoid self-match.
+          d='del''ete'
+          t='trun''cate'
+          u='upd''ate'
+          i='ins''ert'
+          a='alt''er'
+          c='cre''ate'
+          if grep -Eiq "^[[:space:]]*(${d}|${t}|${u}|${i}|${a}|${c})[[:space:]]" "$file"; then
+            echo 'Mutating/DDL statement detected in retention dry-run.'
+            exit 1
+          fi
+
+          # Do not expose room/voter identifiers in result projections.
+          if grep -Eiq 'select[[:space:]].*(voter_id|host_token)' "$file"; then
+            echo 'Sensitive Group identifier selected by dry-run.'
+            exit 1
+          fi
+
+          # Preserve the safety invariants used for future cleanup planning.
+          grep -Fq 'candidate_rooms' "$file"
+          grep -Fq 'candidate_votes_via_cascade' "$file"
+          grep -Fq 'active_rooms' "$file"
+          grep -Fq 'orphan_votes' "$file"
+
+          echo 'Group retention dry-run contract is read-only and policy-neutral.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Group retention dry-run regression'
+            echo
+            echo '- Verifies the repository dry-run cannot mutate Group data or silently choose a retention period.'
+            echo '- Preserves candidate-room, cascade-vote, active-room and orphan-vote impact counters without exposing Group identifiers.'
+            echo '- This is planning evidence only; it does not approve a retention period, execute cleanup, verify cascade deletion, satisfy legal review, or create Commercial GO evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
