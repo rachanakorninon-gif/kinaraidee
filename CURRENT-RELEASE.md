@@ -6,9 +6,9 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `12e993f2ce330254bd5352ce6132ca9ccd08a8c1` (deployment-evidence documentation descendant).
+- Latest reviewed `main`: `ecb78c9511e74008752fd73c73256f88202a5165` (deployment-evidence documentation descendant).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
-- Compare `35fe4b7f...` → `12e993f2...` shows only `CURRENT-RELEASE.md`, `LIVE-DEPLOYMENT-VERIFICATION.md` and `RELEASE-CHECKLIST.md` changed; no browser/PWA runtime asset changed.
+- Compare `35fe4b7f...` → `ecb78c95...` shows only release/deployment evidence documentation changed; no browser/PWA runtime asset changed.
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
@@ -106,7 +106,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `12e993f2ce330254bd5352ce6132ca9ccd08a8c1`; changes after runtime candidate are evidence/docs only per repository compare.
+- Latest reviewed `main` baseline = `ecb78c9511e74008752fd73c73256f88202a5165`; changes after runtime candidate are evidence/docs only per repository compare.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
