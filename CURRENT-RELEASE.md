@@ -9,7 +9,7 @@
 - Current browser/PWA runtime candidate: `db539c75f87683a4225baeb5601509fe3bb26f6f` (PR #134 runtime lineage).
 - Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged).
 - PWA cache marker: `kinaraidee-beta-v14`.
-- Current Group API source candidate remains PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
+- Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and rejection-path hardening. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
@@ -27,7 +27,9 @@ Verified v14 evidence:
 - Live public `release-meta.json` matched deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06`.
 - Live Service Worker marker matched `kinaraidee-beta-v14`.
 - Live Smoke covered focus/reduced-motion deployed source contracts, persistent Surprise accessibility markers, Group-result bridge, Partner renderer/privacy wiring and guarded development-only paths.
-- PR #136 merged the verified v14 deployment evidence into the canonical runtime declaration.
+- PR #136 merged the verified v14 deployment evidence into the canonical runtime declaration as `707d9a403d82a57e6736842a3fa74882d1722e8b`.
+- That evidence-only descendant also has exact successful Pages run `32674271444` and Live Smoke run `32674298914`; read-only diagnostic run `32675047230` confirmed both records.
+- Later main SHA `19626daf77778c6e51ba37193f09b24a7225c139` changes documentation only after `707d9a40...`; diagnostic run `32675123865` found no exact deployment run for it, which is expected because those documentation-only changes did not trigger browser/PWA deployment.
 
 This deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. It does not imply real keyboard interaction, physical reduced-motion behavior, TalkBack/VoiceOver, full device matrix, Public Beta completion or Commercial GO.
 
