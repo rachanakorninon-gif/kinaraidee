@@ -6,7 +6,7 @@
 
 ## Current runtime candidate
 - Current runtime release: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (PR #58 merged)
-- Latest reviewed non-runtime descendant on `main`: `be1288b9984b3923adf23d2fcd96eebb98378a92` (release-lineage/deploy guard)
+- Latest reviewed non-browser-runtime descendant on `main`: `8a66d1292c66715e3d3864b8c490ca01bd78a268` (release/retention schema evidence only; browser/PWA runtime and Group API source unchanged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
 - Runtime change ล่าสุด: PR #58 เพิ่ม Surprise accessible busy-state announcement ผ่าน hidden `role=status`, `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และ busy timing; ต้องมี TalkBack/VoiceOver real-device retest ก่อน accessibility acceptance
 - Historical live-group result bridge runtime: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (PR #42 merged)
@@ -106,6 +106,8 @@
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
 - [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้วด้วย migration `guard_partner_public_text_against_html`; pre-check ไม่พบข้อมูลเดิมที่ละเมิด constraint และ Security Advisor ไม่พบ regression ใหม่
 - [x] Partner-card renderer เปลี่ยนเป็น DOM nodes/`textContent` ใน v13 runtime `83f8f363...`; implementation/static evidence มีแล้ว แต่ยังต้องมี live/runtime และ real-device evidence ก่อนถือว่า release gate ผ่าน
+- [x] Group API retention schema ถูกตรวจแบบ read-only และบันทึกใน `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md`: `group_rooms.expires_at` default 24h และ `group_votes.room_id` ใช้ `ON DELETE CASCADE`; ข้อนี้เป็น schema evidence เท่านั้น ไม่ใช่ approved retention period, cleanup implementation หรือ cleanup PASS
+- [ ] Group API retention period ถูกอนุมัติและ cleanup/purge mechanism ถูก implement + verify ว่าไม่ลบ active rooms และ cascade votes เฉพาะห้องที่เข้าเกณฑ์
 - [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
 
 ## Operations
