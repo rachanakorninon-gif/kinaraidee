@@ -6,11 +6,12 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `53d420823b87de9ad36b41ceb0b6bc1ffcfb07bf` (merge PR #66; release-state documentation only; browser/PWA runtime and Group API source unchanged).
+- Latest reviewed `main`: `6a3a3812270e1d36caec5e716612de358743e28f` (retention decision/workflow/documentation lineage only; browser/PWA runtime and Group API source unchanged).
 - Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Compare `fde1ba5dd1e07084adad7f99c1cf725be962664e..53d420823b87de9ad36b41ceb0b6bc1ffcfb07bf` = 2 commits touching only `CURRENT-RELEASE.md`; no browser/PWA runtime asset or Group API source changed in this lineage.
+- Compare `53d420823b87de9ad36b41ceb0b6bc1ffcfb07bf..6a3a3812270e1d36caec5e716612de358743e28f` = 3 commits touching only `.github/workflows/group-retention-regression.yml`, `CURRENT-RELEASE.md` and `GROUP-API-RETENTION-DECISION.md`; no browser/PWA runtime asset or Group API source changed in this lineage.
+- `GROUP-API-RETENTION-DECISION.md` now records the retention gate explicitly as **NOT APPROVED** with approval fields **UNSET**; `.github/workflows/group-retention-regression.yml` guards against silently inferring a retention window and keeps cleanup verification as a separate gate.
 - PR #58 เป็น runtime change ล่าสุดของ browser/PWA: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
 - PR #58 เพิ่ม `.github/workflows/surprise-accessibility-regression.yml` เป็น static contract guard; static PASS ไม่แทน TalkBack/VoiceOver real-device evidence.
 - PR #59 `d20529a9...` เปลี่ยนเฉพาะ `deployment-check.html` เพื่อให้ public probe ตรวจ marker ของ Surprise accessibility fix; ไม่เปลี่ยน core app behavior เพิ่มจาก PR #58.
@@ -41,6 +42,8 @@ PR #63 head `527cfa0c0fc11d026f549132004b04d71f400662` มี inspectable pull-r
 หลัง PR #63 มี Supabase inspection ใหม่ยืนยันว่า `group-api` version 3 เป็น `ACTIVE`, `verify_jwt=false`, และ deployed `index.ts` มี source candidate เดียวกับ repository รวม privacy-safe `logEvent(...)` wiring. หลักฐานนี้ยืนยัน source/deployment parity เท่านั้น ไม่ใช่ live log-ingestion quality, alerting หรือ monitoring baseline PASS.
 
 Release-lineage guards หลัง PR #61/PR #62 ป้องกัน stale declared browser/PWA runtime candidate ใน source/workflow configuration และมี regression self-test สำหรับ guard behavior แล้ว แต่ยังไม่ถือว่า Pages deploy หรือ Live Smoke ผ่านจนกว่าจะมีผล run ที่ตรวจได้.
+
+Retention decision regression guard ที่ latest reviewed source ป้องกันสถานะ **NOT APPROVED** จากการกลายเป็น retention policy โดยปริยาย และบังคับ required approval fields เมื่อสถานะเปลี่ยนเป็น **APPROVED**; static guard นี้ไม่ใช่ Privacy/Legal approval หรือ cleanup/deletion PASS.
 
 CI/static evidence ไม่แทน push-triggered GitHub Pages deployment, corresponding Live Smoke, Public URL verification หรือ real-device interaction/assistive-technology testing.
 
@@ -126,7 +129,8 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี browser/PWA runtime app change ใหม่.
 - Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity ถูก re-verify หลัง deploy source candidate นี้.
-- Latest reviewed source baseline = `53d42082...`; compare จาก `fde1ba5d...` ถึง baseline นี้เปลี่ยนเฉพาะ `CURRENT-RELEASE.md` และไม่ supersede browser/PWA runtime behavior ของ PR #58 หรือ Group API source ของ PR #63.
+- Latest reviewed source baseline = `6a3a3812...`; compare จาก `53d42082...` ถึง baseline นี้เปลี่ยนเฉพาะ retention decision/workflow/release documentation และไม่ supersede browser/PWA runtime behavior ของ PR #58 หรือ Group API source ของ PR #63.
+- Retention policy remains **NOT APPROVED**; `group_rooms.expires_at` default must not be interpreted as approved deletion/retention policy, and cleanup remains unimplemented/unverified until separate approved decision and evidence exist.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59/#60/#61 และ stale-runtime deployment guards ล่าสุด.
 - Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
