@@ -106,6 +106,26 @@ jobs:
 
           echo "Declared runtime candidate $candidate is an ancestor of HEAD and no browser/PWA runtime files changed after it"
 
+      - name: Validate declared Group API source candidate lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse Group API source candidate SHA from CURRENT-RELEASE.md'; exit 1; }
+
+          git cat-file -e "$candidate^{commit}" || { echo "Group API candidate SHA is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo "Group API candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
+
+          changed="$(git diff --name-only "$candidate"..HEAD -- supabase/functions/group-api || true)"
+          if [ -n "$changed" ]; then
+            echo 'Group API source changed after the declared candidate; CURRENT-RELEASE.md must advance the Group API candidate and deployment evidence before release:'
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+
+          echo "Declared Group API candidate $candidate is an ancestor of HEAD and no Group API source files changed after it"
+
       - name: Validate atomic app-shell strategy
         shell: bash
         run: |
