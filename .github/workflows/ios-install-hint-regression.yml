@@ -1,0 +1,173 @@
+name: iOS Install Hint Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-ios-install-hint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Simulate iPhone/iPad hint and 7-day suppression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const source=fs.readFileSync('data/pwa-install.js','utf8');
+          const KEY='kinaraideeIosInstallHintDismissedAt';
+          const DAY=24*60*60*1000;
+
+          function createHarness({now, userAgent='Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', platform='iPhone', maxTouchPoints=5, standalone=false, seed={}}){
+            const store=new Map(Object.entries(seed).map(([k,v])=>[k,String(v)]));
+            const byId=new Map();
+
+            class Element {
+              constructor(tag){
+                this.tagName=String(tag).toUpperCase();
+                this.children=[];
+                this.parentNode=null;
+                this.style={display:'',cssText:''};
+                this.className='';
+                this.textContent='';
+                this.onclick=null;
+                this.async=true;
+                this.src='';
+                this._id='';
+                this._innerHTML='';
+              }
+              set id(value){
+                if(this._id)byId.delete(this._id);
+                this._id=String(value||'');
+                if(this._id)byId.set(this._id,this);
+              }
+              get id(){return this._id}
+              set innerHTML(value){
+                this._innerHTML=String(value||'');
+                if(this._innerHTML.includes('id="iosInstallHintDismiss"')){
+                  const button=new Element('button');
+                  button.id='iosInstallHintDismiss';
+                  this.appendChild(button);
+                }
+              }
+              get innerHTML(){return this._innerHTML}
+              appendChild(child){
+                child.parentNode=this;
+                this.children.push(child);
+                return child;
+              }
+              insertBefore(child,before){
+                child.parentNode=this;
+                const i=this.children.indexOf(before);
+                if(i<0)this.children.push(child);else this.children.splice(i,0,child);
+                return child;
+              }
+              remove(){
+                if(this.parentNode){
+                  const i=this.parentNode.children.indexOf(this);
+                  if(i>=0)this.parentNode.children.splice(i,1);
+                }
+                this.parentNode=null;
+                const unregister=(node)=>{
+                  if(node.id)byId.delete(node.id);
+                  for(const child of node.children||[])unregister(child);
+                };
+                unregister(this);
+              }
+              querySelector(selector){
+                if(selector==='.betaLinks')return this.children.find(x=>x.className==='betaLinks')||null;
+                return null;
+              }
+            }
+
+            const body=new Element('body');
+            const homeHero=new Element('div');
+            homeHero.className='homeHero';
+            const links=new Element('div');
+            links.className='betaLinks';
+            homeHero.appendChild(links);
+            body.appendChild(homeHero);
+
+            const document={
+              readyState:'complete',
+              body,
+              createElement:(tag)=>new Element(tag),
+              getElementById:(id)=>byId.get(id)||null,
+              addEventListener:()=>{},
+              querySelector:(selector)=>{
+                if(selector==='#home .homeHero')return homeHero;
+                const match=selector.match(/^script\[src="(.+)"\]$/);
+                if(match){
+                  return body.children.find(x=>x.tagName==='SCRIPT'&&x.src===match[1])||null;
+                }
+                return null;
+              }
+            };
+
+            const listeners={};
+            const window={
+              navigator:null,
+              matchMedia:()=>({matches:standalone}),
+              addEventListener:(name,fn)=>{listeners[name]=fn}
+            };
+            const navigator={userAgent,platform,maxTouchPoints,standalone};
+            window.navigator=navigator;
+            const localStorage={
+              getItem:(key)=>store.has(key)?store.get(key):null,
+              setItem:(key,value)=>store.set(key,String(value)),
+              removeItem:(key)=>store.delete(key)
+            };
+            class FakeDate extends Date {
+              static now(){return now}
+            }
+            const context={window,document,navigator,localStorage,Date:FakeDate,console,Promise,setTimeout,clearTimeout};
+            vm.createContext(context);
+            vm.runInContext(source,context,{filename:'data/pwa-install.js'});
+            return {document,store,homeHero,listeners};
+          }
+
+          function assert(condition,message){if(!condition)throw new Error(message)}
+
+          const t0=1_800_000_000_000;
+          const first=createHarness({now:t0});
+          const hint=first.document.getElementById('iosInstallHint');
+          assert(hint,'iPhone hint should render when not installed and not dismissed');
+          const dismiss=first.document.getElementById('iosInstallHintDismiss');
+          assert(dismiss&&typeof dismiss.onclick==='function','dismiss control should be wired');
+          dismiss.onclick();
+          assert(!first.document.getElementById('iosInstallHint'),'dismiss should remove the hint');
+          assert(Number(first.store.get(KEY))===t0,'dismiss should persist the current timestamp');
+
+          const suppressed=createHarness({now:t0+DAY,seed:{[KEY]:t0}});
+          assert(!suppressed.document.getElementById('iosInstallHint'),'hint should stay suppressed within 7 days');
+
+          const expired=createHarness({now:t0+8*DAY,seed:{[KEY]:t0}});
+          assert(expired.document.getElementById('iosInstallHint'),'hint should return after the 7-day cooldown');
+
+          const standaloneHarness=createHarness({now:t0,standalone:true});
+          assert(!standaloneHarness.document.getElementById('iosInstallHint'),'installed standalone mode should not show the hint');
+
+          const ipadDesktopUA=createHarness({
+            now:t0,
+            userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+            platform:'MacIntel',
+            maxTouchPoints:5
+          });
+          assert(ipadDesktopUA.document.getElementById('iosInstallHint'),'touch MacIntel/iPad path should show the hint');
+
+          console.log('Synthetic iOS install hint PASS: render, dismiss, 7-day suppression, cooldown expiry, standalone suppression, iPad desktop-UA detection');
+          NODE
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'Synthetic PWA install-hint regression passed.'
+          echo 'This guards NF-05 implementation logic but does not constitute iPhone/iPad Safari real-device PASS.'
