@@ -5,11 +5,13 @@ on:
     paths:
       - 'supabase/functions/partner-api/index.ts'
       - '.github/workflows/partner-api-regression.yml'
+      - '.github/workflows/partner-api-live-probe.yml'
   push:
     branches: ['main']
     paths:
       - 'supabase/functions/partner-api/index.ts'
       - '.github/workflows/partner-api-regression.yml'
+      - '.github/workflows/partner-api-live-probe.yml'
   workflow_dispatch:
 
 permissions:
@@ -59,6 +61,26 @@ jobs:
           grep -Fq "if(action==='track_click')" "$file"
           grep -Fq "if(action==='dashboard_summary')" "$file"
 
+      - name: Guard recurring live probe as rejection-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe='.github/workflows/partner-api-live-probe.yml'
+          test -s "$probe"
+          grep -Fq "cron: '41 */6 * * *'" "$probe"
+          grep -Fq "test \"\$code\" = '405'" "$probe"
+          grep -Fq "test \"\$code\" = '400'" "$probe"
+          grep -Fq "test \"\$code\" = '413'" "$probe"
+          json_action_key='"act''ion"'
+          if grep -Fq "$json_action_key" "$probe"; then
+            echo 'JSON application action payload detected in rejection-only probe.'
+            exit 1
+          fi
+          if grep -Eq "test[[:space:]]+\"\$code\"[[:space:]]*=[[:space:]]*'2[0-9][0-9]'" "$probe"; then
+            echo 'Expected 2xx response detected in rejection-only probe.'
+            exit 1
+          fi
+
       - name: Record evidence boundary
         if: always()
         shell: bash
@@ -68,5 +90,6 @@ jobs:
             echo
             echo '- Guards repository source against unbounded request-body parsing and requires a 32 KiB byte budget with early cancellation.'
             echo '- Verifies no-store/nosniff response headers and preserves the existing owner-auth boundary markers.'
-            echo '- This is static source evidence only. It does not prove deployed source parity, live request behavior, complete anonymous rate limiting, retention approval, partner commercial readiness, or Commercial GO.'
+            echo '- Guards the six-hour live probe as rejection-only and prevents JSON application actions or expected 2xx assertions.'
+            echo '- This is static/source workflow evidence only. It does not prove a specific live probe run, complete anonymous rate limiting, retention approval, alert delivery, partner commercial readiness, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"

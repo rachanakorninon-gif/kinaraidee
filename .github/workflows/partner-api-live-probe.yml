@@ -1,4 +1,3 @@
-# Diagnostic-only comment: exercises the live rejection probe now that the workflow exists on main.
 name: Partner API Live Rejection Probe
 
 on:
@@ -11,6 +10,8 @@ on:
     paths:
       - '.github/workflows/partner-api-live-probe.yml'
       - 'supabase/functions/partner-api/index.ts'
+  schedule:
+    - cron: '41 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -58,6 +59,10 @@ PY
             echo 'JSON application action payload detected in rejection-only probe.'
             exit 1
           fi
+          if grep -Eq "test[[:space:]]+\"\$code\"[[:space:]]*=[[:space:]]*'2[0-9][0-9]'" "$file"; then
+            echo 'Expected 2xx response detected in rejection-only probe.'
+            exit 1
+          fi
 
       - name: Record evidence boundary
         if: always()
@@ -68,6 +73,7 @@ PY
             echo
             echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
             echo '- Expected contract: GET 405, malformed JSON 400, body over 32 KiB 413, with no-store/nosniff on the GET rejection response.'
-            echo '- The workflow statically rejects a JSON application-action key so it cannot become a search/click/conversion generator by accident.'
-            echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, or Commercial GO.'
+            echo '- Scheduled every 6 hours at minute 41 UTC and can also be dispatched manually.'
+            echo '- The workflow statically rejects a JSON application-action key and expected 2xx assertions so it cannot become a search/click/conversion generator by accident.'
+            echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, alert delivery or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
