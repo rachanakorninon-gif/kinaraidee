@@ -38,6 +38,7 @@ jobs:
             '/sw.js'
             '/release-meta.json'
             '/data/home-surprise.js'
+            '/data/pwa-install.js'
             '/data/nearby-restaurants.js'
           )
 
@@ -52,6 +53,7 @@ jobs:
           live_manifest="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/manifest.webmanifest")"
           live_probe="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/deployment-check.html")"
           live_surprise="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/data/home-surprise.js")"
+          live_pwa="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/data/pwa-install.js")"
           live_sw="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/sw.js")"
           release_meta="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 5 --max-time 25 "$base/release-meta.json")"
           live_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$live_sw")"
@@ -72,6 +74,13 @@ jobs:
           grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing aria-busy state wiring'; exit 1; }
           grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" <<<"$live_surprise" || { echo 'Live Surprise asset is missing aria-disabled state wiring'; exit 1; }
           grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$live_surprise" || { echo 'Live Surprise asset is missing the busy announcement text'; exit 1; }
+
+          grep -Fq 'function ensurePwaInstallHelper()' <<<"$live_surprise" || { echo 'Live Surprise bootstrap is missing the PWA helper bridge'; exit 1; }
+          grep -Fq 'script[src="data/pwa-install.js"]' <<<"$live_surprise" || { echo 'Live Surprise bootstrap is missing PWA helper duplicate-load protection'; exit 1; }
+          grep -Fq "s.src='data/pwa-install.js'" <<<"$live_surprise" || { echo 'Live Surprise bootstrap is not loading data/pwa-install.js'; exit 1; }
+          grep -Fq 'ensurePwaInstallHelper();' <<<"$live_surprise" || { echo 'Live Surprise bootstrap is not invoking the PWA helper bridge'; exit 1; }
+          grep -Fq "const IOS_HINT_KEY='kinaraideeIosInstallHintDismissedAt'" <<<"$live_pwa" || { echo 'Live PWA helper is missing iOS hint suppression state'; exit 1; }
+          grep -Fq "loadScript('data/home-surprise.js')" <<<"$live_pwa" || { echo 'Live PWA helper is missing its Surprise-flow compatibility bridge'; exit 1; }
 
           test "$live_marker" = "$expected_marker" || { echo "Live marker $live_marker does not match repository marker $expected_marker"; exit 1; }
           test "$meta_marker" = "$live_marker" || { echo "release-meta marker $meta_marker does not match live Service Worker marker $live_marker"; exit 1; }
@@ -145,6 +154,6 @@ jobs:
             echo "- Deployed SHA from release-meta: \`${DEPLOYED_SHA:-unavailable}\`"
             echo "- Live Service Worker marker: \`${LIVE_MARKER:-unavailable}\`"
             echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, Surprise accessibility source markers, release-meta/SW consistency, deployed-SHA ancestry + runtime-candidate lineage, atomic Service Worker install, development-only path exposure'
+            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, Surprise accessibility source markers, active PWA install-helper bridge, release-meta/SW consistency, deployed-SHA ancestry + runtime-candidate lineage, atomic Service Worker install, development-only path exposure'
             echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, TalkBack/VoiceOver behavior, payment, partner, privacy/legal, or production security evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
