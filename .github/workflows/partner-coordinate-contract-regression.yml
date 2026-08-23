@@ -1,0 +1,58 @@
+name: Partner Coordinate Contract Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/partner-coordinate-range-contract.sql'
+      - '.github/workflows/partner-coordinate-contract-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/partner-coordinate-range-contract.sql'
+      - '.github/workflows/partner-coordinate-contract-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coordinate-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify coordinate range contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/partner-coordinate-range-contract.sql'
+          test -s "$file"
+
+          grep -Fq 'restaurant_search_demand_latitude_range_check' "$file"
+          grep -Fq 'restaurant_search_demand_longitude_range_check' "$file"
+          grep -Fq 'partner_restaurants_latitude_range_check' "$file"
+          grep -Fq 'partner_restaurants_longitude_range_check' "$file"
+          grep -Fq 'latitude between -90 and 90' "$file"
+          grep -Fq 'longitude between -180 and 180' "$file"
+
+          # This contract must remain a narrow validation-only DDL record. Reject
+          # accidental privilege/RLS/data mutation additions here.
+          if grep -Ei '\b(grant|revoke|create[[:space:]]+policy|drop[[:space:]]+policy|disable[[:space:]]+row[[:space:]]+level[[:space:]]+security|insert[[:space:]]+into|update[[:space:]]+public\.|delete[[:space:]]+from|truncate)\b' "$file"; then
+            echo 'Unexpected authorization or data mutation in coordinate contract.'
+            exit 1
+          fi
+
+          echo 'Partner coordinate range contract passed.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Partner coordinate contract regression'
+            echo
+            echo '- Verifies the repository contract keeps latitude within -90..90 and longitude within -180..180 for partner/search analytics tables.'
+            echo '- Rejects privilege, RLS-policy, or data-mutation statements in this narrow contract file.'
+            echo '- Static repository evidence does not prove live database state, Partner API abuse controls, real location behavior, real-device acceptance, or Commercial readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
