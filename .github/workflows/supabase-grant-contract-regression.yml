@@ -5,11 +5,13 @@ on:
     paths:
       - 'supabase/least-privilege-public-table-grants.sql'
       - '.github/workflows/supabase-grant-contract-regression.yml'
+      - '.github/workflows/supabase-anon-access-probe.yml'
   push:
     branches: ['main']
     paths:
       - 'supabase/least-privilege-public-table-grants.sql'
       - '.github/workflows/supabase-grant-contract-regression.yml'
+      - '.github/workflows/supabase-anon-access-probe.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,13 +24,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify least-privilege table-grant contract
+      - name: Verify least-privilege relation-grant contract
         shell: bash
         run: |
           set -euo pipefail
           file='supabase/least-privilege-public-table-grants.sql'
+          live_probe='.github/workflows/supabase-anon-access-probe.yml'
           privileged_role='service_''role'
           test -s "$file"
+          test -s "$live_probe"
 
           # Public submission tables: INSERT only for signed-out/signed-in clients,
           # except authenticated feedback SELECT used by the authorized dashboard flow.
@@ -43,7 +47,10 @@ jobs:
           grep -Fq 'grant select, insert, delete on table public.member_food_history to authenticated;' "$file"
           grep -Fq 'grant select, insert, delete on table public.user_food_history to authenticated;' "$file"
 
-          test "$(grep -Fc 'revoke all privileges on table public.' "$file")" -eq 6
+          # Analytics summary must remain non-public as its underlying demand table is
+          # server-side only. Keep both roles revoked at the view boundary as well.
+          grep -Fq 'revoke all privileges on table public.partner_opportunity_summary from anon, authenticated;' "$file"
+          test "$(grep -Fc 'revoke all privileges on table public.' "$file")" -eq 7
 
           # Reject broad public table grants in this contract file.
           if grep -Ei 'grant[[:space:]]+all([[:space:]]+privileges)?[[:space:]]+on[[:space:]]+table.*to[[:space:]]+(anon|authenticated)' "$file"; then
@@ -58,11 +65,23 @@ jobs:
             exit 1
           fi
           if grep -Ei 'create[[:space:]]+policy|drop[[:space:]]+policy|alter[[:space:]]+policy|disable[[:space:]]+row[[:space:]]+level[[:space:]]+security' "$file"; then
-            echo 'RLS policy/security mutation must not be mixed into this table-grant contract.'
+            echo 'RLS policy/security mutation must not be mixed into this relation-grant contract.'
             exit 1
           fi
 
-          echo 'Supabase least-privilege table-grant source contract passed.'
+          # Live probe must stay read-only and must not print response bodies that could
+          # contain user data if a future exposure regression occurs.
+          grep -Fq 'method: GET only' "$live_probe"
+          if grep -Ei '(--data|--data-binary|--form|-X[[:space:]]*(POST|PUT|PATCH|DELETE)|method:[[:space:]]*(POST|PUT|PATCH|DELETE))' "$live_probe"; then
+            echo 'Mutating request detected in anonymous access probe.'
+            exit 1
+          fi
+          if grep -Ei 'cat[[:space:]]+.*body|tail[[:space:]]+.*body|head[[:space:]]+.*body' "$live_probe"; then
+            echo 'Live probe must not print response bodies.'
+            exit 1
+          fi
+
+          echo 'Supabase least-privilege relation-grant source contract passed.'
 
       - name: Record evidence boundary
         if: always()
@@ -71,7 +90,9 @@ jobs:
           {
             echo '## Supabase grant contract regression'
             echo
-            echo '- Verifies the repository SQL contract limits anon/authenticated table grants to operations already supported by the intended RLS/application model.'
+            echo '- Verifies the repository SQL contract limits anon/authenticated relation grants to operations supported by the intended RLS/application model.'
+            echo '- Requires the partner opportunity summary view to remain non-public.'
+            echo '- Guards the live anonymous access probe as GET-only and prevents response-body output on failure.'
             echo '- Rejects broad public grants, privileged-backend-role edits, and policy-disable mutations in this contract file.'
-            echo '- This is static repository evidence only; it does not prove live database grants, RLS authorization behavior, Auth configuration, real-device behavior, or Commercial readiness.'
+            echo '- This is static repository evidence only; it does not prove live database grants, every RLS authorization path, Auth configuration, real-device behavior, or Commercial readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
