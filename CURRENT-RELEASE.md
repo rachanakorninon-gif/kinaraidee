@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` (merge PR #76; deployment-probe/observability descendant).
+- Latest reviewed `main`: `4c2daa2ddaa593d6c847b681b8041f2de2a2662d` (documentation/evidence descendant after failed post-migration Pages trace recording).
 - Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
 - PWA cache marker: `kinaraidee-beta-v13`.
@@ -14,6 +14,7 @@
 - PR #71 adds synthetic old-cache activation coverage; this is not NF-07 real-device PASS.
 - PR #75 adds synthetic iOS install-hint coverage; this is not iPhone/iPad real-device NF-05 PASS.
 - PR #76 changes only `deployment-check.html` to add `pages-actions-source-v1` and intentionally triggers the Pages artifact path after the repository Pages source was changed to GitHub Actions.
+- Compare from PR #76 merge `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` to reviewed `main` `4c2daa2ddaa593d6c847b681b8041f2de2a2662d` shows only `CURRENT-RELEASE.md` and `LIVE-DEPLOYMENT-VERIFICATION.md` changed; browser/PWA runtime and Group API source are unchanged.
 
 ## Verified CI/static evidence
 
@@ -112,7 +113,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed source/evidence baseline = PR #76 merge `95034bce89853fe87a4b399ca0a4a58c3e9e93d0`; it is deployment-probe/observability work and does not supersede browser/PWA runtime behavior.
+- Latest reviewed source/evidence baseline = `4c2daa2ddaa593d6c847b681b8041f2de2a2662d`; commits after PR #76 through this baseline are documentation/evidence-only and do not supersede browser/PWA runtime behavior.
 - Pages source migration to `build_type: workflow` is verified, but deployment trace remains incomplete while public `release-meta.json` returns 404 and no matching Pages + Live Smoke evidence is recorded.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
