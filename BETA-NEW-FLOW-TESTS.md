@@ -19,10 +19,11 @@
 4. ผลที่คาดหวัง: ระบบเริ่มรอบใหม่ได้ตามปกติ และค่าจากรอบก่อนหน้าไม่ทำให้ flow ค้าง
 
 ## NF-04 Android PWA update
-1. เปิดแอปที่เคยติดตั้ง/เคยเปิดก่อนการอัปเดตล่าสุด
-2. เชื่อมต่ออินเทอร์เน็ตและเปิดแอปใหม่
-3. ปิดแล้วเปิดจากไอคอนอีกครั้ง
-4. ผลที่คาดหวัง: ได้ Service Worker cache รุ่นล่าสุดและเห็นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที”
+1. ใช้ Android PWA ที่เคยติดตั้ง/เคยเปิด build ก่อน release ปัจจุบัน
+2. เชื่อมต่ออินเทอร์เน็ตและเปิดแอปให้ Service Worker มีโอกาสตรวจ update
+3. ปิดแล้วเปิดจากไอคอนอีกครั้งตามรอบ activation ที่ผู้ใช้ปกติทำได้
+4. ผลที่คาดหวังสำหรับ release ปัจจุบัน: ได้ behavior ของ `kinaraidee-beta-v13` และเห็นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” โดยไม่ต้อง clear app/site data เอง
+5. ถ้าไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้ ไม่ใช้การติดตั้ง v13 ใหม่เป็น NF-04 PASS
 
 ## NF-05 iPhone/iPad install guidance
 1. เปิดด้วย Safari โดยยังไม่ได้ติดตั้งลงหน้าจอโฮม
@@ -41,11 +42,13 @@
 4. ผลที่คาดหวัง: app shell และไฟล์ `home-surprise.js` ที่ cache ไว้เปิดได้ โดยไม่อ้างว่าข้อมูลออนไลน์ใหม่ยังพร้อมใช้งาน
 
 ## NF-07 Update จาก cache รุ่นก่อนหน้า
-1. ใช้อุปกรณ์ที่เคยเปิด Kinaraidee ก่อน Service Worker v9 หรือจำลองจาก PWA ที่ยังไม่ได้ refresh ล่าสุด
-2. เปิดออนไลน์และรอให้หน้าโหลดเสร็จ
-3. ปิดแอป/แท็บแล้วเปิดใหม่
-4. ผลที่คาดหวัง: ได้ behavior ล่าสุดของ `pwa-install.js` และ `home-surprise.js` โดยไม่ต้องล้างข้อมูลแอปเอง
-5. ถ้ายังเห็น behavior เก่า ให้บันทึกจำนวนครั้งที่ต้อง reload และสถานะ standalone/browser
+1. ใช้อุปกรณ์/installed PWA ที่ **ยืนยันได้ว่าเคยโหลด cache generation ก่อน `kinaraidee-beta-v13`** และยังไม่ได้ refresh/update เป็น v13 ก่อนเริ่ม test
+2. บันทึกหลักฐาน baseline ก่อน update เท่าที่ตรวจได้ เช่น behavior/marker ของ build เก่า หรือประวัติการติดตั้งที่ trace ได้; ห้ามสร้าง PASS จากการเดาว่า cache เก่า
+3. เปิดออนไลน์และรอให้หน้าโหลด/Service Worker update ตามพฤติกรรมปกติ
+4. ปิดแอป/แท็บแล้วเปิดใหม่ตาม activation path ปกติ โดยไม่ clear app/site data
+5. ผลที่คาดหวัง: behavior ล่าสุดของ `pwa-install.js` และ `home-surprise.js` ทำงาน และ release ปัจจุบันใช้ `kinaraidee-beta-v13`
+6. ถ้ายังเห็น behavior เก่า ให้บันทึกจำนวนรอบ reopen/reload ที่ต้องใช้, standalone/browser state และสิ่งที่เห็นจริง
+7. Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น ไม่ใช่ NF-07 real-device PASS
 
 ## NF-08 Recovery หลังแอปถูกขัดจังหวะ
 1. กด “ไม่รู้เลย — เลือกให้ฉันทันที”
@@ -54,10 +57,15 @@
 4. ผู้ใช้ต้องสามารถเริ่มรอบใหม่ได้โดยไม่ต้อง reload หน้า
 
 ## NF-09 Accessibility ของปุ่ม Surprise
-1. ใช้ screen reader หรือ accessibility inspector ถ้ามี
-2. โฟกัสปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที”
-3. ผลที่คาดหวัง: มีชื่อที่อ่านเข้าใจได้ และสถานะ busy/disabled ถูกสื่อเมื่อกำลังทำงาน
-4. หลังจบรอบ สถานะต้องกลับเป็นพร้อมใช้งาน
+1. ใช้ TalkBack/VoiceOver environment ที่ทำงานได้จริงบนอุปกรณ์ที่จะทดสอบ
+2. ก่อนตัดสินผลของ Kinaraidee ให้ยืนยัน accessibility environment ด้วย control มาตรฐานนอกแอป: โฟกัส control, สั่ง activate ด้วย gesture ของ screen reader และยืนยันว่า **action เกิดจริง** เช่น หน้า/ค่าถูกเปิดหรือเปลี่ยน ไม่ใช่แค่ได้ยินชื่อ control
+3. กลับ Kinaraidee และโฟกัสปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที”
+4. ผลที่คาดหวัง: screen reader อ่านชื่อ/role ที่เข้าใจได้
+5. Activate ปุ่มด้วย gesture ของ screen reader
+6. ผลที่คาดหวังระหว่างกำลังทำงาน: ผู้ใช้ได้ยินสถานะ busy ที่เข้าใจได้ และ control ถูกสื่อว่าไม่พร้อมให้กดซ้ำในช่วงนั้น
+7. หลังจบรอบ: สถานะต้องกลับเป็นพร้อมใช้งาน และผู้ใช้สามารถเริ่มรอบใหม่ได้
+8. ถ้า external control activation ใช้งานไม่ได้หรือไม่สามารถยืนยัน actual action ได้ ให้บันทึก `INCONCLUSIVE / TEST ENVIRONMENT` แทน PASS/FAIL ของ Kinaraidee
+9. Source/static/synthetic accessibility checks หรือการอ่าน accessible name อย่างเดียวไม่เพียงพอสำหรับ full NF-09 PASS
 
 ## NF-10 Online recovery
 1. เปิดแอปขณะออฟไลน์หลังเคย cache app shell แล้ว
@@ -67,4 +75,8 @@
 ## การบันทึกผล
 ทุก Fail ให้บันทึก device, OS, browser/version, ขั้นตอน, expected, actual, screenshot/video และ severity
 
-ห้ามทำเครื่องหมาย Pass จาก static review หรือจากการอ่านโค้ดเพียงอย่างเดียว
+ถ้า environment/tool ทำให้ไม่สามารถตัดสินพฤติกรรมของแอปได้อย่างน่าเชื่อถือ ให้ใช้ `INCONCLUSIVE` และบันทึกสาเหตุ แทนการบังคับเป็น PASS หรือ FAIL
+
+หาก exact device/OS/browser version ไม่ได้ถูกเก็บจริง ให้ระบุ `not captured` แทนการเดา
+
+ห้ามทำเครื่องหมาย Pass จาก static review, source markers, CI/synthetic checks หรือจากการอ่านโค้ดเพียงอย่างเดียว
