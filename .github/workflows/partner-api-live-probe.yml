@@ -1,0 +1,71 @@
+name: Partner API Live Rejection Probe
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/partner-api-live-probe.yml'
+      - 'supabase/functions/partner-api/index.ts'
+  push:
+    branches: ['main']
+    paths:
+      - '.github/workflows/partner-api-live-probe.yml'
+      - 'supabase/functions/partner-api/index.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rejection-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify rejection-only live Partner API contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/partner-api'
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          code="$(curl -sS -D "$tmp/get.h" -o "$tmp/get.b" -w '%{http_code}' "$url")"
+          test "$code" = '405' || { echo "GET expected 405, got $code"; exit 1; }
+          grep -qi '^cache-control: no-store' "$tmp/get.h"
+          grep -qi '^x-content-type-options: nosniff' "$tmp/get.h"
+
+          code="$(printf '{' | curl -sS -D "$tmp/bad.h" -o "$tmp/bad.b" -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data-binary @- "$url")"
+          test "$code" = '400' || { echo "Malformed JSON expected 400, got $code"; exit 1; }
+
+          python - <<'PY' | curl -sS -D "$tmp/large.h" -o "$tmp/large.b" -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data-binary @- "$url" > "$tmp/large.code"
+import sys
+sys.stdout.write('x' * 33000)
+PY
+          code="$(cat "$tmp/large.code")"
+          test "$code" = '413' || { echo "Oversized body expected 413, got $code"; exit 1; }
+
+          echo 'Partner API rejection-only live probe passed: GET=405 malformed=400 oversized=413.'
+
+      - name: Guard probe from accidental mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='.github/workflows/partner-api-live-probe.yml'
+          if grep -E "action[[:space:]]*[:=]|find_partners|track_search|track_click|owner_test_click|review_partner_application|update_partner_admin|create_conversion_admin|update_conversion_status" "$file"; then
+            echo 'Potential application action detected in rejection-only probe.'
+            exit 1
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Partner API live rejection probe'
+            echo
+            echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
+            echo '- Expected contract: GET 405, malformed JSON 400, body over 32 KiB 413, with no-store/nosniff on the GET rejection response.'
+            echo '- The workflow statically rejects known Partner API action names so it cannot become a click/search/conversion generator by accident.'
+            echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
