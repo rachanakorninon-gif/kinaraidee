@@ -1,0 +1,72 @@
+name: PWA Cache Upgrade Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-old-cache-upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Simulate Service Worker activation from older Kinaraidee caches
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const source=fs.readFileSync('sw.js','utf8');
+          const marker=source.match(/const CACHE='(kinaraidee-beta-v(\d+))';/);
+          if(!marker) throw new Error('canonical PWA cache marker not found');
+          const current=marker[1];
+          const version=Number(marker[2]);
+          if(version<3) throw new Error('fixture needs at least two older cache generations');
+          const old1=`kinaraidee-beta-v${version-1}`;
+          const old2=`kinaraidee-beta-v${version-2}`;
+          const deleted=[];
+          let claimed=false;
+          const listeners={};
+          const context={
+            console,
+            Promise,
+            self:{
+              addEventListener:(name,handler)=>{listeners[name]=handler},
+              skipWaiting:()=>Promise.resolve(),
+              clients:{claim:()=>{claimed=true;return Promise.resolve()}},
+              location:{origin:'https://example.invalid'}
+            },
+            caches:{
+              keys:()=>Promise.resolve([old2,old1,current]),
+              delete:(key)=>{deleted.push(key);return Promise.resolve(true)},
+              open:()=>Promise.resolve({addAll:()=>Promise.resolve(),put:()=>Promise.resolve()}),
+              match:()=>Promise.resolve(undefined)
+            }
+          };
+          vm.createContext(context);
+          vm.runInContext(source,context,{filename:'sw.js'});
+          if(typeof listeners.activate!=='function') throw new Error('activate handler not registered');
+          let activation;
+          listeners.activate({waitUntil:(p)=>{activation=Promise.resolve(p)}});
+          if(!activation) throw new Error('activate handler did not call waitUntil');
+          activation.then(()=>{
+            for(const key of [old1,old2]){
+              if(!deleted.includes(key)) throw new Error(`older cache was not deleted: ${key}`);
+            }
+            if(deleted.includes(current)) throw new Error(`current cache was deleted: ${current}`);
+            if(!claimed) throw new Error('clients.claim() was not reached after cache cleanup');
+            console.log(`Synthetic activation PASS: ${old2}, ${old1} -> ${current}`);
+          }).catch(error=>{console.error(error);process.exit(1)});
+          NODE
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'Synthetic Service Worker activation regression passed.'
+          echo 'This guards cache cleanup logic but does not constitute NF-07 real-device upgrade PASS.'
