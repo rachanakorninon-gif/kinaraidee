@@ -27,6 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           file='supabase/least-privilege-public-table-grants.sql'
+          privileged_role='service_''role'
           test -s "$file"
 
           # Public submission tables: INSERT only for signed-out/signed-in clients,
@@ -50,9 +51,10 @@ jobs:
             exit 1
           fi
 
-          # The contract must not modify service_role or RLS policy definitions.
-          if grep -Ei '(^|[^[:alnum:]_])service_role([^[:alnum:]_]|$)' "$file" | grep -Eiv 'not changed|scope|evidence'; then
-            echo 'Unexpected service_role modification/reference in grant contract.'
+          # This contract is scoped to browser-facing roles only; privileged backend
+          # access and RLS policy definitions must remain outside this file.
+          if grep -Fi "$privileged_role" "$file"; then
+            echo 'Unexpected privileged backend-role reference in grant contract.'
             exit 1
           fi
           if grep -Ei 'create[[:space:]]+policy|drop[[:space:]]+policy|alter[[:space:]]+policy|disable[[:space:]]+row[[:space:]]+level[[:space:]]+security' "$file"; then
@@ -70,6 +72,6 @@ jobs:
             echo '## Supabase grant contract regression'
             echo
             echo '- Verifies the repository SQL contract limits anon/authenticated table grants to operations already supported by the intended RLS/application model.'
-            echo '- Rejects GRANT ALL and policy-disable mutations in this contract file.'
+            echo '- Rejects broad public grants, privileged-backend-role edits, and policy-disable mutations in this contract file.'
             echo '- This is static repository evidence only; it does not prove live database grants, RLS authorization behavior, Auth configuration, real-device behavior, or Commercial readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
