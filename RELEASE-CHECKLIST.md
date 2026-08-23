@@ -5,20 +5,21 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current runtime release: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (PR #58 merged)
-- Latest reviewed non-browser-runtime descendant on `main`: `8a66d1292c66715e3d3864b8c490ca01bd78a268` (release/retention schema evidence only; browser/PWA runtime and Group API source unchanged)
+- Current runtime release: `96b405460f29d0f410f255cc48c68c58e4621784` (PR #67 squash-merged)
+- Latest reviewed non-browser-runtime descendant on `main`: `e0fdc70a42ba40889e28a8281b1781de93c16d46` (release-lineage documentation only; browser/PWA runtime unchanged from PR #67)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
-- Runtime change ล่าสุด: PR #58 เพิ่ม Surprise accessible busy-state announcement ผ่าน hidden `role=status`, `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และ busy timing; ต้องมี TalkBack/VoiceOver real-device retest ก่อน accessibility acceptance
+- Runtime change ล่าสุด: PR #67 ย้าย Surprise screen-reader live region ไปใต้ `document.body` และคง busy announcement ไว้นานพอให้ assistive technology มีโอกาสรับรู้ หลัง real-device TalkBack retest ของ PR #58 ยังไม่ประกาศ busy state; PR #67 จึงต้องมี deployment trace + TalkBack/VoiceOver retest ใหม่ก่อน accessibility acceptance
+- Historical first accessibility runtime: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (PR #58 merged); real-device TalkBack retest ของ implementation นี้ถูกบันทึกว่า FAIL สำหรับ busy announcement
 - Historical live-group result bridge runtime: `6fadf04fdf647680b60df2ada9cb43f4659816dd` (PR #42 merged)
 - PR #41 เพิ่ม member-history write/read race hardening; PR #37 แก้ cloud-history timestamp shape (`created_at` → numeric `at` + fallback) เพื่อป้องกัน `Invalid Date`
 - Regression guards: `.github/workflows/surprise-accessibility-regression.yml`, `.github/workflows/group-result-regression.yml` และ `.github/workflows/history-sync-regression.yml`
-- PR #53/59 เพิ่ม `deployment-check.html`; PR #60 เพิ่ม Surprise accessibility checks ใน Pages/Live Smoke; PR #61 harden synthetic monitor runtime lineage
+- PR #53/59 เพิ่ม `deployment-check.html`; PR #60 เพิ่ม Surprise accessibility checks ใน Pages/Live Smoke; PR #61 harden synthetic monitor runtime lineage; PR #67 ขยาย probe เป็น `surprise-a11y-v2` สำหรับ persistent live region
 - Release Consistency และ Pages predeploy มี stale-runtime-candidate guard แล้ว แต่การมี guard ไม่เท่ากับ successful workflow/deployment evidence
 - Historical partner/privacy runtime: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28 merged)
 - Historical v13 renderer baseline: `83f8f36373f819fcaf3d5dde7f7ae830a1e4aea1` (PR #26 merged)
 - Historical v12 runtime baseline: `f08d069ab2e8a5c00f63cb3f16bf6ab58c2c1c3f` / `kinaraidee-beta-v12`
 - Android same-device regression evidence สำหรับ Issues #38/#40 และ narrow live-group 2/2 final-result path มีบันทึกจริงแล้วตาม `CURRENT-RELEASE.md`; หลักฐานเหล่านี้ไม่เท่ากับ full device matrix PASS
-- Pages / Live Smoke trace, Surprise assistive-technology retest และ full real-device matrix สำหรับ candidate นี้ยังต้องยืนยันด้วยผลจริงก่อนติ๊ก release gate ผ่าน
+- Pages / Live Smoke trace, PR #67 Surprise assistive-technology retest และ full real-device matrix สำหรับ candidate นี้ยังต้องยืนยันด้วยผลจริงก่อนติ๊ก release gate ผ่าน
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -28,7 +29,7 @@
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
 - [x] Live-group completed 2/2 vote → final-result path มี same-device Android post-fix evidence ว่าแสดงผลกลุ่ม + reroll + handoff สำเร็จหลัง PR #42; ข้อนี้ไม่แทน multi-device matrix
-- [ ] Surprise busy-state accessibility หลัง PR #58 ถูก retest ด้วย TalkBack และ/หรือ VoiceOver ตาม scope และบันทึก evidence จริง
+- [ ] Surprise busy-state accessibility หลัง PR #67 ถูกยืนยันว่า deploy แล้วและ retest ด้วย TalkBack และ/หรือ VoiceOver ตาม scope พร้อมบันทึก evidence จริง
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v13 หลัง renderer/cache generation เปลี่ยนตาม device matrix ที่กำหนด
 - [x] TC-12 Partner application มี Android same-device evidence หลังเพิ่ม privacy acknowledgement fields และ backend fields ถูกยืนยัน; ยังไม่แทน cross-platform/full-matrix evidence
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
@@ -38,11 +39,12 @@
 
 ## Deployment & Release Evidence
 - [ ] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ release candidate / commit SHA ที่กำลังจะเปิดจริง
-- [ ] GitHub Pages deployment ของ `75d467cb...` หรือ runtime-equivalent descendant สำเร็จและ trace กลับไปยัง commit ได้
+- [ ] GitHub Pages deployment ของ `96b405460f29d0f410f255cc48c68c58e4621784` หรือ runtime-equivalent descendant สำเร็จและ trace กลับไปยัง commit ได้
 - [ ] Public `release-meta.json` มี deployed SHA ตรงกับ Pages run ที่ใช้เป็นหลักฐาน และ `pwa_cache` เป็น `kinaraidee-beta-v13`
 - [ ] `qa.yml`, `beta-check.yml`, `pages.yml`, `release-consistency.yml`, `surprise-accessibility-regression.yml`, `group-result-regression.yml`, `history-sync-regression.yml`, `public-beta-monitor.yml` และ `live-smoke.yml` ที่เกี่ยวข้องไม่มีผล FAIL ที่ยังไม่ได้แก้
 - [ ] Public URL เสิร์ฟ `sw.js` cache generation ตรง release candidate (ปัจจุบัน `kinaraidee-beta-v13`)
-- [ ] Live Smoke ตรวจ completed group-result bridge และ Surprise accessibility source contract บน deployed assets และ trace กลับไปยัง deployment เดียวกัน
+- [ ] Live Smoke ตรวจ completed group-result bridge และ PR #67 persistent Surprise accessibility source contract บน deployed assets และ trace กลับไปยัง deployment เดียวกัน
+- [ ] Public `/deployment-check.html` แสดง `surprise-a11y-v2` และ persistent live-region markers ของ PR #67 บน deployment เดียวกัน
 - [ ] Public Beta Monitor ตรวจ deployed SHA ว่าอยู่ใน current `main` history และมี current runtime candidate อยู่ใน lineage; ผล monitor ต้องมี run evidence จริงก่อนนับ
 - [ ] Service Worker live ใช้ atomic app-shell install (`cache.addAll(SHELL)`) และไม่มี install strategy ที่ยอมรับ partial shell cache
 - [ ] development-only files เช่น `.github/`, `supabase/`, README/security/release docs ไม่ถูกเผยแพร่ใน Pages artifact
@@ -51,7 +53,7 @@
 
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix
-- [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; Surprise busy announcement หลัง PR #58 ต้องมี TalkBack/VoiceOver evidence
+- [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; Surprise busy announcement หลัง PR #67 ต้องมี post-deployment TalkBack/VoiceOver evidence
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test ตาม matrix
