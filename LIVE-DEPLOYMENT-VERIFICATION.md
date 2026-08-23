@@ -4,7 +4,7 @@
 
 ## Release candidate ปัจจุบัน
 - Runtime candidate SHA: `96b405460f29d0f410f255cc48c68c58e4621784` (PR #67 squash-merged)
-- Latest reviewed source descendant: `e0fdc70a42ba40889e28a8281b1781de93c16d46` (release-lineage documentation only; browser/PWA runtime unchanged from PR #67)
+- Latest reviewed source descendant: `4568c731d3957d88373db914cc47fd66ec0ad24b` (release-evidence documentation descendant; compare lineage confirms browser/PWA runtime remains PR #67)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
 - Runtime change ล่าสุด: PR #67 ย้าย Surprise screen-reader live region ไปไว้ใต้ `document.body` เพื่อไม่ให้ถูกซ่อนเมื่อ screen container เปลี่ยนเป็น `display:none` และคง busy announcement ไว้นานพอให้ assistive technology รับรู้
@@ -23,6 +23,7 @@
 - `.github/workflows/surprise-accessibility-regression.yml` ตรวจ static contract ของ implementation และ real TalkBack/VoiceOver ยังต้อง retest
 - `deployment-check.html` ตรวจ `homeSurpriseStatus`, `aria-live='assertive'`, busy-message marker, `document.body.appendChild(status)` และ `clearStatusLater(status)`
 - PR #67 final PR head มี CI checks ที่บันทึกใน `CURRENT-RELEASE.md`; static/CI evidence ไม่แทน deployment หรือ real-device evidence
+- compare จาก PR #67 ถึง reviewed descendant `4568c731...` มีเฉพาะ release/evidence documentation changes และไม่มี browser/PWA runtime asset change
 - live-group result bridge จาก PR #42 และ member-history fixes จาก PR #37/#41 ยังคงอยู่ใน lineage
 
 Repository/static evidence ยืนยัน implementation และ guard wiring เท่านั้น ไม่ยืนยัน Pages deployment, Public URL ปัจจุบัน หรือ assistive-technology behavior จริง
@@ -66,7 +67,7 @@ Source marker หรือ static regression guard **ห้ามถูกนั
 
 ## Evidence record
 - Runtime candidate SHA: `96b405460f29d0f410f255cc48c68c58e4621784`
-- Latest reviewed source descendant: `e0fdc70a42ba40889e28a8281b1781de93c16d46` (release-lineage docs only)
+- Latest reviewed source descendant: `4568c731d3957d88373db914cc47fd66ec0ad24b` (release/evidence docs only; runtime unchanged from PR #67)
 - Deployed SHA:
 - `release-meta.json` observed SHA / PWA cache:
 - Pages workflow run URL / ID:
