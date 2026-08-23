@@ -6,45 +6,39 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `4c2daa2ddaa593d6c847b681b8041f2de2a2662d` (documentation/evidence descendant after failed post-migration Pages trace recording).
-- Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
+- Latest reviewed `main`: `1a4c23b3c93d2d0601056c487e057e402104316b` (merge PR #78; Pages predeploy secret-scan false-positive fix).
+- Current browser/PWA runtime candidate: `fcab6fa5a2c81de434b203ff005792d26a444670` (PWA install-helper bridge runtime commit on the current fix branch; pending merge/deploy verification).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- PR #67 keeps the Surprise screen-reader live region outside hidden `.screen` containers and remains the browser/PWA runtime candidate.
+- PR #67 persistent Surprise accessibility implementation remains present in the new browser/PWA candidate.
+- The new runtime candidate wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes a source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
 - PR #71 adds synthetic old-cache activation coverage; this is not NF-07 real-device PASS.
-- PR #75 adds synthetic iOS install-hint coverage; this is not iPhone/iPad real-device NF-05 PASS.
-- PR #76 changes only `deployment-check.html` to add `pages-actions-source-v1` and intentionally triggers the Pages artifact path after the repository Pages source was changed to GitHub Actions.
-- Compare from PR #76 merge `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` to reviewed `main` `4c2daa2ddaa593d6c847b681b8041f2de2a2662d` shows only `CURRENT-RELEASE.md` and `LIVE-DEPLOYMENT-VERIFICATION.md` changed; browser/PWA runtime and Group API source are unchanged.
+- PR #75 adds synthetic iOS install-hint behavior coverage; the current branch additionally guards that the active app bootstrap actually loads that helper.
 
 ## Verified CI/static evidence
 
-- PR #77 head `063bcf07013a6c15a6c69c3722ff79d6ddee6885` completed the main regression/security suites successfully, including Beta QA, Beta integrity, Release Consistency, Security Hygiene, Credential Scanner, Runtime Lineage Regression, Surprise Accessibility Regression, PWA Cache Upgrade Regression, iOS Install Hint Regression, Group Result Regression, Release Metadata Regression and History Sync Regression.
-- The dedicated `Public Pages Trace Check` on the same PR failed; do not fold the successful static/CI suites into deployment PASS.
+- PR #78 final head passed the main regression/security suites before merge, including Release Metadata Regression, Release Consistency, Runtime Lineage Regression, Beta QA, Beta integrity, Security Hygiene, Credential Scanner, Surprise Accessibility, PWA Cache Upgrade, iOS Install Hint, Group Result, Pages Source Diagnostic and History Sync.
+- Pages predeploy failure on PR #76 was traced to a false-positive secret scan against safe server-side `Deno.env.get(...)` references. PR #78 aligned Pages scanning with the existing Beta QA safe-env contract while preserving blocking of credential-shaped payloads.
 - Static source markers, workflow configuration, synthetic probes, and CI success do not replace real-device or live-deployment evidence.
 
 ## Deployment evidence
 
 Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
-GitHub Actions source is confirmed, but the public artifact trace is still failing and deployment acceptance remains incomplete.
+GitHub Actions Pages source and the artifact deployment path are now proven to work, and public release metadata is now present. One Live Smoke contract failure remains under active repair.
 
-The former repository-admin Pages-source blocker is resolved:
+Confirmed evidence after PR #78:
 
-- Fresh read-only Pages diagnostic on 2026-08-23 reports `build_type: workflow`.
-- Source branch/path is still reported as `main` / `/`, and the public site remains `https://rachanakorninon-gif.github.io/kinaraidee/`.
-- Therefore the repository is now configured for GitHub Actions Pages deployments; no further admin source migration is required for Issue #69.
+- Pages Source Diagnostic reports `build_type: workflow` for the repository.
+- PR #78 merged as `1a4c23b3c93d2d0601056c487e057e402104316b`.
+- Pages workflow run `32621203074` completed **success** for that exact SHA.
+- Public trace workflow run `32621219335` completed **success** and verified public `release-meta.json` SHA = `1a4c23b3c93d2d0601056c487e057e402104316b`, `pwa_cache` = `kinaraidee-beta-v13`, `pages-actions-source-v1` on the deployment probe, and the matching live Service Worker marker.
+- Live Smoke run `32621221131` was triggered from the same successful Pages deployment but completed **failure**.
+- A focused assertion diagnostic run `32621294450` found exactly one failing live assertion: the root HTML did not directly contain `pwa-install.js`; all other checked public release metadata, cache, group-result, Surprise accessibility source, partner/privacy, robots/sitemap and runtime markers passed.
+- Source inspection confirms `index.html` directly loads `data/home-surprise.js` but not `data/pwa-install.js`. Therefore the iOS/Android install helper existed and had synthetic tests but was not actually wired into the active app bootstrap.
+- The current runtime candidate `fcab6fa5a2c81de434b203ff005792d26a444670` fixes that gap by loading `data/pwa-install.js` from the active home bootstrap. A fresh Pages deployment and matching Live Smoke success are still required after merge.
 
-However deployment acceptance is still not met:
-
-- PR #76 merged as `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` to trigger the watched deployment path.
-- PR #77 `Public Pages Trace Check` workflow run `32620743936`, job `97148434823`, retried the public trace 18 times between 2026-08-23T05:35:51Z and 05:38:52Z.
-- Every attempt failed fetching public `/release-meta.json` with HTTP 404.
-- The check therefore ended `failure`; there is still no verified public metadata linking the live site to PR #76's deployed SHA.
-- Corresponding Pages deployment run ID/URL and Live Smoke evidence for the same deployment have not been recorded here.
-
-Required next deployment work is now investigation of why the GitHub Actions-configured site still does not expose the workflow-generated artifact, followed by a successful Pages artifact deployment and corresponding Live Smoke trace.
-
-Do not infer complete deployment-gate success from source, PR/CI success, the Pages `build_type: workflow` setting, public source markers, or workflow files alone.
+Do not infer complete deployment-gate success until the current runtime candidate is merged, the new Pages deployment succeeds, public metadata points to that deployment, and the corresponding Live Smoke run passes.
 
 ## Real-device regression status
 
@@ -61,7 +55,7 @@ Status: **IMPLEMENTED + PUBLIC V2 SOURCE PROBE CONFIRMED / REAL ASSISTIVE-TECH R
 
 Issue #5 contains scoped same-device evidence for multiple core flows, including Group 2/2 result flow and selected PWA/recovery scenarios. Exact device model/OS/Chrome were not captured and must not be guessed. One device/session does not satisfy the full device matrix.
 
-NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta-v13` upgrade remains unverified. NF-05 now also has synthetic iOS install-hint coverage only; real iPhone/iPad Safari evidence remains required.
+NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta-v13` upgrade remains unverified. NF-05 has synthetic iOS install-hint behavior coverage and now has active-bootstrap wiring under the current runtime candidate, but real iPhone/iPad Safari evidence remains required.
 
 ## Group API / operations evidence
 
@@ -86,10 +80,10 @@ Public Beta is still **NOT COMPLETE**.
 
 Minimum open evidence includes:
 
-- Issue #69: public `release-meta.json` + traceable Pages workflow run + corresponding Live Smoke for one deployment after the GitHub Actions source migration;
+- Issue #69: merge/deploy the current PWA-helper wiring candidate and obtain a corresponding successful Live Smoke trace with matching public release metadata;
 - NF-09 assistive-tech acceptance on a functioning TalkBack/VoiceOver environment;
 - NF-07 real-device old-cache → current-cache upgrade evidence;
-- NF-05 real iPhone/iPad Safari install-hint evidence despite synthetic CI coverage;
+- NF-05 real iPhone/iPad Safari install-hint evidence despite synthetic CI and source-wiring coverage;
 - Android Chrome on at least 3 device models total;
 - iPhone Safari on at least 2 device models total;
 - remaining TC-01–TC-15 / NF-01–NF-10 evidence and Blocker/Critical closure appropriate to Beta acceptance.
@@ -100,7 +94,7 @@ Issue #5 remains the primary technical/device QA tracker. Issue #1 remains Beta 
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance and deployment trace;
+- Public Beta technical/device/accessibility acceptance and final deployment trace;
 - Supabase leaked-password protection gate (#11);
 - `main` branch protection / required checks (#35);
 - Group API live observability, retention/deletion policy, abuse controls and monitoring baseline (#45);
@@ -113,9 +107,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784` until another browser/PWA runtime change occurs.
+- Current browser/PWA runtime candidate = `fcab6fa5a2c81de434b203ff005792d26a444670` on the current PWA-helper wiring fix until merged/superseded; it contains PR #67 accessibility behavior plus active loading of `data/pwa-install.js`.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed source/evidence baseline = `4c2daa2ddaa593d6c847b681b8041f2de2a2662d`; commits after PR #76 through this baseline are documentation/evidence-only and do not supersede browser/PWA runtime behavior.
-- Pages source migration to `build_type: workflow` is verified, but deployment trace remains incomplete while public `release-meta.json` returns 404 and no matching Pages + Live Smoke evidence is recorded.
+- Latest reviewed `main` baseline = `1a4c23b3c93d2d0601056c487e057e402104316b`.
+- The PR #78 Pages deployment/public metadata path is verified, but full deployment acceptance remains incomplete because its matching Live Smoke identified the PWA-helper wiring gap; the current candidate must pass a fresh matching deployment + Live Smoke trace.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
