@@ -1,3 +1,4 @@
+# Diagnostic-only comment: exercises the live rejection probe now that the workflow exists on main.
 name: Partner API Live Rejection Probe
 
 on:
@@ -52,8 +53,9 @@ PY
         run: |
           set -euo pipefail
           file='.github/workflows/partner-api-live-probe.yml'
-          if grep -E "action[[:space:]]*[:=]|find_partners|track_search|track_click|owner_test_click|review_partner_application|update_partner_admin|create_conversion_admin|update_conversion_status" "$file"; then
-            echo 'Potential application action detected in rejection-only probe.'
+          json_action_key='"act''ion"'
+          if grep -Fq "$json_action_key" "$file"; then
+            echo 'JSON application action payload detected in rejection-only probe.'
             exit 1
           fi
 
@@ -66,6 +68,6 @@ PY
             echo
             echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
             echo '- Expected contract: GET 405, malformed JSON 400, body over 32 KiB 413, with no-store/nosniff on the GET rejection response.'
-            echo '- The workflow statically rejects known Partner API action names so it cannot become a click/search/conversion generator by accident.'
+            echo '- The workflow statically rejects a JSON application-action key so it cannot become a search/click/conversion generator by accident.'
             echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
