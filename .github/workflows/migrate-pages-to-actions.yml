@@ -1,0 +1,47 @@
+name: Migrate Pages Source to Actions
+
+on:
+  push:
+    branches: ["ops/migrate-pages-to-actions"]
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  migrate-pages-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Switch GitHub Pages build type to workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/$REPOSITORY/pages"
+          auth=(-H 'Accept: application/vnd.github+json' -H "Authorization: Bearer $GH_TOKEN" -H 'X-GitHub-Api-Version: 2022-11-28')
+          before="$(curl --fail --silent --show-error --location "${auth[@]}" "$api")"
+          BEFORE="$before" node -e "const x=JSON.parse(process.env.BEFORE); console.log('Before build_type:',x.build_type,'source:',JSON.stringify(x.source||null));"
+          build_type="$(BEFORE="$before" node -e "const x=JSON.parse(process.env.BEFORE); process.stdout.write(String(x.build_type||''));")"
+          if [ "$build_type" != 'workflow' ]; then
+            curl --fail --silent --show-error --location \
+              -X PUT "${auth[@]}" \
+              -H 'Content-Type: application/json' \
+              --data '{"build_type":"workflow"}' \
+              "$api" >/dev/null
+          fi
+          after="$(curl --fail --silent --show-error --location "${auth[@]}" "$api")"
+          AFTER="$after" node <<'NODE'
+          const x=JSON.parse(process.env.AFTER||'{}');
+          console.log('After build_type:',x.build_type,'source:',JSON.stringify(x.source||null));
+          if(x.build_type!=='workflow'){
+            console.error('Pages build_type did not switch to workflow');
+            process.exit(1);
+          }
+          NODE
+
+      - name: Record migration boundary
+        run: |
+          echo 'Pages source migration completed. This setting change alone is not deployment PASS.'
+          echo 'A successful Pages artifact deployment, public release-meta.json, and corresponding Live Smoke are still required.'
