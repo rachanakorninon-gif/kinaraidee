@@ -6,13 +6,13 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `6a3a3812270e1d36caec5e716612de358743e28f` (retention decision/workflow/documentation lineage only; browser/PWA runtime and Group API source unchanged).
-- Current browser/PWA runtime candidate: `b82f00633f42cc1c0121d943236db954816aeb6f` (PR #67 runtime commit; persistent Surprise live region follow-up after real-device TalkBack retest still failed on PR #58).
+- Latest reviewed `main`: `96b405460f29d0f410f255cc48c68c58e4621784` (squash merge PR #67; persistent Surprise live-region runtime follow-up plus accessibility regression/deployment-probe/release-state updates).
+- Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 changes `data/home-surprise.js` so the screen-reader live region is appended to `document.body`, outside screen containers that become `display:none`, and keeps the busy announcement available long enough for assistive technology to receive it.
 - PR #67 also strengthens the Surprise accessibility regression guard and advances `deployment-check.html` to `surprise-a11y-v2`; these source/probe checks do not replace real TalkBack/VoiceOver verification.
-- PR #58 / `75d467cb...` remains the historical first accessibility fix. Real-device TalkBack retest after verified public deployment still did not announce the busy state, so Issue #57 remains open and PR #67 is the new runtime candidate.
+- PR #58 / `75d467cb...` remains the historical first accessibility fix. Real-device TalkBack retest after verified public deployment still did not announce the busy state, so Issue #57 remains open and PR #67 is the current runtime candidate.
 - `GROUP-API-RETENTION-DECISION.md` records the retention gate explicitly as **NOT APPROVED** with approval fields **UNSET**; `.github/workflows/group-retention-regression.yml` guards against silently inferring a retention window and keeps cleanup verification as a separate gate.
 - PR #59 `d20529a9...` added the first Surprise accessibility deployment probe; PR #60 `984e5d8c...` added Pages/Live Smoke source-contract checks; PR #61 `557010fb...` hardened Public Beta synthetic runtime-lineage monitoring.
 - PR #62 `77bbffd5...` added runtime-lineage regression self-tests.
@@ -28,15 +28,17 @@ CI/static evidence is scoped to the commit/head that produced it and never repla
 
 PR #58 static checks passed and added a Surprise Accessibility Regression guard, but real-device TalkBack later proved that the first implementation still did not announce the busy state after deployment.
 
-PR #67 branch evidence after the runtime change currently includes successful Surprise Accessibility Regression plus the existing Beta/History/Group/Security/metadata suites. Release Consistency and Runtime Lineage Regression initially failed because `CURRENT-RELEASE.md` still declared PR #58 as the runtime candidate; this document now advances the candidate to the actual PR #67 runtime commit `b82f00633f42cc1c0121d943236db954816aeb6f` so the lineage guards can verify no undeclared runtime drift remains.
+PR #67 final PR head passed all 10 triggered checks before merge: Credential Scanner Regression, Security Hygiene, Beta integrity, History Sync Regression, Group Result Regression, Runtime Lineage Regression, Release Consistency, Surprise Accessibility Regression, Beta QA, and Release Metadata Regression.
 
-Static source markers, regression guards, deployment probes, and CI success do not constitute NF-09 PASS. A real TalkBack/VoiceOver retest is still required after PR #67 is merged and confirmed deployed.
+PR #67 was squash-merged to `main` as `96b405460f29d0f410f255cc48c68c58e4621784`. Because squash merge rewrites branch history, the canonical runtime candidate is the merge commit itself rather than the pre-merge branch runtime commit.
+
+Static source markers, regression guards, deployment probes, and CI success do not constitute NF-09 PASS. A real TalkBack/VoiceOver retest is still required after PR #67 is confirmed deployed.
 
 Retention decision regression guards are static governance checks only; they do not constitute Privacy/Legal approval or deletion/cleanup evidence.
 
 ## Deployment evidence
 
-Status: **PARTIAL / BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+Status: **PARTIAL / PR #67 BROWSER DEPLOYMENT TRACE STILL REQUIRED**
 
 Deployment observability includes:
 
@@ -56,7 +58,7 @@ For PR #67, browser deployment remains pending until there is an inspectable suc
 
 ### Surprise accessibility — Issue #57 / NF-09
 
-Status: **PR #58 DEPLOYED SOURCE CONFIRMED / REAL TALKBACK RETEST FAILED / PR #67 FOLLOW-UP IN PROGRESS**
+Status: **PR #58 DEPLOYED SOURCE CONFIRMED / REAL TALKBACK RETEST FAILED / PR #67 MERGED, DEPLOYMENT + RETEST REQUIRED**
 
 Actual Android/TalkBack evidence:
 
@@ -67,7 +69,7 @@ Actual Android/TalkBack evidence:
 - therefore NF-09 remains FAIL/open on this device/session and Issue #57 must stay open;
 - PR #67 addresses the likely accessibility-tree lifetime problem by keeping the live region outside hidden screen containers.
 
-No PASS may be recorded for PR #67 until its runtime is merged, deployed, public probe evidence confirms `surprise-a11y-v2`, and TalkBack/VoiceOver actually announces a clear busy state on a real device.
+No PASS may be recorded for PR #67 until its runtime is deployed, public probe evidence confirms `surprise-a11y-v2`, and TalkBack/VoiceOver actually announces a clear busy state on a real device.
 
 ### Group live result — completed 2/2 vote path
 
@@ -121,9 +123,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #67 runtime commit `b82f00633f42cc1c0121d943236db954816aeb6f` until another browser/PWA runtime app change occurs.
+- Current browser/PWA runtime candidate = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784` until another browser/PWA runtime app change occurs.
 - Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity is re-verified for that source.
-- Latest reviewed `main` baseline remains `6a3a3812...` until PR #67 is reviewed/merged; PR #67 candidate is a branch runtime candidate, not yet a deployed release.
+- Latest reviewed `main` baseline = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784`; subsequent docs-only descendants do not supersede browser/PWA runtime behavior.
 - Retention policy remains **NOT APPROVED**; schema defaults must not be treated as approved deletion/retention policy.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline began with PR #53 and was extended by PR #59/#60/#61 and PR #67's v2 probe.
