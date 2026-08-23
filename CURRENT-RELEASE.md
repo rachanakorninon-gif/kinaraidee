@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `96b405460f29d0f410f255cc48c68c58e4621784` (squash merge PR #67; persistent Surprise live-region runtime follow-up plus accessibility regression/deployment-probe/release-state updates).
+- Latest reviewed `main`: `9d97f5a8b4a78724ca5e554b78ca2c6f2265791f` (PR #67 runtime plus subsequent release-evidence documentation sync; browser/PWA runtime unchanged from `96b405460f29d0f410f255cc48c68c58e4621784`).
 - Current browser/PWA runtime candidate: `96b405460f29d0f410f255cc48c68c58e4621784` (merge PR #67).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
@@ -21,6 +21,7 @@
 - PR #42 `6fadf04f...` remains the historical live-group result bridge baseline.
 - PR #37 fixed member cloud-history timestamp mapping/fallback; PR #41 added stale-snapshot/write-race protection.
 - PR #53 added public diagnostic `deployment-check.html`; PR #54 synchronized actual Android real-device evidence.
+- Commits `46e8be2b...` and `9d97f5a8...` synchronize Live Deployment Verification and Commercial Release Checklist to PR #67; these are documentation/evidence-state changes only and do not constitute deployment PASS.
 
 ## Verified CI/static evidence
 
@@ -125,7 +126,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784` until another browser/PWA runtime app change occurs.
 - Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity is re-verified for that source.
-- Latest reviewed `main` baseline = PR #67 / `96b405460f29d0f410f255cc48c68c58e4621784`; subsequent docs-only descendants do not supersede browser/PWA runtime behavior.
+- Latest reviewed `main` baseline = `9d97f5a8b4a78724ca5e554b78ca2c6f2265791f`; commits after PR #67 reviewed here are documentation/evidence-state descendants and do not supersede browser/PWA runtime behavior.
 - Retention policy remains **NOT APPROVED**; schema defaults must not be treated as approved deletion/retention policy.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline began with PR #53 and was extended by PR #59/#60/#61 and PR #67's v2 probe.
