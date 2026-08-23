@@ -68,12 +68,16 @@ jobs:
             echo 'CURRENT-RELEASE.md must preserve an explicit incomplete Public Beta gate while required evidence remains open'
             exit 1
           }
-          grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve the deployment-evidence caution'
+          grep -Fq 'Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve the verified browser/PWA deployment-trace status'
+            exit 1
+          }
+          grep -Fq 'This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only.' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve the scoped deployment-evidence boundary'
             exit 1
           }
 
-          echo 'Active release files use only the canonical marker; evidence docs include the canonical marker and CURRENT-RELEASE.md records a reviewed release baseline without overclaiming deployment readiness'
+          echo 'Active release files use only the canonical marker; evidence docs preserve a trace-verified browser/PWA deployment while keeping Public Beta explicitly incomplete'
 
       - name: Validate declared browser runtime candidate lineage
         shell: bash

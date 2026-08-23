@@ -39,11 +39,11 @@ jobs:
           grep -Fq 'test "$deployed_sha" = "$DEPLOY_HEAD_SHA"' "$smoke"
           grep -Fq 'Completed live-group result bridge: checked on deployed assets' "$smoke"
 
-      - name: Verify current release evidence remains cautious
+      - name: Verify current release evidence preserves scoped deployment PASS
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq 'Status: **PARTIAL /' CURRENT-RELEASE.md
-          grep -Fq 'DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**' CURRENT-RELEASE.md
-          grep -Fq 'Do not infer complete deployment-gate success' CURRENT-RELEASE.md
+          grep -Fq 'Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' CURRENT-RELEASE.md
+          grep -Fq 'This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only.' CURRENT-RELEASE.md
           grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md
+          grep -Fq 'No user-count, conversion, revenue, payment success, partner readiness, legal approval, full device-matrix PASS, full Public Beta PASS, or Commercial GO is inferred from this document.' CURRENT-RELEASE.md
