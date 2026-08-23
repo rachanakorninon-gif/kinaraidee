@@ -1,7 +1,6 @@
 name: Pages Source Diagnostic
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -45,5 +44,5 @@ jobs:
 
       - name: Explain evidence boundary
         run: |
-          echo 'This check only reads repository Pages configuration.'
+          echo 'This is a manual diagnostic that only reads repository Pages configuration.'
           echo 'It does not change the deployment source and does not constitute deployment PASS.'
