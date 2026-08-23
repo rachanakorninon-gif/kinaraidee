@@ -1,0 +1,56 @@
+name: V14 Deployment Evidence Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v14-deployment-evidence-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find exact v14 Pages and Live Smoke runs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TARGET_SHA: e30aa999f6277b221bf8dae85aa3b23521ad6f06
+        run: |
+          set -euo pipefail
+          fetch_runs(){
+            local workflow="$1"
+            curl --fail --silent --show-error --location \
+              -H 'Accept: application/vnd.github+json' \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/$REPOSITORY/actions/workflows/$workflow/runs?branch=main&per_page=50"
+          }
+          pages="$(fetch_runs pages.yml)"
+          smoke="$(fetch_runs live-smoke.yml)"
+          PAGES="$pages" SMOKE="$smoke" TARGET_SHA="$TARGET_SHA" node <<'NODE'
+          const pages=JSON.parse(process.env.PAGES||'{}').workflow_runs||[];
+          const smoke=JSON.parse(process.env.SMOKE||'{}').workflow_runs||[];
+          const sha=process.env.TARGET_SHA;
+          const p=pages.find(r=>r.head_sha===sha);
+          const s=smoke.find(r=>r.head_sha===sha || (r.event==='workflow_run' && String(r.name||'').includes('Kinaraidee Live Smoke Test')));
+          console.log('Target SHA:',sha);
+          console.log('Exact Pages run:',p?JSON.stringify({id:p.id,status:p.status,conclusion:p.conclusion,event:p.event,head_sha:p.head_sha,html_url:p.html_url}):'NOT FOUND');
+          console.log('Candidate Live Smoke runs:', smoke.slice(0,10).map(r=>({id:r.id,status:r.status,conclusion:r.conclusion,event:r.event,head_sha:r.head_sha,created_at:r.created_at,html_url:r.html_url})));
+          if(!p) process.exitCode=2;
+          else if(p.status!=='completed'||p.conclusion!=='success') process.exitCode=3;
+          if(process.env.GITHUB_STEP_SUMMARY){
+            const fs=require('fs');
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              `## V14 deployment diagnostic\n\n- target SHA: \`${sha}\`\n- exact Pages: ${p?`run ${p.id} / ${p.status} / ${p.conclusion}`:'NOT FOUND'}\n- Live Smoke candidates printed in logs for trace inspection.\n\nThis diagnostic is read-only and does not itself constitute Live Smoke PASS.\n`);
+          }
+          NODE
+
+      - name: Evidence boundary
+        if: always()
+        run: |
+          echo 'Read-only diagnostic only. No deployment, workflow rerun, public data mutation, or business transaction is performed.'
