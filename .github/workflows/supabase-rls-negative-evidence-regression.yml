@@ -5,6 +5,7 @@ on:
     paths:
       - 'SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
       - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+      - 'CURRENT-RELEASE.md'
       - 'supabase/beta-feedback-admin-rls-contract.sql'
       - '.github/workflows/supabase-rls-negative-evidence-regression.yml'
   push:
@@ -12,6 +13,7 @@ on:
     paths:
       - 'SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
       - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+      - 'CURRENT-RELEASE.md'
       - 'supabase/beta-feedback-admin-rls-contract.sql'
       - '.github/workflows/supabase-rls-negative-evidence-regression.yml'
   workflow_dispatch:
@@ -32,10 +34,12 @@ jobs:
           set -euo pipefail
           evidence='SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
           auth='SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+          release='CURRENT-RELEASE.md'
           contract='supabase/beta-feedback-admin-rls-contract.sql'
 
           test -s "$evidence"
           test -s "$auth"
+          test -s "$release"
           test -s "$contract"
 
           grep -Fq 'READ + CROSS-USER MUTATION NEGATIVE EVIDENCE' "$evidence"
@@ -49,6 +53,12 @@ jobs:
           grep -Fq 'cross-user INSERT rejection or every mutation shape' "$evidence"
           grep -Fq 'leaked-password protection' "$evidence"
           grep -Fq 'real-device behavior, Public Beta completion, or Commercial GO' "$evidence"
+
+          # Keep the canonical release summary aligned with the same evidence boundary.
+          grep -Fq 'does not prove every authenticated per-user JWT/RLS path' "$release"
+          grep -Fq 'Supabase leaked-password protection gate (#11)' "$release"
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
           # Keep the evidence tied to the hardened beta_feedback admin boundary.
           grep -Fq 'private.is_admin_dashboard_owner()' "$auth"
@@ -81,6 +91,7 @@ jobs:
             echo '## Supabase authenticated RLS negative evidence'
             echo
             echo '- Guards the repository record for authenticated cross-user read isolation and selected UPDATE/DELETE negative paths.'
+            echo '- Keeps CURRENT-RELEASE.md aligned with the scoped RLS/Auth evidence boundary and open security gates.'
             echo '- Keeps the evidence tied to the current private admin-helper contract for beta_feedback.'
             echo '- This workflow validates documentation/source consistency only. It does not re-run the live SQL probes, prove every INSERT/mutation/JWT/session path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
           } >> "$GITHUB_STEP_SUMMARY"
