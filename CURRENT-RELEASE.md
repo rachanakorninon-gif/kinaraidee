@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `501aa92604e2660190749fb90679622119db8d55` (merge PR #65; release/hardening documentation sync only; browser/PWA runtime unchanged).
+- Latest reviewed `main`: `8a66d1292c66715e3d3864b8c490ca01bd78a268` (retention schema evidence only; browser/PWA runtime and Group API source unchanged).
 - Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Compare `0ecf9836fa01c4c6cec135845b6263e7b251d756..501aa92604e2660190749fb90679622119db8d55` = 3 commits touching only `CURRENT-RELEASE.md` and `GROUP-API-HARDENING-PLAN.md`; no browser/PWA runtime asset changed in this lineage.
+- Compare `501aa92604e2660190749fb90679622119db8d55..8a66d1292c66715e3d3864b8c490ca01bd78a268` = 2 commits touching only `CURRENT-RELEASE.md` and `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md`; no browser/PWA runtime asset or Group API source changed in this lineage.
 - PR #58 เป็น runtime change ล่าสุดของ browser/PWA: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
 - PR #58 เพิ่ม `.github/workflows/surprise-accessibility-regression.yml` เป็น static contract guard; static PASS ไม่แทน TalkBack/VoiceOver real-device evidence.
 - PR #59 `d20529a9...` เปลี่ยนเฉพาะ `deployment-check.html` เพื่อให้ public probe ตรวจ marker ของ Surprise accessibility fix; ไม่เปลี่ยน core app behavior เพิ่มจาก PR #58.
@@ -20,6 +20,7 @@
 - `be1288b99...` เพิ่ม Pages predeploy guard แบบเดียวกัน เพื่อ block deployment หาก declared runtime candidate stale เมื่อเทียบกับ browser/PWA runtime files.
 - PR #62 `77bbffd5...` เพิ่ม `.github/workflows/runtime-lineage-regression.yml` เพื่อ self-test ว่า candidate ปัจจุบัน clean, docs-only descendant ไม่ถูกนับเป็น runtime drift, synthetic runtime change ถูกตรวจจับ และ production lineage guards ยัง wired อยู่; ไม่เปลี่ยน browser/PWA runtime.
 - PR #63 `f683f829...` เปลี่ยน Group API backend source โดยเพิ่ม privacy-safe structured operational events และ regression guard ที่ป้องกัน logging ของ sensitive identifiers/payload references; source นี้ถูก deploy และตรวจย้อนกลับได้ใน Supabase `group-api` version 3 โดยคง `verify_jwt=false` ตาม invite-flow เดิม.
+- Retention schema inspection วันที่ 2026-08-23 ยืนยัน `group_rooms.expires_at DEFAULT now()+24h` และ `group_votes.room_id -> group_rooms(id) ON DELETE CASCADE`; บันทึกใน `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md`. ข้อมูลนี้เป็น schema evidence เท่านั้น ไม่ใช่ retention-policy หรือ cleanup PASS.
 - Guards เหล่านี้ใช้ full git history (`fetch-depth: 0`) และตรวจ ancestry/diff ก่อนยอมรับ release lineage; การมี guard ไม่เท่ากับ successful deployment evidence.
 - PR #42 `6fadf04f...` ยังคงเป็น historical live-group result bridge baseline.
 - PR #37 แก้ member cloud-history timestamp mapping/fallback; PR #41 เพิ่ม stale-snapshot/write-race protection.
@@ -124,7 +125,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี browser/PWA runtime app change ใหม่.
 - Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity ถูก re-verify หลัง deploy source candidate นี้.
-- Latest reviewed source baseline = `501aa926...`; compare จาก `0ecf9836...` ถึง baseline นี้เปลี่ยนเฉพาะ release/hardening documentation และไม่ supersede browser/PWA runtime behavior ของ PR #58.
+- Latest reviewed source baseline = `8a66d129...`; compare จาก `501aa926...` ถึง baseline นี้เปลี่ยนเฉพาะ release/retention evidence documentation และไม่ supersede browser/PWA runtime behavior ของ PR #58 หรือ Group API source ของ PR #63.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
 - Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59/#60/#61 และ stale-runtime deployment guards ล่าสุด.
 - Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
