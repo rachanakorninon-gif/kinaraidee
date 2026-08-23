@@ -2,8 +2,8 @@
 --
 -- Applied to the connected project on 2026-08-23 after a transaction-only dry run.
 -- Scope: anon/authenticated table privileges only. RLS policies remain the row-level
--- authorization layer. service_role privileges, sequences, policies and data are not
--- changed by this script.
+-- authorization layer. Privileged backend-role access, sequences, policies and data
+-- are not changed by this script.
 --
 -- Evidence boundary: this file records the intended grant contract. Repository/CI
 -- checks cannot prove the live database state; verify live grants separately after any
