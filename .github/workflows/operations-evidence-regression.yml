@@ -1,0 +1,63 @@
+name: Operations Evidence Regression
+
+on:
+  pull_request:
+    paths:
+      - 'MONITORING-EVIDENCE-TEMPLATE.md'
+      - 'GROUP-RETENTION-CLEANUP-DESIGN.md'
+      - '.github/workflows/operations-evidence-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'MONITORING-EVIDENCE-TEMPLATE.md'
+      - 'GROUP-RETENTION-CLEANUP-DESIGN.md'
+      - '.github/workflows/operations-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify monitoring evidence boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='MONITORING-EVIDENCE-TEMPLATE.md'
+          test -s "$file"
+          grep -Fq 'NOT VERIFIED' "$file"
+          grep -Fq 'Alert received? yes / no / not tested' "$file"
+          grep -Fq 'successful scheduled run ไม่แทน alert-delivery PASS' "$file"
+          grep -Fq 'ห้ามกำหนด Production alert threshold แบบเดา' "$file"
+
+      - name: Verify retention design is policy neutral
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='GROUP-RETENTION-CLEANUP-DESIGN.md'
+          test -s "$file"
+          grep -Fq 'DESIGN ONLY / NO CLEANUP EXECUTED' "$file"
+          grep -Fq 'explicit threshold parameter; no hidden default' "$file"
+          grep -Fq 'no-active-delete guard' "$file"
+          grep -Fq 'Orphan votes after:' "$file"
+          if grep -Eqi '^(approved[ _-]?retention[ _-]?(period|days|hours)|retention[ _-]?(period|days|hours))[[:space:]]*[:=][[:space:]]*[0-9]+' "$file"; then
+            echo 'Explicit numeric retention policy detected in policy-neutral design.'
+            exit 1
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Operations evidence regression'
+            echo
+            echo '- Guards monitoring evidence from being promoted without actual run/alert proof.'
+            echo '- Guards Group cleanup design from silently choosing a retention period or claiming execution.'
+            echo '- Static documentation regression evidence is not an operations drill, retention approval, cleanup PASS, alert-delivery PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
