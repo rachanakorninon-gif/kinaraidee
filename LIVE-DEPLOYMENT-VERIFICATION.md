@@ -4,78 +4,53 @@
 
 ## Release candidate ปัจจุบัน
 
-- Runtime candidate SHA: `96b405460f29d0f410f255cc48c68c58e4621784` (PR #67 squash-merged)
-- Latest reviewed source descendant: `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` (PR #76 deployment-probe/observability descendant; browser/PWA runtime unchanged from PR #67)
+- Runtime candidate SHA: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v13`
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
-- PR #67 remains the browser/PWA runtime candidate for the persistent Surprise accessibility live-region fix.
-- PR #76 adds `pages-actions-source-v1` to `deployment-check.html` after the repository Pages Source was changed to GitHub Actions.
+- PR #79 wires `data/pwa-install.js` into the active app bootstrap while retaining the PR #67 persistent Surprise accessibility implementation.
+- This runtime has a matching successful Pages deployment and matching successful Live Smoke trace.
 
-## Repository/static evidence
+## Verified deployment evidence — 2026-08-23
 
-- `sw.js` uses `kinaraidee-beta-v13` and atomic `cache.addAll(SHELL)`.
-- `data/home-surprise.js` contains the PR #67 persistent Surprise live-region implementation.
-- deployment/static regression guards remain present.
-- PR #77 static/regression suites completed successfully, but its dedicated public Pages trace check failed; successful CI/static checks do not substitute for deployment evidence.
+GitHub Pages source and deployment trace are now **VERIFIED** for the current browser/PWA runtime candidate.
 
-## GitHub Pages source evidence
+Confirmed evidence:
 
-Pages source migration is now **VERIFIED**:
+- GitHub Pages Source reports `build_type: workflow`.
+- PR #79 merged as `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
+- Pages workflow run `32621529715` completed **success** for head SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
+- Public Pages Trace Check run `32621547307` completed **success** and verified public `release-meta.json` for the same deployment lineage, including deployed SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, PWA cache `kinaraidee-beta-v13`, the `pages-actions-source-v1` probe marker and the matching live Service Worker marker.
+- Corresponding Live Smoke run `32621549478` completed **success** with head SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
+- Live Smoke covered public pages/assets, latest live app markers, accessibility/group/PWA source contracts, development-file exclusion and traceable automated evidence recording.
+- Issue #69 is closed as completed for the browser/PWA deployment-trace scope.
 
-- Pages Source Diagnostic run `32620743913`, job `97148434798`, on 2026-08-23 reported `build_type: workflow`.
-- It also reported source branch `main`, source path `/`, and site `https://rachanakorninon-gif.github.io/kinaraidee/`.
-- Therefore the former requirement for a repository admin to switch Pages Source from legacy branch publishing to GitHub Actions is resolved.
-
-This setting result alone is not deployment PASS.
-
-## Public Pages trace evidence after PR #76
-
-PR #76 merged as `95034bce89853fe87a4b399ca0a4a58c3e9e93d0` to modify the watched `deployment-check.html` path and trigger the normal Pages deployment path.
-
-PR #77 was created only to verify the resulting public deployment and was not intended to merge.
-
-Observed result:
-
-- Public Pages Trace Check run: `32620743936`
-- Job: `97148434823`
-- Expected deployed SHA: `95034bce89853fe87a4b399ca0a4a58c3e9e93d0`
-- Expected cache marker: `kinaraidee-beta-v13`
-- Attempts: 18
-- Window: 2026-08-23T05:35:51Z through 05:38:52Z
-- Result: **FAIL**
-- Failure observed on every attempt: HTTP 404 while fetching public `/release-meta.json`
-
-PR #77 was closed without merge after this diagnostic result was recorded, consistent with its evidence-only purpose.
-
-### Interpretation
-
-- Pages Source migration: **VERIFIED / RESOLVED**
-- Public workflow-generated `release-meta.json`: **NOT VERIFIED / observed 404**
-- Traceable Pages deployment of PR #76: **NOT VERIFIED**
-- Matching Live Smoke evidence: **NOT VERIFIED**
-- Complete deployment gate: **BLOCKED**
-
-Do not infer Pages/Live Smoke PASS from `build_type: workflow`, successful PR checks, source markers, or the existence of `.github/workflows/pages.yml`.
+The earlier PR #78 deployment established the Pages artifact path but exposed one live contract failure: the PWA install helper existed but was not actively bootstrapped. PR #79 fixed that runtime wiring and the fresh matching deployment/Live Smoke trace passed.
 
 ## Deployment acceptance checklist
 
 - [x] GitHub Pages Source reports `build_type: workflow`
-- [ ] A Pages artifact deployment run for PR #76/runtime-equivalent descendant is identified and completed successfully
-- [ ] Public `release-meta.json` returns HTTP 200
-- [ ] Public metadata contains a valid 40-character deployed SHA
-- [ ] Public metadata `pwa_cache` is `kinaraidee-beta-v13`
-- [ ] Public `deployment-check.html` contains the expected release/deployment probe markers
-- [ ] Public `sw.js` cache marker matches the metadata
-- [ ] Corresponding Live Smoke run succeeds against the same deployment
-- [ ] Pages run ID/URL and Live Smoke run ID/URL are recorded
+- [x] Pages artifact deployment run for the current runtime candidate completed successfully
+- [x] Public `release-meta.json` is available and traceable to the deployed runtime
+- [x] Public metadata contains a valid 40-character deployed SHA
+- [x] Public metadata deployed SHA is `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
+- [x] Public metadata `pwa_cache` is `kinaraidee-beta-v13`
+- [x] Public deployment probe contains the expected current release markers
+- [x] Public `sw.js` cache marker matches the metadata
+- [x] Corresponding Live Smoke run succeeds against the same runtime SHA
+- [x] Pages run ID and Live Smoke run ID are recorded
+- [x] development-only paths checked by Live Smoke are not exposed by the Pages artifact
 
-## Real-device evidence
+## Scope boundary
 
-Automated workflows and public source probes do not replace real-device testing.
+Deployment trace status: **PASS FOR BROWSER/PWA DEPLOYMENT + AUTOMATED LIVE SMOKE**.
 
-### Surprise accessibility — PR #67 / NF-09
+This PASS does **not** mean Public Beta is complete and does not replace real-device interaction or assistive-technology evidence. In particular it does not create NF-05, NF-07 or NF-09 PASS, full device-matrix PASS, payment/partner readiness, legal approval, Production Security PASS or Commercial GO.
 
-- [ ] TalkBack on a functioning Android assistive-technology environment announces the busy state after the deployed PR #67-equivalent runtime is confirmed
+## Real-device evidence still required
+
+### Surprise accessibility / NF-09
+
+- [ ] TalkBack on a functioning Android assistive-technology environment announces the required busy state on the deployed current runtime
 - [ ] VoiceOver on iPhone provides the required state/interaction behavior
 - [ ] double tap does not create duplicate action and recovery returns to ready
 - [ ] Device / OS / Browser / Assistive Technology / actual result are recorded
@@ -87,33 +62,32 @@ The latest available Android TalkBack environment was itself malfunctioning for 
 - [ ] Android Chrome on at least 3 device models
 - [ ] iPhone Safari on at least 2 device models
 - [ ] NF-07 real-device old-cache → `kinaraidee-beta-v13` upgrade
-- [ ] NF-05 real iPhone/iPad Safari install-hint behavior despite synthetic CI coverage
+- [ ] NF-05 real iPhone/iPad Safari install-hint behavior despite deployed wiring and synthetic CI coverage
 - [ ] remaining TC-01–TC-15 / NF-01–NF-10 evidence appropriate to the Beta gate
 
 ## Evidence record
 
-- Runtime candidate SHA: `96b405460f29d0f410f255cc48c68c58e4621784`
-- Latest reviewed source descendant: `95034bce89853fe87a4b399ca0a4a58c3e9e93d0`
-- Pages source diagnostic run/job: `32620743913` / `97148434798`
-- Pages source result: `build_type: workflow`
-- Public trace check run/job: `32620743936` / `97148434823`
-- Public trace result: **FAIL — release-meta.json HTTP 404 across 18 attempts**
-- Deployed SHA observed from public metadata: not available
-- Matching Live Smoke run: not recorded
+- Runtime candidate SHA: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
+- Pages run: `32621529715` — success
+- Public Pages Trace Check: `32621547307` — success
+- Live Smoke run: `32621549478` — success
+- Service Worker cache: `kinaraidee-beta-v13`
+- Deployment trace issue: #69 — closed/completed
 - TalkBack/VoiceOver acceptance: not complete
+- Full Android/iPhone matrix: not complete
 
 ## Result
 
-- [ ] PASS — deployment/live evidence trace ได้และ real-device evidence ที่จำเป็นผ่าน
-- [ ] FAIL — release candidate mismatch หรือ runtime defect ที่ยืนยันแล้ว
-- [x] BLOCKED — source migration สำเร็จแล้ว แต่ workflow-generated public deployment trace + matching Live Smoke และ real-device matrix ยังไม่ครบ
+- [x] PASS — browser/PWA deployment trace + matching automated Live Smoke
+- [ ] PASS — complete Public Beta real-device/accessibility gate
+- [ ] FAIL — release candidate mismatch or confirmed runtime defect
 
 ## Interpretation rules
 
 - workflow file มีอยู่ ไม่เท่ากับ workflow run ผ่าน
 - Pages Source = GitHub Actions ไม่เท่ากับ artifact deployment ผ่าน
 - PR/static QA success ไม่แทน Pages/Live Smoke
-- `deployment-check.html` source marker ไม่แทน `release-meta.json` deployed-SHA evidence
 - Live Smoke ไม่แทน real-device interaction
 - synthetic PWA/iOS regressions ไม่แทน NF-07/NF-05 real-device evidence
 - Android same-device evidence ไม่เท่ากับ full Android/iPhone matrix PASS
+- deployment PASS ไม่เท่ากับ Public Beta PASS หรือ Commercial GO
