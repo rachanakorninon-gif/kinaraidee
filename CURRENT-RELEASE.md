@@ -6,13 +6,14 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `ed0ddc6fae67238236ba7ae3e8516acd54af40e1` (PR #106; documentation/test-contract-only descendant after current browser/PWA and Group API runtime candidates).
+- Latest reviewed `main`: `b7fd1cf425ce33f19807353f7c3164d08d667742` (verified real-device contract regression evidence descendant after PR #107; no browser/PWA or Group API runtime source change after PR #106).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
-- Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; compare through PR #106 shows later changes are workflows, Group API backend source/evidence and documentation/test contracts, with no browser/PWA runtime asset change.
+- Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; compare through `b7fd1cf425ce33f19807353f7c3164d08d667742` shows later changes are workflows, Group API backend source/evidence and documentation/test contracts, with no browser/PWA runtime asset change.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; Supabase inspection verifies ACTIVE version 6 source/deployment parity against repository blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be`.
 - PR #95 / `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` changes only the non-mutating live-probe workflow wording for deployed Group API v6; it does not supersede the backend source candidate from PR #93.
 - PR #103 adds a six-hour rejection-only Group API live probe schedule while retaining manual/workflow-file triggers; PR #105 records a verified post-enable run. These improve monitoring mechanism/evidence coverage without changing Group API runtime source.
 - PR #106 tightens real-device acceptance contracts for TC-08 Location allow, NF-04/NF-07 PWA upgrade and NF-09 assistive technology. It changes no existing device result and creates no new PASS.
+- PR #107 adds/refines the repository-level real-device acceptance-contract regression guard and records inspected CI evidence. It does not change browser/PWA runtime, Group API runtime source or any real-device result.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
 - PR #79 wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes the source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
@@ -27,6 +28,7 @@
 - PR #93 hardened the body-read path further: it uses a bounded `ReadableStream` reader, counts incoming chunk bytes, cancels the reader as soon as the 8 KiB budget is exceeded, decodes UTF-8 with a fatal decoder, and parses JSON only after a successful bounded read. Its regression gate rejects a return to direct `req.json()` or full-body `req.text()` buffering.
 - PR #103 adds recurring rejection-only Group API probing every six hours and regression guards that reject an expected 2xx request in that probe.
 - PR #106 head `42790273c9db385e61ac8a03969e0c5ce487c056` has inspected successful PR runs for Beta QA, Beta integrity, Security Hygiene, Credential Scanner, Release Consistency, Release Metadata, Runtime Lineage, PWA Cache Upgrade, iOS Install Hint, Surprise Accessibility, Group Result, History Sync and Pages Source Diagnostic. These are CI/static/workflow evidence only and do not replace real-device acceptance.
+- PR #107 head `db0f455c20989a84a87e9dbc571d80fa1d6788a6` has an inspected successful `Real Device Contract Regression` run `32640086233`; the evidence record also documents successful companion regression suites on that head. This proves the acceptance/anti-fabrication contract guard, not any real-device TC/NF PASS.
 - `SECURITY.md` treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make unchecked gates PASS.
 - Static source markers, workflow configuration, synthetic probes, policy text, and CI success do not replace real-device or production-security evidence.
 
@@ -56,6 +58,7 @@ Status: **IMPLEMENTED + DEPLOYED SOURCE CONTRACT VERIFIED / REAL ASSISTIVE-TECH 
 - Historical pre-persistent-fix evidence recorded that the busy announcement was not heard.
 - Latest full NF-09 acceptance remains **INCONCLUSIVE**, not PASS and not a new application FAIL, because reliable screen-reader activation was not yet demonstrated end-to-end in the available test environment.
 - PR #106 now requires validating the assistive-tech environment first with a normal external control whose action/page change can be observed before scoring Kinaraidee; accessible-name-only evidence and source/static/synthetic checks are insufficient for full NF-09 PASS.
+- PR #107 protects this evidence boundary in CI and explicitly allows `INCONCLUSIVE / TEST ENVIRONMENT` when assistive-tech activation cannot be validated; it does not change NF-09 to PASS.
 - Issue #57 remains open until a functioning TalkBack/VoiceOver environment is verified and busy/ready behavior is retested end-to-end.
 
 ### Android device #1 evidence boundary
@@ -124,8 +127,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #106 / `ed0ddc6fae67238236ba7ae3e8516acd54af40e1`; later evidence/documentation/workflow descendants do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = `b7fd1cf425ce33f19807353f7c3164d08d667742` (verified real-device contract regression evidence after PR #107); later evidence/documentation/workflow descendants do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
+- PR #107 CI evidence verifies the real-device acceptance-contract guard only; it does not create TC/NF real-device PASS.
 - Recurring Group API probe mechanism and verified post-enable run strengthen operational evidence only; they do not close application-event ingestion, alerting/baseline, retention, complete abuse-control or Commercial gates.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
