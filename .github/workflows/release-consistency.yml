@@ -126,6 +126,33 @@ jobs:
 
           echo "Declared Group API candidate $candidate is an ancestor of HEAD and no Group API source files changed after it"
 
+      - name: Validate declared Partner API source candidate lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
+          test -s "$evidence" || { echo "Missing Partner API evidence file: $evidence"; exit 1; }
+          candidate="$(sed -n 's/^- PR #[0-9][0-9]* merged as `\([0-9a-f]\{40\}\)`.*/\1/p' "$evidence" | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse Partner API source candidate SHA from evidence'; exit 1; }
+
+          git cat-file -e "$candidate^{commit}" || { echo "Partner API candidate SHA is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo "Partner API candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
+
+          changed="$(git diff --name-only "$candidate"..HEAD -- supabase/functions/partner-api || true)"
+          if [ -n "$changed" ]; then
+            echo 'Partner API source changed after the documented candidate; PARTNER-API-HARDENING-EVIDENCE.md must advance source/deployment evidence before release:'
+            printf '%s\n' "$changed"
+            exit 1
+          fi
+
+          grep -Fq 'Status: **SOURCE/DEPLOYMENT HARDENING VERIFIED — LIVE REJECTION RUN NOT YET PROMOTED TO PASS**' "$evidence" || {
+            echo 'Partner API evidence boundary must remain explicit until a confirmed live rejection run exists'
+            exit 1
+          }
+
+          echo "Declared Partner API candidate $candidate is an ancestor of HEAD; no Partner API source changed after it and live rejection evidence remains explicitly unpromoted"
+
       - name: Validate atomic app-shell strategy
         shell: bash
         run: |
