@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `398786576d77576d609a9fba74877cef31e3f2af` (PR #121 merge). Compare from PR #120 / `d4440060...` shows 4 commits changing only `.github/workflows/release-consistency.yml`, `CURRENT-RELEASE.md`, and `POST-PR120-LINEAGE-EVIDENCE.md`; no browser/PWA runtime asset, Group API source, or Supabase runtime-state change.
+- Latest reviewed `main`: `dd8c31c3ac7f218dcd83ccc79c47813301e7b7d2`. Compare from PR #121 merge / `398786576d77576d609a9fba74877cef31e3f2af` shows 3 commits changing only `.github/workflows/pages-source-diagnostic.yml`, `CURRENT-RELEASE.md`, and `POST-PR121-MAIN-EVIDENCE.md`; no browser/PWA runtime asset, Group API source, or Supabase runtime-state change.
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Supabase grant/RLS/security descendants through PR #112 changed database grants, policies/helpers, security verification workflows and evidence only. PR #114 prepared governance documentation/regression protection; PR #119 and PR #120 plus their documentation-only refreshes updated governance/release evidence. PR #121 added Group API candidate-lineage validation to Release Consistency and recorded scoped post-PR120 lineage evidence. None of these descendants change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/RLS/security descendants through PR #112 changed database grants, policies/helpers, security verification workflows and evidence only. PR #114 prepared governance documentation/regression protection; PR #119 and PR #120 plus their documentation-only refreshes updated governance/release evidence. PR #121 added Group API candidate-lineage validation to Release Consistency and recorded scoped post-PR120 lineage evidence. Post-PR121 descendants through `dd8c31c3...` are workflow/evidence maintenance only. None of these descendants change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -159,7 +159,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed evidence baseline = `398786576d77576d609a9fba74877cef31e3f2af`; later evidence/documentation/QA-only descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed evidence baseline = `dd8c31c3ac7f218dcd83ccc79c47813301e7b7d2`; later evidence/documentation/QA-only descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
 - Governance runbook/required-check contract and evidence refreshes are preparation evidence, not branch-protection enforcement PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
