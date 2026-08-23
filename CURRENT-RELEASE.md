@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `8bdf6a3208fd34473750ab84cd0f4255ba309e86` (repository tree remains identical to PR #111 merge after a temporary file create/delete cleanup; no browser/PWA or Group API runtime-source change).
+- Latest reviewed `main`: `722712a5997511998a09ce9ed401f71799bf9283` (PR #112 merge; Supabase feedback authenticated/admin RLS contract + evidence descendant, with no browser/PWA or Group API runtime-source change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Supabase grant/security descendants through the current reviewed baseline change database grants, RLS/security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/RLS/security descendants through PR #112 change database grants, policies/helpers, security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -74,6 +74,8 @@ Post-remediation connected verification confirms:
 - `private.is_admin_dashboard_owner()` is `STABLE SECURITY DEFINER` with `search_path=''`, `anon` cannot execute it, and the public helper no longer exists;
 - the Security Advisor warning for an authenticated-callable public `SECURITY DEFINER` helper is no longer present.
 
+PR #112 merged as `722712a5997511998a09ce9ed401f71799bf9283`. Its head `32011345f4a646fd100427a3811b88d9226624fc` had 15 inspected successful PR checks, including new `Supabase Feedback RLS Contract Regression` run `32645461886`, Security Hygiene, Credential Scanner, Release Consistency/Metadata, Runtime Lineage and the existing Beta/PWA/accessibility/history/group/device-contract suites.
+
 Repository contract: `supabase/beta-feedback-admin-rls-contract.sql`; static guard: `.github/workflows/supabase-feedback-rls-contract-regression.yml`; detailed evidence: `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md`.
 
 This is database-side role/JWT-claim simulation and live policy/configuration inspection. It does not claim a complete external authenticated-session/API lifecycle PASS or blanket privileged-backend authorization PASS.
@@ -86,7 +88,7 @@ Fresh Security Advisor re-check after the relation-grant, view and feedback-RLS 
 - visible `RLS Enabled No Policy` findings are INFO-only deny-by-default/server-side tables;
 - the intermediate public `SECURITY DEFINER` helper warning has been removed by the private-schema migration.
 
-Performance Advisor previously remained INFO-only unused-index findings; no index was dropped as part of this security work.
+Fresh Performance Advisor after the same DDL changes remains INFO-only unused-index findings and reports no Performance WARN; no index was dropped as part of this security work.
 
 Previous connected evidence records the organization on the Free plan and the leaked-password feature as unavailable without the relevant plan/configuration. Therefore Issue #11 remains **BLOCKED BY PLAN/CONFIGURATION — NOT PASS** until authorized enablement is possible and a fresh Security Advisor result confirms the WARN is absent.
 
@@ -107,7 +109,8 @@ The remaining device/accessibility gates are not replaced by CI or source inspec
 
 - Current Group API source candidate remains PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`.
 - Connected evidence previously verified ACTIVE Supabase `group-api` version 6 source parity and rejection-only live probes, including bounded request-body rejection behavior.
-- Synthetic/rejection probes do not establish production traffic baseline, SLA/SLO, application-event ingestion, retention approval, cleanup verification or complete anonymous abuse controls.
+- A refreshed read-only retention baseline at `2026-08-23 14:31 UTC` observed 16 rooms total (14 expired / 2 active), 14 joined votes (10 linked to expired rooms / 4 active), and 0 orphan votes. No cleanup/delete was executed and no retention period is inferred or approved from these counts.
+- Synthetic/rejection probes and read-only retention inspection do not establish production traffic baseline, SLA/SLO, application-event ingestion, retention approval, cleanup verification or complete anonymous abuse controls.
 - Retention policy remains **NOT APPROVED**.
 - Application-level structured-event ingestion/monitoring ownership remains not fully verified.
 
@@ -143,7 +146,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `8bdf6a3208fd34473750ab84cd0f4255ba309e86`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = PR #112 merge `722712a5997511998a09ce9ed401f71799bf9283`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
