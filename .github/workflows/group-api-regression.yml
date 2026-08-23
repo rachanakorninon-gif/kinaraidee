@@ -33,7 +33,11 @@ jobs:
 
           grep -q "Access-Control-Allow-Methods':'POST, OPTIONS'" "$file"
           grep -q "req.method!=='POST'" "$file"
-          grep -q "contentLength>8192" "$file"
+          grep -Fq "const maxRequestBytes=8192" "$file"
+          grep -Fq "contentLength>maxRequestBytes" "$file"
+          grep -Fq "rawBody=await req.text()" "$file"
+          grep -Fq "byteLength(rawBody)>maxRequestBytes" "$file"
+          grep -Fq "b=JSON.parse(rawBody)" "$file"
           grep -q "'Cache-Control':'no-store'" "$file"
           grep -q "'X-Content-Type-Options':'nosniff'" "$file"
           grep -q "$privileged_name" "$file"
@@ -54,6 +58,10 @@ jobs:
           test "$(grep -Fc "!validRoomId(roomId)" "$file")" -ge 4
           test "$(grep -Fc "!hostTokenPattern.test(hostToken)" "$file")" -ge 2
 
+          if grep -Fq "req.json()" "$file"; then
+            echo 'Direct req.json() parsing would bypass the actual-byte body-size guard.'
+            exit 1
+          fi
           if grep -qE "${privileged_name}[[:space:]]*=[[:space:]]*['\"]" "$file"; then
             echo 'Possible hard-coded privileged Supabase credential assignment detected.'
             exit 1
@@ -79,12 +87,12 @@ jobs:
 
           # Event logging may contain bounded operational counters/reasons only.
           # Reject direct logging of sensitive/user-supplied identifiers or payloads.
-          if grep -E "logEvent\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags|req\.headers|req\.json|contentLength)" "$file"; then
+          if grep -E "logEvent\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags|req\.headers|req\.json|rawBody|contentLength)" "$file"; then
             echo 'Privacy-sensitive value referenced in Group API event logging.'
             exit 1
           fi
-          if grep -E "console\.(log|info|warn|error)\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags)" "$file"; then
-            echo 'Direct sensitive identifier logging detected.'
+          if grep -E "console\.(log|info|warn|error)\([^\n]*(roomId|hostToken|host_token|voterId|voter_id|tags|rawBody)" "$file"; then
+            echo 'Direct sensitive identifier/request-body logging detected.'
             exit 1
           fi
 
@@ -97,7 +105,8 @@ jobs:
           {
             echo '## Group API source regression gate'
             echo
-            echo '- Checks the committed Group API source for method, size, input, room-state, host-token and response-hardening invariants.'
+            echo '- Checks the committed Group API source for method, actual 8 KiB request-body size, input, room-state, host-token and response-hardening invariants.'
+            echo '- Requires the request body to be measured after read, so a missing/chunked Content-Length cannot bypass the application size contract.'
             echo '- Requires UUID-shaped room IDs, 64-hex host-token shape on host-only actions, and rejection rather than silent truncation for voter IDs over 120 characters.'
             echo '- Checks for the server-side service-role environment variable reference without treating it as a deploy credential.'
             echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
