@@ -44,9 +44,9 @@ jobs:
           grep -Fq 'DESIGN ONLY / NO CLEANUP EXECUTED' "$file"
           grep -Fq 'explicit threshold parameter; no hidden default' "$file"
           grep -Fq 'no-active-delete guard' "$file"
-          grep -Fq 'orphan votes after' "$file"
-          if grep -Eq 'retention period[^\n]*(=|:)[[:space:]]*[0-9]+[[:space:]]*(hour|hours|day|days|week|weeks|month|months|year|years)' "$file"; then
-            echo 'Hard-coded retention period detected in policy-neutral design.'
+          grep -Fq 'Orphan votes after:' "$file"
+          if grep -Eqi '^(approved[ _-]?retention[ _-]?(period|days|hours)|retention[ _-]?(period|days|hours))[[:space:]]*[:=][[:space:]]*[0-9]+' "$file"; then
+            echo 'Explicit numeric retention policy detected in policy-neutral design.'
             exit 1
           fi
 
