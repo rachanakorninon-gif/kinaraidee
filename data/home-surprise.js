@@ -69,7 +69,17 @@
       if(typeof startFresh==='function')startFresh();
     }
   }
+  function ensurePwaInstallHelper(){
+    if(document.querySelector('script[src="data/pwa-install.js"]'))return;
+    const s=document.createElement('script');
+    s.src='data/pwa-install.js';
+    s.async=false;
+    document.body.appendChild(s);
+  }
   function install(){
+    // index.html loads this helper directly. Bridge the PWA install helper here so
+    // iPhone/iPad guidance and Android install-prompt UI are actually live as well.
+    ensurePwaInstallHelper();
     const home=document.querySelector('#home .homeHero');
     if(!home||document.getElementById('homeSurpriseBtn'))return;
     const b=document.createElement('button');
