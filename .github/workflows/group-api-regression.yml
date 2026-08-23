@@ -6,10 +6,12 @@ on:
     paths:
       - 'supabase/functions/group-api/**'
       - '.github/workflows/group-api-regression.yml'
+      - '.github/workflows/group-api-live-observability-probe.yml'
   pull_request:
     paths:
       - 'supabase/functions/group-api/**'
       - '.github/workflows/group-api-regression.yml'
+      - '.github/workflows/group-api-live-observability-probe.yml'
   workflow_dispatch:
 
 permissions:
@@ -106,6 +108,27 @@ jobs:
 
           echo 'Privacy-safe observability contract checks passed.'
 
+      - name: Verify scheduled live probe remains rejection-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe='.github/workflows/group-api-live-observability-probe.yml'
+          test -s "$probe"
+          grep -Fq "cron: '23 */6 * * *'" "$probe"
+          grep -Fq 'expect 405 method_not_allowed' "$probe"
+          grep -Fq 'expect 400 invalid_room_id' "$probe"
+          grep -Fq 'expect 403 forbidden' "$probe"
+          grep -Fq 'expect 413 request_too_large' "$probe"
+          grep -Fq "Transfer-Encoding: chunked" "$probe"
+          grep -Fq 'deliberately performs no successful create/vote/update/close action' "$probe"
+
+          if grep -Eq '^[[:space:]]*expect[[:space:]]+2[0-9][0-9][[:space:]]' "$probe"; then
+            echo 'Scheduled live probe contains an expected 2xx request and may mutate production data.'
+            exit 1
+          fi
+
+          echo 'Scheduled Group API live probe contract is present and remains rejection-only.'
+
       - name: Record evidence boundary
         if: always()
         shell: bash
@@ -121,6 +144,7 @@ jobs:
             echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
             echo '- Requires structured operational event markers for create/vote/read/close outcomes.'
             echo '- Rejects event logging that directly includes room IDs, host tokens, voter IDs, tags, request headers or request payloads.'
-            echo '- This is static source-contract evidence only.'
-            echo '- It does not prove Supabase deployment/version, live application-log ingestion, alerting, retention cleanup, rate limiting, production traffic behavior, load/security testing, or real-device group flow.'
+            echo '- Guards that the scheduled live probe runs every six hours and expects only rejection-class HTTP responses, including chunked oversized-body 413.'
+            echo '- This is static source/workflow-contract evidence only.'
+            echo '- It does not prove Supabase deployment/version, live application-log ingestion, alert delivery, monitoring thresholds, retention cleanup, complete rate limiting, production traffic behavior, load/security testing, or real-device group flow.'
           } >> "$GITHUB_STEP_SUMMARY"
