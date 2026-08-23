@@ -6,39 +6,37 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `1a4c23b3c93d2d0601056c487e057e402104316b` (merge PR #78; Pages predeploy secret-scan false-positive fix).
-- Current browser/PWA runtime candidate: `fcab6fa5a2c81de434b203ff005792d26a444670` (PWA install-helper bridge runtime commit on the current fix branch; pending merge/deploy verification).
+- Latest reviewed `main`: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (merge PR #79; PWA install-helper bridge wired into the active app bootstrap).
+- Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- PR #67 persistent Surprise accessibility implementation remains present in the new browser/PWA candidate.
-- The new runtime candidate wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes a source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
+- PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
+- PR #79 wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes the source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
 - PR #71 adds synthetic old-cache activation coverage; this is not NF-07 real-device PASS.
-- PR #75 adds synthetic iOS install-hint behavior coverage; the current branch additionally guards that the active app bootstrap actually loads that helper.
+- PR #75 adds synthetic iOS install-hint behavior coverage; PR #79 additionally guards that the active app bootstrap actually loads that helper.
 
 ## Verified CI/static evidence
 
 - PR #78 final head passed the main regression/security suites before merge, including Release Metadata Regression, Release Consistency, Runtime Lineage Regression, Beta QA, Beta integrity, Security Hygiene, Credential Scanner, Surprise Accessibility, PWA Cache Upgrade, iOS Install Hint, Group Result, Pages Source Diagnostic and History Sync.
-- Pages predeploy failure on PR #76 was traced to a false-positive secret scan against safe server-side `Deno.env.get(...)` references. PR #78 aligned Pages scanning with the existing Beta QA safe-env contract while preserving blocking of credential-shaped payloads.
-- Static source markers, workflow configuration, synthetic probes, and CI success do not replace real-device or live-deployment evidence.
+- PR #79 fixed the PWA install-helper bootstrap wiring discovered by the first matching Live Smoke failure and retained the synthetic iOS install-hint regression boundary.
+- Static source markers, workflow configuration, synthetic probes, and CI success do not replace real-device evidence.
 
 ## Deployment evidence
 
-Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 
-GitHub Actions Pages source and the artifact deployment path are now proven to work, and public release metadata is now present. One Live Smoke contract failure remains under active repair.
+The current browser/PWA runtime candidate has a matching successful Pages deployment, public release metadata and corresponding successful Live Smoke run.
 
-Confirmed evidence after PR #78:
+Confirmed evidence for PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`:
 
 - Pages Source Diagnostic reports `build_type: workflow` for the repository.
-- PR #78 merged as `1a4c23b3c93d2d0601056c487e057e402104316b`.
-- Pages workflow run `32621203074` completed **success** for that exact SHA.
-- Public trace workflow run `32621219335` completed **success** and verified public `release-meta.json` SHA = `1a4c23b3c93d2d0601056c487e057e402104316b`, `pwa_cache` = `kinaraidee-beta-v13`, `pages-actions-source-v1` on the deployment probe, and the matching live Service Worker marker.
-- Live Smoke run `32621221131` was triggered from the same successful Pages deployment but completed **failure**.
-- A focused assertion diagnostic run `32621294450` found exactly one failing live assertion: the root HTML did not directly contain `pwa-install.js`; all other checked public release metadata, cache, group-result, Surprise accessibility source, partner/privacy, robots/sitemap and runtime markers passed.
-- Source inspection confirms `index.html` directly loads `data/home-surprise.js` but not `data/pwa-install.js`. Therefore the iOS/Android install helper existed and had synthetic tests but was not actually wired into the active app bootstrap.
-- The current runtime candidate `fcab6fa5a2c81de434b203ff005792d26a444670` fixes that gap by loading `data/pwa-install.js` from the active home bootstrap. A fresh Pages deployment and matching Live Smoke success are still required after merge.
+- PR #79 merged as `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
+- Pages workflow run `32621529715` completed **success** for that exact SHA.
+- Public Pages Trace Check run `32621547307` completed **success** and verified public `release-meta.json` SHA = `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, `pwa_cache` = `kinaraidee-beta-v13`, `pages-actions-source-v1` on the deployment probe, and the matching live Service Worker marker.
+- Corresponding Live Smoke run `32621549478` completed **success**. All smoke steps passed: public pages/assets, latest live app markers and accessibility/group/PWA contracts, development-file exclusion, and traceable automated evidence recording.
+- The older focused diagnostic still reports its intentionally obsolete direct-root-HTML `pwa-install.js` assertion as failure; PR #79 changed the production acceptance contract to verify the actual active-bootstrap bridge instead. That temporary diagnostic PR #77 is closed and was never intended to merge.
 
-Do not infer complete deployment-gate success until the current runtime candidate is merged, the new Pages deployment succeeds, public metadata points to that deployment, and the corresponding Live Smoke run passes.
+This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only. It does not imply real-device, assistive-technology, payment, partner, legal, full Public Beta or Commercial PASS.
 
 ## Real-device regression status
 
@@ -55,7 +53,7 @@ Status: **IMPLEMENTED + PUBLIC V2 SOURCE PROBE CONFIRMED / REAL ASSISTIVE-TECH R
 
 Issue #5 contains scoped same-device evidence for multiple core flows, including Group 2/2 result flow and selected PWA/recovery scenarios. Exact device model/OS/Chrome were not captured and must not be guessed. One device/session does not satisfy the full device matrix.
 
-NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta-v13` upgrade remains unverified. NF-05 has synthetic iOS install-hint behavior coverage and now has active-bootstrap wiring under the current runtime candidate, but real iPhone/iPad Safari evidence remains required.
+NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta-v13` upgrade remains unverified. NF-05 has synthetic iOS install-hint behavior coverage and active-bootstrap wiring in the deployed runtime, but real iPhone/iPad Safari evidence remains required.
 
 ## Group API / operations evidence
 
@@ -72,18 +70,17 @@ NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker: `main` branch protection / required-check enforcement has not been verified as enabled. Latest GitHub branch evidence still showed protection disabled. Workflow success does not equal governance enforcement.
+Issue #35 remains a Commercial Governance blocker: `main` branch protection / required-check enforcement is disabled. Workflow success does not equal governance enforcement.
 
 ## Public Beta gate impact
 
 Public Beta is still **NOT COMPLETE**.
 
-Minimum open evidence includes:
+The browser/PWA deployment-trace blocker from Issue #69 is now satisfied for PR #79. Minimum open evidence still includes:
 
-- Issue #69: merge/deploy the current PWA-helper wiring candidate and obtain a corresponding successful Live Smoke trace with matching public release metadata;
 - NF-09 assistive-tech acceptance on a functioning TalkBack/VoiceOver environment;
 - NF-07 real-device old-cache → current-cache upgrade evidence;
-- NF-05 real iPhone/iPad Safari install-hint evidence despite synthetic CI and source-wiring coverage;
+- NF-05 real iPhone/iPad Safari install-hint evidence despite synthetic CI and deployed source-wiring coverage;
 - Android Chrome on at least 3 device models total;
 - iPhone Safari on at least 2 device models total;
 - remaining TC-01–TC-15 / NF-01–NF-10 evidence and Blocker/Critical closure appropriate to Beta acceptance.
@@ -94,7 +91,7 @@ Issue #5 remains the primary technical/device QA tracker. Issue #1 remains Beta 
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance and final deployment trace;
+- Public Beta technical/device/accessibility acceptance;
 - Supabase leaked-password protection gate (#11);
 - `main` branch protection / required checks (#35);
 - Group API live observability, retention/deletion policy, abuse controls and monitoring baseline (#45);
@@ -103,13 +100,13 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Payment/Premium provider and real subscription lifecycle evidence;
 - real restaurant/affiliate partner commercial evidence for any model enabled.
 
-No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete deployment PASS, full device-matrix PASS, or Commercial GO is inferred from this document.
+No user-count, conversion, revenue, payment success, partner readiness, legal approval, full device-matrix PASS, full Public Beta PASS, or Commercial GO is inferred from this document.
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = `fcab6fa5a2c81de434b203ff005792d26a444670` on the current PWA-helper wiring fix until merged/superseded; it contains PR #67 accessibility behavior plus active loading of `data/pwa-install.js`.
+- Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `1a4c23b3c93d2d0601056c487e057e402104316b`.
-- The PR #78 Pages deployment/public metadata path is verified, but full deployment acceptance remains incomplete because its matching Live Smoke identified the PWA-helper wiring gap; the current candidate must pass a fresh matching deployment + Live Smoke trace.
+- Latest reviewed `main` baseline = `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
+- PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
