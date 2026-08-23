@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed security/workflow `main` baseline: PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443` (Supabase anonymous Data API live negative probe + relation-grant contract hardening; no browser/PWA or Group API runtime-source change).
+- Latest reviewed `main`: `f337d35cfa2fbe71719ec6fde022807d08ef7443` (PR #109 merge; Supabase anonymous Data API live negative probe + relation-grant contract hardening; no browser/PWA or Group API runtime-source change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
@@ -121,7 +121,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed security/workflow `main` baseline = PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe are scoped live security evidence, not a blanket RLS/Auth/security PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
