@@ -120,6 +120,37 @@ jobs:
           }
           echo "Deployed SHA $DEPLOYED_SHA is traceable to current main and contains runtime candidate $EXPECTED_RUNTIME_SHA"
 
+      - name: Check live Group API non-mutating rejection health
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/group-api'
+          body="$(mktemp)"
+          oversized="$(mktemp)"
+          trap 'rm -f "$body" "$oversized"' EXIT
+
+          expect(){
+            expected_status="$1"
+            expected_error="$2"
+            shift 2
+            : > "$body"
+            status="$(curl --silent --show-error --location --retry 2 --retry-delay 3 --max-time 25 --output "$body" --write-out '%{http_code}' "$@")"
+            test "$status" = "$expected_status" || { echo "Unexpected Group API status: $status (expected $expected_status)"; cat "$body"; exit 1; }
+            grep -Fq "\"error\":\"$expected_error\"" "$body" || { echo 'Unexpected Group API response body'; cat "$body"; exit 1; }
+          }
+
+          # All probes below are rejection-only and deliberately create/update no room or vote data.
+          expect 405 method_not_allowed "$url"
+          expect 400 invalid_room_id -H 'Content-Type: application/json' --data '{"action":"get_room","roomId":"not-a-uuid"}' "$url"
+
+          printf '{"action":"unknown","padding":"' > "$oversized"
+          head -c 9000 /dev/zero | tr '\0' 'x' >> "$oversized"
+          printf '"}' >> "$oversized"
+          test "$(wc -c < "$oversized")" -gt 8192
+          expect 413 request_too_large --http1.1 -H 'Content-Type: application/json' -H 'Transfer-Encoding: chunked' --data-binary "@$oversized" "$url"
+
+          echo 'GROUP_API_SYNTHETIC_SCOPE=rejection-only GET/malformed-room/chunked-oversize checks passed' >> "$GITHUB_ENV"
+
       - name: Verify development-only paths remain private
         shell: bash
         run: |
@@ -153,7 +184,9 @@ jobs:
             echo "- Expected runtime candidate: \`${EXPECTED_RUNTIME_SHA:-unavailable}\`"
             echo "- Deployed SHA from release-meta: \`${DEPLOYED_SHA:-unavailable}\`"
             echo "- Live Service Worker marker: \`${LIVE_MARKER:-unavailable}\`"
-            echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, Surprise accessibility source markers, active PWA install-helper bridge, release-meta/SW consistency, deployed-SHA ancestry + runtime-candidate lineage, atomic Service Worker install, development-only path exposure'
-            echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, TalkBack/VoiceOver behavior, payment, partner, privacy/legal, or production security evidence.'
+            echo "- Group API synthetic scope: ${GROUP_API_SYNTHETIC_SCOPE:-not completed}"
+            echo '- Target: https://rachanakorninon-gif.github.io/kinaraidee/ + deployed public Group API rejection surface'
+            echo '- Scope: HTTP availability, homepage core wiring, manifest validity, Surprise accessibility source markers, active PWA install-helper bridge, release-meta/SW consistency, deployed-SHA ancestry + runtime-candidate lineage, atomic Service Worker install, non-mutating Group API rejection health, development-only path exposure'
+            echo '- The Group API checks are rejection-only and intentionally perform no successful create/vote/update/close operation.'
+            echo '- This workflow is synthetic monitoring only; it does not replace real-device TC/NF, TalkBack/VoiceOver behavior, application structured-event ingestion, retention/cleanup, abuse-control baselines, payment, partner, privacy/legal, or production security evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
