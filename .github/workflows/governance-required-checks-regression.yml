@@ -1,0 +1,85 @@
+name: Governance Required Checks Regression
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governance-required-checks-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify proposed required-check workflows stay universal and stable
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          check_workflow(){
+            file="$1"
+            workflow_name="$2"
+            job_id="$3"
+
+            test -s "$file" || { echo "Missing governance candidate workflow: $file"; exit 1; }
+            grep -Fqx "name: $workflow_name" "$file" || {
+              echo "Governance candidate workflow name drifted: $file"
+              exit 1
+            }
+            grep -Eq "^  ${job_id}:[[:space:]]*$" "$file" || {
+              echo "Governance candidate job id drifted: $file expected $job_id"
+              exit 1
+            }
+            grep -Eq '^  pull_request:[[:space:]]*$' "$file" || {
+              echo "Governance candidate no longer has a pull_request trigger: $file"
+              exit 1
+            }
+
+            nested="$(awk '
+              /^  pull_request:[[:space:]]*$/ { inside=1; next }
+              inside && /^  [A-Za-z0-9_-]+:[[:space:]]*/ { exit }
+              inside { print }
+            ' "$file" | sed '/^[[:space:]]*$/d')"
+            if [ -n "$nested" ]; then
+              echo "Governance candidate pull_request trigger is no longer universal/unfiltered: $file"
+              printf '%s\n' "$nested"
+              exit 1
+            fi
+          }
+
+          check_workflow '.github/workflows/release-consistency.yml' 'Kinaraidee Release Consistency' 'release-consistency'
+          check_workflow '.github/workflows/beta-check.yml' 'Beta integrity checks' 'validate'
+          check_workflow '.github/workflows/qa.yml' 'Kinaraidee Beta QA' 'static-qa'
+          check_workflow '.github/workflows/security-hygiene.yml' 'Kinaraidee Security Hygiene' 'repository-security-hygiene'
+
+          echo 'Initial main-protection required-check contract is stable and universal across pull requests.'
+
+      - name: Verify governance runbook preserves enforcement evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='GOVERNANCE-RUNBOOK.md'
+          test -s "$file"
+          grep -Fq 'Status: **PREPARED / NOT YET ENFORCED**' "$file"
+          grep -Fq 'Require a pull request before merge.' "$file"
+          grep -Fq 'Block force pushes to `main`.' "$file"
+          grep -Fq 'Block deletion of `main`.' "$file"
+          grep -Fq 'verify GitHub blocks merge;' "$file"
+          grep -Fq 'Issue #35 remains an open Commercial Governance blocker.' "$file"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Governance required-check contract'
+            echo
+            echo '- Verifies the proposed initial required checks retain stable workflow/job identities and run on every pull request without path filtering.'
+            echo '- Protects the runbook from being reworded into false enforcement evidence.'
+            echo '- This does not enable branch protection/rulesets and does not prove that a failing check blocks merge. Issue #35 remains open until GitHub enforcement is configured and tested.'
+          } >> "$GITHUB_STEP_SUMMARY"
