@@ -24,7 +24,9 @@
 
 ## Deployment evidence
 
-Status: **PARTIAL / GITHUB ACTIONS SOURCE CONFIRMED / PUBLIC ARTIFACT TRACE STILL FAILING**
+Status: **PARTIAL / DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
+
+GitHub Actions source is confirmed, but the public artifact trace is still failing and deployment acceptance remains incomplete.
 
 The former repository-admin Pages-source blocker is resolved:
 
