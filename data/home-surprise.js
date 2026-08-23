@@ -12,6 +12,26 @@
     if(h>=16&&h<22)return 'เย็น';
     return 'ดึก';
   }
+  function ensureAccessibilityStyles(){
+    if(document.getElementById('kinaraideeAccessibilityStyles'))return;
+    const style=document.createElement('style');
+    style.id='kinaraideeAccessibilityStyles';
+    style.textContent=`
+      button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{
+        outline:3px solid #0b6bcb;
+        outline-offset:3px;
+      }
+      @media (prefers-reduced-motion: reduce){
+        *,*::before,*::after{
+          scroll-behavior:auto !important;
+          animation-duration:.01ms !important;
+          animation-iteration-count:1 !important;
+          transition-duration:.01ms !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
   function announceBusy(status){
     if(!status)return;
     if(statusWriteTimer)clearTimeout(statusWriteTimer);
@@ -77,6 +97,7 @@
     document.body.appendChild(s);
   }
   function install(){
+    ensureAccessibilityStyles();
     // index.html loads this helper directly. Bridge the PWA install helper here so
     // iPhone/iPad guidance and Android install-prompt UI are actually live as well.
     ensurePwaInstallHelper();
