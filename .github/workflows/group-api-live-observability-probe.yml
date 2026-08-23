@@ -13,8 +13,9 @@ permissions:
 jobs:
   probe-live-group-api:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Trigger privacy-safe v3 rejection event
+      - name: Verify non-mutating live rejection contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -22,17 +23,36 @@ jobs:
           body="$(mktemp)"
           trap 'rm -f "$body"' EXIT
 
-          # GET is intentionally unsupported by group-api. The deployed v3 handler
-          # records only a bounded structured event:
-          # {component:"group-api", event:"request_rejected", reason:"method_not_allowed"}
-          # No room, voter, token, tag, IP, header or request-body data is supplied.
-          status="$(curl --silent --show-error --location --output "$body" --write-out '%{http_code}' "$url")"
-          test "$status" = '405' || { echo "Unexpected Group API probe status: $status"; cat "$body"; exit 1; }
-          grep -Fq '"error":"method_not_allowed"' "$body"
-          echo 'Live Group API endpoint returned the expected privacy-safe method rejection.'
+          expect(){
+            expected_status="$1"
+            expected_error="$2"
+            shift 2
+            : > "$body"
+            status="$(curl --silent --show-error --location --output "$body" --write-out '%{http_code}' "$@")"
+            test "$status" = "$expected_status" || { echo "Unexpected status: $status (expected $expected_status)"; cat "$body"; exit 1; }
+            grep -Fq "\"error\":\"$expected_error\"" "$body" || { echo "Unexpected response body"; cat "$body"; exit 1; }
+          }
+
+          # Unsupported GET: no request body or identifiers.
+          expect 405 method_not_allowed "$url"
+
+          # Malformed room identifiers must be rejected before UUID-column DB queries.
+          expect 400 invalid_room_id -H 'Content-Type: application/json' --data '{"action":"get_room","roomId":"not-a-uuid"}' "$url"
+          expect 400 invalid_vote -H 'Content-Type: application/json' --data '{"action":"submit_vote","roomId":"not-a-uuid","voterId":"probe","tags":[]}' "$url"
+
+          # Host-only actions reject malformed identifier/token shapes without a DB lookup.
+          expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"get_votes","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
+          expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"close_room","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
+
+          # Overlong voter identifiers are rejected instead of being silently truncated.
+          long_voter="$(printf 'x%.0s' $(seq 1 121))"
+          payload="$(printf '{\"action\":\"submit_vote\",\"roomId\":\"00000000-0000-4000-8000-000000000000\",\"voterId\":\"%s\",\"tags\":[]}' "$long_voter")"
+          expect 400 invalid_vote -H 'Content-Type: application/json' --data "$payload" "$url"
+
+          echo 'Live Group API rejection contracts passed without creating/updating/closing any room or vote data.'
 
       - name: Explain evidence boundary
         run: |
-          echo 'This run only creates a non-mutating rejection event in the deployed Group API.'
-          echo 'Supabase log inspection is still required to prove structured application-event ingestion.'
-          echo 'This does not approve monitoring thresholds, retention policy, cleanup, anonymous rate limits, or Production readiness.'
+          echo 'This verifies deployed public rejection behavior only and deliberately performs no successful write action.'
+          echo 'Supabase log inspection is still required to distinguish platform invocation logging from application structured-event ingestion.'
+          echo 'This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
