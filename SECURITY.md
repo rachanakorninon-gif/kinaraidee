@@ -33,6 +33,7 @@ Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหร
 - XSS, injection, unsafe HTML, open redirect หรือ destination URL ที่นำผู้ใช้ไปปลายทางไม่คาดคิด
 - การเปิดเผยตำแหน่งผู้ใช้ละเอียดเกินนโยบาย หรือ public SELECT ของข้อมูล location
 - CORS/endpoint configuration ที่เปิด write/admin operation เกินจำเป็น
+- public anonymous endpoint ที่ไม่มี retention, abuse-control หรือ monitoring strategy ที่เหมาะสมกับ traffic จริง
 - dependency หรือ third-party compromise ที่กระทบ public build/backend
 
 ## หลักการสำหรับ repository สาธารณะ
@@ -42,6 +43,7 @@ Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหร
 - ทุก endpoint ที่แก้ข้อมูลสำคัญต้องตรวจ authorization และ validate payload ฝั่ง server/database
 - client-side role, price, commission, entitlement หรือ conversion status ห้ามถือเป็นข้อมูลที่เชื่อถือได้โดยลำพัง
 - log และ error message ไม่ควรเปิด token, secret, session หรือ PII
+- production branch ต้องมี merge governance ที่บังคับ release/security checks จริง ไม่ใช่เพียงมี workflow อยู่ใน repository
 
 ## Production Security Gate
 ก่อนเปิดรับเงินจริง ให้มีหลักฐานตรวจอย่างน้อย:
@@ -49,14 +51,24 @@ Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหร
 - [ ] negative test ว่าผู้ใช้ A อ่าน/แก้ข้อมูลผู้ใช้ B ไม่ได้
 - [ ] owner/admin endpoints ปฏิเสธผู้ใช้ทั่วไป
 - [ ] password recovery/session expiry/sign-out ทำงานตามที่ออกแบบ
-- [ ] repository/public build ไม่มี secret
+- [ ] Supabase Auth leaked-password protection ถูกเปิดและ Security Advisor ถูกตรวจซ้ำ
+- [ ] repository/public build ไม่มี secret และ credential-scanner regression ยังทำงาน
+- [ ] `main` มี branch protection/ruleset + required release/security checks และมีหลักฐานว่า failing check block merge ได้จริง
 - [ ] Edge Functions/API validate auth + payload สำหรับ operation สำคัญ
+- [ ] public anonymous APIs มี retention/deletion policy, abuse-control strategy และ monitoring baseline ที่ได้รับอนุมัติและตรวจสอบได้
 - [ ] location/restaurant request data ไม่มี public read ที่ไม่ตั้งใจ
 - [ ] partner click/conversion ไม่สามารถตั้ง confirmed/commission จาก browser โดยไม่มี server verification
 - [ ] dependency/security findings ระดับ Critical ถูกปิด
-- [ ] rollback/disable path สำหรับ flow ที่มีความเสี่ยงพร้อมใช้งาน
+- [ ] rollback/disable path สำหรับ flow ที่มีความเสี่ยงพร้อมใช้งานและผ่าน drill ตาม scope ที่ใช้จริง
 
 บันทึกผลไว้กับ `RELEASE-CHECKLIST.md` และอ้างอิง commit/issue/test evidence ที่ตรวจสอบย้อนหลังได้
+
+## Evidence boundary
+- CI/static review ยืนยันได้เฉพาะ source/configuration contract ที่มันตรวจจริง
+- Deployment trace ยืนยันได้เฉพาะ artifact/version ที่เผยแพร่ ไม่แทน RLS/auth negative tests หรือ real-device behavior
+- Source/deployment parity ของ Edge Function ไม่แทน live monitoring, retention cleanup, abuse-control หรือ production traffic evidence
+- เอกสาร policy/runbook ไม่ใช่ PASS จนกว่าจะมีการตั้งค่า/ทดสอบ/อนุมัติจริงตาม gate นั้น
+- ห้ามใช้ historical PASS กับ runtime/backend ที่เปลี่ยน behavior ที่เกี่ยวข้องโดยอัตโนมัติ
 
 ## Incident Response ขั้นต่ำ
 เมื่อพบเหตุที่อาจกระทบข้อมูลหรือเงินจริง:
