@@ -23,29 +23,35 @@ jobs:
           tc='BETA-TEST-CASES.md'
           nf='BETA-NEW-FLOW-TESTS.md'
 
+          require_text(){
+            file="$1"
+            text="$2"
+            grep -Fq "$text" "$file" || { echo "Missing required contract text in $file: $text"; exit 1; }
+          }
+
           # TC-08 must prove the permission-allow path, not infer it from Maps/coordinates.
-          grep -Fq 'site/app ยังไม่ได้รับ Location' "$tc"
-          grep -Fq 'allow-location path' "$tc"
-          grep -Fq 'Maps เปิดได้' "$tc"
-          grep -Fq 'พิกัดเพียงอย่างเดียวไม่เพียงพอ' "$tc"
+          require_text "$tc" 'site/app ยังไม่ได้รับ Location'
+          require_text "$tc" 'allow-location path'
+          require_text "$tc" 'Maps เปิดได้'
+          require_text "$tc" 'พิกัดเพียงอย่างเดียวไม่เพียงพอ'
 
           # NF-04/NF-07 must start from a verifiable pre-current-release baseline.
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive current PWA cache marker'; exit 1; }
-          grep -Fq "$marker" "$nf"
-          grep -Fq 'หากไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้' "$nf"
-          grep -Fq 'ยืนยันได้ว่าเคยโหลด cache generation ก่อน' "$nf"
-          grep -Fq 'Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น' "$nf"
+          require_text "$nf" "$marker"
+          require_text "$nf" 'ถ้าไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้'
+          require_text "$nf" 'ยืนยันได้ว่าเคยโหลด cache generation ก่อน'
+          require_text "$nf" 'Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น'
 
           # NF-09 must validate the assistive-tech environment and allow INCONCLUSIVE.
-          grep -Fq 'control มาตรฐานนอกแอป' "$nf"
-          grep -Fq 'action เกิดจริง' "$nf"
-          grep -Fq 'INCONCLUSIVE / TEST ENVIRONMENT' "$nf"
-          grep -Fq 'Source/static/synthetic accessibility checks' "$nf"
+          require_text "$nf" 'control มาตรฐานนอกแอป'
+          require_text "$nf" 'action เกิดจริง'
+          require_text "$nf" 'INCONCLUSIVE / TEST ENVIRONMENT'
+          require_text "$nf" 'Source/static/synthetic accessibility checks'
 
           # Global anti-fabrication boundaries must remain explicit.
-          grep -Fq 'not captured' "$tc"
-          grep -Fq 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง' "$tc"
-          grep -Fq 'ห้ามทำเครื่องหมาย Pass จาก static review' "$nf"
+          require_text "$tc" 'not captured'
+          require_text "$tc" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
+          require_text "$nf" 'ห้ามทำเครื่องหมาย Pass จาก static review'
 
           echo 'Real-device acceptance contracts preserved'
