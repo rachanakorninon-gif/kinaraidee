@@ -6,7 +6,8 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `aea2aaa596175ed9b4ef3c71fcabfa99eb21dceb` (Group API v5 deployment-evidence sync descendant of PR #88).
+- Latest reviewed `main`: `9ce19198d39d52cefdec2922f14093e5451dfcac` (documentation/evidence descendant after Group API v5 deployment verification).
+- Compare from `aea2aaa596175ed9b4ef3c71fcabfa99eb21dceb` to `9ce19198d39d52cefdec2922f14093e5451dfcac` contains 3 commits and changes only `CURRENT-RELEASE.md`, `GROUP-API-HARDENING-PLAN.md` and `MONITORING-RUNBOOK.md`; no browser/PWA runtime asset or Group API source changed in this lineage.
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; later reviewed commits are workflow/evidence/backend changes.
 - Current Group API source candidate: PR #87 / `3b2375e50368add46e8b683111c30ed41be75715`; Supabase inspection verifies ACTIVE version 5 source/deployment parity against repository blob `9f6cadc6dd9385f8b786aeec56c7d87134cb9e39`.
@@ -116,7 +117,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #87 / `3b2375e50368add46e8b683111c30ed41be75715` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `aea2aaa596175ed9b4ef3c71fcabfa99eb21dceb`; later evidence-document changes do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = `9ce19198d39d52cefdec2922f14093e5451dfcac`; later evidence-document changes do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
 - Supabase version 5 source/deployment parity and the scoped non-mutating v5 rejection probe, including actual-body chunked >8 KiB rejection, are verified for the Group API candidate; application structured-event ingestion remains unverified in the available log surface.
 - Retention policy remains **NOT APPROVED**.
