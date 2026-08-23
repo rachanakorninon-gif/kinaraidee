@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `058c41790970be91a397f01870210849e5a792c1` (security/governance documentation descendant).
+- Latest reviewed `main`: `1bec99be1dbdf253bed67610b354973897af253f` (PR #84 live Group API v4 rejection-probe descendant).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
-- Compare `35fe4b7f...` → `058c4179...` shows only release/deployment/security evidence documentation changed; no browser/PWA runtime asset changed.
-- Compare previous reviewed baseline `ecb78c9511e74008752fd73c73256f88202a5165` → `058c41790970be91a397f01870210849e5a792c1` is 2 commits affecting only `CURRENT-RELEASE.md` and `SECURITY.md`.
-- Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase inspection previously verified ACTIVE version 3 source/deployment parity for that candidate.
+- Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; later commits through the reviewed baseline are workflow/evidence/backend changes.
+- Current Group API source candidate: `a4237ce6746478caa8f0b9da60d4456b6dce4758` (PR #83); Supabase inspection verifies ACTIVE version 4 source/deployment parity for that source.
+- PR #84 / `1bec99be1dbdf253bed67610b354973897af253f` changes only the non-mutating live rejection probe for deployed Group API v4; it does not supersede the backend source candidate from PR #83.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
 - PR #79 wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes the source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
@@ -19,9 +19,10 @@
 
 ## Verified CI/static evidence
 
-- PR #78 final head passed the main regression/security suites before merge, including Release Metadata Regression, Release Consistency, Runtime Lineage Regression, Beta QA, Beta integrity, Security Hygiene, Credential Scanner, Surprise Accessibility, PWA Cache Upgrade, iOS Install Hint, Group Result, Pages Source Diagnostic and History Sync.
-- PR #79 fixed the PWA install-helper bootstrap wiring discovered by the first matching Live Smoke failure and retained the synthetic iOS install-hint regression boundary.
-- `SECURITY.md` now explicitly treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make those unchecked gates PASS.
+- Browser/PWA release lineage for PR #79 remains protected by Release Metadata, Release Consistency, Runtime Lineage, Beta QA/integrity, Security Hygiene, Credential Scanner, Surprise Accessibility, PWA Cache Upgrade, iOS Install Hint, Group Result and History Sync regression suites.
+- PR #83 added Group API identifier-shape hardening: UUID-shaped room IDs before UUID-column queries, 64-hex host-token shape checks for host-only actions, and rejection of voter IDs longer than 120 characters instead of silent truncation. Its relevant PR checks completed successfully before merge.
+- PR #84 added a non-mutating live rejection probe and its PR checks completed successfully before merge.
+- `SECURITY.md` treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make unchecked gates PASS.
 - Static source markers, workflow configuration, synthetic probes, policy text, and CI success do not replace real-device or production-security evidence.
 
 ## Deployment evidence
@@ -59,20 +60,25 @@ NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta
 
 ## Group API / operations evidence
 
-- Current Group API source candidate remains PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4`.
-- Privacy-safe structured operational events are implemented in source/deployed v3 evidence, but live application-event ingestion/monitoring baseline remains **NOT VERIFIED**.
-- Retention policy remains **NOT APPROVED**. Existing schema expiry/defaults and read-only diagnostics must not be interpreted as an approved deletion schedule.
-- Cleanup implementation/cascade verification and anonymous abuse controls remain open under Issue #45.
+- Current Group API source candidate is PR #83 / `a4237ce6746478caa8f0b9da60d4456b6dce4758`.
+- Supabase `group-api` is ACTIVE version 4 with `verify_jwt=false`; deployed source inspection matches repository blob `90de51709db9634fa4c396c9cd27bbe6de8619de` for the PR #83 source and reports bundle SHA-256 `cec4b0678645b49266ed0cd0b826c05ff58e5a751466c0c2ff0899ebf161023c`.
+- Group API v4 preserves privacy-safe structured operational event code and adds malformed identifier/token input rejection before relevant database lookups.
+- PR #84 live probe run `32629629579` completed **success** on exact main SHA `1bec99be1dbdf253bed67610b354973897af253f`. It exercised rejection-only cases and did not create/update/close rooms or submit a successful vote.
+- Supabase platform Edge Function logs show matching version 4 rejection invocations during the probe window, including GET 405 and POST 400/403 responses. This verifies deployed v4 endpoint invocation/platform logging for the controlled probe.
+- The available Supabase log surface still does not expose the application `console.log` structured JSON payload. Therefore exact application-event ingestion for `component=group-api` remains **NOT VERIFIED** and must not be promoted to monitoring-baseline PASS.
+- Fresh read-only retention baseline on 2026-08-23 observed 16 rooms total (13 expired / 3 active), 14 joined votes (8 attached to expired rooms / 6 to active rooms), and 0 orphan votes. These counts are observations only, not an approved retention policy or cleanup PASS.
+- Retention policy remains **NOT APPROVED**. Cleanup implementation/cascade execution verification and a complete anonymous rate-limit/quota strategy remain open under Issue #45.
 
 ## Supabase security/performance evidence
 
 - Connected Supabase organization is on the Free plan.
-- Security Advisor still reports leaked-password protection disabled; Issue #11 remains open.
-- INFO-only RLS/no-policy findings for deny-by-default tables are not a reason to make those tables permissive.
+- Fresh Security Advisor re-check still reports leaked-password protection disabled; Issue #11 remains open.
+- Other current security findings are INFO-only RLS/no-policy findings on deny-by-default tables and are not a reason to make those tables permissive.
+- Fresh Performance Advisor findings are INFO-only unused-index notices; no Performance Advisor WARN was observed in the latest read-only check.
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker: `main` branch protection / required-check enforcement is disabled. Workflow success does not equal governance enforcement. `SECURITY.md` now explicitly requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
+Issue #35 remains a Commercial Governance blocker: fresh branch evidence still reports `main` protection disabled and required-status-check enforcement off. Workflow success does not equal governance enforcement. `SECURITY.md` requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
 
 ## Public Beta gate impact
 
@@ -96,7 +102,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Public Beta technical/device/accessibility acceptance;
 - Supabase leaked-password protection gate (#11);
 - `main` branch protection / required checks (#35);
-- Group API live observability, retention/deletion policy, abuse controls and monitoring baseline (#45);
+- Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring baseline (#45);
 - Production Privacy/Terms/controller/contact/retention/legal decisions;
 - Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence;
 - Payment/Premium provider and real subscription lifecycle evidence;
@@ -107,8 +113,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 ## Supersession rule
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
-- Current Group API source candidate = PR #63 / `f683f8291e57501e0fde75b0e689324d0a65dfb4` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `058c41790970be91a397f01870210849e5a792c1`; changes after runtime candidate are release/deployment/security evidence docs only per repository compare.
+- Current Group API source candidate = merged PR #83 / `a4237ce6746478caa8f0b9da60d4456b6dce4758` until another Group API source change occurs.
+- Latest reviewed `main` baseline = PR #84 / `1bec99be1dbdf253bed67610b354973897af253f`; later evidence-document changes do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
+- Supabase version 4 source/deployment parity and the scoped non-mutating v4 rejection probe are verified for the Group API candidate; application structured-event ingestion remains unverified in the available log surface.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
