@@ -50,16 +50,17 @@ jobs:
           payload="$(printf '{\"action\":\"submit_vote\",\"roomId\":\"00000000-0000-4000-8000-000000000000\",\"voterId\":\"%s\",\"tags\":[]}' "$long_voter")"
           expect 400 invalid_vote -H 'Content-Type: application/json' --data "$payload" "$url"
 
-          # v5 must enforce the 8 KiB contract against actual UTF-8 body bytes,
-          # not only Content-Length. Force HTTP/1.1 chunked transfer so no useful
-          # Content-Length is available to the application-level early check.
+          # The deployed API must enforce the 8 KiB contract against actual body
+          # bytes, not only Content-Length. Force HTTP/1.1 chunked transfer so no
+          # useful Content-Length is available to the early reject. Current v6
+          # reads through a bounded stream and cancels once the byte budget is exceeded.
           printf '{"action":"unknown","padding":"' > "$oversized"
           head -c 9000 /dev/zero | tr '\0' 'x' >> "$oversized"
           printf '"}' >> "$oversized"
           test "$(wc -c < "$oversized")" -gt 8192
           expect 413 request_too_large --http1.1 -H 'Content-Type: application/json' -H 'Transfer-Encoding: chunked' --data-binary "@$oversized" "$url"
 
-          echo 'Live Group API rejection contracts, including the v5 actual-body 8 KiB guard, passed without creating/updating/closing any room or vote data.'
+          echo 'Live Group API rejection contracts, including the streamed actual-body 8 KiB guard, passed without creating/updating/closing any room or vote data.'
 
       - name: Explain evidence boundary
         run: |
