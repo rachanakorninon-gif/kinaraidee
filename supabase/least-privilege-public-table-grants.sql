@@ -1,7 +1,10 @@
 -- Kinaraidee Supabase Data API table-grant contract
 --
--- Applied to the connected project on 2026-08-23 after a transaction-only dry run.
--- Scope: anon/authenticated table privileges only. RLS policies remain the row-level
+-- Applied to the connected project on 2026-08-23 after transaction-only dry-run
+-- verification for the browser-facing tables. The public summary view was reviewed
+-- separately and its anon/authenticated grants were revoked after confirming that its
+-- underlying restaurant_search_demand relation is already server-side only.
+-- Scope: anon/authenticated relation privileges only. RLS policies remain the row-level
 -- authorization layer. Privileged backend-role access, sequences, policies and data
 -- are not changed by this script.
 --
@@ -27,3 +30,8 @@ grant select, insert, delete on table public.member_food_history to authenticate
 
 revoke all privileges on table public.user_food_history from anon, authenticated;
 grant select, insert, delete on table public.user_food_history to authenticated;
+
+-- Read-only analytics summary backed by restaurant_search_demand. The view uses
+-- security_invoker=true and the underlying table has no direct anon/authenticated
+-- access; keep the view itself non-public as well.
+revoke all privileges on table public.partner_opportunity_summary from anon, authenticated;
