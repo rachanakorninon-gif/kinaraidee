@@ -6,11 +6,12 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` (PR #95; workflow-only live-verification descendant after Group API v6 deployment).
+- Latest reviewed `main`: `616a8f94bd1151ffeaf252bea31eb249273628ba` (PR #100; documentation/evidence-only descendant after current browser/PWA and Group API runtime candidates).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
-- Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; later reviewed commits are workflow/evidence/backend changes.
+- Browser/PWA runtime assets have not changed after `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`; later reviewed commits are workflow/evidence/backend/documentation changes.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; Supabase inspection verifies ACTIVE version 6 source/deployment parity against repository blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be`.
 - PR #95 / `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` changes only the non-mutating live-probe workflow wording for deployed Group API v6; it does not supersede the backend source candidate from PR #93.
+- PR #97 synchronized Group API v6 release/monitoring evidence, PR #99 captured a successful scheduled browser/PWA synthetic monitor run, and PR #100 synchronized beta device/run/checklist evidence boundaries. These are evidence/documentation changes only.
 - PWA cache marker: `kinaraidee-beta-v13`.
 - PR #67 persistent Surprise accessibility implementation remains present in the deployed browser/PWA candidate.
 - PR #79 wires `data/pwa-install.js` from the already-active `data/home-surprise.js` bootstrap. This closes the source-wiring gap discovered by Live Smoke; it does not create real iPhone/iPad NF-05 PASS.
@@ -25,6 +26,7 @@
 - PR #93 hardened the body-read path further: it uses a bounded `ReadableStream` reader, counts incoming chunk bytes, cancels the reader as soon as the 8 KiB budget is exceeded, decodes UTF-8 with a fatal decoder, and parses JSON only after a successful bounded read. Its regression gate rejects a return to direct `req.json()` or full-body `req.text()` buffering.
 - PR #95 refreshed the canonical non-mutating live probe wording for the streamed v6 guard without changing successful product behavior.
 - PR #91 extended the rollback runbook with traceable Group API/Supabase evidence requirements; PR #92 extended the data-governance draft with verified Group room/vote schema boundaries. These are procedure/evidence preparation, not rollback-drill or retention-policy PASS.
+- PR #100 beta evidence documents now consistently use the current PR #79 deployment trace, v13 cache marker, Group API v6 evidence boundary, and NF-09 INCONCLUSIVE state without creating new device PASS.
 - `SECURITY.md` treats production merge governance, leaked-password protection, anonymous API retention/abuse-control/monitoring, and rollback drill evidence as Production Security gates. This is policy/gate hardening only; it does not make unchecked gates PASS.
 - Static source markers, workflow configuration, synthetic probes, policy text, and CI success do not replace real-device or production-security evidence.
 
@@ -40,6 +42,7 @@ Confirmed evidence for PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`:
 - Pages workflow run `32621529715` completed **success** for that exact SHA.
 - Public Pages Trace Check run `32621547307` completed **success** and verified public `release-meta.json` SHA = `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, `pwa_cache` = `kinaraidee-beta-v13`, `pages-actions-source-v1` on the deployment probe, and the matching live Service Worker marker.
 - Corresponding Live Smoke run `32621549478` completed **success**. Public pages/assets, latest live app markers and accessibility/group/PWA contracts, development-file exclusion, and traceable automated evidence all passed.
+- Scheduled `Kinaraidee Public Beta Monitor` run `32626732416` completed **success** on repository SHA `058c41790970be91a397f01870210849e5a792c1`; it independently observed deployed SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, `kinaraidee-beta-v13`, public availability/release lineage and non-public development-only paths. This is historical browser/PWA synthetic evidence only and does not cover Group API v6 or current-main full-system monitoring.
 - Issue #69 is closed as completed for the browser/PWA deployment-trace scope.
 
 This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only. It does not imply real-device, assistive-technology, payment, partner, legal, full Public Beta or Commercial PASS.
@@ -51,13 +54,17 @@ This deployment PASS is scoped to browser/PWA deployment trace and automated liv
 Status: **IMPLEMENTED + DEPLOYED SOURCE CONTRACT VERIFIED / REAL ASSISTIVE-TECH RETEST BLOCKED BY TEST ENVIRONMENT**
 
 - PR #67 fixed persistent live-region placement for the Surprise busy announcement and that implementation remains in the deployed PR #79 runtime.
-- The available Android TalkBack environment later became unsuitable for app PASS/FAIL because TalkBack double-tap activation also failed on Android Settings controls.
-- Therefore the latest NF-09 retest remains **BLOCKED / INCONCLUSIVE**, not PASS and not a new application FAIL.
-- Issue #57 remains open until a functioning TalkBack/VoiceOver environment is available.
+- Earlier valid TalkBack evidence confirmed the Surprise accessible name and button role.
+- Historical pre-persistent-fix evidence recorded that the busy announcement was not heard.
+- During later follow-up, the user reported TalkBack double-tap activation was not working reliably across apps, not only in Kinaraidee. A later Android Settings control was successfully focused/announced (`เปิดการตั้งค่า WiFi ปุ่ม`), but actual control activation/page transition was not confirmed from that observation alone.
+- Therefore the latest full NF-09 acceptance attempt remains **BLOCKED / INCONCLUSIVE**, not PASS and not a new application FAIL.
+- Issue #57 remains open until a functioning TalkBack/VoiceOver environment is verified and the busy/ready behavior can be retested end-to-end.
 
 ### Android device #1 evidence boundary
 
 Issue #5 contains scoped same-device evidence for multiple core flows, including Group 2/2 result flow and selected PWA/recovery scenarios. Exact device model/OS/Chrome were not captured and must not be guessed. One device/session does not satisfy the full device matrix.
+
+PR #100 synchronizes `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md` and `BETA-CHECKLIST.md` so historical same-device PASS evidence stays scoped and current deployment/backend/static evidence is not promoted to a device PASS.
 
 NF-07 has synthetic CI coverage only; real-device old-cache → `kinaraidee-beta-v13` upgrade remains unverified. NF-05 has synthetic iOS install-hint behavior coverage and active-bootstrap wiring in the deployed runtime, but real iPhone/iPad Safari evidence remains required.
 
@@ -85,7 +92,7 @@ The Group API v6 streaming change has source/deployment/live rejection evidence 
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker: fresh branch evidence at main `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` reports `protected=false`, protection disabled and required-status-check enforcement off. Workflow success does not equal governance enforcement. `SECURITY.md` requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
+Issue #35 remains a Commercial Governance blocker: fresh branch evidence at main `616a8f94bd1151ffeaf252bea31eb249273628ba` reports `protected=false`, protection disabled and required-status-check enforcement off. Workflow success does not equal governance enforcement. `SECURITY.md` requires production merge governance with required release/security checks and evidence that a failing required check actually blocks merge before Commercial GO.
 
 ## Public Beta gate impact
 
@@ -121,8 +128,9 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #95 / `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; later evidence-document changes do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = PR #100 / `616a8f94bd1151ffeaf252bea31eb249273628ba`; later evidence/documentation descendants do not supersede browser/PWA or Group API runtime candidates unless runtime source changes.
 - PR #79 Pages deployment/public metadata/Live Smoke trace is verified for the current browser/PWA runtime candidate.
+- Scheduled Public Beta Monitor run `32626732416` is additional scoped synthetic browser/PWA evidence for the unchanged PR #79 runtime lineage; it does not prove Group API v6/current-main/full-system Production monitoring.
 - Supabase version 6 source/deployment parity and canonical non-mutating v6 rejection probe, including streamed chunked >8 KiB rejection, are verified for the Group API candidate; application structured-event ingestion remains unverified in the available log surface.
 - Retention policy remains **NOT APPROVED**.
 - Public accessibility source probes and synthetic CI do not close NF-09, NF-07 or NF-05 real-device requirements.
