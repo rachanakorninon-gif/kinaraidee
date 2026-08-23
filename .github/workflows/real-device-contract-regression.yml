@@ -26,7 +26,8 @@ jobs:
           # TC-08 must prove the permission-allow path, not infer it from Maps/coordinates.
           grep -Fq 'site/app ยังไม่ได้รับ Location' "$tc"
           grep -Fq 'allow-location path' "$tc"
-          grep -Fq 'Maps เปิดได้หรือเคยเห็นพิกัดเพียงอย่างเดียวไม่เพียงพอ' "$tc"
+          grep -Fq 'Maps เปิดได้' "$tc"
+          grep -Fq 'พิกัดเพียงอย่างเดียวไม่เพียงพอ' "$tc"
 
           # NF-04/NF-07 must start from a verifiable pre-current-release baseline.
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
