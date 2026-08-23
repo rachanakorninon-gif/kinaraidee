@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed pre-sync `main` evidence baseline: `61323280ac45885658d36cadb1fcb4c85957d06a` (governance evidence refresh after PR #119; docs/evidence only, with no browser/PWA, Group API or Supabase runtime-state change).
+- Latest reviewed `main`: `61323280ac45885658d36cadb1fcb4c85957d06a` (governance evidence refresh after PR #119; docs/evidence only, with no browser/PWA, Group API or Supabase runtime-state change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
@@ -54,7 +54,7 @@ PR #110 was a temporary read-only Actions diagnostic used only to trace the exac
 
 Repository contract: `supabase/least-privilege-public-table-grants.sql`; static guard: `.github/workflows/supabase-grant-contract-regression.yml`; live negative probe: `.github/workflows/supabase-anon-access-probe.yml`; detailed evidence: `SUPABASE-GRANT-HARDENING-EVIDENCE.md`.
 
-Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does **not** prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
+Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does not prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
 
 ## Supabase authenticated RLS authorization evidence
 
@@ -157,7 +157,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed pre-sync evidence baseline = `61323280ac45885658d36cadb1fcb4c85957d06a`; later evidence/documentation-only descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed evidence baseline = `61323280ac45885658d36cadb1fcb4c85957d06a`; later evidence/documentation-only descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
 - Governance runbook/required-check contract and evidence refreshes are preparation evidence, not branch-protection enforcement PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
