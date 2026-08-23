@@ -14,8 +14,8 @@
 <body>
 <main>
   <h1>🔎 ตรวจสอบเวอร์ชัน “กินอะไรดี”</h1>
-  <p>หน้านี้ใช้ตรวจว่าโค้ดแก้ผลโหวตกลุ่มและสถานะสำหรับผู้ใช้ screen reader ขึ้นเว็บจริงหรือยัง โดยไม่เปลี่ยนข้อมูลผู้ใช้</p>
-  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1 · surprise-a11y-v2</div></div>
+  <p>หน้านี้ใช้ตรวจว่าโค้ดแก้ผลโหวตกลุ่ม สถานะสำหรับผู้ใช้ screen reader และ deployment metadata ขึ้นเว็บจริงหรือยัง โดยไม่เปลี่ยนข้อมูลผู้ใช้</p>
+  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1 · surprise-a11y-v2 · pages-actions-source-v1</div></div>
   <div class="row"><strong>Group result bridge</strong><div id="bridge" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>Surprise accessibility</strong><div id="surprise" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>PWA cache</strong><div id="cache" class="wait">กำลังตรวจ…</div></div>
@@ -38,7 +38,7 @@
       const m=sw.match(/const CACHE='(kinaraidee-beta-v\d+)'/);const cache=m?m[1]:'ไม่พบ marker';set('cache',cache,cache==='kinaraidee-beta-v13');
     }catch(e){set('bridge','ตรวจ runtime ไม่สำเร็จ: '+e.message,false);set('surprise','ตรวจไม่ได้',false);set('cache','ตรวจไม่ได้',false)}
     try{
-      const raw=await text('./release-meta.json');const m=JSON.parse(raw);const valid=/^[0-9a-f]{40}$/.test(String(m.sha||''));set('meta',valid?('SHA '+m.sha+' · '+m.pwa_cache):'ไฟล์มีอยู่แต่รูปแบบไม่ถูกต้อง',valid);
+      const raw=await text('./release-meta.json');const m=JSON.parse(raw);const valid=/^[0-9a-f]{40}$/.test(String(m.sha||''))&&m.pwa_cache==='kinaraidee-beta-v13';set('meta',valid?('PASS — SHA '+m.sha+' · '+m.pwa_cache):'FAIL — ไฟล์มีอยู่แต่รูปแบบหรือ cache marker ไม่ถูกต้อง',valid);
     }catch(e){set('meta','ยังไม่มี release-meta.json บน public site ('+e.message+')',null)}
   }
   $('again').addEventListener('click',run);run();
