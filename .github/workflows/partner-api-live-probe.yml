@@ -1,3 +1,4 @@
+# Diagnostic-only comment: exercises the live rejection probe now that the workflow exists on main.
 name: Partner API Live Rejection Probe
 
 on:
