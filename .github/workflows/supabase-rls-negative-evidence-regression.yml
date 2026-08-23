@@ -83,4 +83,4 @@ jobs:
             echo '- Guards the repository record for authenticated cross-user read isolation and selected UPDATE/DELETE negative paths.'
             echo '- Keeps the evidence tied to the current private admin-helper contract for beta_feedback.'
             echo '- This workflow validates documentation/source consistency only. It does not re-run the live SQL probes, prove every INSERT/mutation/JWT/session path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
-          } >> "$GITHUB_STEP_SUMMARY""}
+          } >> "$GITHUB_STEP_SUMMARY"
