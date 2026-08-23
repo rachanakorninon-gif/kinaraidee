@@ -11,6 +11,8 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 - Public Beta URL และหน้า/asset สำคัญตอบ HTTP สำเร็จ
 - Homepage ออนไลน์ยังมี app identity และ wiring หลักของ manifest, Service Worker, Surprise flow และ nearby restaurants
 - `manifest.webmanifest` ออนไลน์ parse เป็น JSON ได้และมี `name`, `start_url`, `display`
+- Surprise bootstrap ออนไลน์ยังมี active bridge ที่โหลด `data/pwa-install.js`, มี duplicate-load protection และเรียก helper จริงตาม source contract ของ PR #79
+- `data/pwa-install.js` ออนไลน์ยังมี iOS install-hint suppression state และ compatibility bridge กลับไปยัง Surprise flow
 - `sw.js` ออนไลน์ใช้ release marker เดียวกับ `main`
 - `release-meta.json` ออนไลน์มี deployed SHA รูปแบบถูกต้องและ PWA cache marker ตรงกับ `sw.js`
 - deployed SHA จาก `release-meta.json` trace กลับมาเป็น ancestor ของ `main` ปัจจุบันได้ เพื่อป้องกัน metadata ที่ชี้ไปยัง commit นอก release lineage
@@ -26,6 +28,7 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 
 - real-device TC-01–TC-15 / NF-01–NF-10
 - การทดสอบ PWA install/update/offline บนอุปกรณ์จริง
+- iPhone/iPad Safari install-hint behavior หรือ Android install prompt interaction บนอุปกรณ์จริง
 - accessibility test บนอุปกรณ์/assistive technology จริง
 - Payment, entitlement, webhook หรือ reconciliation
 - Partner conversion/commission verification
@@ -50,7 +53,7 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 ## เมื่อ monitor FAIL
 
 1. อย่าตีความทันทีว่าเป็น runtime defect; แยก transient network/GitHub Pages propagation ออกจาก defect จริง
-2. ตรวจ path/homepage wiring/manifest/marker/release-meta/deployed-SHA lineage ที่ fail จาก logs
+2. ตรวจ path/homepage wiring/manifest/PWA-helper bridge/marker/release-meta/deployed-SHA lineage ที่ fail จาก logs
 3. ถ้า Public Beta กระทบผู้ใช้จริง ให้เปิด defect/incident ที่ trace กลับไปยัง run
 4. ถ้าเป็น release regression ให้ใช้ `ROLLBACK-RUNBOOK.md`
 5. หลังแก้ ให้รัน monitor ใหม่และบันทึก run ใหม่เป็น evidence; ห้ามแก้ไขผล run เก่าให้เป็น PASS
