@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `f337d35cfa2fbe71719ec6fde022807d08ef7443` (PR #109 merge; Supabase anonymous Data API live negative probe + relation-grant contract hardening; no browser/PWA or Group API runtime-source change).
+- Latest reviewed `main`: `8bdf6a3208fd34473750ab84cd0f4255ba309e86` (repository tree remains identical to PR #111 merge after a temporary file create/delete cleanup; no browser/PWA or Group API runtime-source change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Supabase grant/security descendants through PR #109 change database grants, security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/security descendants through the current reviewed baseline change database grants, RLS/security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -56,15 +56,37 @@ Repository contract: `supabase/least-privilege-public-table-grants.sql`; static 
 
 Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does **not** prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
 
+## Supabase authenticated RLS authorization evidence
+
+Database-side authenticated-claim simulation found a real policy defect in `beta_feedback`: the admin-owner branch of `feedback_select_authenticated` directly referenced `public.admin_dashboard_owners`, while browser-facing roles intentionally have no SELECT privilege on that table. This could turn an otherwise valid normal-user feedback read into a permission error during policy evaluation.
+
+Live remediation was applied in two migrations:
+
+- `20260823140943 / fix_beta_feedback_admin_select_rls_helper` introduced a `STABLE SECURITY DEFINER` admin-owner helper with `search_path=''` and repointed the policy to it.
+- Security Advisor then identified the intermediate public-schema helper as an authenticated-callable `SECURITY DEFINER` API surface.
+- `20260823141156 / move_feedback_admin_rls_helper_private` moved the helper to schema `private`, revoked anonymous access, retained only authenticated usage/execute required for policy evaluation, repointed the policy and removed the public helper.
+
+Post-remediation connected verification confirms:
+
+- normal authenticated simulation is not treated as admin, sees exactly its own `beta_feedback` rows and is denied cross-user/unowned rows;
+- admin-owner simulation is recognized by the private helper and matches the full feedback scope expected by the admin path;
+- member profile/history simulations also matched own-row scope exactly and denied cross-user rows for `member_profiles`, `member_food_history` and `user_food_history`;
+- `private.is_admin_dashboard_owner()` is `STABLE SECURITY DEFINER` with `search_path=''`, `anon` cannot execute it, and the public helper no longer exists;
+- the Security Advisor warning for an authenticated-callable public `SECURITY DEFINER` helper is no longer present.
+
+Repository contract: `supabase/beta-feedback-admin-rls-contract.sql`; static guard: `.github/workflows/supabase-feedback-rls-contract-regression.yml`; detailed evidence: `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md`.
+
+This is database-side role/JWT-claim simulation and live policy/configuration inspection. It does not claim a complete external authenticated-session/API lifecycle PASS or blanket privileged-backend authorization PASS.
+
 ## Supabase Auth security gate
 
-Fresh Security Advisor re-check after the relation-grant/view hardening still reports:
+Fresh Security Advisor re-check after the relation-grant, view and feedback-RLS hardening reports:
 
 - WARN: `auth_leaked_password_protection` / `Leaked Password Protection Disabled`;
 - visible `RLS Enabled No Policy` findings are INFO-only deny-by-default/server-side tables;
-- no new Security Advisor WARN was introduced by the grant/view hardening.
+- the intermediate public `SECURITY DEFINER` helper warning has been removed by the private-schema migration.
 
-Performance Advisor remains INFO-only unused-index findings; no index was dropped as part of this work.
+Performance Advisor previously remained INFO-only unused-index findings; no index was dropped as part of this security work.
 
 Previous connected evidence records the organization on the Free plan and the leaked-password feature as unavailable without the relevant plan/configuration. Therefore Issue #11 remains **BLOCKED BY PLAN/CONFIGURATION — NOT PASS** until authorized enablement is possible and a fresh Security Advisor result confirms the WARN is absent.
 
@@ -108,7 +130,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Public Beta technical/device/accessibility acceptance;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
 - `main` branch protection / required checks (#35);
-- complete authenticated per-user RLS/JWT and privileged/admin negative authorization evidence beyond the scoped relation-grant + anonymous-SELECT hardening;
+- remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond the scoped anonymous Data API probe and database-side RLS simulations;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
 - Production Privacy/Terms/controller/contact/retention/legal decisions;
 - Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence;
@@ -121,7 +143,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
-- Supabase least-privilege relation grants + anonymous SELECT negative probe are scoped live security evidence, not a blanket RLS/Auth/security PASS.
+- Latest reviewed `main` baseline = `8bdf6a3208fd34473750ab84cd0f4255ba309e86`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.

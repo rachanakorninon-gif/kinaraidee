@@ -1,0 +1,82 @@
+name: Supabase Feedback RLS Contract Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/beta-feedback-admin-rls-contract.sql'
+      - '.github/workflows/supabase-feedback-rls-contract-regression.yml'
+      - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/beta-feedback-admin-rls-contract.sql'
+      - '.github/workflows/supabase-feedback-rls-contract-regression.yml'
+      - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify beta_feedback authenticated/admin RLS contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/beta-feedback-admin-rls-contract.sql'
+          test -s "$file"
+
+          grep -Fq 'create schema if not exists private;' "$file"
+          grep -Fq 'revoke all on schema private from public;' "$file"
+          grep -Fq 'revoke all on schema private from anon;' "$file"
+          grep -Fq 'grant usage on schema private to authenticated;' "$file"
+
+          grep -Fq 'create or replace function private.is_admin_dashboard_owner()' "$file"
+          grep -Fq 'stable' "$file"
+          grep -Fq 'security definer' "$file"
+          grep -Fq "set search_path = ''" "$file"
+          grep -Fq 'from public.admin_dashboard_owners o' "$file"
+          grep -Fq 'revoke all on function private.is_admin_dashboard_owner() from public;' "$file"
+          grep -Fq 'revoke execute on function private.is_admin_dashboard_owner() from anon;' "$file"
+          grep -Fq 'grant execute on function private.is_admin_dashboard_owner() to authenticated;' "$file"
+
+          grep -Fq 'drop policy if exists feedback_select_authenticated on public.beta_feedback;' "$file"
+          grep -Fq 'to authenticated' "$file"
+          grep -Fq '(select auth.uid()) = user_id' "$file"
+          grep -Fq 'or (select private.is_admin_dashboard_owner())' "$file"
+          grep -Fq 'drop function if exists public.is_admin_dashboard_owner();' "$file"
+
+          # The policy must not return to a direct browser-role SELECT dependency on
+          # admin_dashboard_owners, and the privileged helper must not live in public.
+          policy_block="$(sed -n '/create policy feedback_select_authenticated/,/);/p' "$file")"
+          if printf '%s\n' "$policy_block" | grep -Fq 'admin_dashboard_owners'; then
+            echo 'beta_feedback policy directly references admin_dashboard_owners; use the private helper boundary instead.'
+            exit 1
+          fi
+          if grep -Ei 'create[[:space:]]+or[[:space:]]+replace[[:space:]]+function[[:space:]]+public\.[a-z0-9_]+\([^)]*\).*' "$file"; then
+            echo 'Public helper function definition detected in the final feedback RLS contract.'
+            exit 1
+          fi
+          if grep -Ei 'grant[[:space:]]+(select|all).*admin_dashboard_owners.*(anon|authenticated)' "$file"; then
+            echo 'Direct browser-role admin_dashboard_owners read grant detected.'
+            exit 1
+          fi
+
+          echo 'Supabase beta_feedback authenticated/admin RLS source contract passed.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Supabase feedback RLS contract regression'
+            echo
+            echo '- Protects the repository contract for normal-user own-row feedback reads plus dashboard-owner reads through a private SECURITY DEFINER helper.'
+            echo '- Rejects a return to a public helper or direct browser-role dependency on admin_dashboard_owners.'
+            echo '- This is static repository evidence only. It does not prove live authenticated JWT behavior, leaked-password protection, device behavior, Public Beta completion or Commercial readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
