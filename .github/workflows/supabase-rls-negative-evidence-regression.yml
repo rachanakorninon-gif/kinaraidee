@@ -1,0 +1,86 @@
+name: Supabase RLS Negative Evidence Regression
+
+on:
+  pull_request:
+    paths:
+      - 'SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
+      - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+      - 'supabase/beta-feedback-admin-rls-contract.sql'
+      - '.github/workflows/supabase-rls-negative-evidence-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
+      - 'SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+      - 'supabase/beta-feedback-admin-rls-contract.sql'
+      - '.github/workflows/supabase-rls-negative-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify authenticated RLS negative-evidence scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
+          auth='SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md'
+          contract='supabase/beta-feedback-admin-rls-contract.sql'
+
+          test -s "$evidence"
+          test -s "$auth"
+          test -s "$contract"
+
+          grep -Fq 'READ + CROSS-USER MUTATION NEGATIVE EVIDENCE' "$evidence"
+          grep -Fq '`member_profiles` UPDATE' "$evidence"
+          grep -Fq '`member_food_history` DELETE' "$evidence"
+          grep -Fq '`user_food_history` DELETE' "$evidence"
+          grep -Fq 'could not update/delete another user' "$evidence"
+
+          # Preserve the explicit limits: these probes are scoped security evidence,
+          # not a blanket Auth/RLS, Public Beta or Commercial PASS.
+          grep -Fq 'cross-user INSERT rejection or every mutation shape' "$evidence"
+          grep -Fq 'leaked-password protection' "$evidence"
+          grep -Fq 'real-device behavior, Public Beta completion, or Commercial GO' "$evidence"
+
+          # Keep the evidence tied to the hardened beta_feedback admin boundary.
+          grep -Fq 'private.is_admin_dashboard_owner()' "$auth"
+          grep -Fq 'create or replace function private.is_admin_dashboard_owner()' "$contract"
+          grep -Fq "set search_path = ''" "$contract"
+          grep -Fq 'revoke execute on function private.is_admin_dashboard_owner() from anon;' "$contract"
+
+          echo 'Authenticated RLS negative-evidence contract is internally consistent.'
+
+      - name: Reject evidence overclaiming
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='SUPABASE-RLS-NEGATIVE-EVIDENCE.md'
+
+          if grep -Ei '(^|[^A-Za-z])(full|complete|blanket)[[:space:]]+(auth|rls|security)[[:space:]]+pass' "$evidence"; then
+            echo 'Over-broad Auth/RLS/Security PASS wording detected in scoped RLS evidence.'
+            exit 1
+          fi
+          if grep -Ei 'commercial[[:space:]]+(go|pass)[[:space:]]*[:=-]?[[:space:]]*(yes|pass|approved|ready)' "$evidence"; then
+            echo 'Commercial readiness overclaim detected in scoped RLS evidence.'
+            exit 1
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Supabase authenticated RLS negative evidence'
+            echo
+            echo '- Guards the repository record for authenticated cross-user read isolation and selected UPDATE/DELETE negative paths.'
+            echo '- Keeps the evidence tied to the current private admin-helper contract for beta_feedback.'
+            echo '- This workflow validates documentation/source consistency only. It does not re-run the live SQL probes, prove every INSERT/mutation/JWT/session path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
+          } >> "$GITHUB_STEP_SUMMARY""}
