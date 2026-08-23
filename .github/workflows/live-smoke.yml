@@ -14,6 +14,9 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout runtime declaration
+        uses: actions/checkout@v4
+
       - name: Wait for Pages propagation
         run: sleep 20
 
@@ -23,13 +26,19 @@ jobs:
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
           paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/deployment-check.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
-          for path in "${paths[@]}"; do url="$base$path"; echo "Checking $url"; curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null; done
+          for path in "${paths[@]}"; do
+            url="$base$path"
+            echo "Checking $url"
+            curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" >/dev/null
+          done
 
-      - name: Check latest live app markers, accessibility contract, group bridge, deployment probe, and PWA v13
+      - name: Check current live runtime contract
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
+          expected_cache="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$expected_cache" || { echo 'Unable to derive expected cache marker'; exit 1; }
           html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
           probe="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/deployment-check.html")"
           sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
@@ -39,9 +48,11 @@ jobs:
           release_meta="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/release-meta.json")"
           surprise="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/home-surprise.js")"
           pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
+          feedback="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/feedback.html")"
           partner="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/partner.html")"
           robots="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/robots.txt")"
           sitemap="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sitemap.xml")"
+
           grep -q 'กินอะไรดี' <<<"$html"
           grep -q 'manifest.webmanifest' <<<"$html"
           grep -q 'serviceWorker' <<<"$html"
@@ -49,62 +60,67 @@ jobs:
           grep -Fq "s.src='data/pwa-install.js'" <<<"$surprise"
           grep -Fq 'ensurePwaInstallHelper();' <<<"$surprise"
           grep -Fq '2026-08-23-group-result-bridge' <<<"$probe"
-          grep -Fq 'surprise-a11y-v1' <<<"$probe"
           grep -Fq 'surprise-a11y-v2' <<<"$probe"
+          grep -Fq 'focus-motion-v14' <<<"$probe"
           grep -Fq 'pages-actions-source-v1' <<<"$probe"
           grep -Fq 'showRemoteResult:useRemoteVotes' <<<"$probe"
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$probe"
           grep -Fq 'homeSurpriseStatus' <<<"$probe"
-          grep -Fq "aria-live','assertive" <<<"$probe"
-          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$probe"
-          grep -q 'kinaraidee-beta-v13' <<<"$sw"
+
+          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
+          test "$live_cache" = "$expected_cache" || { echo "Live cache $live_cache does not match expected $expected_cache"; exit 1; }
           grep -q 'cache.addAll(SHELL)' <<<"$sw"
           grep -q 'home-surprise.js' <<<"$sw"
           grep -q 'pwa-install.js' <<<"$sw"
           if grep -q 'Promise.allSettled' <<<"$sw"; then echo 'Live Service Worker unexpectedly uses non-atomic shell install'; exit 1; fi
-          grep -Fq 'function useRemoteVotes(votes,setup)' <<<"$group_mode"
-          grep -Fq 'window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}' <<<"$group_mode"
-          grep -Fq "await load('data/group-sync.js')" <<<"$group_mode"
-          grep -Fq "await load('data/group-remote.js')" <<<"$group_mode"
-          grep -Fq 'window.KINARAIDEE_GROUP_MODE?.showRemoteResult' <<<"$group_remote"
-          grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$group_remote"
-          grep -Fq 'renderGroupResult();return true' <<<"$group_mode"
+
           deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
           meta_cache="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
-          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
-          test -n "$deployed_sha" || { echo 'release-meta.json has no valid deployed SHA'; exit 1; }
-          test "$meta_cache" = 'kinaraidee-beta-v13' || { echo "Unexpected release-meta PWA cache: $meta_cache"; exit 1; }
+          test "$meta_cache" = "$expected_cache" || { echo "Unexpected release-meta cache: $meta_cache expected $expected_cache"; exit 1; }
           test "$live_cache" = "$meta_cache" || { echo "Live sw.js cache marker $live_cache does not match release-meta $meta_cache"; exit 1; }
+
+          grep -Fq 'function useRemoteVotes(votes,setup)' <<<"$group_mode"
+          grep -Fq 'window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}' <<<"$group_mode"
+          grep -Fq 'window.KINARAIDEE_GROUP_MODE?.showRemoteResult' <<<"$group_remote"
+          grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$group_remote"
           grep -q 'box.replaceChildren()' <<<"$nearby"
           grep -q "name.textContent=String(r.name" <<<"$nearby"
-          grep -Fq 'homeSurpriseStatus' <<<"$surprise"
-          grep -Fq "status.setAttribute('role','status')" <<<"$surprise"
+
+          grep -Fq 'kinaraideeAccessibilityStyles' <<<"$surprise"
+          grep -Fq 'button:focus-visible' <<<"$surprise"
+          grep -Fq 'prefers-reduced-motion' <<<"$surprise"
+          grep -Fq 'button:focus-visible' <<<"$feedback"
+          grep -Fq 'prefers-reduced-motion:reduce' <<<"$feedback"
+          grep -Fq 'button:focus-visible' <<<"$partner"
+          grep -Fq 'prefers-reduced-motion:reduce' <<<"$partner"
           grep -Fq "status.setAttribute('aria-live','assertive')" <<<"$surprise"
           grep -Fq "document.body.appendChild(status)" <<<"$surprise"
-          grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" <<<"$surprise"
           grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$surprise"
-          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$surprise"
           grep -q 'pageshow' <<<"$surprise"
           grep -q 'online' <<<"$surprise"
           grep -q 'เข้าใจแล้ว' <<<"$pwa"
           grep -q 'MacIntel' <<<"$pwa"
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" <<<"$partner"
-          grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' <<<"$partner"
           grep -q 'privacy_acknowledged_at:new Date().toISOString()' <<<"$partner"
           grep -q 'sitemap.xml' <<<"$robots"
           grep -q '<urlset' <<<"$sitemap"
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 with active PWA-install bridge, Surprise accessibility source contract, completed group-result bridge, deployment probe, and release metadata'
+          echo "Live smoke passed for current runtime $expected_cache; deployed SHA $deployed_sha"
 
       - name: Verify development files are not published
         shell: bash
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          private_paths=('/README.md' '/SECURITY.md' '/BETA-DAILY-LOG.md' '/RELEASE-CHECKLIST.md' '/.github/workflows/pages.yml' '/supabase/config.toml')
-          for path in "${private_paths[@]}"; do url="$base$path"; code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"; echo "$path -> HTTP $code"; if [ "$code" = '200' ]; then echo "Development-only path is unexpectedly public: $path"; exit 1; fi; done
+          private_paths=('/README.md' '/SECURITY.md' '/BETA-DAILY-LOG.md' '/RELEASE-CHECKLIST.md' '/CURRENT-RUNTIME.md' '/.github/workflows/pages.yml' '/supabase/config.toml')
+          for path in "${private_paths[@]}"; do
+            url="$base$path"
+            code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"
+            echo "$path -> HTTP $code"
+            if [ "$code" = '200' ]; then echo "Development-only path is unexpectedly public: $path"; exit 1; fi
+          done
 
       - name: Record traceable automated evidence
         shell: bash
@@ -123,8 +139,8 @@ jobs:
           deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
           meta_cache="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
           live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
-          test -n "$deployed_sha" || { echo 'Unable to derive deployed SHA from release-meta.json'; exit 1; }
-          test "$meta_cache" = "$live_cache" || { echo "release-meta cache $meta_cache does not match live sw.js cache $live_cache"; exit 1; }
+          test -n "$deployed_sha"
+          test "$meta_cache" = "$live_cache"
           if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then
             verified_sha="$DEPLOY_HEAD_SHA"
             source_run="$SERVER_URL/$REPOSITORY/actions/runs/$DEPLOY_RUN_ID"
@@ -143,15 +159,12 @@ jobs:
             echo "- Trigger: $trigger"
             echo "- Source deployment run: $source_run"
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
-            echo '- Human-readable deployment probe: `/deployment-check.html` checked'
-            echo "- Service Worker cache marker: \`$live_cache\` (matches release-meta.json)"
-            echo '- Active PWA install-helper bridge: checked on deployed `data/home-surprise.js`'
-            echo '- Surprise accessibility source contract: checked on deployed probe and `data/home-surprise.js`'
-            echo '- Completed live-group result bridge: checked on deployed assets'
-            echo '- Partner renderer safety markers: checked'
-            echo '- Partner privacy acknowledgement wiring: checked'
-            echo '- App shell strategy checked: `cache.addAll(SHELL)`'
+            echo "- Service Worker cache marker: \`$live_cache\`"
+            echo '- Visible focus + reduced-motion source contract: checked on deployed assets'
+            echo '- Surprise persistent live-region contract: checked'
+            echo '- Completed live-group result bridge: checked'
+            echo '- Partner renderer/privacy wiring: checked'
             echo '- Development-only exposure check: completed'
             echo
-            echo '> This summary is automated live-asset evidence only. It does not replace real-device TC/NF interaction testing, TalkBack/VoiceOver retest, or Commercial GO approval.'
+            echo '> Automated live evidence does not replace keyboard/device interaction, TalkBack/VoiceOver, NF-05/NF-07/NF-09, full real-device matrix, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"

@@ -26,7 +26,7 @@ jobs:
             data/foods-expanded.js data/choice-rules.js
             data/nearby-restaurants.js data/group-mode.js
             data/group-sync.js data/group-remote.js data/member-sync.js
-            data/pwa-install.js data/home-surprise.js
+            data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md
           )
           for file in "${required[@]}"; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
@@ -127,11 +127,13 @@ jobs:
           grep -q "ระยะเวลาการเก็บและการลบข้อมูล" privacy.html
           grep -q "คำขอเกี่ยวกับข้อมูล" privacy.html
 
-      - name: Verify PWA shell and v13 update strategy
+      - name: Verify PWA shell and current update strategy
         shell: bash
         run: |
           set -euo pipefail
-          grep -q "kinaraidee-beta-v13" sw.js
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive PWA marker'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md
           grep -q "cache.addAll(SHELL)" sw.js
           shell_paths=(
             "'./'"
@@ -165,25 +167,9 @@ jobs:
           set -euo pipefail
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive release marker from sw.js'; exit 1; }
-          test "$(printf '%s\n' "$marker" | wc -l)" -eq 1
+          declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test "$declared" = "$marker" || { echo "PWA release marker drift: CURRENT-RUNTIME.md=$declared sw.js=$marker"; exit 1; }
           echo "Canonical PWA release marker: $marker"
-          tracked=(
-            '.github/workflows/qa.yml'
-            '.github/workflows/beta-check.yml'
-            '.github/workflows/pages.yml'
-            '.github/workflows/live-smoke.yml'
-            'README.md'
-            'LIVE-DEPLOYMENT-VERIFICATION.md'
-            'BETA-RUN-LOG.md'
-            'BETA-DEVICE-MATRIX.md'
-            'RELEASE-CHECKLIST.md'
-          )
-          for file in "${tracked[@]}"; do
-            grep -Fq "$marker" "$file" || {
-              echo "PWA release marker drift: $file does not reference $marker"
-              exit 1
-            }
-          done
 
       - name: Verify recovery and SEO files
         shell: bash
@@ -203,7 +189,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Split sentinel text so repository-wide scanning includes workflows without matching this detector source.
           pattern='(service_''role|sb_''secret_|SUPABASE_''SERVICE_ROLE|PRIVATE_''KEY-----)'
           matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' "$pattern" . || true)"
           safe_env='Deno\.env\.get\(['"'"'\"]SUPABASE_''SERVICE_ROLE_KEY['"'"'\"]\)'

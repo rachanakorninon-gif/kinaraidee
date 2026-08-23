@@ -35,8 +35,23 @@ jobs:
           grep -Fq "if(busy)return" data/home-surprise.js
           grep -Fq "setBusy(false)" data/home-surprise.js
 
+      - name: Check visible focus and reduced-motion contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "style.id='kinaraideeAccessibilityStyles'" data/home-surprise.js
+          grep -Fq 'button:focus-visible' data/home-surprise.js
+          grep -Fq '@media (prefers-reduced-motion: reduce)' data/home-surprise.js
+          grep -Fq 'outline:3px solid #0b6bcb' data/home-surprise.js
+          grep -Fq 'button:focus-visible' feedback.html
+          grep -Fq 'prefers-reduced-motion:reduce' feedback.html
+          grep -Fq 'button:focus-visible' partner.html
+          grep -Fq 'prefers-reduced-motion:reduce' partner.html
+          grep -Fq "const CACHE='kinaraidee-beta-v14';" sw.js
+
       - name: Explain evidence boundary
         run: |
-          echo 'Static regression guard passed.'
+          echo 'Static accessibility regression guard passed.'
           echo 'The live region is required to remain outside hidden .screen containers during loading.'
-          echo 'TalkBack/VoiceOver announcement behavior still requires real assistive-technology retest before Issue #57 can close.'
+          echo 'Visible-focus and reduced-motion source contracts are guarded for the main app and public forms.'
+          echo 'TalkBack/VoiceOver, keyboard interaction and motion-preference behavior still require real-device/assistive-technology acceptance before related issues can close.'

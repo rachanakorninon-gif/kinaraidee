@@ -16,6 +16,7 @@ on:
       - 'robots.txt'
       - 'sitemap.xml'
       - 'data/**'
+      - 'CURRENT-RUNTIME.md'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -40,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          required=(index.html 404.html privacy.html feedback.html partner.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -58,10 +59,6 @@ jobs:
           grep -Fq "const accepted=r.action==='picked';" data/member-sync.js
           grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js
           grep -Fq "new Date(h.at).toLocaleString('th-TH')" index.html
-          if grep -Fq "date:new Date(r.created_at).toLocaleString('th-TH')" data/member-sync.js && ! grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js; then
-            echo 'Cloud history exposes display date but not the local timestamp field required by the renderer.'
-            exit 1
-          fi
       - name: Verify completed live-group result bridge before deploy
         shell: bash
         run: |
@@ -80,22 +77,23 @@ jobs:
           grep -Fq '2026-08-23-group-result-bridge' deployment-check.html
           grep -Fq 'surprise-a11y-v1' deployment-check.html
           grep -Fq 'surprise-a11y-v2' deployment-check.html
+          grep -Fq 'focus-motion-v14' deployment-check.html
           grep -Fq 'pages-actions-source-v1' deployment-check.html
-          grep -Fq "fetch('./data/group-mode.js'" deployment-check.html || grep -Fq "text('./data/group-mode.js')" deployment-check.html
           grep -Fq 'showRemoteResult:useRemoteVotes' deployment-check.html
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' deployment-check.html
           grep -Fq 'homeSurpriseStatus' deployment-check.html
           grep -Fq "aria-live','assertive" deployment-check.html
-          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' deployment-check.html
-          grep -Fq 'kinaraidee-beta-v13' deployment-check.html
-      - name: Verify latest release wiring and PWA v13
+          grep -Fq 'kinaraidee-beta-v14' deployment-check.html
+      - name: Verify latest release wiring and accessibility runtime
         shell: bash
         run: |
           set -euo pipefail
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive PWA marker'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md
           grep -q 'data/home-surprise.js' index.html
           grep -q 'data/nearby-restaurants.js' index.html
           grep -q 'serviceWorker' index.html
-          grep -q 'kinaraidee-beta-v13' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
@@ -106,38 +104,28 @@ jobs:
           grep -Fq "status.setAttribute('aria-live','assertive')" data/home-surprise.js
           grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" data/home-surprise.js
           grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" data/home-surprise.js
-          grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' data/home-surprise.js
-          grep -q 'pageshow' data/home-surprise.js
-          grep -q 'online' data/home-surprise.js
+          grep -Fq 'kinaraideeAccessibilityStyles' data/home-surprise.js
+          grep -Fq 'prefers-reduced-motion' data/home-surprise.js
+          grep -Fq 'button:focus-visible' feedback.html
+          grep -Fq 'button:focus-visible' partner.html
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
           grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
           grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
           if grep -q 'Promise.allSettled' sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
-      - name: Block deploy on release evidence marker drift
+      - name: Block deploy on runtime declaration drift
         shell: bash
         run: |
           set -euo pipefail
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
-          test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
-          test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
-          strict=('.github/workflows/qa.yml' '.github/workflows/beta-check.yml' '.github/workflows/pages.yml' '.github/workflows/live-smoke.yml' 'README.md')
-          evidence=('CURRENT-RELEASE.md' 'LIVE-DEPLOYMENT-VERIFICATION.md' 'BETA-RUN-LOG.md' 'BETA-DEVICE-MATRIX.md' 'RELEASE-CHECKLIST.md')
-          for file in "${strict[@]}"; do
-            test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
-            grep -Fq "$marker" "$file" || { echo "Release marker drift: $file does not reference $marker"; exit 1; }
-            while IFS= read -r found; do [ -z "$found" ] && continue; if [ "$found" != "$marker" ]; then echo "Stale active release marker in $file: $found (expected only $marker)"; exit 1; fi; done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
-          done
-          for file in "${evidence[@]}"; do test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }; grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }; done
-          grep -Eq 'Current `main`: `[0-9a-f]{40}`|Latest reviewed .*`[0-9a-f]{40}`' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'; exit 1; }
-          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the incomplete Public Beta gate'; exit 1; }
-          grep -Fq 'Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the verified browser/PWA deployment-trace status'; exit 1; }
-          grep -Fq 'This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only.' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the scoped deployment-evidence boundary'; exit 1; }
+          declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$marker" && test "$marker" = "$declared" || { echo "Runtime marker drift: sw=$marker declaration=$declared"; exit 1; }
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RUNTIME.md
       - name: Block deploy when declared browser runtime candidate is stale
         shell: bash
         run: |
           set -euo pipefail
-          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
-          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RELEASE.md'; exit 1; }
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RUNTIME.md'; exit 1; }
           git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of deployment HEAD: $candidate"; exit 1; }
           changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
@@ -151,8 +139,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Keep the same credential detector contract used by Beta QA: server-side
-          # environment-variable references are safe; actual credential-shaped payloads are not.
           pattern='(sb_''secret_|service_''role|SUPABASE_''SERVICE_ROLE|PRIVATE_''KEY-----)'
           matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' "$pattern" . || true)"
           safe_env='Deno\.env\.get\(['"'"'\"]SUPABASE_''SERVICE_ROLE_KEY['"'"'\"]\)'

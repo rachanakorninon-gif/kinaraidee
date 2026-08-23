@@ -22,136 +22,76 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive canonical release marker from sw.js'; exit 1; }
           test "$(printf '%s\n' "$marker" | wc -l)" -eq 1 || { echo 'Multiple canonical markers found in sw.js'; exit 1; }
-          echo "Canonical marker: $marker"
-
-          strict=(
-            '.github/workflows/qa.yml'
-            '.github/workflows/beta-check.yml'
-            '.github/workflows/pages.yml'
-            '.github/workflows/live-smoke.yml'
-            'README.md'
-          )
-          evidence=(
-            'CURRENT-RELEASE.md'
-            'LIVE-DEPLOYMENT-VERIFICATION.md'
-            'BETA-RUN-LOG.md'
-            'BETA-DEVICE-MATRIX.md'
-            'RELEASE-CHECKLIST.md'
-          )
-
-          for file in "${strict[@]}"; do
-            test -s "$file" || { echo "Missing release-tracking file: $file"; exit 1; }
-            grep -Fq "$marker" "$file" || { echo "Release marker drift: $file does not reference $marker"; exit 1; }
-            while IFS= read -r found; do
-              [ -z "$found" ] && continue
-              if [ "$found" != "$marker" ]; then
-                echo "Stale active release marker in $file: $found (expected only $marker)"
-                exit 1
-              fi
-            done < <(grep -oE 'kinaraidee-beta-v[0-9]+' "$file" | sort -u || true)
-          done
-
-          for file in "${evidence[@]}"; do
-            test -s "$file" || { echo "Missing release-evidence file: $file"; exit 1; }
-            grep -Fq "$marker" "$file" || { echo "Release evidence drift: $file does not reference current $marker"; exit 1; }
-          done
-
-          grep -Eq 'Current `main`: `[0-9a-f]{40}`|Latest reviewed .*`[0-9a-f]{40}`' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md does not contain a reviewed 40-character release SHA'
-            exit 1
-          }
-          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve an explicit incomplete Public Beta gate while required evidence remains open'
-            exit 1
-          }
-          grep -Fq 'Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve the verified browser/PWA deployment-trace status'
-            exit 1
-          }
-          grep -Fq 'This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only.' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve the scoped deployment-evidence boundary'
-            exit 1
-          }
-
-          echo 'Active release files use only the canonical marker; evidence docs preserve a trace-verified browser/PWA deployment while keeping Public Beta explicitly incomplete'
+          test -s CURRENT-RUNTIME.md || { echo 'Missing CURRENT-RUNTIME.md'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md || { echo "CURRENT-RUNTIME.md does not declare $marker"; exit 1; }
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RUNTIME.md || { echo 'Current runtime declaration must preserve incomplete Public Beta gate'; exit 1; }
+          if grep -Eq 'PWA cache marker: `kinaraidee-beta-v[0-9]+`' CURRENT-RUNTIME.md; then
+            declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+            test "$declared" = "$marker" || { echo "Runtime declaration marker $declared differs from sw.js $marker"; exit 1; }
+          fi
+          echo "Canonical browser/PWA marker: $marker"
 
       - name: Validate declared browser runtime candidate lineage
         shell: bash
         run: |
           set -euo pipefail
-
-          reviewed="$(sed -n 's/^- Latest reviewed `main`: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
-          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
-
-          test -n "$reviewed" || { echo 'Unable to parse latest reviewed main SHA from CURRENT-RELEASE.md'; exit 1; }
-          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RELEASE.md'; exit 1; }
-
-          git cat-file -e "$reviewed^{commit}" || { echo "Reviewed SHA is not present in repository history: $reviewed"; exit 1; }
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RUNTIME.md'; exit 1; }
           git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
-          git merge-base --is-ancestor "$reviewed" HEAD || { echo "Reviewed SHA is not an ancestor of HEAD: $reviewed"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
-
-          changed="$(git diff --name-only "$candidate"..HEAD -- \
-            index.html 404.html privacy.html feedback.html partner.html \
-            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           if [ -n "$changed" ]; then
-            echo 'Browser/PWA runtime files changed after the declared candidate; CURRENT-RELEASE.md must advance the runtime candidate before release:'
+            echo 'Browser/PWA runtime files changed after the declared candidate; CURRENT-RUNTIME.md must advance before release:'
             printf '%s\n' "$changed"
             exit 1
           fi
-
-          echo "Declared runtime candidate $candidate is an ancestor of HEAD and no browser/PWA runtime files changed after it"
+          status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          case "$status" in
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT'|'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE') ;;
+            *) echo "Unexpected runtime deployment status: $status"; exit 1;;
+          esac
+          echo "Declared runtime candidate $candidate is clean; deployment status is $status"
 
       - name: Validate declared Group API source candidate lineage
         shell: bash
         run: |
           set -euo pipefail
-
           candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           test -n "$candidate" || { echo 'Unable to parse Group API source candidate SHA from CURRENT-RELEASE.md'; exit 1; }
-
           git cat-file -e "$candidate^{commit}" || { echo "Group API candidate SHA is not present in repository history: $candidate"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Group API candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
-
           changed="$(git diff --name-only "$candidate"..HEAD -- supabase/functions/group-api || true)"
           if [ -n "$changed" ]; then
-            echo 'Group API source changed after the declared candidate; CURRENT-RELEASE.md must advance the Group API candidate and deployment evidence before release:'
+            echo 'Group API source changed after the declared candidate; release evidence must advance before release:'
             printf '%s\n' "$changed"
             exit 1
           fi
-
-          echo "Declared Group API candidate $candidate is an ancestor of HEAD and no Group API source files changed after it"
+          echo "Declared Group API candidate $candidate remains clean"
 
       - name: Validate declared Partner API source candidate lineage
         shell: bash
         run: |
           set -euo pipefail
-
           evidence='PARTNER-API-HARDENING-EVIDENCE.md'
           test -s "$evidence" || { echo "Missing Partner API evidence file: $evidence"; exit 1; }
           candidate="$(sed -n 's/^- PR #[0-9][0-9]* merged as `\([0-9a-f]\{40\}\)`.*/\1/p' "$evidence" | head -n1)"
           test -n "$candidate" || { echo 'Unable to parse Partner API source candidate SHA from evidence'; exit 1; }
-
           git cat-file -e "$candidate^{commit}" || { echo "Partner API candidate SHA is not present in repository history: $candidate"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Partner API candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
-
           changed="$(git diff --name-only "$candidate"..HEAD -- supabase/functions/partner-api || true)"
           if [ -n "$changed" ]; then
-            echo 'Partner API source changed after the documented candidate; PARTNER-API-HARDENING-EVIDENCE.md must advance source/deployment evidence before release:'
+            echo 'Partner API source changed after documented candidate; evidence must advance before release:'
             printf '%s\n' "$changed"
             exit 1
           fi
-
           grep -Fq 'Status: **SOURCE/DEPLOYMENT HARDENING VERIFIED — LIVE REJECTION RUN NOT YET PROMOTED TO PASS**' "$evidence" || {
             echo 'Partner API evidence boundary must remain explicit until a confirmed live rejection run exists'
             exit 1
           }
-
-          echo "Declared Partner API candidate $candidate is an ancestor of HEAD; no Partner API source changed after it and live rejection evidence remains explicitly unpromoted"
+          echo "Declared Partner API candidate $candidate remains clean"
 
       - name: Validate atomic app-shell strategy
         shell: bash

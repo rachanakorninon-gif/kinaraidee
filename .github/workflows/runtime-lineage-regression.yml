@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           test -n "$candidate" || { echo 'Unable to parse runtime candidate'; exit 1; }
           git cat-file -e "$candidate^{commit}"
           git merge-base --is-ancestor "$candidate" HEAD
@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           original="$(git rev-parse HEAD)"
           git config user.name 'runtime-lineage-regression'
           git config user.email 'runtime-lineage-regression@users.noreply.github.com'
@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           original="$(git rev-parse HEAD)"
           git config user.name 'runtime-lineage-regression'
           git config user.email 'runtime-lineage-regression@users.noreply.github.com'
@@ -64,5 +64,7 @@ jobs:
           set -euo pipefail
           grep -Fq 'Validate declared browser runtime candidate lineage' .github/workflows/release-consistency.yml
           grep -Fq 'Block deploy when declared browser runtime candidate is stale' .github/workflows/pages.yml
+          grep -Fq 'CURRENT-RUNTIME.md' .github/workflows/release-consistency.yml
+          grep -Fq 'CURRENT-RUNTIME.md' .github/workflows/pages.yml
           grep -Fq 'git diff --name-only "$candidate"..HEAD' .github/workflows/release-consistency.yml
           grep -Fq 'git diff --name-only "$candidate"..HEAD' .github/workflows/pages.yml
