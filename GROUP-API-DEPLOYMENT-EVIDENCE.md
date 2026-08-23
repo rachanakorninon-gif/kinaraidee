@@ -7,37 +7,42 @@ Evidence refreshed: 2026-08-23 (Asia/Bangkok)
 - Supabase project: `cuspfvfzprlgtvtdyilh` (`Kinaraidee`).
 - Edge Function: `group-api`.
 - Observed deployed status at inspection time: `ACTIVE`.
-- Observed deployed version at inspection time: `4`.
+- Observed deployed version at inspection time: `5`.
 - Observed deployment setting: `verify_jwt=false`, preserved intentionally for accountless invited-friend voting.
-- Supabase-reported deployed bundle SHA-256 at inspection time: `cec4b0678645b49266ed0cd0b826c05ff58e5a751466c0c2ff0899ebf161023c`.
-- The deployed `index.ts` payload retrieved from Supabase was inspected against repository `main` at `supabase/functions/group-api/index.ts` (repository blob `90de51709db9634fa4c396c9cd27bbe6de8619de`) and matched the PR #83 source payload.
-- Current deployed payload includes `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, 8 KiB Content-Length rejection, room expiry/state checks, host-token authorization for host-only actions, validated room/vote inputs, and privacy-safe structured operational event code.
-- PR #83 additionally validates UUID-shaped room IDs before UUID-column lookups, validates the existing 64-hex host-token shape before host-only DB lookups, and rejects voter IDs longer than 120 characters rather than silently truncating them.
+- Supabase-reported deployed bundle SHA-256 at inspection time: `d2f70b4345ce05af1c4645764f4de205695593b79ba4f165a7fdd7aef52bf150`.
+- The deployed `index.ts` payload retrieved from Supabase was inspected against repository `main` at `supabase/functions/group-api/index.ts` (repository blob `9f6cadc6dd9385f8b786aeec56c7d87134cb9e39`) and matched the PR #87 source payload.
+- Current deployed payload includes `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, room expiry/state checks, host-token authorization for host-only actions, validated room/vote inputs, privacy-safe structured operational event code, and an 8 KiB request-body contract enforced against actual UTF-8 bytes after the body is read.
+- `Content-Length` remains an early rejection signal, but version 5 also measures `rawBody` bytes before JSON parsing so missing/chunked `Content-Length` cannot bypass the same limit.
+- The v4 UUID-shaped room ID checks, 64-hex host-token shape checks and >120-character voter-ID rejection remain present.
 - Operational event code remains bounded to fields such as `reason`, `size`, `voteCount`, and `isUpdate`; the inspected source does not directly log room IDs, host tokens, voter IDs, tags, IP addresses, request headers, or request bodies.
 
 ## Repository lineage
 
-PR #83 was squash-merged to `main` at `a4237ce6746478caa8f0b9da60d4456b6dce4758` and is the current Group API source candidate.
+PR #83 was merged to `main` at `a4237ce6746478caa8f0b9da60d4456b6dce4758` and established the identifier-shape hardening used by v4.
 
-PR #84 was squash-merged at `1bec99be1dbdf253bed67610b354973897af253f`; it changes the rejection-only live probe workflow and does not alter `supabase/functions/group-api/index.ts`. Therefore PR #84 is a live-verification descendant, not a new Group API source candidate.
+PR #87 was merged at `3b2375e50368add46e8b683111c30ed41be75715` and is the current Group API source candidate. It changes `supabase/functions/group-api/index.ts` so the existing 8 KiB contract is enforced against the actual UTF-8 request body and extends the static regression guard accordingly.
 
-The earlier PR #63 / Supabase v3 parity evidence is historical and has been superseded for current backend source/deployment parity by PR #83 / Supabase v4.
+PR #88 was merged at `524c185517b27c55c56218c8331b2a2ecec0f949`; it changes the rejection-only live probe workflow and does not alter backend runtime source. Therefore PR #88 is a live-verification descendant, not a new Group API source candidate.
+
+Earlier PR #63/v3 and PR #83/v4 deployment parity records remain historical evidence and are superseded for current backend source/deployment parity by PR #87 / Supabase v5.
 
 ## Live rejection-probe evidence
 
-`Group API Live Observability Probe` run `32629629579` completed `success` on exact `main` SHA `1bec99be1dbdf253bed67610b354973897af253f`.
+`Group API Live Observability Probe` run `32631490603` completed `success` on exact `main` SHA `524c185517b27c55c56218c8331b2a2ecec0f949`.
 
-The probe is deliberately rejection-only and non-mutating. It verified the deployed public endpoint rejects:
+The probe is deliberately rejection-only and non-mutating. It retained the existing checks for unsupported method, malformed room identifiers, malformed host-only room/token shapes and overlong voter IDs, and additionally verified:
 
-- unsupported GET with HTTP 405 / `method_not_allowed`;
-- malformed `roomId` for `get_room` with HTTP 400 / `invalid_room_id`;
-- malformed `roomId` for `submit_vote` with HTTP 400 / `invalid_vote`;
-- malformed room/token shapes for host-only actions with HTTP 403 / `forbidden`;
-- a voter identifier longer than 120 characters with HTTP 400 / `invalid_vote`.
+- a request body larger than 8 KiB sent with HTTP/1.1 `Transfer-Encoding: chunked` is rejected with HTTP 413 / `request_too_large`.
 
-The probe does not create a room, submit a successful vote, update a room, or close a room.
+The chunked transfer case specifically exercises the post-read actual-byte guard rather than relying only on the `Content-Length` early check. The probe does not create a room, submit a successful vote, update a room, or close a room.
 
-Fresh Supabase Edge Function platform logs during the same probe window show version 4 requests with the expected rejection status classes, including GET 405 and POST 400/403 responses. This establishes that the controlled probe reached the ACTIVE v4 deployment and that request-level platform invocation logs were ingested.
+Fresh Supabase Edge Function platform logs during the same probe window show version 5 requests with the expected rejection status classes, including:
+
+- GET 405;
+- POST 400/403 for the existing malformed-input cases;
+- POST 413 at `2026-08-23T09:37:00.760Z` for the oversized request.
+
+This establishes that the controlled probe reached the ACTIVE v5 deployment and that request-level platform invocation logs captured the actual-body 413 rejection.
 
 ## Application structured-event evidence status
 
@@ -45,13 +50,22 @@ The currently available Supabase log surface exposes request-level platform even
 
 Therefore:
 
-- deployment/source parity for inspected v4 payload: **VERIFIED**
-- scoped live v4 rejection behavior: **VERIFIED**
-- request-level platform log ingestion for the controlled v4 probe: **VERIFIED**
+- deployment/source parity for inspected v5 payload: **VERIFIED**
+- scoped live v5 rejection behavior including chunked oversized-body 413: **VERIFIED**
+- request-level platform log ingestion for the controlled v5 probe: **VERIFIED**
 - exact application structured-event ingestion for `component=group-api`: **NOT VERIFIED IN THE AVAILABLE LOG SURFACE**
 - monitoring baseline / thresholds / alerts / owner / escalation: **NOT YET VERIFIED**
 
 Do not infer application-event ingestion from platform request logs alone.
+
+## Advisor evidence after v5 deployment
+
+A fresh read-only Supabase advisor re-check after the v5 backend deployment found:
+
+- Security Advisor: leaked-password protection remains disabled (`WARN`); other current findings are INFO-only RLS-enabled/no-policy notices on deny-by-default tables.
+- Performance Advisor: INFO-only unused-index notices; no Performance Advisor WARN was observed.
+
+No DDL change was made as part of PR #87/v5.
 
 ## Retention baseline observation
 
@@ -66,6 +80,6 @@ These are time-stamped operational observations only. They do not select a reten
 
 ## Evidence boundary
 
-This evidence verifies the inspected ACTIVE `group-api` v4 payload, repository/deployment source parity, and a scoped non-mutating live rejection contract with matching platform request logs. It does **not** prove application structured-event ingestion, alerting, load capacity, a complete anonymous rate-limit/quota strategy, approved retention/deletion policy, cleanup correctness, Privacy/PDPA approval, real-device Group final-result behavior, Public Beta completion, or Commercial GO readiness.
+This evidence verifies the inspected ACTIVE `group-api` v5 payload, repository/deployment source parity, and a scoped non-mutating live rejection contract including chunked oversized-body handling with matching platform request logs. It does **not** prove application structured-event ingestion, alerting, load capacity, a complete anonymous rate-limit/quota strategy, approved retention/deletion policy, cleanup correctness, Privacy/PDPA approval, real-device Group final-result behavior, Public Beta completion, or Commercial GO readiness.
 
 Issue #45 remains open for application-event observability, monitoring baseline/operations, retention cleanup, complete anonymous abuse controls, related privacy decisions, and remaining production-readiness evidence.
