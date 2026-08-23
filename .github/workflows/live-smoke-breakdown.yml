@@ -1,0 +1,92 @@
+name: Live Smoke Breakdown
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose-live-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Identify failing live assertion
+        shell: bash
+        run: |
+          set -u
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          get(){ curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "$1"; }
+          html="$(get "$base/")" || exit 2
+          probe="$(get "$base/deployment-check.html")" || exit 2
+          sw="$(get "$base/sw.js")" || exit 2
+          nearby="$(get "$base/data/nearby-restaurants.js")" || exit 2
+          group_mode="$(get "$base/data/group-mode.js")" || exit 2
+          group_remote="$(get "$base/data/group-remote.js")" || exit 2
+          release_meta="$(get "$base/release-meta.json")" || exit 2
+          surprise="$(get "$base/data/home-surprise.js")" || exit 2
+          pwa="$(get "$base/data/pwa-install.js")" || exit 2
+          partner="$(get "$base/partner.html")" || exit 2
+          robots="$(get "$base/robots.txt")" || exit 2
+          sitemap="$(get "$base/sitemap.xml")" || exit 2
+          failures=0
+          check(){ label="$1"; shift; if "$@"; then echo "PASS: $label"; else echo "FAIL: $label"; failures=$((failures+1)); fi; }
+          fixed(){ grep -Fq "$1" <<<"$2"; }
+          regex(){ grep -q "$1" <<<"$2"; }
+          check 'html title' fixed 'กินอะไรดี' "$html"
+          check 'html manifest' fixed 'manifest.webmanifest' "$html"
+          check 'html serviceWorker' fixed 'serviceWorker' "$html"
+          check 'html home-surprise' fixed 'home-surprise.js' "$html"
+          check 'html pwa-install' fixed 'pwa-install.js' "$html"
+          check 'probe group marker' fixed '2026-08-23-group-result-bridge' "$probe"
+          check 'probe surprise v1' fixed 'surprise-a11y-v1' "$probe"
+          check 'probe surprise v2' fixed 'surprise-a11y-v2' "$probe"
+          check 'probe pages actions' fixed 'pages-actions-source-v1' "$probe"
+          check 'probe group bridge source marker' fixed 'showRemoteResult:useRemoteVotes' "$probe"
+          check 'probe remote result marker' fixed 'remoteShowResult.onclick=showOnlineResult' "$probe"
+          check 'probe a11y status marker' fixed 'homeSurpriseStatus' "$probe"
+          check 'probe aria-live marker' fixed "aria-live','assertive" "$probe"
+          check 'probe busy text' fixed 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' "$probe"
+          check 'sw cache' fixed 'kinaraidee-beta-v13' "$sw"
+          check 'sw atomic shell' fixed 'cache.addAll(SHELL)' "$sw"
+          check 'sw surprise asset' fixed 'home-surprise.js' "$sw"
+          check 'sw pwa asset' fixed 'pwa-install.js' "$sw"
+          if grep -q 'Promise.allSettled' <<<"$sw"; then echo 'FAIL: sw Promise.allSettled'; failures=$((failures+1)); else echo 'PASS: sw no Promise.allSettled'; fi
+          check 'group useRemoteVotes' fixed 'function useRemoteVotes(votes,setup)' "$group_mode"
+          check 'group public bridge' fixed 'window.KINARAIDEE_GROUP_MODE={showRemoteResult:useRemoteVotes}' "$group_mode"
+          check 'group sync load' fixed "await load('data/group-sync.js')" "$group_mode"
+          check 'group remote load' fixed "await load('data/group-remote.js')" "$group_mode"
+          check 'group remote call' fixed 'window.KINARAIDEE_GROUP_MODE?.showRemoteResult' "$group_remote"
+          check 'group click handler' fixed 'remoteShowResult.onclick=showOnlineResult' "$group_remote"
+          check 'group render bridge' fixed 'renderGroupResult();return true' "$group_mode"
+          deployed_sha="$(META="$release_meta" node -e "const m=JSON.parse(process.env.META);process.stdout.write(String(m.sha||''))")"
+          meta_cache="$(META="$release_meta" node -e "const m=JSON.parse(process.env.META);process.stdout.write(String(m.pwa_cache||''))")"
+          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
+          if [[ "$deployed_sha" =~ ^[0-9a-f]{40}$ ]]; then echo "PASS: release meta SHA $deployed_sha"; else echo "FAIL: release meta SHA [$deployed_sha]"; failures=$((failures+1)); fi
+          if [ "$meta_cache" = 'kinaraidee-beta-v13' ]; then echo "PASS: meta cache $meta_cache"; else echo "FAIL: meta cache [$meta_cache]"; failures=$((failures+1)); fi
+          if [ "$live_cache" = "$meta_cache" ]; then echo "PASS: live/meta cache match"; else echo "FAIL: live cache [$live_cache] vs meta [$meta_cache]"; failures=$((failures+1)); fi
+          check 'nearby replaceChildren' fixed 'box.replaceChildren()' "$nearby"
+          check 'nearby name textContent' fixed 'name.textContent=String(r.name' "$nearby"
+          check 'surprise status id' fixed 'homeSurpriseStatus' "$surprise"
+          check 'surprise role status' fixed "status.setAttribute('role','status')" "$surprise"
+          check 'surprise aria-live' fixed "status.setAttribute('aria-live','assertive')" "$surprise"
+          check 'surprise aria-disabled' fixed "b.setAttribute('aria-disabled',on?'true':'false')" "$surprise"
+          check 'surprise aria-busy' fixed "b.setAttribute('aria-busy',on?'true':'false')" "$surprise"
+          check 'surprise busy text' fixed 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' "$surprise"
+          check 'surprise pageshow' fixed 'pageshow' "$surprise"
+          check 'surprise online' fixed 'online' "$surprise"
+          check 'pwa dismiss label' fixed 'เข้าใจแล้ว' "$pwa"
+          check 'pwa iPad desktop UA' fixed 'MacIntel' "$pwa"
+          check 'partner privacy version' fixed "PRIVACY_NOTICE_VERSION='2026-08-21'" "$partner"
+          check 'partner privacy version payload' fixed 'privacy_notice_version:PRIVACY_NOTICE_VERSION' "$partner"
+          check 'partner privacy timestamp payload' fixed 'privacy_acknowledged_at:new Date().toISOString()' "$partner"
+          check 'robots sitemap' fixed 'sitemap.xml' "$robots"
+          check 'sitemap urlset' fixed '<urlset' "$sitemap"
+          check 'sitemap privacy' fixed 'privacy.html' "$sitemap"
+          check 'sitemap feedback' fixed 'feedback.html' "$sitemap"
+          check 'sitemap partner' fixed 'partner.html' "$sitemap"
+          echo "Failures: $failures"
+          exit "$failures"
+
+      - name: Evidence boundary
+        run: echo 'Diagnostic only; fix the root assertion rather than weakening live acceptance.'
