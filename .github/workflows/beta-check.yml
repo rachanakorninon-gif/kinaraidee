@@ -18,13 +18,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js)
+          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Block private credential patterns including workflows
         shell: bash
         run: |
           set -euo pipefail
-          # Split sentinel text so scanning workflow YAML does not flag the detector source itself.
           pattern='(sb_''secret_|service_''role|SUPABASE_''SERVICE_ROLE|PRIVATE_''KEY-----)'
           matches="$(grep -RInE --exclude-dir=.git --exclude='*.md' "$pattern" . || true)"
           safe_env='Deno\.env\.get\(['"'"'\"]SUPABASE_''SERVICE_ROLE_KEY['"'"'\"]\)'
@@ -64,15 +63,17 @@ jobs:
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
           grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
           grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
-      - name: Validate surprise and PWA v13 integrity
+      - name: Validate surprise and current PWA integrity
         shell: bash
         run: |
           set -euo pipefail
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive PWA marker'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md
           grep -q 'aria-busy' data/home-surprise.js
           grep -q 'if(busy)return' data/home-surprise.js
           grep -q 'pageshow' data/home-surprise.js
           grep -q 'online' data/home-surprise.js
-          grep -q 'kinaraidee-beta-v13' sw.js
           grep -q 'cache.addAll(SHELL)' sw.js
           grep -q "'./data/home-surprise.js'" sw.js
           grep -q "'./data/pwa-install.js'" sw.js
