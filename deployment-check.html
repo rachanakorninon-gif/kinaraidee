@@ -15,7 +15,7 @@
 <main>
   <h1>🔎 ตรวจสอบเวอร์ชัน “กินอะไรดี”</h1>
   <p>หน้านี้ใช้ตรวจว่าโค้ดแก้ผลโหวตกลุ่มและสถานะสำหรับผู้ใช้ screen reader ขึ้นเว็บจริงหรือยัง โดยไม่เปลี่ยนข้อมูลผู้ใช้</p>
-  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1</div></div>
+  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1 · surprise-a11y-v2</div></div>
   <div class="row"><strong>Group result bridge</strong><div id="bridge" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>Surprise accessibility</strong><div id="surprise" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>PWA cache</strong><div id="cache" class="wait">กำลังตรวจ…</div></div>
@@ -33,8 +33,8 @@
       const [mode,remote,surprise,sw]=await Promise.all([text('./data/group-mode.js'),text('./data/group-remote.js'),text('./data/home-surprise.js'),text('./sw.js')]);
       const bridge=mode.includes('function useRemoteVotes(votes,setup)')&&mode.includes('showRemoteResult:useRemoteVotes')&&remote.includes('remoteShowResult.onclick=showOnlineResult');
       set('bridge',bridge?'PASS — พบโค้ดแก้ผลโหวตกลุ่ม':'FAIL — ยังไม่พบโค้ดแก้ผลโหวตกลุ่ม',bridge);
-      const surpriseA11y=surprise.includes('homeSurpriseStatus')&&surprise.includes("aria-live','assertive")&&surprise.includes('กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่');
-      set('surprise',surpriseA11y?'PASS — พบโค้ดประกาศสถานะให้ screen reader':'FAIL — ยังไม่พบโค้ดประกาศสถานะให้ screen reader',surpriseA11y);
+      const surpriseA11y=surprise.includes('homeSurpriseStatus')&&surprise.includes("aria-live','assertive")&&surprise.includes('กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่')&&surprise.includes('document.body.appendChild(status)')&&surprise.includes('clearStatusLater(status)');
+      set('surprise',surpriseA11y?'PASS — พบโค้ดประกาศสถานะให้ screen reader (persistent live region)':'FAIL — ยังไม่พบโค้ด persistent live region สำหรับ screen reader',surpriseA11y);
       const m=sw.match(/const CACHE='(kinaraidee-beta-v\d+)'/);const cache=m?m[1]:'ไม่พบ marker';set('cache',cache,cache==='kinaraidee-beta-v13');
     }catch(e){set('bridge','ตรวจ runtime ไม่สำเร็จ: '+e.message,false);set('surprise','ตรวจไม่ได้',false);set('cache','ตรวจไม่ได้',false)}
     try{
