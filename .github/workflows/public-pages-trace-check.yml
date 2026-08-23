@@ -14,7 +14,7 @@ jobs:
       - name: Verify latest Pages artifact is public
         shell: bash
         env:
-          EXPECTED_SHA: 1a4c23b3c93d2d0601056c487e057e402104316b
+          EXPECTED_SHA: 35fe4b7fbf201882ea2ebad8ffca2b8da668999b
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
