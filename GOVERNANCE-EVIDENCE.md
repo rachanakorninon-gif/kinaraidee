@@ -6,13 +6,16 @@ This record captures the current repository-governance evidence without claiming
 
 ## Current observed state
 
-Observed `main` after PR #114 merge:
+Fresh GitHub branch read-back on 2026-08-23 at `main` SHA `a597db1150a02cd703a5dd003d5dc5a3db458f6a` reports:
 
-- `main` SHA: `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0`.
-- PR #114 merged successfully and added `GOVERNANCE-RUNBOOK.md` plus `.github/workflows/governance-required-checks-regression.yml`.
-- GitHub branch read-back still reports `protected=false`.
-- Protection `enabled=false`.
-- Required status-check enforcement is `off` and no required contexts/checks are configured.
+- `protected=false`;
+- protection `enabled=false`;
+- required status-check enforcement = `off`;
+- required contexts/checks are empty.
+
+The current lineage also contains direct post-PR #114 commits on `main`, including `a04a2efc85048c4e0e04632f1632a3fb461856fb` and `a597db1150a02cd703a5dd003d5dc5a3db458f6a`. Their presence is consistent with the current absence of a pull-request enforcement rule. This is recorded as governance exposure evidence, not as an assertion about who intentionally bypassed a policy.
+
+Compare from PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` through `a597db1150a02cd703a5dd003d5dc5a3db458f6a` is 14 commits ahead and changes only governance/RLS evidence documents plus `.github/workflows/supabase-rls-negative-evidence-regression.yml`; it does not change the browser/PWA runtime candidate or Group API source candidate.
 
 Therefore Issue #35 remains a **Commercial Governance blocker**.
 
@@ -39,7 +42,7 @@ For PR #114 head `0ffc70d1a1dace304b4acce8ee902d6f32462f1c`, the inspected pull-
 
 Other inspected regression suites for the same PR head also completed successfully.
 
-Evidence boundary: successful PR checks prove the source-side required-check contract is currently coherent. They do **not** prove GitHub is enforcing those checks on `main`.
+Evidence boundary: successful PR checks prove the source-side required-check contract is coherent. They do **not** prove GitHub is enforcing those checks on `main`.
 
 ## Evidence still required before governance PASS
 
