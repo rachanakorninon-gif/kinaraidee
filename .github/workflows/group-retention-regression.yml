@@ -1,0 +1,76 @@
+name: Kinaraidee Group Retention Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'supabase/group-retention-diagnostic.sql'
+      - 'GROUP-API-RETENTION-SCHEMA-EVIDENCE.md'
+      - '.github/workflows/group-retention-regression.yml'
+  pull_request:
+    paths:
+      - 'supabase/group-retention-diagnostic.sql'
+      - 'GROUP-API-RETENTION-SCHEMA-EVIDENCE.md'
+      - '.github/workflows/group-retention-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  retention-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify diagnostic remains read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/group-retention-diagnostic.sql'
+          test -s "$file"
+
+          # Remove full-line SQL comments before checking executable text.
+          executable="$(sed -E '/^[[:space:]]*--/d' "$file")"
+
+          if grep -Eqi '(^|[^[:alnum:]_])(delete|update|insert|truncate|drop|alter|create|grant|revoke|call|do|merge|copy)([^[:alnum:]_]|$)' <<<"$executable"; then
+            echo 'Mutation or DDL keyword detected in read-only retention diagnostic.'
+            exit 1
+          fi
+
+          grep -Fq 'from public.group_rooms' "$file"
+          grep -Fq 'from public.group_votes' "$file"
+          grep -Fq 'expires_at <= now()' "$file"
+          grep -Fq 'expires_at > now()' "$file"
+          grep -Fq 'left join public.group_rooms' "$file"
+
+          echo 'Retention diagnostic remains read-only and preserves lifecycle checks.'
+
+      - name: Verify evidence boundary is explicit
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='GROUP-API-RETENTION-SCHEMA-EVIDENCE.md'
+          test -s "$evidence"
+          grep -Fq 'not an approved data-retention period' "$evidence"
+          grep -Fq 'idempotent cleanup mechanism' "$evidence"
+          grep -Fq 'active/non-eligible rooms are not deleted' "$evidence"
+          grep -Fq 'cleanup PASS' "$evidence"
+          grep -Fq 'Commercial GO' "$evidence"
+          echo 'Retention evidence boundary checks passed.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Group retention regression gate'
+            echo
+            echo '- Ensures the committed retention diagnostic remains read-only and contains no mutation/DDL statements.'
+            echo '- Preserves checks for expired vs active rooms, vote relationships and orphan detection.'
+            echo '- Requires retention evidence to keep policy/cleanup/Commercial boundaries explicit.'
+            echo '- This is static repository evidence only.'
+            echo '- It does not approve a retention period, execute cleanup, verify cascade deletion, prove Privacy/Legal compliance, or mark Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
