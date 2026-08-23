@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `722712a5997511998a09ce9ed401f71799bf9283` (PR #112 merge; Supabase feedback authenticated/admin RLS contract + evidence descendant, with no browser/PWA or Group API runtime-source change).
+- Latest reviewed `main`: `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` (PR #114 merge; repository-governance runbook + required-check contract descendant, with no browser/PWA, Group API or Supabase runtime-state change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Supabase grant/RLS/security descendants through PR #112 change database grants, policies/helpers, security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/RLS/security descendants through PR #112 changed database grants, policies/helpers, security verification workflows and evidence only. PR #114 adds governance documentation/regression protection only. None of these descendants change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -21,7 +21,7 @@ Confirmed evidence for PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` remai
 - Pages workflow run `32621529715` completed success for that exact SHA.
 - Public Pages Trace Check run `32621547307` verified public `release-meta.json` SHA, `kinaraidee-beta-v13`, and matching live Service Worker marker.
 - Corresponding Live Smoke run `32621549478` completed success.
-- Later documentation, QA, Group API, and Supabase security descendants have not changed the browser/PWA runtime candidate.
+- Later documentation, QA, Group API, Supabase security and governance descendants have not changed the browser/PWA runtime candidate.
 
 This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only. It does not imply real-device, assistive-technology, payment, partner, legal, full Public Beta or Commercial PASS.
 
@@ -116,9 +116,16 @@ The remaining device/accessibility gates are not replaced by CI or source inspec
 
 ## Repository governance
 
-Issue #35 remains a Commercial Governance blocker. The most recently verified branch-governance evidence reports `main` protection / required-status-check enforcement absent. Workflow success does not equal governance enforcement.
+Issue #35 remains a Commercial Governance blocker, but the repository-side preparation is now explicit:
 
-Before Commercial GO, production merge governance must have verifiable required release/security checks and evidence that a failing required check blocks merge.
+- PR #114 merged as `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` after 15 successful PR checks.
+- `GOVERNANCE-RUNBOOK.md` defines the recommended initial `main` protection/ruleset configuration and safe failure-blocking proof procedure.
+- Initial required-check candidates are `Kinaraidee Release Consistency / release-consistency`, `Beta integrity checks / validate`, `Kinaraidee Beta QA / static-qa`, and `Kinaraidee Security Hygiene / repository-security-hygiene`; all four currently run on every pull request without path filters.
+- `Governance Required Checks Regression` run `32646056459` passed on PR #114 and guards those workflow/job identities and universal PR triggers from drift.
+
+Status remains **PREPARED / NOT YET ENFORCED**. The connected GitHub surface still does not expose an administration write action for branch protection/rulesets, and current branch evidence remains unprotected. Workflow success or a prepared runbook does not equal governance enforcement.
+
+Before Commercial GO, an authorized GitHub administration action must enable protection/ruleset enforcement, then a safe temporary failing required check must be verified to block merge and branch state must be read back as protected/enforced.
 
 ## Public Beta gate impact
 
@@ -132,7 +139,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 
 - Public Beta technical/device/accessibility acceptance;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
-- `main` branch protection / required checks (#35);
+- actual `main` branch protection / required-check enforcement (#35), despite completed repository-side preparation;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond the scoped anonymous Data API probe and database-side RLS simulations;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
 - Production Privacy/Terms/controller/contact/retention/legal decisions;
@@ -146,7 +153,8 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = PR #112 merge `722712a5997511998a09ce9ed401f71799bf9283`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Latest reviewed `main` baseline = PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
 - Supabase least-privilege relation grants + anonymous SELECT negative probe + scoped database-side RLS simulations are security evidence, not a blanket RLS/Auth/security PASS.
+- Governance runbook/required-check contract is preparation evidence, not branch-protection enforcement PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
