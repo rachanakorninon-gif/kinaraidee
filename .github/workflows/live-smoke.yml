@@ -46,9 +46,12 @@ jobs:
           grep -q 'manifest.webmanifest' <<<"$html"
           grep -q 'serviceWorker' <<<"$html"
           grep -q 'home-surprise.js' <<<"$html"
-          grep -q 'pwa-install.js' <<<"$html"
+          grep -Fq "s.src='data/pwa-install.js'" <<<"$surprise"
+          grep -Fq 'ensurePwaInstallHelper();' <<<"$surprise"
           grep -Fq '2026-08-23-group-result-bridge' <<<"$probe"
           grep -Fq 'surprise-a11y-v1' <<<"$probe"
+          grep -Fq 'surprise-a11y-v2' <<<"$probe"
+          grep -Fq 'pages-actions-source-v1' <<<"$probe"
           grep -Fq 'showRemoteResult:useRemoteVotes' <<<"$probe"
           grep -Fq 'remoteShowResult.onclick=showOnlineResult' <<<"$probe"
           grep -Fq 'homeSurpriseStatus' <<<"$probe"
@@ -77,6 +80,7 @@ jobs:
           grep -Fq 'homeSurpriseStatus' <<<"$surprise"
           grep -Fq "status.setAttribute('role','status')" <<<"$surprise"
           grep -Fq "status.setAttribute('aria-live','assertive')" <<<"$surprise"
+          grep -Fq "document.body.appendChild(status)" <<<"$surprise"
           grep -Fq "b.setAttribute('aria-disabled',on?'true':'false')" <<<"$surprise"
           grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$surprise"
           grep -Fq 'กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่' <<<"$surprise"
@@ -92,7 +96,7 @@ jobs:
           grep -q 'privacy.html' <<<"$sitemap"
           grep -q 'feedback.html' <<<"$sitemap"
           grep -q 'partner.html' <<<"$sitemap"
-          echo 'Live smoke test passed for PWA v13 with Surprise accessibility source contract, completed group-result bridge, deployment probe, and release metadata'
+          echo 'Live smoke test passed for PWA v13 with active PWA-install bridge, Surprise accessibility source contract, completed group-result bridge, deployment probe, and release metadata'
 
       - name: Verify development files are not published
         shell: bash
@@ -141,6 +145,7 @@ jobs:
             echo '- Public URL: https://rachanakorninon-gif.github.io/kinaraidee/'
             echo '- Human-readable deployment probe: `/deployment-check.html` checked'
             echo "- Service Worker cache marker: \`$live_cache\` (matches release-meta.json)"
+            echo '- Active PWA install-helper bridge: checked on deployed `data/home-surprise.js`'
             echo '- Surprise accessibility source contract: checked on deployed probe and `data/home-surprise.js`'
             echo '- Completed live-group result bridge: checked on deployed assets'
             echo '- Partner renderer safety markers: checked'

@@ -16,6 +16,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify active app bootstrap wires PWA helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check data/home-surprise.js
+          grep -Fq 'function ensurePwaInstallHelper()' data/home-surprise.js
+          grep -Fq 'script[src="data/pwa-install.js"]' data/home-surprise.js
+          grep -Fq "s.src='data/pwa-install.js'" data/home-surprise.js
+          grep -Fq 'ensurePwaInstallHelper();' data/home-surprise.js
+          grep -Fq '<script src="data/home-surprise.js"></script>' index.html
+
       - name: Simulate iPhone/iPad hint and 7-day suppression
         shell: bash
         run: |
@@ -164,10 +175,10 @@ jobs:
           });
           assert(ipadDesktopUA.document.getElementById('iosInstallHint'),'touch MacIntel/iPad path should show the hint');
 
-          console.log('Synthetic iOS install hint PASS: render, dismiss, 7-day suppression, cooldown expiry, standalone suppression, iPad desktop-UA detection');
+          console.log('Synthetic iOS install hint PASS: active bootstrap wiring, render, dismiss, 7-day suppression, cooldown expiry, standalone suppression, iPad desktop-UA detection');
           NODE
 
       - name: Explain evidence boundary
         run: |
           echo 'Synthetic PWA install-hint regression passed.'
-          echo 'This guards NF-05 implementation logic but does not constitute iPhone/iPad Safari real-device PASS.'
+          echo 'This guards NF-05 implementation and active-bootstrap wiring but does not constitute iPhone/iPad Safari real-device PASS.'
