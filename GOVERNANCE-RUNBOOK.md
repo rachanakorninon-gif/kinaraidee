@@ -4,6 +4,17 @@ Status: **PREPARED / NOT YET ENFORCED**
 
 This runbook defines a low-risk starting configuration for protecting `main` before Commercial GO. It does not claim that GitHub branch protection or a repository ruleset is currently enabled.
 
+## Current read-back evidence
+
+Read-only GitHub branch inspection on 2026-08-23 at `main` SHA `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` reports:
+
+- `protected=false`;
+- protection `enabled=false`;
+- required-status-check enforcement level `off`;
+- configured required-status-check contexts/checks are empty.
+
+Therefore repository governance remains **NOT ENFORCED / NOT PASS**. This evidence only confirms the current branch configuration state; it does not authorize changing repository protection settings and does not replace the failure-blocking proof described below.
+
 ## Why these checks are the initial required set
 
 The following four workflows run on every pull request without path filters, so they are suitable initial required checks without creating a permanent pending-check problem for documentation-only or narrowly scoped PRs:
