@@ -38,7 +38,7 @@ Retention decision regression guards are static governance checks only; they do 
 
 ## Deployment evidence
 
-Status: **PARTIAL / PR #67 BROWSER DEPLOYMENT TRACE STILL REQUIRED**
+Status: **PARTIAL / PR #67 BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
 Deployment observability includes:
 
