@@ -1,0 +1,49 @@
+name: Pages Source Diagnostic
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: read
+
+jobs:
+  inspect-pages-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read GitHub Pages configuration
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/$REPOSITORY/pages"
+          body="$(curl --fail --silent --show-error --location \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "$api")"
+          BODY="$body" node <<'NODE'
+          const cfg=JSON.parse(process.env.BODY||'{}');
+          const buildType=String(cfg.build_type||'unknown');
+          const source=cfg.source||{};
+          console.log(`Pages build_type: ${buildType}`);
+          console.log(`Pages source branch: ${source.branch||'(none)'}`);
+          console.log(`Pages source path: ${source.path||'(none)'}`);
+          console.log(`Pages html_url: ${cfg.html_url||'(none)'}`);
+          if(process.env.GITHUB_STEP_SUMMARY){
+            const fs=require('fs');
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              `## GitHub Pages source diagnostic\n\n- build_type: \`${buildType}\`\n- source branch: \`${source.branch||'(none)'}\`\n- source path: \`${source.path||'(none)'}\`\n- site: ${cfg.html_url||'(none)'}\n\n`+
+              (buildType==='workflow'
+                ? 'Result: Pages is configured for GitHub Actions deployments.\n'
+                : 'Result: Pages is not configured for GitHub Actions deployments; generated workflow-only files such as `release-meta.json` will not be published by the active source.\n'));
+          }
+          NODE
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'This check only reads repository Pages configuration.'
+          echo 'It does not change the deployment source and does not constitute deployment PASS.'
