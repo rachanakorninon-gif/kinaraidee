@@ -3,6 +3,9 @@ name: Migrate Pages Source to Actions
 on:
   push:
     branches: ["ops/migrate-pages-to-actions"]
+  pull_request:
+    paths:
+      - '.github/workflows/migrate-pages-to-actions.yml'
 
 permissions:
   contents: read
