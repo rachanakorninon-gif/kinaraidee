@@ -3,7 +3,10 @@
 Status: **SCOPED PASS / READ + CROSS-USER MUTATION NEGATIVE EVIDENCE**
 
 Evidence date: 2026-08-23
-Repository baseline reviewed: `670307f7ce87155768eb3afb60fdb9ee6bd8443a`
+Repository baseline reviewed: `34ac370bf3ba0b334a06e1f9a9c51dd4775df459`
+
+Baseline note: compare from PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` through this baseline changes only governance/RLS evidence documents and `.github/workflows/supabase-rls-negative-evidence-regression.yml`; it does not change browser/PWA runtime assets, `supabase/functions/group-api/index.ts`, or Supabase RLS/policy migrations. The live RLS observations below therefore remain the scoped evidence under review rather than being reclassified as new runtime results.
+
 Supabase project: Kinaraidee production project
 
 ## Purpose
