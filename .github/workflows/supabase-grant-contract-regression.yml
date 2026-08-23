@@ -1,0 +1,75 @@
+name: Supabase Grant Contract Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/least-privilege-public-table-grants.sql'
+      - '.github/workflows/supabase-grant-contract-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/least-privilege-public-table-grants.sql'
+      - '.github/workflows/supabase-grant-contract-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify least-privilege table-grant contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/least-privilege-public-table-grants.sql'
+          test -s "$file"
+
+          # Public submission tables: INSERT only for signed-out/signed-in clients,
+          # except authenticated feedback SELECT used by the authorized dashboard flow.
+          grep -Fq 'grant insert on table public.beta_feedback to anon;' "$file"
+          grep -Fq 'grant select, insert on table public.beta_feedback to authenticated;' "$file"
+          grep -Fq 'grant insert on table public.partner_applications to anon, authenticated;' "$file"
+          grep -Fq 'grant insert on table public.restaurant_requests to anon, authenticated;' "$file"
+
+          # Member-owned data: no anon table grant; authenticated permissions match
+          # the existing ownership RLS policies and current application operations.
+          grep -Fq 'grant select, insert, update on table public.member_profiles to authenticated;' "$file"
+          grep -Fq 'grant select, insert, delete on table public.member_food_history to authenticated;' "$file"
+          grep -Fq 'grant select, insert, delete on table public.user_food_history to authenticated;' "$file"
+
+          test "$(grep -Fc 'revoke all privileges on table public.' "$file")" -eq 6
+
+          # Reject broad public table grants in this contract file.
+          if grep -Ei 'grant[[:space:]]+all([[:space:]]+privileges)?[[:space:]]+on[[:space:]]+table.*to[[:space:]]+(anon|authenticated)' "$file"; then
+            echo 'Broad ALL table grant to anon/authenticated detected.'
+            exit 1
+          fi
+
+          # The contract must not modify service_role or RLS policy definitions.
+          if grep -Ei '(^|[^[:alnum:]_])service_role([^[:alnum:]_]|$)' "$file" | grep -Eiv 'not changed|scope|evidence'; then
+            echo 'Unexpected service_role modification/reference in grant contract.'
+            exit 1
+          fi
+          if grep -Ei 'create[[:space:]]+policy|drop[[:space:]]+policy|alter[[:space:]]+policy|disable[[:space:]]+row[[:space:]]+level[[:space:]]+security' "$file"; then
+            echo 'RLS policy/security mutation must not be mixed into this table-grant contract.'
+            exit 1
+          fi
+
+          echo 'Supabase least-privilege table-grant source contract passed.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Supabase grant contract regression'
+            echo
+            echo '- Verifies the repository SQL contract limits anon/authenticated table grants to operations already supported by the intended RLS/application model.'
+            echo '- Rejects GRANT ALL and policy-disable mutations in this contract file.'
+            echo '- This is static repository evidence only; it does not prove live database grants, RLS authorization behavior, Auth configuration, real-device behavior, or Commercial readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
