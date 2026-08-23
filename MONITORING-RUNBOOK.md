@@ -22,6 +22,25 @@ Workflow: `.github/workflows/public-beta-monitor.yml`
 
 การตรวจ lineage นี้ยอมรับกรณี `main` มี workflow/documentation/backend commits หลัง browser runtime deployment ได้ ตราบใดที่ deployed SHA ยังอยู่ในประวัติของ `main` และไม่มี browser/PWA runtime asset change ที่ทำให้ candidate stale
 
+### Captured browser/PWA synthetic evidence
+
+Scheduled `Kinaraidee Public Beta Monitor` run `32626732416` completed `success` on repository SHA `058c41790970be91a397f01870210849e5a792c1` at 2026-08-23T07:52Z.
+
+The run captured:
+
+- deployed SHA from public `release-meta.json`: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
+- expected browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
+- live Service Worker marker: `kinaraidee-beta-v13`
+- public availability checks for home, 404, privacy, feedback, partner, deployment probe, manifest, Service Worker, release metadata, Surprise asset and nearby-restaurants asset
+- deployed-SHA ancestry/runtime-candidate lineage verification
+- development-only path checks where `/README.md`, `/SECURITY.md`, `/RELEASE-CHECKLIST.md`, `/.github/workflows/pages.yml` and `/supabase/config.toml` returned HTTP 404
+
+PR #98 was a temporary read-only diagnostic used to retrieve this run metadata and logs and was closed without merge after evidence capture.
+
+Evidence boundary: run `32626732416` is historical synthetic browser/PWA evidence for the unchanged PR #79 runtime candidate. Later Group API/workflow/documentation commits do not make it a Group API v6 monitor or a current-main full-system monitor. It does not replace real-device, accessibility, payment, privacy/legal, partner, backend application-event, owner/alert/escalation or Commercial acceptance evidence.
+
+Earlier scheduled monitor failures remain historical evidence and are not rewritten as success; the captured successful run above is a later run with its own immutable run ID/conclusion.
+
 ## Group API live monitoring evidence
 
 Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase `group-api` ACTIVE version 6.
@@ -111,4 +130,4 @@ Execution times in this controlled v6 rejection sequence are diagnostic observat
 - ขั้นตอน escalation/support ที่ทดสอบหรือยืนยันการเข้าถึงได้
 - monitoring/error reporting ที่ครอบคลุม Production components ที่เปิดใช้จริง เช่น payment/backend เมื่อเปิดใช้งาน
 
-ดังนั้น `RELEASE-CHECKLIST.md` ต้องคง Production monitoring เป็นรายการที่ยังไม่ผ่านจนกว่าหลักฐานเหล่านี้ครบ
+ดังนั้นการมี successful scheduled browser/PWA run `32626732416` และ canonical Group API rejection probe `32632951668` ช่วยเติมหลักฐาน mechanism/run ได้บางส่วน แต่ **Production monitoring gate ยังไม่ผ่าน** จนกว่ารายการข้างต้นครบตาม production scope จริง.
