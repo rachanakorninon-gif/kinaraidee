@@ -1,0 +1,116 @@
+name: Supabase Anonymous Data API Access Probe
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/least-privilege-public-table-grants.sql'
+      - '.github/workflows/supabase-anon-access-probe.yml'
+      - '.github/workflows/supabase-grant-contract-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/least-privilege-public-table-grants.sql'
+      - '.github/workflows/supabase-anon-access-probe.yml'
+      - '.github/workflows/supabase-grant-contract-regression.yml'
+  schedule:
+    - cron: '41 */12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  anonymous-select-negative-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify public project/key connectivity
+        shell: bash
+        run: |
+          set -euo pipefail
+          project_url="$(grep -oE 'https://[a-z0-9]+\.supabase\.co' feedback.html | head -n 1)"
+          publishable_key="$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+' feedback.html | head -n 1)"
+          test -n "$project_url"
+          test -n "$publishable_key"
+
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            -H "apikey: $publishable_key" \
+            "$project_url/auth/v1/settings")"
+          test "$status" = '200' || {
+            echo "::error::Supabase public connectivity/control check returned HTTP $status"
+            exit 1
+          }
+
+      - name: Verify anonymous Data API reads stay denied
+        shell: bash
+        run: |
+          set -euo pipefail
+          # method: GET only
+          project_url="$(grep -oE 'https://[a-z0-9]+\.supabase\.co' feedback.html | head -n 1)"
+          publishable_key="$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+' feedback.html | head -n 1)"
+          body="$(mktemp)"
+          trap 'rm -f "$body"' EXIT
+
+          expect_select_denied(){
+            relation="$1"
+            : > "$body"
+            status="$(curl --silent --show-error --output "$body" --write-out '%{http_code}' \
+              -H "apikey: $publishable_key" \
+              -H "Authorization: Bearer $publishable_key" \
+              "$project_url/rest/v1/$relation?select=*&limit=1")"
+            case "$status" in
+              401|403)
+                echo "$relation anonymous SELECT denied (HTTP $status)"
+                ;;
+              *)
+                # Never print the response body: if a future regression exposed rows,
+                # emitting the body would turn a security check into a data leak.
+                echo "::error::Anonymous SELECT unexpectedly returned HTTP $status for $relation"
+                exit 1
+                ;;
+            esac
+          }
+
+          relations=(
+            admin_dashboard_owners
+            admin_dashboard_tokens
+            beta_feedback
+            group_rooms
+            group_votes
+            member_food_history
+            member_profiles
+            partner_applications
+            partner_audit_log
+            partner_clicks
+            partner_conversions
+            partner_opportunity_summary
+            partner_restaurants
+            restaurant_requests
+            restaurant_search_demand
+            user_food_history
+          )
+
+          for relation in "${relations[@]}"; do
+            expect_select_denied "$relation"
+          done
+
+          echo "Anonymous SELECT negative probe passed for ${#relations[@]} relations."
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Supabase anonymous Data API negative probe'
+            echo
+            echo "- Trigger: \`${GITHUB_EVENT_NAME}\`"
+            echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo '- Schedule: every 12 hours at minute 41 UTC, plus workflow-file/contract pushes and manual runs'
+            echo '- Method: GET only; no table/view mutation is performed'
+            echo '- Positive control: public Auth settings endpoint must return HTTP 200 using the repository publishable key'
+            echo '- Negative scope: anonymous SELECT must return HTTP 401/403 for 16 public relations that are not intended to expose rows directly'
+            echo '- Response bodies are never printed, including on an unexpected status'
+            echo '- This verifies a live anonymous Data API boundary only. It does not prove authenticated per-user RLS paths, privileged backend access, Auth leaked-password protection, device behavior, or Commercial readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
