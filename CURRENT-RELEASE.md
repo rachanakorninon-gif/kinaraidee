@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main`: `41cd9f654931e167e3c8e0e5598cff82e86db2a6` (Supabase least-privilege grant hardening + Auth plan-blocker evidence descendant; no browser/PWA or Group API runtime-source change after the previously reviewed baseline).
+- Latest reviewed security/workflow `main` baseline: PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443` (Supabase anonymous Data API live negative probe + relation-grant contract hardening; no browser/PWA or Group API runtime-source change).
 - Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified on GitHub Pages).
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; previous connected Supabase inspection verified ACTIVE version 6 source/deployment parity.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Compare from the prior reviewed baseline `b7fd1cf425ce33f19807353f7c3164d08d667742` through `41cd9f654931e167e3c8e0e5598cff82e86db2a6` changes only Supabase grant/evidence files, a grant-contract regression workflow and release documentation. It does not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
+- Supabase grant/security descendants through PR #109 change database grants, security verification workflows and evidence only. They do not change browser/PWA runtime assets or `supabase/functions/group-api/index.ts`.
 
 ## Browser/PWA deployment evidence
 
@@ -25,9 +25,11 @@ Confirmed evidence for PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` remai
 
 This deployment PASS is scoped to browser/PWA deployment trace and automated live smoke only. It does not imply real-device, assistive-technology, payment, partner, legal, full Public Beta or Commercial PASS.
 
-## Supabase least-privilege grant evidence
+## Supabase least-privilege + live anonymous access evidence
 
-On 2026-08-23, connected-project inspection found `anon` / `authenticated` roles had broader public-table privileges than the active RLS operation set required. A scoped least-privilege migration was applied and post-change read-only verification confirmed the intended matrix for six tables:
+On 2026-08-23, connected-project inspection found `anon` / `authenticated` roles had broader public-relation privileges than the active RLS/application operation set required.
+
+Migration `20260823134036 / least_privilege_public_table_grants` reduced browser-facing grants for six tables:
 
 - `beta_feedback`: anon `INSERT`; authenticated `SELECT, INSERT`.
 - `partner_applications`: anon/authenticated `INSERT`.
@@ -36,19 +38,35 @@ On 2026-08-23, connected-project inspection found `anon` / `authenticated` roles
 - `member_food_history`: anon none; authenticated `SELECT, INSERT, DELETE`.
 - `user_food_history`: anon none; authenticated `SELECT, INSERT, DELETE`.
 
-`service_role` privileges, table data, RLS policies, Edge Functions, browser/PWA runtime, sequences and Auth settings were not changed. Repository contract: `supabase/least-privilege-public-table-grants.sql`; regression guard: `.github/workflows/supabase-grant-contract-regression.yml`; evidence: `SUPABASE-GRANT-HARDENING-EVIDENCE.md`.
+Migration `20260823135244 / revoke_public_partner_opportunity_summary_grants` additionally revoked all direct `anon` / `authenticated` privileges from `partner_opportunity_summary`. Connected inspection confirms the view remains `security_invoker=true`; `anon` / `authenticated` cannot SELECT either the view or its source `restaurant_search_demand`, while `service_role` retains SELECT on both.
 
-This is scoped table-grant hardening evidence only. It does not replace negative authorization testing for every RLS path or make Production Security PASS.
+A read-only expected-privilege matrix then checked 50 table/view assertions and found **0 mismatches**.
+
+PR #109 merged at `f337d35cfa2fbe71719ec6fde022807d08ef7443` and added a scheduled, GET-only live negative probe for the public Data API. Canonical main evidence:
+
+- workflow: `Supabase Anonymous Data API Access Probe`;
+- run `32643996631` completed **success** on exact SHA `f337d35cfa2fbe71719ec6fde022807d08ef7443`;
+- job `97205302130` passed a non-mutating public Auth-settings connectivity control;
+- anonymous SELECT returned HTTP 401 for all 16 checked public relations, including member/profile/history, feedback/application/request, Group, partner/admin/server-side tables and `partner_opportunity_summary`;
+- workflow guards keep the probe GET-only and prohibit printing response bodies.
+
+PR #110 was a temporary read-only Actions diagnostic used only to trace the exact main run and was closed without merge.
+
+Repository contract: `supabase/least-privilege-public-table-grants.sql`; static guard: `.github/workflows/supabase-grant-contract-regression.yml`; live negative probe: `.github/workflows/supabase-anon-access-probe.yml`; detailed evidence: `SUPABASE-GRANT-HARDENING-EVIDENCE.md`.
+
+Evidence boundary: this proves the scoped live relation grants and anonymous Data API SELECT-denial boundary above. It does **not** prove every authenticated per-user JWT/RLS path, privileged backend authorization path or Production Security PASS.
 
 ## Supabase Auth security gate
 
-Connected evidence dated 2026-08-23 records:
+Fresh Security Advisor re-check after the relation-grant/view hardening still reports:
 
-- organization plan observed: Free;
-- Security Advisor WARN: `auth_leaked_password_protection` / `Leaked Password Protection Disabled`;
-- current Supabase documentation states leaked-password protection is available on Pro Plan and above.
+- WARN: `auth_leaked_password_protection` / `Leaked Password Protection Disabled`;
+- visible `RLS Enabled No Policy` findings are INFO-only deny-by-default/server-side tables;
+- no new Security Advisor WARN was introduced by the grant/view hardening.
 
-Therefore this gate is **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**. A plan/configuration decision, authorized enablement, and a fresh Security Advisor result with the WARN absent are required before Issue #11 can close. Evidence: `SUPABASE-AUTH-SECURITY-EVIDENCE.md`.
+Performance Advisor remains INFO-only unused-index findings; no index was dropped as part of this work.
+
+Previous connected evidence records the organization on the Free plan and the leaked-password feature as unavailable without the relevant plan/configuration. Therefore Issue #11 remains **BLOCKED BY PLAN/CONFIGURATION — NOT PASS** until authorized enablement is possible and a fresh Security Advisor result confirms the WARN is absent.
 
 No paid-plan upgrade is authorized or inferred by this repository state.
 
@@ -90,7 +108,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Public Beta technical/device/accessibility acceptance;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
 - `main` branch protection / required checks (#35);
-- complete RLS/auth/admin negative authorization evidence beyond the scoped table-grant hardening;
+- complete authenticated per-user RLS/JWT and privileged/admin negative authorization evidence beyond the scoped relation-grant + anonymous-SELECT hardening;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
 - Production Privacy/Terms/controller/contact/retention/legal decisions;
 - Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence;
@@ -103,7 +121,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = merged PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` until another browser/PWA runtime change occurs.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Latest reviewed `main` baseline = `41cd9f654931e167e3c8e0e5598cff82e86db2a6`; later evidence/documentation/workflow descendants do not supersede runtime candidates unless runtime source changes.
-- Supabase least-privilege table grants are scoped live security evidence, not a blanket RLS/Auth/security PASS.
+- Latest reviewed security/workflow `main` baseline = PR #109 merge `f337d35cfa2fbe71719ec6fde022807d08ef7443`; later evidence/documentation descendants do not supersede runtime candidates unless runtime source changes.
+- Supabase least-privilege relation grants + anonymous SELECT negative probe are scoped live security evidence, not a blanket RLS/Auth/security PASS.
 - Supabase leaked-password protection remains blocked and must not be inferred PASS from source, CI, grants or deployment evidence.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05 or TC-08 real-device requirements.
