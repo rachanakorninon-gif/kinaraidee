@@ -21,6 +21,8 @@ const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[
 const hostTokenPattern=/^[0-9a-f]{64}$/
 const validRoomId=(value:unknown)=>uuidPattern.test(String(value||''))
 const token=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','')
+const maxRequestBytes=8192
+const byteLength=(value:string)=>new TextEncoder().encode(value).byteLength
 
 // Privacy-safe operational event logging. Never include room IDs, host tokens,
 // voter IDs, tags, IP addresses, request bodies, or other user-supplied values.
@@ -35,15 +37,28 @@ Deno.serve(async(req)=>{
     return json({error:'method_not_allowed'},405)
   }
 
+  // Content-Length is only an early reject. The actual decoded request body is
+  // measured as UTF-8 bytes below so chunked/missing-length requests cannot
+  // bypass the same 8 KiB application contract.
   const contentLength=Number(req.headers.get('content-length')||0)
-  if(Number.isFinite(contentLength)&&contentLength>8192){
+  if(Number.isFinite(contentLength)&&contentLength>maxRequestBytes){
+    logEvent('request_rejected',{reason:'request_too_large'})
+    return json({error:'request_too_large'},413)
+  }
+
+  let rawBody=''
+  try{rawBody=await req.text()}catch{
+    logEvent('request_rejected',{reason:'invalid_json'})
+    return json({error:'invalid_json'},400)
+  }
+  if(byteLength(rawBody)>maxRequestBytes){
     logEvent('request_rejected',{reason:'request_too_large'})
     return json({error:'request_too_large'},413)
   }
 
   const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   let b:any
-  try{b=await req.json()}catch{
+  try{b=JSON.parse(rawBody)}catch{
     logEvent('request_rejected',{reason:'invalid_json'})
     return json({error:'invalid_json'},400)
   }
