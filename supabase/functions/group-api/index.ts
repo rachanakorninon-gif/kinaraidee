@@ -22,7 +22,32 @@ const hostTokenPattern=/^[0-9a-f]{64}$/
 const validRoomId=(value:unknown)=>uuidPattern.test(String(value||''))
 const token=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','')
 const maxRequestBytes=8192
-const byteLength=(value:string)=>new TextEncoder().encode(value).byteLength
+
+const readBodyLimited=async(req:Request)=>{
+  if(!req.body) return {ok:true as const,text:''}
+  const reader=req.body.getReader()
+  const decoder=new TextDecoder('utf-8',{fatal:true})
+  let totalBytes=0
+  let text=''
+  try{
+    while(true){
+      const {value,done}=await reader.read()
+      if(done) break
+      totalBytes+=value.byteLength
+      if(totalBytes>maxRequestBytes){
+        try{await reader.cancel()}catch{}
+        return {ok:false as const,error:'request_too_large' as const}
+      }
+      text+=decoder.decode(value,{stream:true})
+    }
+    text+=decoder.decode()
+    return {ok:true as const,text}
+  }catch{
+    return {ok:false as const,error:'invalid_json' as const}
+  }finally{
+    try{reader.releaseLock()}catch{}
+  }
+}
 
 // Privacy-safe operational event logging. Never include room IDs, host tokens,
 // voter IDs, tags, IP addresses, request bodies, or other user-supplied values.
@@ -37,24 +62,21 @@ Deno.serve(async(req)=>{
     return json({error:'method_not_allowed'},405)
   }
 
-  // Content-Length is only an early reject. The actual decoded request body is
-  // measured as UTF-8 bytes below so chunked/missing-length requests cannot
-  // bypass the same 8 KiB application contract.
+  // Content-Length remains a cheap early reject, but the stream reader below is
+  // the authoritative 8 KiB guard. It stops consuming the body as soon as the
+  // byte budget is exceeded, including chunked/missing-length requests.
   const contentLength=Number(req.headers.get('content-length')||0)
   if(Number.isFinite(contentLength)&&contentLength>maxRequestBytes){
     logEvent('request_rejected',{reason:'request_too_large'})
     return json({error:'request_too_large'},413)
   }
 
-  let rawBody=''
-  try{rawBody=await req.text()}catch{
-    logEvent('request_rejected',{reason:'invalid_json'})
-    return json({error:'invalid_json'},400)
+  const bodyResult=await readBodyLimited(req)
+  if(!bodyResult.ok){
+    logEvent('request_rejected',{reason:bodyResult.error})
+    return json({error:bodyResult.error},bodyResult.error==='request_too_large'?413:400)
   }
-  if(byteLength(rawBody)>maxRequestBytes){
-    logEvent('request_rejected',{reason:'request_too_large'})
-    return json({error:'request_too_large'},413)
-  }
+  const rawBody=bodyResult.text
 
   const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   let b:any
