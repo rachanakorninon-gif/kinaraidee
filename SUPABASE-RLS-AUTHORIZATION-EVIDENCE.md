@@ -64,9 +64,9 @@ The remaining WARN is still:
 
 - `auth_leaked_password_protection` — `Leaked Password Protection Disabled`.
 
-Visible `rls_enabled_no_policy` findings remain INFO-level deny-by-default/server-side-table notices already tracked by the project.
+Visible `rls_enabled_no_policy` findings remain INFO-level deny-by-default/server-side-table notices already tracked by the project. A fresh Performance Advisor check after the same DDL changes remains INFO-only unused-index findings and reports no Performance WARN.
 
-## Repository guard
+## Repository guard and CI evidence
 
 The final desired policy/helper state is recorded in:
 
@@ -76,7 +76,18 @@ and statically guarded by:
 
 - `.github/workflows/supabase-feedback-rls-contract-regression.yml`
 
-The guard rejects a return to a public helper, a direct browser-role admin-table grant, or direct admin-table evaluation from the feedback SELECT policy.
+PR #112 (`Harden and record beta feedback authenticated RLS authorization`) merged as `722712a5997511998a09ce9ed401f71799bf9283`. Its head `32011345f4a646fd100427a3811b88d9226624fc` had 15 inspected successful pull-request checks, including:
+
+- `Supabase Feedback RLS Contract Regression` run `32645461886`;
+- `Kinaraidee Security Hygiene` run `32645461791`;
+- `Credential Scanner Regression` run `32645461847`;
+- `Kinaraidee Release Consistency` run `32645461858`;
+- `Kinaraidee Release Metadata Regression` run `32645461792`;
+- `Runtime Lineage Regression` run `32645461835`;
+- `Real Device Contract Regression` run `32645461800`;
+- the existing Beta QA/integrity, PWA, accessibility, history, group-result, iOS-install-hint and Pages-source regression suites.
+
+The new guard rejects a return to a public helper, a direct browser-role admin-table grant, or direct admin-table evaluation from the feedback SELECT policy. CI/static success does not replace the live database inspection or an external authenticated-session test.
 
 ## Evidence boundary
 
