@@ -7,81 +7,73 @@
 ## Current source/runtime state
 
 - Latest reviewed `main`: `6a3a3812270e1d36caec5e716612de358743e28f` (retention decision/workflow/documentation lineage only; browser/PWA runtime and Group API source unchanged).
-- Current browser/PWA runtime candidate: `75d467cb1118ff88a948a2be6bbc15dbc755779f` (merge PR #58).
+- Current browser/PWA runtime candidate: `b82f00633f42cc1c0121d943236db954816aeb6f` (PR #67 runtime commit; persistent Surprise live region follow-up after real-device TalkBack retest still failed on PR #58).
 - Current Group API source candidate: `f683f8291e57501e0fde75b0e689324d0a65dfb4` (merge PR #63); Supabase deployment/source parity was re-verified after deploying this source as `group-api` version 3.
 - PWA cache marker: `kinaraidee-beta-v13`.
-- Compare `53d420823b87de9ad36b41ceb0b6bc1ffcfb07bf..6a3a3812270e1d36caec5e716612de358743e28f` = 3 commits touching only `.github/workflows/group-retention-regression.yml`, `CURRENT-RELEASE.md` and `GROUP-API-RETENTION-DECISION.md`; no browser/PWA runtime asset or Group API source changed in this lineage.
-- `GROUP-API-RETENTION-DECISION.md` now records the retention gate explicitly as **NOT APPROVED** with approval fields **UNSET**; `.github/workflows/group-retention-regression.yml` guards against silently inferring a retention window and keeps cleanup verification as a separate gate.
-- PR #58 เป็น runtime change ล่าสุดของ browser/PWA: เพิ่ม accessible busy-state announcement ให้ปุ่ม Surprise ผ่าน hidden `role=status` / `aria-live=assertive`, dynamic `aria-label`, `aria-disabled` และยืด busy interval เพื่อให้ assistive technology มีโอกาสประกาศสถานะ.
-- PR #58 เพิ่ม `.github/workflows/surprise-accessibility-regression.yml` เป็น static contract guard; static PASS ไม่แทน TalkBack/VoiceOver real-device evidence.
-- PR #59 `d20529a9...` เปลี่ยนเฉพาะ `deployment-check.html` เพื่อให้ public probe ตรวจ marker ของ Surprise accessibility fix; ไม่เปลี่ยน core app behavior เพิ่มจาก PR #58.
-- PR #60 `984e5d8c...` เพิ่ม Pages predeploy/Live Smoke checks สำหรับ Surprise accessibility source contract และคืน explicit Public Beta incomplete invariant; ไม่เปลี่ยน browser/PWA runtime behavior.
-- PR #61 `557010fb...` harden Public Beta synthetic monitor ให้ deployed SHA ต้องมี runtime candidate ปัจจุบันอยู่ใน lineage และตรวจ Surprise accessibility source markers บน live assets; เป็น monitoring/workflow evidence ไม่ใช่ runtime change หรือ device PASS.
-- `d258cb49...` เพิ่ม Release Consistency guard ที่ fail เมื่อ `CURRENT-RELEASE.md` ประกาศ runtime candidate เก่าแต่มี browser/PWA runtime files เปลี่ยนหลัง candidate.
-- `be1288b99...` เพิ่ม Pages predeploy guard แบบเดียวกัน เพื่อ block deployment หาก declared runtime candidate stale เมื่อเทียบกับ browser/PWA runtime files.
-- PR #62 `77bbffd5...` เพิ่ม `.github/workflows/runtime-lineage-regression.yml` เพื่อ self-test ว่า candidate ปัจจุบัน clean, docs-only descendant ไม่ถูกนับเป็น runtime drift, synthetic runtime change ถูกตรวจจับ และ production lineage guards ยัง wired อยู่; ไม่เปลี่ยน browser/PWA runtime.
-- PR #63 `f683f829...` เปลี่ยน Group API backend source โดยเพิ่ม privacy-safe structured operational events และ regression guard ที่ป้องกัน logging ของ sensitive identifiers/payload references; source นี้ถูก deploy และตรวจย้อนกลับได้ใน Supabase `group-api` version 3 โดยคง `verify_jwt=false` ตาม invite-flow เดิม.
-- Retention schema inspection วันที่ 2026-08-23 ยืนยัน `group_rooms.expires_at DEFAULT now()+24h` และ `group_votes.room_id -> group_rooms(id) ON DELETE CASCADE`; บันทึกใน `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md`. ข้อมูลนี้เป็น schema evidence เท่านั้น ไม่ใช่ retention-policy หรือ cleanup PASS.
-- Repository มี `supabase/group-retention-diagnostic.sql` สำหรับ baseline แบบ read-only และ `.github/workflows/group-retention-regression.yml` เพื่อป้องกัน diagnostic จาก mutation/DDL drift; สิ่งนี้ไม่อนุมัติ retention period และไม่ execute cleanup.
-- Guards เหล่านี้ใช้ full git history (`fetch-depth: 0`) และตรวจ ancestry/diff ก่อนยอมรับ release lineage; การมี guard ไม่เท่ากับ successful deployment evidence.
-- PR #42 `6fadf04f...` ยังคงเป็น historical live-group result bridge baseline.
-- PR #37 แก้ member cloud-history timestamp mapping/fallback; PR #41 เพิ่ม stale-snapshot/write-race protection.
-- PR #53 เพิ่ม public diagnostic `deployment-check.html`; PR #54 sync Android real-device evidence ที่มีจริง.
-- Group API source/deployment lineage แยกจาก browser runtime; `GROUP-API-DEPLOYMENT-EVIDENCE.md` ระบุ historical v2 parity และ current verified v3 parity หลัง PR #63.
+- PR #67 changes `data/home-surprise.js` so the screen-reader live region is appended to `document.body`, outside screen containers that become `display:none`, and keeps the busy announcement available long enough for assistive technology to receive it.
+- PR #67 also strengthens the Surprise accessibility regression guard and advances `deployment-check.html` to `surprise-a11y-v2`; these source/probe checks do not replace real TalkBack/VoiceOver verification.
+- PR #58 / `75d467cb...` remains the historical first accessibility fix. Real-device TalkBack retest after verified public deployment still did not announce the busy state, so Issue #57 remains open and PR #67 is the new runtime candidate.
+- `GROUP-API-RETENTION-DECISION.md` records the retention gate explicitly as **NOT APPROVED** with approval fields **UNSET**; `.github/workflows/group-retention-regression.yml` guards against silently inferring a retention window and keeps cleanup verification as a separate gate.
+- PR #59 `d20529a9...` added the first Surprise accessibility deployment probe; PR #60 `984e5d8c...` added Pages/Live Smoke source-contract checks; PR #61 `557010fb...` hardened Public Beta synthetic runtime-lineage monitoring.
+- PR #62 `77bbffd5...` added runtime-lineage regression self-tests.
+- PR #63 `f683f829...` added privacy-safe Group API observability and was deployed as Supabase `group-api` version 3 with source parity re-verified.
+- Retention schema inspection confirms `group_rooms.expires_at DEFAULT now()+24h` and `group_votes.room_id -> group_rooms(id) ON DELETE CASCADE`; this is schema evidence only, not an approved retention policy or cleanup PASS.
+- PR #42 `6fadf04f...` remains the historical live-group result bridge baseline.
+- PR #37 fixed member cloud-history timestamp mapping/fallback; PR #41 added stale-snapshot/write-race protection.
+- PR #53 added public diagnostic `deployment-check.html`; PR #54 synchronized actual Android real-device evidence.
 
 ## Verified CI/static evidence
 
-หลักฐาน CI/static ที่บันทึกไว้ก่อนหน้า (เช่น PR #42, PR #53, PR #54) ยังเป็น evidence เฉพาะ commit/head นั้น ๆ และไม่ถูกยกมาเป็น PASS ของ PR #58 โดยอัตโนมัติ.
+CI/static evidence is scoped to the commit/head that produced it and never replaces Pages deployment, Live Smoke, public URL verification, or real-device interaction/assistive-technology testing.
 
-PR #58 มี static accessibility regression guard อยู่ใน source และตรวจ contract ของ `data/home-surprise.js`; อย่างไรก็ตาม workflow file/implementation ไม่เท่ากับ successful run evidence จนกว่าจะมี run result ที่ตรวจย้อนกลับได้.
+PR #58 static checks passed and added a Surprise Accessibility Regression guard, but real-device TalkBack later proved that the first implementation still did not announce the busy state after deployment.
 
-PR #62 head `76e6e47672c4fdec3e1772b9e6eb0a87adc52e3a` มี inspectable pull-request workflow evidence: `Runtime Lineage Regression`, `Kinaraidee Beta QA`, `Beta integrity checks`, `Kinaraidee Release Consistency`, `Kinaraidee Security Hygiene`, `Credential Scanner Regression`, `Surprise Accessibility Regression`, `Group Result Regression`, `Kinaraidee Release Metadata Regression` และ `Kinaraidee History Sync Regression` จบด้วย `success`. ขอบเขต evidence นี้ยืนยันเฉพาะ CI/static/workflow contract ของ PR #62 ไม่ใช่ Pages deploy, Live Smoke, Public URL หรือ real-device PASS.
+PR #67 branch evidence after the runtime change currently includes successful Surprise Accessibility Regression plus the existing Beta/History/Group/Security/metadata suites. Release Consistency and Runtime Lineage Regression initially failed because `CURRENT-RELEASE.md` still declared PR #58 as the runtime candidate; this document now advances the candidate to the actual PR #67 runtime commit `b82f00633f42cc1c0121d943236db954816aeb6f` so the lineage guards can verify no undeclared runtime drift remains.
 
-PR #63 head `527cfa0c0fc11d026f549132004b04d71f400662` มี inspectable pull-request CI evidence ว่า `Kinaraidee Group API Regression`, `Kinaraidee Security Hygiene`, Beta QA/integrity, Release Consistency และ regression suites ที่เกี่ยวข้องจบด้วย `success`. ขอบเขตนี้เป็น source/CI evidence ของ backend observability contract; deployment/source parity ต้องอาศัย Supabase inspection แยกต่างหาก.
+Static source markers, regression guards, deployment probes, and CI success do not constitute NF-09 PASS. A real TalkBack/VoiceOver retest is still required after PR #67 is merged and confirmed deployed.
 
-หลัง PR #63 มี Supabase inspection ใหม่ยืนยันว่า `group-api` version 3 เป็น `ACTIVE`, `verify_jwt=false`, และ deployed `index.ts` มี source candidate เดียวกับ repository รวม privacy-safe `logEvent(...)` wiring. หลักฐานนี้ยืนยัน source/deployment parity เท่านั้น ไม่ใช่ live log-ingestion quality, alerting หรือ monitoring baseline PASS.
-
-Release-lineage guards หลัง PR #61/PR #62 ป้องกัน stale declared browser/PWA runtime candidate ใน source/workflow configuration และมี regression self-test สำหรับ guard behavior แล้ว แต่ยังไม่ถือว่า Pages deploy หรือ Live Smoke ผ่านจนกว่าจะมีผล run ที่ตรวจได้.
-
-Retention decision regression guard ที่ latest reviewed source ป้องกันสถานะ **NOT APPROVED** จากการกลายเป็น retention policy โดยปริยาย และบังคับ required approval fields เมื่อสถานะเปลี่ยนเป็น **APPROVED**; static guard นี้ไม่ใช่ Privacy/Legal approval หรือ cleanup/deletion PASS.
-
-CI/static evidence ไม่แทน push-triggered GitHub Pages deployment, corresponding Live Smoke, Public URL verification หรือ real-device interaction/assistive-technology testing.
+Retention decision regression guards are static governance checks only; they do not constitute Privacy/Legal approval or deletion/cleanup evidence.
 
 ## Deployment evidence
 
 Status: **PARTIAL / BROWSER DEPLOYMENT WORKFLOW TRACE STILL REQUIRED**
 
-Deployment observability ปัจจุบันประกอบด้วย:
+Deployment observability includes:
 
-- Pages สร้าง `release-meta.json` ที่มี deployed SHA และ PWA cache marker.
-- Live Smoke ตรวจ deployed SHA/cache marker และ runtime markers ที่กำหนด.
-- `deployment-check.html` ตรวจ live-group bridge และตั้งแต่ PR #59 ตรวจ Surprise accessibility source markers เพิ่ม.
-- PR #60 เพิ่ม predeploy/live checks ที่บังคับ Surprise accessibility source markers ก่อน/หลัง deploy แต่ workflow configuration หรือ source contract ยังไม่เท่ากับ successful deployment evidence.
-- PR #61 เพิ่ม synthetic monitor lineage requirement ว่า deployed SHA ต้องเป็น descendant ของ current runtime candidate และอยู่ใน current `main` history.
-- Release Consistency และ Pages predeploy ปัจจุบัน block stale declared runtime candidate เมื่อ browser/PWA runtime files เปลี่ยนหลัง candidate.
-- PR #62 เพิ่ม regression self-test สำหรับ runtime-lineage guard logic; ไม่ใช่ deployment evidence.
-- Release Metadata Regression ตรวจ contract ของ metadata/deployment-trace wiring แบบ static.
-- Group API source candidate จาก PR #63 ถูก deploy เป็น Supabase `group-api` version 3 และ post-deploy source inspection ยืนยัน current source/deployment parity; live operational-event ingestion/alerting ยังต้องพิสูจน์แยก.
+- Pages creates `release-meta.json` containing deployed SHA and PWA cache marker.
+- Live Smoke checks deployed SHA/cache marker and required runtime markers.
+- `deployment-check.html` checks the live-group bridge and Surprise accessibility source markers; PR #67 advances the Surprise probe to `surprise-a11y-v2`.
+- Pages predeploy and Live Smoke require the declared Surprise accessibility contract, but workflow/source configuration is not deployment evidence by itself.
+- Public Beta monitor requires the deployed SHA to be within the current runtime lineage.
+- Release Consistency and Pages predeploy block stale declared browser/PWA runtime candidates.
+- Group API source candidate from PR #63 is deployed as Supabase `group-api` version 3 with source parity re-verified; live operational-event ingestion/alerting remains a separate gate.
 
 Do not infer complete deployment-gate success from source, PR/CI success, workflow guards, or the presence of deployment observability files alone.
 
-ยังห้ามสรุป browser deployment gate ว่า PASS จนกว่าจะมี inspectable successful Pages run และ corresponding Live Smoke run ที่ trace กลับไปยัง deployment เดียวกันของ PR #58 หรือ descendant ที่พิสูจน์ว่า runtime-equivalent.
-
-Group API current source/deployment parity หลัง PR #63 มีหลักฐานตรวจแล้วสำหรับ version 3 แต่ยังห้ามสรุป monitoring/operations readiness จนกว่าจะมี live ingestion/retention/abuse-control evidence ที่เกี่ยวข้อง.
+For PR #67, browser deployment remains pending until there is an inspectable successful Pages run, corresponding Live Smoke trace, public `surprise-a11y-v2` probe evidence, and then a new real-device TalkBack retest.
 
 ## Real-device regression status
 
-### Surprise accessibility — PR #58
+### Surprise accessibility — Issue #57 / NF-09
 
-Status: **IMPLEMENTED / STATIC-GUARDED / REAL ASSISTIVE-TECH RETEST REQUIRED**
+Status: **PR #58 DEPLOYED SOURCE CONFIRMED / REAL TALKBACK RETEST FAILED / PR #67 FOLLOW-UP IN PROGRESS**
 
-Implementation มี busy announcement contract แล้ว แต่ยังต้องมีผลจริงจาก TalkBack และ/หรือ VoiceOver ตาม test scope ก่อนปิด accessibility defect/gate. ห้ามนับ source markers, deployment probe หรือ synthetic monitor ว่าเป็น accessibility PASS.
+Actual Android/TalkBack evidence:
+
+- accessible name/role was announced correctly: `ไม่รู้เลย ให้ระบบเลือกอาหารให้ทันที ปุ่ม`;
+- first busy-state test produced no announcement;
+- PR #58 was implemented and public `deployment-check.html` later showed the Surprise accessibility source marker as PASS with `kinaraidee-beta-v13`;
+- real-device TalkBack retest after that verified deployment still produced **no busy-state announcement**;
+- therefore NF-09 remains FAIL/open on this device/session and Issue #57 must stay open;
+- PR #67 addresses the likely accessibility-tree lifetime problem by keeping the live region outside hidden screen containers.
+
+No PASS may be recorded for PR #67 until its runtime is merged, deployed, public probe evidence confirms `surprise-a11y-v2`, and TalkBack/VoiceOver actually announces a clear busy state on a real device.
 
 ### Group live result — completed 2/2 vote path
 
 Status: **POST-FIX SAME-DEVICE RETEST RECORDED PASS / FULL MATRIX STILL OPEN**
 
-Android session เดิมมี evidence จริงว่า 2/2 final result + repeated reroll + handoff to normal result สำเร็จหลัง PR #42 บน device/session เดียวกัน. หลักฐานนี้ไม่เท่ากับ full matrix PASS.
+Android device/session #1 has actual evidence for completed 2/2 group result, repeated reroll, handoff to normal result, saving to History, stats update, logout/login persistence, and history persistence. This does not equal full matrix PASS.
 
 ### Member-history regressions
 
@@ -90,49 +82,51 @@ Android session เดิมมี evidence จริงว่า 2/2 final resu
 
 ### Android device #1 evidence boundary
 
-PR #54/Issue #5 บันทึก scoped same-device evidence สำหรับหลาย core flows. Device model, Android version และ Chrome version ไม่ได้ capture จึงห้ามเดาเติม และผลนี้ไม่เท่ากับ full device matrix PASS. NF-07 old-cache upgrade และ NF-09 accessibility/assistive-technology evidence ยังเปิดอยู่.
+Issue #5 records scoped same-device evidence for core flows including Surprise, guided selection, Group, History/Favorite, Feedback, Partner, location/Maps fallback, PWA install/reopen, offline cold start/recommendation, offline→online recovery, 404 recovery, rapid-tap observation, and background/lock recovery.
+
+Exact device model, Android version, and Chrome version were not captured and must not be guessed. This remains one Android device/session only. NF-07 old-cache upgrade remains open, and NF-09 remains open after the second real-device TalkBack failure.
 
 ## Public Beta gate impact
 
 Public Beta is still **NOT COMPLETE**.
 
-Public Beta ยัง **NOT COMPLETE**. ขั้นต่ำที่ยังต้องมีหลักฐานจริง:
+Minimum evidence still required includes:
 
-- successful GitHub Pages deployment trace สำหรับ PR #58 หรือ runtime-equivalent descendant,
-- corresponding successful Live Smoke trace และ deployed SHA/release metadata ที่ตรวจย้อนหลังได้,
-- public `/deployment-check.html` / live asset verification ที่เห็น Surprise accessibility markers ของ PR #58,
-- Android Chrome อย่างน้อย 3 device models,
-- iPhone Safari อย่างน้อย 2 device models,
-- TC-01–TC-15 / NF-01–NF-10 ที่เหลือ; โดยเฉพาะ NF-07 และ NF-09,
-- TalkBack/VoiceOver retest สำหรับ Surprise busy announcement ก่อน accessibility acceptance,
-- Blocker/Critical ที่เกี่ยวข้องกับ Beta = 0 ก่อน Beta acceptance.
+- successful GitHub Pages deployment trace for PR #67 or a proven runtime-equivalent descendant;
+- corresponding successful Live Smoke trace and deployed SHA/release metadata;
+- public `/deployment-check.html` / live asset verification showing `surprise-a11y-v2`;
+- successful TalkBack/VoiceOver retest for the Surprise busy announcement;
+- Android Chrome on at least 3 device models total;
+- iPhone Safari on at least 2 device models total;
+- remaining TC-01–TC-15 / NF-01–NF-10 evidence, especially NF-07 and NF-09;
+- Blocker/Critical related to Beta = 0 before Beta acceptance.
 
-Issue #5 เป็น primary Beta QA execution tracker และเป็นแหล่ง evidence ล่าสุดสำหรับ device QA.
+Issue #5 remains the primary Beta QA execution tracker and source of actual device evidence.
 
 ## Commercial Readiness impact
 
-Commercial launch ยัง **NO-GO** ขณะหลักฐาน/การตัดสินใจสำคัญยังไม่ครบ ได้แก่:
+Commercial launch remains **NO-GO** while important evidence/decisions remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance + Pages/Live Smoke trace,
-- Supabase Auth leaked-password protection follow-up,
-- `main` branch protection / required-check governance,
-- Group API live observability ingestion, retention/deletion policy, anonymous abuse-control strategy, monitoring baseline และ Privacy/Operations decisions,
-- Production Privacy/Terms/controller/contact/retention/legal decisions,
-- Production monitoring/support/backup/recovery/rollback drill evidence,
-- Payment/Premium และ partner commercial evidence เฉพาะโมเดลที่เลือกเปิดจริง.
+- Public Beta technical/device/accessibility acceptance and Pages/Live Smoke trace;
+- Supabase Auth leaked-password protection follow-up;
+- `main` branch protection / required-check governance;
+- Group API live observability ingestion, retention/deletion policy, anonymous abuse-control strategy, monitoring baseline, and Privacy/Operations decisions;
+- Production Privacy/Terms/controller/contact/retention/legal decisions;
+- Production monitoring/support/backup/recovery/rollback drill evidence;
+- Payment/Premium and partner commercial evidence for any model actually enabled.
 
-Repository `main` protection ยังต้องถือเป็น blocker จนกว่าจะมี enforcement จริง; การมี workflow files โดยไม่มี required-check enforcement ไม่เท่ากับ repository governance PASS.
+Repository `main` protection remains a blocker until enforcement is real; workflow files without required-check enforcement are not repository-governance PASS.
 
-No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete deployment PASS, full device-matrix PASS หรือ Commercial GO ถูกอนุมานจากเอกสารนี้.
+No user-count, conversion, revenue, payment success, partner readiness, legal approval, complete deployment PASS, full device-matrix PASS, or Commercial GO is inferred from this document.
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #58 / `75d467cb...` จนกว่าจะมี browser/PWA runtime app change ใหม่.
-- Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity ถูก re-verify หลัง deploy source candidate นี้.
-- Latest reviewed source baseline = `6a3a3812...`; compare จาก `53d42082...` ถึง baseline นี้เปลี่ยนเฉพาะ retention decision/workflow/release documentation และไม่ supersede browser/PWA runtime behavior ของ PR #58 หรือ Group API source ของ PR #63.
-- Retention policy remains **NOT APPROVED**; `group_rooms.expires_at` default must not be interpreted as approved deletion/retention policy, and cleanup remains unimplemented/unverified until separate approved decision and evidence exist.
+- Current browser/PWA runtime candidate = PR #67 runtime commit `b82f00633f42cc1c0121d943236db954816aeb6f` until another browser/PWA runtime app change occurs.
+- Current Group API source candidate = PR #63 / `f683f829...`; Supabase `group-api` version 3 parity is re-verified for that source.
+- Latest reviewed `main` baseline remains `6a3a3812...` until PR #67 is reviewed/merged; PR #67 candidate is a branch runtime candidate, not yet a deployed release.
+- Retention policy remains **NOT APPROVED**; schema defaults must not be treated as approved deletion/retention policy.
 - Historical group-result runtime baseline = PR #42 / `6fadf04f...`.
-- Deployment-observability baseline เริ่มจาก PR #53, ถูกขยายโดย PR #59/#60/#61 และ stale-runtime deployment guards ล่าสุด.
-- Latest QA evidence-sync baseline = PR #54 / `a7e93997...`.
-- Group API backend deployment/source evidence ต้องติดตามแยกจาก browser/PWA deployment.
-- เมื่อมี commit ใหม่ ให้ใช้ repository diff/PR files แยกว่าเป็น browser runtime app, diagnostic/deployment asset, QA evidence, workflow/docs หรือ backend change ก่อนย้าย candidate/evidence state.
+- Deployment-observability baseline began with PR #53 and was extended by PR #59/#60/#61 and PR #67's v2 probe.
+- Latest QA evidence-sync baseline = PR #54 / `a7e93997...` plus subsequent Issue #5 comments for real-device evidence.
+- Group API backend deployment/source evidence is tracked separately from browser/PWA deployment.
+- When a new commit appears, use repository diff/PR files to classify it as browser runtime, diagnostic/deployment asset, QA evidence, workflow/docs, or backend change before moving the declared candidate/evidence state.

@@ -1,6 +1,8 @@
 // กินอะไรดี — instant “ไม่รู้เลย” action on the home screen
 (function(){
   let busy=false;
+  let statusWriteTimer=null;
+  let statusClearTimer=null;
   const READY_LABEL='ไม่รู้เลย ให้ระบบเลือกเมนูอาหารให้ทันที';
   const BUSY_MESSAGE='กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่';
   function inferMeal(){
@@ -9,6 +11,24 @@
     if(h>=11&&h<16)return 'กลางวัน';
     if(h>=16&&h<22)return 'เย็น';
     return 'ดึก';
+  }
+  function announceBusy(status){
+    if(!status)return;
+    if(statusWriteTimer)clearTimeout(statusWriteTimer);
+    if(statusClearTimer)clearTimeout(statusClearTimer);
+    status.textContent='';
+    statusWriteTimer=setTimeout(()=>{
+      statusWriteTimer=null;
+      status.textContent=BUSY_MESSAGE;
+    },40);
+  }
+  function clearStatusLater(status){
+    if(!status)return;
+    if(statusClearTimer)clearTimeout(statusClearTimer);
+    statusClearTimer=setTimeout(()=>{
+      statusClearTimer=null;
+      if(!busy)status.textContent='';
+    },1200);
   }
   function setBusy(on){
     busy=on;
@@ -21,7 +41,7 @@
     b.setAttribute('aria-label',on?BUSY_MESSAGE:READY_LABEL);
     b.style.opacity=on?'.7':'1';
     b.textContent=on?'🎲 กำลังเลือกให้…':'🎲 ไม่รู้เลย — เลือกให้ฉันทันที';
-    if(status)status.textContent=on?BUSY_MESSAGE:'';
+    if(on)announceBusy(status);else clearStatusLater(status);
   }
   function recover(){setBusy(false)}
   function runSurprise(){
@@ -69,10 +89,12 @@
     status.setAttribute('aria-live','assertive');
     status.setAttribute('aria-atomic','true');
     status.style.cssText='position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0;';
+    // Keep the live region outside #home because show('loading') hides every inactive .screen.
+    // A live region inside #home disappears from the accessibility tree before TalkBack can announce it.
+    document.body.appendChild(status);
 
     const group=[...home.querySelectorAll('button')].find(x=>x.textContent.includes('เลือกพร้อมกัน'));
-    if(group){home.insertBefore(b,group);home.insertBefore(status,group)}
-    else{home.appendChild(b);home.appendChild(status)}
+    if(group)home.insertBefore(b,group);else home.appendChild(b);
   }
   window.addEventListener('pageshow',recover);
   window.addEventListener('online',recover);
