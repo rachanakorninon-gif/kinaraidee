@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/deployment-check.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
+          paths=('/' '/index.html' '/404.html' '/privacy.html' '/feedback.html' '/partner.html' '/member.html' '/reset-password.html' '/deployment-check.html' '/manifest.webmanifest' '/sw.js' '/icon.svg' '/robots.txt' '/sitemap.xml' '/release-meta.json' '/data/foods-expanded.js' '/data/choice-rules.js' '/data/nearby-restaurants.js' '/data/group-mode.js' '/data/group-sync.js' '/data/group-remote.js' '/data/member-sync.js' '/data/pwa-install.js' '/data/home-surprise.js')
           for path in "${paths[@]}"; do
             url="$base$path"
             echo "Checking $url"
@@ -50,6 +50,8 @@ jobs:
           pwa="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/pwa-install.js")"
           feedback="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/feedback.html")"
           partner="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/partner.html")"
+          member="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/member.html")"
+          reset="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/reset-password.html")"
           robots="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/robots.txt")"
           sitemap="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sitemap.xml")"
 
@@ -102,6 +104,16 @@ jobs:
           grep -q 'MacIntel' <<<"$pwa"
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" <<<"$partner"
           grep -q 'privacy_acknowledged_at:new Date().toISOString()' <<<"$partner"
+
+          grep -Fq 'minlength="8"' <<<"$member"
+          grep -Fq 'p.length<8' <<<"$member"
+          grep -Fq 'minlength="8"' <<<"$reset"
+          grep -Fq 'p.length<8' <<<"$reset"
+          grep -Fq "location.href='member.html'" <<<"$reset"
+          if grep -q 'error\.message' <<<"$member"; then echo 'Live member page exposes raw backend error.message'; exit 1; fi
+          if grep -q 'error\.message' <<<"$reset"; then echo 'Live reset page exposes raw backend error.message'; exit 1; fi
+          if grep -q "location.href='admin.html'" <<<"$reset"; then echo 'Live member reset incorrectly redirects to private admin page'; exit 1; fi
+
           grep -q 'sitemap.xml' <<<"$robots"
           grep -q '<urlset' <<<"$sitemap"
           grep -q 'privacy.html' <<<"$sitemap"
@@ -114,7 +126,7 @@ jobs:
         run: |
           set -euo pipefail
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          private_paths=('/README.md' '/SECURITY.md' '/BETA-DAILY-LOG.md' '/RELEASE-CHECKLIST.md' '/CURRENT-RUNTIME.md' '/.github/workflows/pages.yml' '/supabase/config.toml')
+          private_paths=('/README.md' '/SECURITY.md' '/BETA-DAILY-LOG.md' '/RELEASE-CHECKLIST.md' '/CURRENT-RUNTIME.md' '/.github/workflows/pages.yml' '/supabase/config.toml' '/admin.html' '/partner-manage.html' '/conversion-manage.html' '/reports.html')
           for path in "${private_paths[@]}"; do
             url="$base$path"
             code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' --max-time 30 "$url")"
@@ -164,6 +176,7 @@ jobs:
             echo '- Surprise persistent live-region contract: checked'
             echo '- Completed live-group result bridge: checked'
             echo '- Partner renderer/privacy wiring: checked'
+            echo '- Member auth/reset minimum-length + error-hygiene contract: checked'
             echo '- Development-only exposure check: completed'
             echo
             echo '> Automated live evidence does not replace keyboard/device interaction, TalkBack/VoiceOver, NF-05/NF-07/NF-09, full real-device matrix, or Commercial GO.'
