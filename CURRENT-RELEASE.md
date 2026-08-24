@@ -10,7 +10,7 @@
 - Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged).
 - PWA cache marker: `kinaraidee-beta-v14`.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
-- Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and rejection-path hardening. This is not partner/commercial readiness evidence.
+- Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
 PR #134 changed browser/PWA runtime behavior by adding visible keyboard focus and reduced-motion accessibility hardening on the main app and public Feedback/Partner forms. Therefore historical PR #79 / v13 deployment evidence is no longer the current runtime deployment evidence.
@@ -73,8 +73,12 @@ Historical same-device Android evidence for specific fixed defects remains scope
 ## Partner API evidence
 
 - Partner API request-body handling, coordinate validation, no-store/nosniff and rejection-only probe mechanisms are documented in `PARTNER-API-HARDENING-EVIDENCE.md`.
-- Existing deployment evidence records ACTIVE v15 parity, but synthetic rejection-path evidence does not establish production traffic baseline, complete abuse controls, partner agreement, conversion/reconciliation or Commercial readiness.
-- No user, click, conversion or revenue figure is inferred from API hardening evidence.
+- Supabase ACTIVE v15 source/deployment parity remains the scoped deployment evidence for the Partner API source candidate.
+- PR #142 fixed an Actions workflow-validation defect that had caused the rejection probe to fail before job creation; the repaired workflow preserved rejection-only behavior and introduced no application-action payload.
+- Merged-main Partner API Live Rejection Probe run `32675596758` completed **success** on exact SHA `5ca280f4832e0d0fc1aa7057bb68f4df001d4067`; job `97283018587` passed GET=405 with no-store/nosniff, malformed JSON=400 and oversized body=413.
+- Read-only diagnostic run `32675626819` confirmed the exact push run/SHA, and PR #144 merged the scoped evidence/consistency guard as `cc3b08101a2f342e4f5e6c178c56f1b25aa0c67c`.
+- This is **VERIFIED PASS FOR REJECTION BEHAVIOR ONLY**. It does not establish successful product-action requests, production traffic baseline, complete abuse controls, recurring monitoring/alert SLA, approved retention, partner agreement, conversion/reconciliation, revenue or Commercial readiness.
+- No user, click, conversion or revenue figure is inferred from API hardening/live-rejection evidence.
 
 ## Repository governance
 
@@ -110,7 +114,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Current browser/PWA runtime candidate = PR #134 runtime lineage `db539c75f87683a4225baeb5601509fe3bb26f6f`; deployed merge SHA = `e30aa999f6277b221bf8dae85aa3b23521ad6f06` until another browser/PWA runtime change occurs.
 - Current PWA cache marker = `kinaraidee-beta-v14`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
-- Partner API source/deployment lineage is tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
+- Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - PR #136 / `707d9a403d82a57e6736842a3fa74882d1722e8b` is evidence/runtime-declaration maintenance after the v14 deploy; it does not create a newer browser runtime than PR #134.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance runbook/check-contract evidence is preparation evidence, not enforcement PASS.
