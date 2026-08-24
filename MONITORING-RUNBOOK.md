@@ -2,149 +2,130 @@
 
 เอกสารนี้กำหนดขอบเขต monitoring สำหรับ Public Beta และหลักฐานที่ต้องมี ก่อนนับ Operations monitoring เป็นพร้อมใช้งานเชิงพาณิชย์
 
-## Automated synthetic monitoring
+## Automated browser/PWA synthetic monitoring
 
 Workflow: `.github/workflows/public-beta-monitor.yml`
 
-ตรวจทุก 6 ชั่วโมงและสั่งรันเองได้ โดยตรวจเฉพาะสิ่งที่พิสูจน์อัตโนมัติได้:
+ตรวจทุก 6 ชั่วโมงและสั่งรันเองได้ โดยตรวจเฉพาะสิ่งที่พิสูจน์อัตโนมัติได้ เช่น public URL/assets, manifest, Service Worker, Surprise/PWA wiring, release metadata/deployed-SHA lineage, atomic app-shell strategy และ development-only path exposure.
 
-- Public Beta URL และหน้า/asset สำคัญตอบ HTTP สำเร็จ
-- Homepage ออนไลน์ยังมี app identity และ wiring หลักของ manifest, Service Worker, Surprise flow และ nearby restaurants
-- `manifest.webmanifest` ออนไลน์ parse เป็น JSON ได้และมี `name`, `start_url`, `display`
-- Surprise bootstrap ออนไลน์ยังมี active bridge ที่โหลด `data/pwa-install.js`, มี duplicate-load protection และเรียก helper จริงตาม source contract ของ PR #79
-- `data/pwa-install.js` ออนไลน์ยังมี iOS install-hint suppression state และ compatibility bridge กลับไปยัง Surprise flow
-- `sw.js` ออนไลน์ใช้ release marker เดียวกับ `main`
-- `release-meta.json` ออนไลน์มี deployed SHA รูปแบบถูกต้องและ PWA cache marker ตรงกับ `sw.js`
-- deployed SHA จาก `release-meta.json` trace กลับมาเป็น ancestor ของ `main` ปัจจุบันได้ เพื่อป้องกัน metadata ที่ชี้ไปยัง commit นอก release lineage
-- Service Worker ใช้ atomic app-shell install (`cache.addAll(SHELL)`)
-- ไม่พบ `Promise.allSettled` ใน live Service Worker
-- development-only paths ที่กำหนดไม่ตอบ HTTP 200
-
-การตรวจ lineage นี้ยอมรับกรณี `main` มี workflow/documentation/backend commits หลัง browser runtime deployment ได้ ตราบใดที่ deployed SHA ยังอยู่ในประวัติของ `main` และไม่มี browser/PWA runtime asset change ที่ทำให้ candidate stale
+การตรวจ lineage ยอมรับกรณี `main` มี workflow/documentation/backend commits หลัง browser runtime deployment ได้ ตราบใดที่ deployed SHA ยังอยู่ในประวัติของ `main` และไม่มี browser/PWA runtime asset change ที่ทำให้ candidate stale.
 
 ### Captured browser/PWA synthetic evidence
 
-Scheduled `Kinaraidee Public Beta Monitor` run `32626732416` completed `success` on repository SHA `058c41790970be91a397f01870210849e5a792c1` at 2026-08-23T07:52Z.
+Historical scheduled `Kinaraidee Public Beta Monitor` run `32626732416` completed `success` on repository SHA `058c41790970be91a397f01870210849e5a792c1` at 2026-08-23T07:52Z. It captured deployed SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, live Service Worker marker `kinaraidee-beta-v13`, public availability/lineage checks and selected development-only paths returning 404. PR #98 was the temporary read-only diagnostic and was closed without merge.
 
-The run captured:
+This run remains historical v13 synthetic evidence. Current browser/PWA runtime is v14 and has its own Pages/Live Smoke evidence in `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md`. Historical synthetic success is not promoted into current-v14 real-device or Commercial acceptance.
 
-- deployed SHA from public `release-meta.json`: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
-- expected browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`
-- live Service Worker marker: `kinaraidee-beta-v13`
-- public availability checks for home, 404, privacy, feedback, partner, deployment probe, manifest, Service Worker, release metadata, Surprise asset and nearby-restaurants asset
-- deployed-SHA ancestry/runtime-candidate lineage verification
-- development-only path checks where `/README.md`, `/SECURITY.md`, `/RELEASE-CHECKLIST.md`, `/.github/workflows/pages.yml` and `/supabase/config.toml` returned HTTP 404
-
-PR #98 was a temporary read-only diagnostic used to retrieve this run metadata and logs and was closed without merge after evidence capture.
-
-Evidence boundary: run `32626732416` is historical synthetic browser/PWA evidence for the unchanged PR #79 runtime candidate. Later Group API/workflow/documentation commits do not make it a Group API v6 monitor or a current-main full-system monitor. It does not replace real-device, accessibility, payment, privacy/legal, partner, backend application-event, owner/alert/escalation or Commercial acceptance evidence.
-
-Earlier scheduled monitor failures remain historical evidence and are not rewritten as success; the captured successful run above is a later run with its own immutable run ID/conclusion.
-
-## Group API live monitoring evidence
+## Group API recurring rejection monitoring
 
 Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase `group-api` ACTIVE version 6.
 
-Current repository source blob: `04e7f595ef73b9fdbdf377ba3b8936a818a109be`.
+- repository source blob: `04e7f595ef73b9fdbdf377ba3b8936a818a109be`
+- deployed bundle SHA-256: `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`
+- probe workflow: `.github/workflows/group-api-live-observability-probe.yml`
+- recurring schedule: every 6 hours at minute 23 UTC (`23 */6 * * *`), added by PR #103
+- regression guard rejects expected 2xx/mutating requests in the scheduled probe
 
-Supabase-reported deployed bundle SHA-256: `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
+Canonical v6 rejection-only run `32632951668` completed `success` on exact main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`. First verified post-schedule-enable run `32634589593` also completed `success` and explicitly performed no successful create/vote/update/close action.
 
-A controlled, rejection-only workflow `.github/workflows/group-api-live-observability-probe.yml` verifies selected public endpoint rejection contracts without creating/updating/closing rooms or submitting a successful vote.
+### Verified scheduled-run history — 2026-08-24
 
-PR #103 / merge SHA `1d3bc0cbd736693077838a57a5272734481ded9b` adds a recurring schedule to this same rejection-only probe: every 6 hours at minute 23 UTC (`23 */6 * * *`), while retaining manual dispatch and the workflow-file push trigger. `group-api-regression.yml` statically guards that the scheduled probe remains rejection-only and fails if an expected 2xx request is introduced.
+Temporary read-only diagnostic PR #155 used Actions metadata only. Diagnostic run `32723844101`, job `97420719958` completed `success` and found four Group probe runs with `event=schedule`; all four were completed `success`:
 
-Latest verified post-schedule activation run:
+- `32706786954` — head `cbeb50ad0f18442020c917c3b9e57a9163560e8e` — created `2026-08-24T08:31:55Z`
+- `32687136317` — head `c3331d306a369d19b26b91ed39ac32d840cf864e` — created `2026-08-24T03:38:08Z`
+- `32660456824` — head `98fe9254df38c5894c3510ab9314e8b2b4cedbc1` — created `2026-08-23T19:11:31Z`
+- `32643519352` — head `6cd922bb26c9416db14b829e6d44b208fbe18072` — created `2026-08-23T13:49:22Z`
 
-- run ID: `32634589593`
-- event: `push`
-- exact PR #103 merge SHA: `1d3bc0cbd736693077838a57a5272734481ded9b`
-- conclusion: `success`
-- probe job `probe-live-group-api`: `success`
-- verified non-mutating rejection paths: unsupported method, malformed room IDs, malformed host-only token/id shapes, overlong voter ID, and HTTP/1.1 chunked request body >8 KiB
-- chunked oversized-body contract: HTTP 413 / `request_too_large`
-- job log explicitly records that no successful create/vote/update/close action was performed
-- job summary records the new six-hour schedule and the evidence boundary
+Supabase Edge Function platform logs show matching v6 rejection sequences in recent scheduled windows, including GET 405, POST 400/403 and oversized-body POST 413. The provider log surface exposes method/status/execution/function version but still does **not** expose the application `console.log` JSON payload generated by `logEvent()`.
 
-PR #104 was a temporary read-only diagnostic used to retrieve the post-PR #103 main-branch run metadata. Diagnostic run `32634628075` succeeded and traced run `32634589593` to the exact PR #103 merge SHA; PR #104 was closed without merge after evidence capture.
+Therefore Group evidence now proves source/deployment parity, rejection-only live behavior, recurring schedule configuration, real scheduled execution history and platform request-log visibility. It still does **not** prove exact `component=group-api` structured-event ingestion, production traffic baseline, SLA/SLO, alert delivery, monitoring owner/escalation, complete abuse control or approved retention.
 
-Earlier canonical verified v6 run remains useful source/deployment-era evidence:
+## Partner API recurring rejection monitoring
 
-- run ID: `32632951668`
-- exact `main` SHA: `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`
-- conclusion: `success`
-- tested the same rejection-only contract including HTTP/1.1 chunked body >8 KiB → HTTP 413 / `request_too_large`
-- source contract behind deployed v6 uses a bounded stream reader and cancels once the 8192-byte budget is exceeded rather than buffering an arbitrarily large body first
+Current Partner API is Supabase `partner-api` ACTIVE version 15 with canonical repository source at `supabase/functions/partner-api/index.ts`.
 
-PR #94 was a temporary read-only deployed-v6 diagnostic and was closed without merge after independently passing the rejection contract. PR #96 was a temporary read-only workflow-run metadata diagnostic; it traced canonical run `32632951668` as `success` on the exact SHA above and was closed without merge as intended.
+- deployed bundle SHA-256: `8adde9353c1037db0a519b7f0cba6d949dd039d8b0346fd98e892389818439bb`
+- request-body contract: bounded streaming at 32 KiB with early reject/cancel
+- generic rejection headers: `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`
+- probe workflow: `.github/workflows/partner-api-live-probe.yml`
+- recurring schedule: every 6 hours at minute 41 UTC (`41 */6 * * *`)
+- `Partner API Regression` guards the workflow against JSON product-action payloads and expected 2xx assertions
 
-Fresh Supabase Edge Function logs for the canonical `32632951668` run window show ACTIVE version 6 request-level platform entries with expected 405/400/403/413 status classes. The inspected platform rows expose method, status, execution time, function/deployment identifiers and function version. A matching canonical-run POST 413 entry is visible at `2026-08-23T10:08:47.714000` on version 6.
+Merged-main live rejection run `32675596758`, job `97283018587`, completed `success` on exact SHA `5ca280f4832e0d0fc1aa7057bb68f4df001d4067` and verified GET 405 + no-store/nosniff, malformed JSON 400 and body >32 KiB 413 without a successful product action.
 
-Important boundary: the available Supabase log surface still does **not** expose the application `console.log` JSON payload generated by `logEvent()`. Therefore current evidence verifies deployed endpoint behavior, recurring probe mechanism and platform request-log ingestion for the inspected canonical window, but exact `component=group-api` application structured-event ingestion is still **NOT VERIFIED**.
+### Verified scheduled-run history — 2026-08-24
 
-Execution times in controlled rejection sequences are diagnostic observations only and are **not** a production traffic latency baseline, SLA, SLO, error budget or alert threshold.
+The same read-only diagnostic PR #155 / run `32723844101` found two Partner probe runs with `event=schedule`; both were completed `success`:
 
-## สิ่งที่ workflow/monitoring evidence นี้ไม่พิสูจน์
+- `32711804436` — head `adbab6e514bddbed403bdf2ce39d2abbf17cfe4f` — created `2026-08-24T09:29:14Z`
+- `32687246662` — head `4bc08800f4ec6d9f89997433081486f9664220fe` — created `2026-08-24T03:40:05Z`
 
-ผล SUCCESS ของ synthetic monitor หรือ Group API rejection probe **ห้าม** ใช้แทน:
+Supabase Edge Function platform logs show matching ACTIVE v15 sequences for recent scheduled windows: GET 405, malformed POST 400 and oversized POST 413.
+
+Therefore Partner evidence now proves source/deployment hardening, rejection-only live behavior, recurring schedule configuration, real scheduled execution history and provider platform request-log visibility. It still does **not** prove successful search/click/conversion flows, real partner traffic, conversion/revenue, monitoring SLA, alert delivery, owner/escalation, complete anonymous rate/quota controls or approved retention.
+
+## Synthetic-monitor evidence boundaries
+
+SUCCESS ของ browser/PWA synthetic monitor หรือ Group/Partner rejection probe **ห้าม** ใช้แทน:
 
 - real-device TC-01–TC-15 / NF-01–NF-10
-- การทดสอบ PWA install/update/offline บนอุปกรณ์จริง
-- iPhone/iPad Safari install-hint behavior หรือ Android install prompt interaction บนอุปกรณ์จริง
-- accessibility test บนอุปกรณ์/assistive technology จริง
+- PWA install/update/offline บนอุปกรณ์จริง
+- iPhone/iPad Safari install-hint หรือ Android install interaction บนอุปกรณ์จริง
+- accessibility/TalkBack/VoiceOver/keyboard/reduced-motion acceptance บนอุปกรณ์จริง
 - Payment, entitlement, webhook หรือ reconciliation
-- Partner conversion/commission verification
+- Partner conversion/commission/revenue verification
 - Privacy/Legal review หรือ consent correctness
-- Production Security gate / RLS / authorization negative tests ทั้งหมด
+- Production Security/RLS/authorization negative evidence ที่ต้องมีแยกต่างหาก
 - complete anonymous API rate-limit/quota/abuse-control strategy
-- approved Group API retention/deletion policy หรือ cleanup execution
-- Group API application structured-event ingestion ถ้าเห็นเพียง platform request logs
+- approved Group/Partner retention/deletion/anonymization policy หรือ cleanup execution
+- application structured-event ingestion ถ้าเห็นเพียง platform request logs
 - actual alert delivery / incident ownership / escalation readiness
-- production traffic/error/latency baseline หรือ alert threshold
+- production traffic/error/latency baseline, SLA, SLO, error budget หรือ alert threshold
+- Public Beta completion หรือ Commercial GO
 
-## Evidence ที่ใช้ได้
+## Evidence ที่ต้องเก็บ
 
-สำหรับ browser/PWA synthetic monitoring เมื่อ workflow รันจริง ให้เก็บอย่างน้อย:
+สำหรับ browser/PWA synthetic monitoring:
+- workflow run URL / run ID
+- repository commit SHA
+- deployed SHA จาก `release-meta.json`
+- live Service Worker marker
+- timestamp และ conclusion จริง
+- Job Summary/log ที่ trace กลับไปยัง run ได้
 
-- Workflow run URL / run ID
-- repository commit SHA ที่ run อ้างอิง
-- deployed SHA ที่อ่านจาก `release-meta.json`
-- live Service Worker cache marker
-- วันที่/เวลา run
-- conclusion จริง (`success` / `failure` / `cancelled`)
-- Job Summary หรือ logs ที่ trace กลับไปยัง run ได้
-
-สำหรับ Group API ให้เก็บเพิ่มตามชนิดหลักฐาน:
-
-- source candidate commit
-- repository source blob SHA
+สำหรับ Group/Partner backend probes:
+- source candidate commit / repository source blob เมื่อ applicable
 - Supabase deployed function version/status/bundle hash/source parity
 - controlled probe run ID/SHA/event/conclusion
-- schedule/trigger contract เมื่อใช้ recurring probe เป็น monitoring mechanism
-- Supabase platform log version/status/timestamp สำหรับ matching probe window เมื่อมีการตรวจ log
+- schedule/trigger contract
+- scheduled-run history เมื่อใช้ recurring probe เป็น monitoring mechanism
+- Supabase platform log version/status/timestamp สำหรับ matching probe window เมื่อมี
 - แยก `platform request log` ออกจาก `application structured event` อย่างชัดเจน
-- เมื่อมี body-limit implementation change ให้แยก static source guard, deployed source parity และ live chunked actual-body evidence ออกจากกัน
+- แยก static regression, deployed source parity, live rejection behavior และ monitoring history เป็นคนละ evidence class
 
-ห้ามกรอก SUCCESS หรือ PASS ลง release evidence หากยังไม่ได้ตรวจ run/log จริง หรือถ้าหลักฐานคนละชั้นถูกนำมาปนกัน
+ห้ามกรอก SUCCESS/PASS หากยังไม่ได้ตรวจ run/log จริง หรือถ้านำหลักฐานคนละชั้นมาปนกัน.
 
 ## เมื่อ monitor FAIL
 
-1. อย่าตีความทันทีว่าเป็น runtime defect; แยก transient network/Pages propagation/platform logging ออกจาก defect จริง
-2. สำหรับ browser/PWA ตรวจ path/homepage wiring/manifest/PWA-helper bridge/marker/release-meta/deployed-SHA lineage ที่ fail จาก logs
-3. สำหรับ Group API แยก endpoint response regression, deployment/source mismatch, platform-log absence และ application-event ingestion gap ออกจากกัน
-4. ถ้า Public Beta กระทบผู้ใช้จริง ให้เปิด defect/incident ที่ trace กลับไปยัง run
-5. ถ้าเป็น browser release regression ให้ใช้ `ROLLBACK-RUNBOOK.md`; backend rollback ต้อง trace source/deployment version/blob/bundle hash แยกตาม backend runbook/evidence
-6. หลังแก้ ให้รัน monitor/probe ใหม่และบันทึก run ใหม่เป็น evidence; ห้ามแก้ไขผล run เก่าให้เป็น PASS
+1. อย่าตีความทันทีว่าเป็น runtime defect; แยก transient network/Pages propagation/provider logging/workflow defect ออกจาก application defect.
+2. Browser/PWA: ตรวจ public paths, manifest/PWA wiring, marker, release metadata และ deployed-SHA lineage จาก logs.
+3. Group/Partner API: แยก endpoint response regression, workflow validation, deployment/source mismatch, platform-log absence และ application-event ingestion gap.
+4. ถ้า Public Beta กระทบผู้ใช้จริง ให้เปิด defect/incident ที่ trace กลับไปยัง run.
+5. ใช้ `ROLLBACK-RUNBOOK.md` ตาม component และ trace source/deployment version/blob/bundle hash ก่อน rollback.
+6. หลังแก้ ให้สร้าง run ใหม่และเก็บ evidence ใหม่; ห้ามแก้ผล historical run ให้เป็น PASS.
 
 ## Commercial monitoring gate
 
-การมี workflow, recurring probe และ runbook นี้หมายถึง **monitoring mechanisms/evidence paths exist** เท่านั้น ยังไม่ถือว่า Operations monitoring gate ผ่าน จนกว่าจะมีตาม production scope ที่เปิดจริง:
+การมี workflow, recurring probes, successful scheduled history และ runbook นี้หมายถึง **monitoring mechanisms/evidence paths are functioning in the scoped synthetic sense** เท่านั้น. Operations monitoring gate ยังไม่ผ่านจนกว่าจะมีตาม Production scope ที่เปิดจริง:
 
-- run จริงที่ตรวจสอบย้อนหลังได้สำหรับ monitors ที่ใช้เป็น gate
 - observability surface สำหรับ application/backend events ที่ต้องใช้ operationally
-- baseline จริงก่อนกำหนด threshold
-- ผู้รับผิดชอบ incident/alert ที่ระบุจริง
-- ช่องทางรับรู้ failure ที่ใช้งานจริง
-- ขั้นตอน escalation/support ที่ทดสอบหรือยืนยันการเข้าถึงได้
-- monitoring/error reporting ที่ครอบคลุม Production components ที่เปิดใช้จริง เช่น payment/backend เมื่อเปิดใช้งาน
+- real baseline ก่อนกำหนด threshold
+- production owner/on-call ที่ระบุจริง
+- alert/failure-notification channel ที่ใช้งานจริง
+- actual alert-delivery test
+- escalation/support path ที่ยืนยันได้
+- monitoring/error reporting สำหรับ Production components ที่เปิดจริง เช่น payment/backend/partner flows
+- retention/access policy ของ logs ที่ได้รับอนุมัติ
 
-ดังนั้น successful scheduled browser/PWA run `32626732416`, recurring Group API probe mechanism จาก PR #103 และ successful post-enable run `32634589593` ช่วยเติมหลักฐาน mechanism/run ได้มากขึ้น แต่ **Production monitoring gate ยังไม่ผ่าน** จนกว่ารายการด้าน application observability, baseline, alert delivery, owner และ escalation ครบตาม production scope จริง.
+ณ 2026-08-24 มีหลักฐาน scheduled rejection monitor ที่สำเร็จจริง 4 Group runs และ 2 Partner runs รวมถึง matching provider platform logs. สิ่งนี้ปิดช่องว่าง “schedule เคย execute จริงหรือไม่” แต่ **Production monitoring gate ยัง NOT PASSED** เพราะ application observability, real traffic baseline, alert delivery, owner และ escalation ยังไม่ครบ.
