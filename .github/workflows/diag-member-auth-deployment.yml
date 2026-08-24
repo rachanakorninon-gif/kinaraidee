@@ -11,7 +11,7 @@ permissions:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
     steps:
       - name: Inspect merged-main deployment and live site
         shell: bash
@@ -21,32 +21,32 @@ jobs:
           TARGET_SHA: b6300e5458f17195c72a72ffa7ed0000fee40e24
         run: |
           set -euo pipefail
-          api="https://api.github.com/repos/$REPOSITORY/actions/runs?head_sha=$TARGET_SHA&per_page=100"
           base='https://rachanakorninon-gif.github.io/kinaraidee'
-          pages_id=''; smoke_id=''; pages_conclusion=''; smoke_conclusion=''; live_sha=''
-          for i in $(seq 1 24); do
-            runs="$(curl --fail --silent --show-error --location -H 'Accept: application/vnd.github+json' -H "Authorization: Bearer $GH_TOKEN" -H 'X-GitHub-Api-Version: 2022-11-28' "$api")"
-            readarray -t vals < <(RUNS="$runs" node <<'NODE'
-          const r=JSON.parse(process.env.RUNS||'{}').workflow_runs||[];
-          for(const name of ['Deploy Kinaraidee to GitHub Pages','Kinaraidee Live Smoke Test']){
-            const x=r.find(v=>v.name===name);
-            console.log(x ? `${x.id}|${x.status}|${x.conclusion||''}|${x.event}|${x.head_sha}` : '||||');
-          }
-          NODE
-            )
-            IFS='|' read -r pages_id pages_status pages_conclusion pages_event pages_sha <<<"${vals[0]:-||||}"
-            IFS='|' read -r smoke_id smoke_status smoke_conclusion smoke_event smoke_sha <<<"${vals[1]:-||||}"
-            meta="$(curl --silent --show-error --location --max-time 20 "$base/release-meta.json" || true)"
-            live_sha="$(META="$meta" node -e "try{const m=JSON.parse(process.env.META||'{}');process.stdout.write(String(m.sha||''))}catch{}")"
-            echo "poll=$i pages=$pages_id/$pages_status/$pages_conclusion smoke=$smoke_id/$smoke_status/$smoke_conclusion live=$live_sha"
-            if [ "$pages_conclusion" = 'success' ] && [ "$smoke_conclusion" = 'success' ] && [ "$live_sha" = "$TARGET_SHA" ]; then break; fi
-            sleep 10
-          done
+          headers=(-H 'Accept: application/vnd.github+json' -H "Authorization: Bearer $GH_TOKEN" -H 'X-GitHub-Api-Version: 2022-11-28')
+
+          pages_json="$(curl --fail --silent --show-error --location "${headers[@]}" "https://api.github.com/repos/$REPOSITORY/actions/workflows/pages.yml/runs?branch=main&per_page=20")"
+          smoke_json="$(curl --fail --silent --show-error --location "${headers[@]}" "https://api.github.com/repos/$REPOSITORY/actions/workflows/live-smoke.yml/runs?branch=main&per_page=20")"
+
+          pages_line="$(printf '%s' "$pages_json" | jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha==$sha) | [.id,.status,(.conclusion//""),.event,.head_sha] | @tsv' | head -n1)"
+          smoke_line="$(printf '%s' "$smoke_json" | jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha==$sha) | [.id,.status,(.conclusion//""),.event,.head_sha] | @tsv' | head -n1)"
+
+          IFS=$'\t' read -r pages_id pages_status pages_conclusion pages_event pages_sha <<<"$pages_line"
+          IFS=$'\t' read -r smoke_id smoke_status smoke_conclusion smoke_event smoke_sha <<<"$smoke_line"
+
+          meta="$(curl --fail --silent --show-error --location "$base/release-meta.json")"
+          live_sha="$(printf '%s' "$meta" | jq -r '.sha // ""')"
+          live_cache="$(printf '%s' "$meta" | jq -r '.pwa_cache // ""')"
+
+          echo "Pages run=$pages_id status=$pages_status conclusion=$pages_conclusion event=$pages_event sha=$pages_sha"
+          echo "Live Smoke run=$smoke_id status=$smoke_status conclusion=$smoke_conclusion event=$smoke_event sha=$smoke_sha"
+          echo "Public release-meta sha=$live_sha cache=$live_cache"
+
           test -n "$pages_id" && test "$pages_conclusion" = 'success' || { echo 'Exact Pages success not found'; exit 1; }
           test "$pages_sha" = "$TARGET_SHA" || { echo 'Pages SHA mismatch'; exit 1; }
           test -n "$smoke_id" && test "$smoke_conclusion" = 'success' || { echo 'Exact Live Smoke success not found'; exit 1; }
           test "$smoke_sha" = "$TARGET_SHA" || { echo 'Live Smoke SHA mismatch'; exit 1; }
           test "$live_sha" = "$TARGET_SHA" || { echo 'Public release-meta SHA mismatch'; exit 1; }
+          test "$live_cache" = 'kinaraidee-beta-v14' || { echo 'Unexpected live cache marker'; exit 1; }
 
           member="$(curl --fail --silent --show-error --location "$base/member.html")"
           reset="$(curl --fail --silent --show-error --location "$base/reset-password.html")"
@@ -59,4 +59,4 @@ jobs:
           if grep -q "location.href='admin.html'" <<<"$reset"; then echo 'Reset redirects to admin'; exit 1; fi
           admin_code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' "$base/admin.html")"
           test "$admin_code" != '200' || { echo 'Private admin page is public'; exit 1; }
-          echo "EVIDENCE Pages run=$pages_id Live Smoke run=$smoke_id SHA=$TARGET_SHA public_release_meta=$live_sha admin_http=$admin_code"
+          echo "EVIDENCE Pages run=$pages_id Live Smoke run=$smoke_id SHA=$TARGET_SHA public_release_meta=$live_sha cache=$live_cache admin_http=$admin_code"
