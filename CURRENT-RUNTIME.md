@@ -10,6 +10,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - GitHub Pages run: `32737240239` — completed `success` on exact deployed SHA
 - Corresponding Live Smoke run: `32737301309` — completed `success` on the same SHA
 - Read-only diagnostic run: `32738157335` — confirmed exact Pages/Live Smoke run metadata and public-site state; temporary PR #165 was closed without merge
+- Evidence sync PR: #166 records this verified deployment trace without changing browser/PWA runtime assets
 - Live public `release-meta.json` SHA = `b6300e5458f17195c72a72ffa7ed0000fee40e24` with Service Worker cache `kinaraidee-beta-v14`
 - Live verification confirmed public `member.html` / `reset-password.html` use the 8-character minimum, do not expose raw Supabase `error.message`, reset returns to `member.html`, and public `admin.html` returned HTTP 404
 - The Service Worker shell/cache marker remains v14 because this runtime change does not modify `sw.js` or the cached app shell
