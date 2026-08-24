@@ -48,6 +48,7 @@ jobs:
           done
 
           runtime_candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
+          runtime_status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' "$runtime" | head -n1)"
           deployed_sha="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
           marker="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$runtime" | head -n1)"
           group_candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' "$release" | head -n1)"
@@ -58,7 +59,7 @@ jobs:
           partner_probe_run="$(sed -n 's/^- Partner API Live Rejection Probe run `\([0-9][0-9]*\)` completed \*\*success\*\*.*/\1/p' "$partner" | head -n1)"
 
           test -n "$runtime_candidate" || { echo 'Unable to parse runtime candidate from CURRENT-RUNTIME.md'; exit 1; }
-          test -n "$deployed_sha" || { echo 'Unable to parse deployed SHA from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$runtime_status" || { echo 'Unable to parse deployment status from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$marker" || { echo 'Unable to parse cache marker from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$group_candidate" || { echo 'Unable to parse Group API candidate from CURRENT-RELEASE.md'; exit 1; }
           test -n "$group_evidence_candidate" || { echo 'Unable to parse Group API candidate from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
@@ -67,12 +68,26 @@ jobs:
           test -n "$partner_version" || { echo 'Unable to parse Partner API deployed version from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
           test -n "$partner_probe_run" || { echo 'Unable to parse Partner API live rejection run from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
 
-          grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$release" || { echo 'CURRENT-RELEASE.md runtime candidate drift'; exit 1; }
-          grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$release" || { echo 'CURRENT-RELEASE.md deployed SHA drift'; exit 1; }
-          grep -Fq "PWA cache marker: \`$marker\`" "$release" || { echo 'CURRENT-RELEASE.md cache marker drift'; exit 1; }
+          case "$runtime_status" in
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
+              test -z "$deployed_sha" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
+              grep -Fq 'Current runtime deployment evidence is pending' "$runtime" || { echo 'Pending runtime evidence boundary missing'; exit 1; }
+              grep -Fq 'Prior verified v14 deployment evidence remains historical and is not reused as current PASS' "$runtime" || { echo 'Pending runtime must preserve prior-evidence boundary'; exit 1; }
+              ;;
+            'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
+              test -n "$deployed_sha" || { echo 'PASS runtime must provide deployed SHA'; exit 1; }
+              grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$release" || { echo 'CURRENT-RELEASE.md runtime candidate drift'; exit 1; }
+              grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$release" || { echo 'CURRENT-RELEASE.md deployed SHA drift'; exit 1; }
+              grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md runtime candidate drift'; exit 1; }
+              grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md deployed SHA drift'; exit 1; }
+              ;;
+            *)
+              echo "Unexpected runtime deployment status: $runtime_status"
+              exit 1
+              ;;
+          esac
 
-          grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md runtime candidate drift'; exit 1; }
-          grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md deployed SHA drift'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" "$release" || { echo 'CURRENT-RELEASE.md cache marker drift'; exit 1; }
           grep -Fq "Expected Service Worker cache: \`$marker\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md cache marker drift'; exit 1; }
           grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
 
@@ -94,7 +109,7 @@ jobs:
           grep -Fq 'Commercial launch remains **NO-GO**' "$release" || { echo 'Canonical release must preserve Commercial NO-GO gate'; exit 1; }
           grep -Fq 'ห้ามเปิดรับเงินจริง' "$checklist" || { echo 'Commercial checklist must preserve no-real-money gate'; exit 1; }
 
-          echo "Commercial release checklist matches runtime $runtime_candidate / deployed $deployed_sha / $marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
+          echo "Commercial release checklist preserves runtime $runtime_candidate / status $runtime_status / $marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
 
       - name: Record evidence boundary
         if: always()
@@ -105,6 +120,7 @@ jobs:
             echo
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
             echo '- Scope: cross-document release-state consistency only'
-            echo '- Verifies runtime candidate, deployed SHA, cache marker, Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
+            echo '- Accepts a new runtime as PENDING without reusing a prior deployed SHA; PASS still requires exact cross-document deployment trace'
+            echo '- Verifies cache marker, Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
             echo '- Does not create device, user, conversion, payment, partner agreement, legal or Commercial readiness evidence'
           } >> "$GITHUB_STEP_SUMMARY"
