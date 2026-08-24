@@ -42,6 +42,8 @@ Existing live evidence remains valid unless superseded by a later schema/configu
 - the private admin-owner RLS helper remediation removed the prior public `SECURITY DEFINER` warning;
 - Supabase Auth leaked-password protection remains **BLOCKED BY PLAN/CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment evidence.
 
+This scoped evidence does not prove every authenticated per-user JWT/RLS path, every mutation shape, external authenticated-session lifecycle, privileged-backend authorization path, Production Security PASS, Public Beta completion or Commercial GO.
+
 No paid-plan upgrade is authorized or inferred.
 
 ## Real-device / accessibility status
