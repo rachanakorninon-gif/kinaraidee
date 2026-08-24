@@ -1,0 +1,41 @@
+name: Partner Live Run Evidence Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/partner-live-run-evidence-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List recent Partner API live probe runs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+          curl --fail --silent --show-error --location \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$REPOSITORY/actions/workflows/partner-api-live-probe.yml/runs?branch=main&per_page=30" > "$tmp"
+          RUNS_FILE="$tmp" node <<'NODE'
+          const fs=require('fs');
+          const runs=JSON.parse(fs.readFileSync(process.env.RUNS_FILE,'utf8')).workflow_runs||[];
+          const compact=runs.slice(0,20).map(r=>({id:r.id,event:r.event,status:r.status,conclusion:r.conclusion,head_sha:r.head_sha,created_at:r.created_at,html_url:r.html_url}));
+          console.log(JSON.stringify(compact,null,2));
+          const success=runs.find(r=>r.status==='completed'&&r.conclusion==='success'&&['schedule','push','workflow_dispatch'].includes(r.event));
+          if(!success){ console.error('No qualifying successful Partner API live rejection probe run found.'); process.exit(2); }
+          console.log('QUALIFYING_SUCCESS',JSON.stringify({id:success.id,event:success.event,head_sha:success.head_sha,created_at:success.created_at,html_url:success.html_url}));
+          NODE
+      - name: Evidence boundary
+        if: always()
+        run: echo 'Read-only Actions metadata diagnostic only; does not invoke Partner API or modify production data.'
