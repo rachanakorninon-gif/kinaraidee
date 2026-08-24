@@ -6,11 +6,11 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `ca339234fc66396ba6b7ededfbb83a830334c0ad`.
-- Compare from prior reviewed descendant `d6d441c2aaf0c3e5613540d335717e916454b561` to this descendant spans 4 commits and changes only `.github/workflows/release-checklist-consistency.yml`, `CURRENT-RELEASE.md` and `POST-GROUP-API-RELEASE-GUARD-VALIDATION.md`. No browser/PWA runtime asset, Group API source, Partner API function source or Supabase migration/runtime source changed in that range.
+- Latest reviewed `main` descendant: `b6300e5458f17195c72a72ffa7ed0000fee40e24` (PR #164 merged member-auth deployment lineage).
+- Current browser/PWA deployment evidence was refreshed after PR #164; prior compare/evidence notes below remain historical context.
 - PR #151 merged as `ca339234fc66396ba6b7ededfbb83a830334c0ad` to validate the Group API commercial-release consistency guard through pull-request CI after the guard was changed to derive the deployed version from recorded evidence instead of hard-coding it. The validation file is evidence-only and explicitly does not modify browser/PWA runtime, Group API source, Partner API source, Supabase schema/data/configuration, device results, user data, conversion data or revenue data. This is repository QA/evidence consistency only; it is not a new Group API deployment, device result, partner action, conversion, revenue, Public Beta completion or Commercial GO evidence.
-- Current browser/PWA runtime candidate: `db539c75f87683a4225baeb5601509fe3bb26f6f` (PR #134 runtime lineage).
-- Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged).
+- Current browser/PWA runtime candidate: `e5c19d048ae556153ebe66bdb4598ab0d168da97` (PR #164 member-auth runtime lineage).
+- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24` (PR #164 merged).
 - PWA cache marker: `kinaraidee-beta-v14`.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main. This is not partner/commercial readiness evidence.
@@ -18,11 +18,20 @@
 
 PR #134 changed browser/PWA runtime behavior by adding visible keyboard focus and reduced-motion accessibility hardening on the main app and public Feedback/Partner forms. Therefore historical PR #79 / v13 deployment evidence is no longer the current runtime deployment evidence.
 
+PR #164 changed the browser/PWA runtime by hardening public member/reset error handling and password length, correcting reset return to `member.html`, and adding both auth pages to the clean Pages artifact, runtime-lineage guard and Live Smoke scope. The merged deployment trace is recorded below.
+
 ## Browser/PWA deployment evidence
 
 Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 
 Verified v14 evidence:
+
+- Current member-auth runtime: PR #164 merged as `b6300e5458f17195c72a72ffa7ed0000fee40e24`; the Service Worker remains `kinaraidee-beta-v14` because the cached shell did not change.
+- Pages workflow run `32737240239` completed success for exact deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24`.
+- Corresponding Live Smoke run `32737301309` completed success on the same SHA.
+- Read-only diagnostic run `32738157335` confirmed exact Pages/Live Smoke metadata, public `release-meta.json` SHA/cache, deployed `member.html` / `reset-password.html` hardening, and public `admin.html` HTTP 404; temporary PR #165 closed without merge.
+- Live public `release-meta.json` matched `b6300e5458f17195c72a72ffa7ed0000fee40e24` and `kinaraidee-beta-v14`.
+- Prior PR #134/v14 focus and reduced-motion deployment evidence remains historical support for unchanged runtime portions and is not reused as proof of the member-auth deployment by itself.
 
 - Pages workflow run `32673914310` completed success for deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06`.
 - Corresponding Live Smoke run `32673939090` completed success on the same SHA.
@@ -33,7 +42,7 @@ Verified v14 evidence:
 - PR #136 merged the verified v14 deployment evidence into the canonical runtime declaration as `707d9a403d82a57e6736842a3fa74882d1722e8b`.
 - That evidence-only descendant also has exact successful Pages run `32674271444` and Live Smoke run `32674298914`; read-only diagnostic run `32675047230` confirmed both records.
 - Later main SHA `19626daf77778c6e51ba37193f09b24a7225c139` changes documentation only after `707d9a40...`; diagnostic run `32675123865` found no exact deployment run for it, which is expected because those documentation-only changes did not trigger browser/PWA deployment.
-- The latest reviewed descendant `ca339234...` remains non-browser-runtime lineage by repository compare; its release-consistency workflow/evidence changes do not supersede the deployed PR #134 runtime candidate.
+- The current deployed browser/PWA lineage is `b6300e5458f17195c72a72ffa7ed0000fee40e24`; older reviewed descendants below remain historical evidence only.
 
 This deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. It does not imply real keyboard interaction, physical reduced-motion behavior, TalkBack/VoiceOver, full device matrix, Public Beta completion or Commercial GO.
 
@@ -88,9 +97,9 @@ Historical same-device Android evidence for specific fixed defects remains scope
 
 ## Repository governance
 
-Status remains **PREPARED / NOT YET ENFORCED**. Fresh GitHub branch read-back for `main` at `ca339234fc66396ba6b7ededfbb83a830334c0ad` shows `protected=false`, protection disabled and required-status-check enforcement `off`.
+Status: **ENFORCED FOR `main` THROUGH THE `Protect main` RULESET**. Repository evidence records that PR #159 passed the required checks and merged, while PR #160 had a failing `release-consistency` check and GitHub blocked the merge under the repository rule; Issue #35 is closed as completed.
 
-Repository-side runbooks/regression guards exist, but CI success does not equal branch protection. Before Commercial GO, an authorized GitHub administration action must enable protection/ruleset enforcement and a safe failing required-check proof must demonstrate that merge is blocked.
+This governance PASS is scoped to merge-rule enforcement. It does not replace runtime deployment, Supabase Auth, device, privacy/legal, payment or Commercial readiness evidence.
 
 ## Public Beta gate impact
 
@@ -104,7 +113,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 
 - Public Beta technical/device/accessibility acceptance on the current v14 runtime;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
-- actual `main` branch protection / required-check enforcement (#35);
+- repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
 - Partner API complete abuse-control/monitoring/retention and real partner-commercial evidence;
@@ -117,12 +126,12 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #134 runtime lineage `db539c75f87683a4225baeb5601509fe3bb26f6f`; deployed merge SHA = `e30aa999f6277b221bf8dae85aa3b23521ad6f06` until another browser/PWA runtime change occurs.
+- Current browser/PWA runtime candidate = PR #164 member-auth lineage `e5c19d048ae556153ebe66bdb4598ab0d168da97`; deployed merge SHA = `b6300e5458f17195c72a72ffa7ed0000fee40e24`.
 - Current PWA cache marker = `kinaraidee-beta-v14`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - PR #136 / `707d9a403d82a57e6736842a3fa74882d1722e8b` is evidence/runtime-declaration maintenance after the v14 deploy; it does not create a newer browser runtime than PR #134.
-- Reviewed descendant `ca339234fc66396ba6b7ededfbb83a830334c0ad` is release-consistency workflow/release-evidence lineage only and does not supersede browser/PWA, Group API or Partner API function source candidates.
+- Merged PR #164 / `b6300e5458f17195c72a72ffa7ed0000fee40e24` supersedes the earlier browser/PWA deployment candidate; later evidence-only descendants do not create a newer runtime unless browser/PWA assets change.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance runbook/check-contract evidence is preparation evidence, not enforcement PASS.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05, TC-08 or new v14 keyboard/reduced-motion real-device requirements.

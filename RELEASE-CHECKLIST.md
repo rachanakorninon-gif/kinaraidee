@@ -5,13 +5,13 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current browser/PWA runtime candidate: `db539c75f87683a4225baeb5601509fe3bb26f6f` (PR #134 runtime lineage)
-- Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged)
+- Current browser/PWA runtime candidate: `e5c19d048ae556153ebe66bdb4598ab0d168da97` (PR #164 member-auth runtime lineage)
+- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24` (PR #164 merged)
 - Current Group API source candidate: `fefc29322ac13f7066038a663bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
 - Expected Service Worker cache: `kinaraidee-beta-v14`
-- PR #134 adds visible keyboard focus and reduced-motion accessibility hardening while retaining the PR #79 PWA-install bootstrap wiring and PR #67 persistent Surprise accessibility implementation.
-- Verified browser/PWA deployment evidence: Pages run `32673914310` = success and Live Smoke run `32673939090` = success for deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06`; read-only diagnostic run `32674078371` confirmed the exact run metadata.
-- Live public `release-meta.json` matched deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06` and live Service Worker marker `kinaraidee-beta-v14`.
+- PR #164 hardens public member/reset auth pages and Pages deployment scope; prior PR #134 visible-focus/reduced-motion hardening remains present in the unchanged v14 shell/runtime.
+- Verified browser/PWA deployment evidence: Pages run `32737240239` = success and Live Smoke run `32737301309` = success for deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24`; read-only diagnostic run `32738157335` confirmed the exact run metadata and public auth-page state.
+- Live public `release-meta.json` matched deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24` and live Service Worker marker `kinaraidee-beta-v14`; deployed member/reset pages passed the error-hygiene/8-character/reset-return contract and public `admin.html` returned 404.
 - Historical scheduled Public Beta synthetic monitor run `32626732416` = success on repository SHA `058c41790970be91a397f01870210849e5a792c1`; it observed the then-current v13 deployment. This proves the monitor mechanism had a successful run historically, not that the current v14 runtime has a fresh scheduled-monitor PASS.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
 - Issue #69 is closed for the browser/PWA deployment-trace scope.
@@ -36,18 +36,19 @@
 - [ ] TC-10/nearby partner rendering และ NF-07 ถูก retest บน v14 ตาม device matrix ที่กำหนด
 - [x] TC-12 Partner application มี Android same-device evidence หลังเพิ่ม privacy acknowledgement fields และ backend fields ถูกยืนยัน; ยังไม่แทน cross-platform/full-matrix evidence
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
+- [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง
 - [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด ไม่อาศัย Android session เดียว
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
 - [x] `LIVE-DEPLOYMENT-VERIFICATION.md` ระบุ current v14 runtime candidate / deployed commit SHA และบันทึก matching deployment evidence
-- [x] GitHub Pages deployment ของ `e30aa999f6277b221bf8dae85aa3b23521ad6f06` สำเร็จและ trace กลับไปยัง commit ได้ — run `32673914310`
-- [x] Public `release-meta.json` ถูกตรวจและมี deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06` กับ live Service Worker marker `kinaraidee-beta-v14`
-- [x] Corresponding Live Smoke ของ runtime SHA เดียวกันสำเร็จ — run `32673939090`
-- [x] Read-only diagnostic run `32674078371` ยืนยัน exact Pages/Live Smoke run metadata ของ v14 deployment
+- [x] GitHub Pages deployment ของ `b6300e5458f17195c72a72ffa7ed0000fee40e24` สำเร็จและ trace กลับไปยัง commit ได้ — run `32737240239`
+- [x] Public `release-meta.json` ถูกตรวจและมี deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24` กับ live Service Worker marker `kinaraidee-beta-v14`
+- [x] Corresponding Live Smoke ของ runtime SHA เดียวกันสำเร็จ — run `32737301309`
+- [x] Read-only diagnostic run `32738157335` ยืนยัน exact Pages/Live Smoke run metadata, public member/reset auth contract และ `admin.html` = 404 ของ deployment ปัจจุบัน
 - [x] Public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v14` ตรงกันตาม trace evidence
-- [x] Live Smoke ตรวจ public assets, current live markers, v14 focus/reduced-motion source contracts, accessibility/group/PWA source contracts, development-file exclusion และ traceable automated evidence สำเร็จ
+- [x] Live Smoke ตรวจ public assets, current live markers, v14 focus/reduced-motion source contracts, accessibility/group/PWA contracts, member/reset auth deployment contract, development-file exclusion และ traceable automated evidenceสำเร็จ
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
 - [x] Public Beta Monitor mechanism มี historical scheduled-run evidence (`32626732416` = success) แต่เป็นหลักฐานจาก v13; ห้ามใช้แทน fresh v14 monitor, Production monitoring หรือ Group API v6 monitoring evidence
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง

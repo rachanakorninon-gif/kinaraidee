@@ -4,12 +4,12 @@
 
 ## Release candidate ปัจจุบัน
 
-- Canonical runtime candidate SHA: `db539c75f87683a4225baeb5601509fe3bb26f6f` (PR #134 runtime lineage)
-- Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged)
+- Canonical runtime candidate SHA: `e5c19d048ae556153ebe66bdb4598ab0d168da97` (PR #164 member-auth runtime lineage)
+- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24` (PR #164 merged)
 - Expected Service Worker cache: `kinaraidee-beta-v14`
 - Public URL: https://rachanakorninon-gif.github.io/kinaraidee/
-- PR #134 adds visible keyboard focus and reduced-motion accessibility hardening on the main app and public Feedback/Partner forms.
-- This runtime has matching successful Pages deployment and Live Smoke evidence recorded by PR #136.
+- PR #164 hardens the public member/reset flow and deployment contract; prior PR #134 focus/reduced-motion hardening remains present in the current v14 runtime.
+- This runtime has matching successful Pages run `32737240239`, Live Smoke run `32737301309`, and read-only diagnostic run `32738157335`.
 
 ## Verified deployment evidence — 2026-08-24
 
@@ -17,8 +17,15 @@ GitHub Pages source and deployment trace are **VERIFIED** for the current browse
 
 Confirmed evidence:
 
+- PR #164 merged as `b6300e5458f17195c72a72ffa7ed0000fee40e24` and is the current deployed browser/PWA lineage.
+- Pages workflow run `32737240239` completed **success** for exact deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24`.
+- Corresponding Live Smoke run `32737301309` completed **success** on the same SHA.
+- Read-only diagnostic run `32738157335` confirmed the exact Pages/Live Smoke records and public-site state; temporary PR #165 closed without merge.
+- Live public `release-meta.json` matched `b6300e5458f17195c72a72ffa7ed0000fee40e24` with `kinaraidee-beta-v14`.
+- Live verification confirmed public member/reset pages use the 8-character minimum, do not expose raw backend `error.message`, reset returns to `member.html`, and `admin.html` is not published (HTTP 404).
+
 - GitHub Pages Source remains workflow-based.
-- PR #134 merged as `e30aa999f6277b221bf8dae85aa3b23521ad6f06`.
+- Historical PR #134 merged as `e30aa999f6277b221bf8dae85aa3b23521ad6f06`.
 - Pages workflow run `32673914310` completed **success** for exact deployed SHA `e30aa999f6277b221bf8dae85aa3b23521ad6f06`.
 - Corresponding Live Smoke run `32673939090` completed **success** on the same SHA.
 - Read-only diagnostic run `32674078371` confirmed the exact Pages/Live Smoke workflow-run metadata; temporary PR #135 was closed without merge.
@@ -36,7 +43,7 @@ A later read-only diagnostic confirmed that this evidence-only descendant was al
 - Corresponding Live Smoke run `32674298914` completed **success** on the same SHA.
 - Read-only diagnostic run `32675047230` confirmed both exact run records; temporary PR #138 was closed without merge.
 
-Subsequent main SHA `19626daf77778c6e51ba37193f09b24a7225c139` is a documentation-only descendant of `707d9a40...`: compare changes only `CURRENT-RELEASE.md`, `LIVE-DEPLOYMENT-VERIFICATION.md` and `README.md`. Read-only diagnostic run `32675123865` found no exact Pages/Live Smoke run for `19626daf...`, which is expected because those documentation-only commits did not trigger a browser/PWA deployment. Therefore the latest verified deployed evidence descendant remains `707d9a40...`, while the browser runtime candidate remains PR #134 / `db539c75...` with v14 assets.
+Historical documentation-only and evidence-only descendants remain preserved below. They are superseded for the current browser/PWA deployment trace by PR #164 / `b6300e5458f17195c72a72ffa7ed0000fee40e24` with Pages `32737240239`, Live Smoke `32737301309` and diagnostic `32738157335`; the Service Worker cache remains `kinaraidee-beta-v14`.
 
 Historical PR #79 / v13 deployment evidence remains valid historical evidence only and is not reused as v14 PASS.
 
@@ -51,6 +58,7 @@ Historical PR #79 / v13 deployment evidence remains valid historical evidence on
 - [x] Public `sw.js` cache marker matches the metadata
 - [x] Corresponding Live Smoke succeeds against the same deployed SHA
 - [x] Pages run ID and Live Smoke run ID are recorded
+- [x] public member/reset auth pages are deployed with the 8-character/error-hygiene/reset-return contract, while owner/admin pages remain excluded
 - [x] focus/reduced-motion deployed source contracts are present in Live Smoke scope
 - [x] development-only paths checked by Live Smoke are not exposed by the Pages artifact
 
@@ -83,6 +91,9 @@ The latest available Android TalkBack environment evidence remains insufficient 
 
 ## Evidence record
 
+- Current Pages run: `32737240239` — success on `b6300e5458f17195c72a72ffa7ed0000fee40e24`
+- Current Live Smoke run: `32737301309` — success on `b6300e5458f17195c72a72ffa7ed0000fee40e24`
+- Current read-only diagnostic run: `32738157335` — success; PR #165 closed without merge
 - Canonical runtime candidate SHA: `db539c75f87683a4225baeb5601509fe3bb26f6f`
 - Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06`
 - Original v14 Pages run: `32673914310` — success
