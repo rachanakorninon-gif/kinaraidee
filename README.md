@@ -65,9 +65,11 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Static QA ตรวจโครงสร้างและไฟล์สำคัญก่อน/ระหว่างการพัฒนา
 - Live smoke test ตรวจหน้า public, PWA assets, recovery route และ SEO discovery files หลัง deploy
 - `LIVE-DEPLOYMENT-VERIFICATION.md` เป็น evidence gate สำหรับยืนยันว่า Public Beta ที่ออนไลน์ตรงกับ release candidate; ถ้ายังตรวจ live URL/อุปกรณ์จริงไม่ได้ให้ใช้สถานะ BLOCKED ไม่ใช่ PASS
-- Service Worker ปัจจุบันใช้ cache generation `kinaraidee-beta-v14`
-- v14 ใช้ atomic app-shell install ด้วย `cache.addAll(SHELL)`; ถ้า shell file ใดโหลดไม่สำเร็จ install จะไม่ถือว่าสมบูรณ์
-- v14 เพิ่ม visible keyboard focus และ reduced-motion accessibility hardening บนแอปหลักและหน้า Feedback/Partner; deployment trace ผ่านแล้ว แต่การใช้งานด้วยอุปกรณ์/แพลตฟอร์มจริงยังต้องทดสอบแยก
+- Browser/PWA runtime ปัจจุบันใช้ cache generation `kinaraidee-beta-v16`; exact merged-main Pages + corresponding Live Smoke + public metadata trace ถูกยืนยันแล้วสำหรับ v16
+- v16 ยังคง atomic app-shell install ด้วย `cache.addAll(SHELL)`; ถ้า shell file ใดโหลดไม่สำเร็จ install จะไม่ถือว่าสมบูรณ์
+- v16 เพิ่ม durable localStorage outbox สำหรับ member Favorite/Picked history, ป้องกัน stale cloud snapshot ทับ local writes และ retry pending writes หลัง restart/กลับมาออนไลน์
+- automated deployment PASS ของ v16 ไม่แทน post-v16 physical Android Favorite → full restart → History retention retest; Issue #177 ยังต้องหลักฐานจากอุปกรณ์จริงก่อนปิด
+- visible keyboard focus และ reduced-motion accessibility hardening จาก v14 ยังคงอยู่ แต่ acceptance บนอุปกรณ์/แพลตฟอร์มจริงยังต้องทดสอบแยก
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
 - GitHub Issue #1 ใช้ติดตาม real-device Beta test round
@@ -106,8 +108,9 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - TC-01–TC-15 และ NF-01–NF-10 ผ่านตามกรณีที่รองรับ
 - Live deployment verification ของ release candidate ไม่เป็น FAIL/BLOCKED สำหรับรายการที่จำเป็นต่อรอบนั้น
 - ตรวจ iPadOS Safari เพิ่มเมื่อมีอุปกรณ์จริง โดยเฉพาะกรณี User Agent แบบ Mac
-- ตรวจ PWA update จาก cache รุ่นเก่ามา v14 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
-- ตรวจ visible keyboard focus และ reduced-motion behavior ของ v14 บนอุปกรณ์/แพลตฟอร์มจริงก่อนถือว่า accessibility acceptance ผ่าน
+- ตรวจ PWA update จาก cache รุ่นเก่ามา v16 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
+- ตรวจ post-v16 Favorite → ปิด PWA เต็มรูปแบบ → เปิดใหม่ → History/Favorite ยังอยู่บน Android จริงก่อนปิด Issue #177
+- ตรวจ visible keyboard focus และ reduced-motion behavior บนอุปกรณ์/แพลตฟอร์มจริงก่อนถือว่า accessibility acceptance ผ่าน
 - ทุก FAIL มี defect ที่ตามแก้ได้
 - Blocker = 0 และ Critical = 0
 
