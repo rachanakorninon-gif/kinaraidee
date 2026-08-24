@@ -68,7 +68,8 @@ jobs:
           probe='.github/workflows/partner-api-live-probe.yml'
           test -s "$probe"
           grep -Fq "cron: '41 */6 * * *'" "$probe"
-          grep -Fq -- '--connect-timeout 10 --max-time 30' "$probe"
+          grep -Fq 'curl_common=(--silent --show-error --connect-timeout 10 --max-time 30)' "$probe"
+          grep -Fq -- '--data-binary @-' "$probe"
           grep -Fq "test \"\$code\" = '405'" "$probe"
           grep -Fq "test \"\$code\" = '400'" "$probe"
           grep -Fq "test \"\$code\" = '413'" "$probe"
@@ -94,6 +95,6 @@ jobs:
             echo
             echo '- Guards repository source against unbounded request-body parsing and requires a 32 KiB byte budget with early cancellation.'
             echo '- Verifies no-store/nosniff response headers and preserves the existing owner-auth boundary markers.'
-            echo '- Guards the six-hour live probe as rejection-only, requires explicit request timeouts and exact rejection error payload checks, and prevents JSON application actions or expected 2xx assertions.'
+            echo '- Guards the six-hour live probe as rejection-only, requires silent/show-error plus explicit connection/total-transfer timeouts, preserves byte-exact data-binary request delivery, checks exact rejection error payloads, and prevents JSON application actions or expected 2xx assertions.'
             echo '- This is static/source workflow evidence only. It does not prove a specific live probe run, complete anonymous rate limiting, retention approval, alert delivery, partner commercial readiness, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
