@@ -6,8 +6,9 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `f391f070a110a331f480ed898b6d875624db803d`.
-- Compare from prior reviewed descendant `4b205282db221daa1980ec4d4722dea9f07cfbdd` to this descendant spans 8 commits and changes only Partner API probe workflows and release-evidence files (`.github/workflows/partner-api-live-probe.yml`, `.github/workflows/partner-api-regression.yml`, `CURRENT-RELEASE.md`, `POST-PARTNER-PROBE-HARDENING-EVIDENCE.md`, `POST-PR148-MAIN-EVIDENCE.md`). No browser/PWA runtime asset, Group API source, Partner API function source or Supabase runtime source changed in that range.
+- Latest reviewed `main` descendant: `19b5e8b364666467a72575ccd0c6b3db03f5d790`.
+- Compare from prior reviewed descendant `f391f070a110a331f480ed898b6d875624db803d` to this descendant spans 5 commits and changes only `.github/workflows/release-baseline-regression.yml`, `CURRENT-RELEASE.md` and `POST-PR148-MAIN-EVIDENCE.md`. No browser/PWA runtime asset, Group API source, Partner API function source or Supabase migration/runtime source changed in that range.
+- PR #149 validated `Kinaraidee Release Baseline Regression` on head `5f18b20bdb786c2001ea063428aa3f1f3d8ae084`; run `32699731708` completed success and the PR merged as `5143c677cfe32e72d63340e03ff9071e8e1a6f01`. Commit `19b5e8b364666467a72575ccd0c6b3db03f5d790` then recorded that CI evidence. This is repository consistency/lineage evidence only, not deployment, device, partner-action, conversion, revenue, Public Beta completion or Commercial GO evidence.
 - Current browser/PWA runtime candidate: `db539c75f87683a4225baeb5601509fe3bb26f6f` (PR #134 runtime lineage).
 - Runtime merge/deployed SHA: `e30aa999f6277b221bf8dae85aa3b23521ad6f06` (PR #134 merged).
 - PWA cache marker: `kinaraidee-beta-v14`.
@@ -32,7 +33,7 @@ Verified v14 evidence:
 - PR #136 merged the verified v14 deployment evidence into the canonical runtime declaration as `707d9a403d82a57e6736842a3fa74882d1722e8b`.
 - That evidence-only descendant also has exact successful Pages run `32674271444` and Live Smoke run `32674298914`; read-only diagnostic run `32675047230` confirmed both records.
 - Later main SHA `19626daf77778c6e51ba37193f09b24a7225c139` changes documentation only after `707d9a40...`; diagnostic run `32675123865` found no exact deployment run for it, which is expected because those documentation-only changes did not trigger browser/PWA deployment.
-- The latest reviewed descendant `f391f070...` remains non-browser-runtime lineage by repository compare; its Partner probe workflow/evidence changes do not supersede the deployed PR #134 runtime candidate.
+- The latest reviewed descendant `19b5e8b3...` remains non-browser-runtime lineage by repository compare; its release-baseline workflow/evidence changes do not supersede the deployed PR #134 runtime candidate.
 
 This deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. It does not imply real keyboard interaction, physical reduced-motion behavior, TalkBack/VoiceOver, full device matrix, Public Beta completion or Commercial GO.
 
@@ -87,7 +88,7 @@ Historical same-device Android evidence for specific fixed defects remains scope
 
 ## Repository governance
 
-Status remains **PREPARED / NOT YET ENFORCED**. Fresh GitHub branch read-back for `main` at `f391f070a110a331f480ed898b6d875624db803d` shows `protected=false`, protection disabled and required-status-check enforcement `off`.
+Status remains **PREPARED / NOT YET ENFORCED**. Fresh GitHub branch read-back for `main` at `19b5e8b364666467a72575ccd0c6b3db03f5d790` shows `protected=false`, protection disabled and required-status-check enforcement `off`.
 
 Repository-side runbooks/regression guards exist, but CI success does not equal branch protection. Before Commercial GO, an authorized GitHub administration action must enable protection/ruleset enforcement and a safe failing required-check proof must demonstrate that merge is blocked.
 
@@ -121,7 +122,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - PR #136 / `707d9a403d82a57e6736842a3fa74882d1722e8b` is evidence/runtime-declaration maintenance after the v14 deploy; it does not create a newer browser runtime than PR #134.
-- Reviewed descendant `f391f070a110a331f480ed898b6d875624db803d` is Partner probe workflow/release-evidence lineage only and does not supersede browser/PWA, Group API or Partner API function source candidates.
+- Reviewed descendant `19b5e8b364666467a72575ccd0c6b3db03f5d790` is release-baseline workflow/release-evidence lineage only and does not supersede browser/PWA, Group API or Partner API function source candidates.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance runbook/check-contract evidence is preparation evidence, not enforcement PASS.
 - Public accessibility/source/synthetic evidence does not close NF-09, NF-07, NF-05, TC-08 or new v14 keyboard/reduced-motion real-device requirements.
