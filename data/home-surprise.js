@@ -12,6 +12,13 @@
     if(h>=16&&h<22)return 'เย็น';
     return 'ดึก';
   }
+  function ensureMemberSync(){
+    if(window.KINARAIDEE_MEMBER_SYNC||document.querySelector('script[src="data/member-sync.js"]'))return;
+    const s=document.createElement('script');
+    s.src='data/member-sync.js';
+    s.async=false;
+    document.body.appendChild(s);
+  }
   function ensureAccessibilityStyles(){
     if(document.getElementById('kinaraideeAccessibilityStyles'))return;
     const style=document.createElement('style');
@@ -98,8 +105,9 @@
   }
   function install(){
     ensureAccessibilityStyles();
-    // index.html loads this helper directly. Bridge the PWA install helper here so
-    // iPhone/iPad guidance and Android install-prompt UI are actually live as well.
+    // index.html loads this helper directly. Start member sync before the user can
+    // create a favorite, then bridge the PWA install helper as before.
+    ensureMemberSync();
     ensurePwaInstallHelper();
     const home=document.querySelector('#home .homeHero');
     if(!home||document.getElementById('homeSurpriseBtn'))return;
@@ -127,6 +135,7 @@
     const group=[...home.querySelectorAll('button')].find(x=>x.textContent.includes('เลือกพร้อมกัน'));
     if(group)home.insertBefore(b,group);else home.appendChild(b);
   }
+  ensureMemberSync();
   window.addEventListener('pageshow',recover);
   window.addEventListener('online',recover);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
