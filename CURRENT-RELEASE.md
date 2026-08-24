@@ -6,7 +6,8 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `b6300e5458f17195c72a72ffa7ed0000fee40e24` (PR #164 merged member-auth deployment lineage).
+- Latest reviewed `main` descendant: `a006a0462a870d44991b833b79930bc7396216db` (PR #169 merged evidence-only runtime declaration sync).
+- PR #169 merged after all 17 observed PR-head workflows completed `success`. It changed only `CURRENT-RUNTIME.md`, preserved the runtime merge/deployed SHA `b6300e5458f17195c72a72ffa7ed0000fee40e24`, and preserved the last explicitly verified public evidence-only deployed descendant `4314f622964c271d3fb8bcc56152be1c35565256`. This is release-lineage/evidence maintenance only; it does not claim a new Pages/Live Smoke deployment, real-device PASS, user/partner/payment/revenue evidence, Public Beta completion, leaked-password protection PASS or Commercial GO.
 - Current browser/PWA deployment evidence was refreshed after PR #164; prior compare/evidence notes below remain historical context.
 - PR #151 merged as `ca339234fc66396ba6b7ededfbb83a830334c0ad` to validate the Group API commercial-release consistency guard through pull-request CI after the guard was changed to derive the deployed version from recorded evidence instead of hard-coding it. The validation file is evidence-only and explicitly does not modify browser/PWA runtime, Group API source, Partner API source, Supabase schema/data/configuration, device results, user data, conversion data or revenue data. This is repository QA/evidence consistency only; it is not a new Group API deployment, device result, partner action, conversion, revenue, Public Beta completion or Commercial GO evidence.
 - Current browser/PWA runtime candidate: `e5c19d048ae556153ebe66bdb4598ab0d168da97` (PR #164 member-auth runtime lineage).
