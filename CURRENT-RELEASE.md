@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `189339f219619570afa7a1431af9a2003b2ab587` (PR #185 release-consistency hardening merged after verified v16 deployment; no browser/PWA runtime supersession).
+- Latest reviewed `main` descendant: `f8c3481ce48c1ee1af9840713436df5414e71b29` (PR #188 deployment-diagnostic regression guard merged after PR #186; QA/workflow-only, no browser/PWA runtime supersession).
 - Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941` (PR #179 v16 runtime lineage).
 - Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` (PR #179 merged).
 - PWA cache marker: `kinaraidee-beta-v16`.
