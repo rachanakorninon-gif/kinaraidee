@@ -12,6 +12,8 @@
 -- Example values must be supplied by an approved policy decision at execution time.
 -- This repository deliberately provides no Production defaults because the retention
 -- periods remain TBD pending owner/legal approval under Issues #31, #45 and #123.
+-- PR-CI validation note: this comment is intentionally non-functional and exists only
+-- to route the read-only retention contract through its path-filtered regression job.
 
 \if :{?partner_click_retention}
 \else
