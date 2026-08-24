@@ -1,0 +1,57 @@
+name: Diagnostic Post Evidence Deployment
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify evidence-only descendant deployment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TARGET_SHA: 4314f622964c271d3fb8bcc56152be1c35565256
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          headers=(-H 'Accept: application/vnd.github+json' -H "Authorization: Bearer $GH_TOKEN" -H 'X-GitHub-Api-Version: 2022-11-28')
+          pages_id=''; smoke_id=''; pages_conclusion=''; smoke_conclusion=''; live_sha=''
+          for i in $(seq 1 24); do
+            pages_json="$(curl --fail --silent --show-error --location "${headers[@]}" "https://api.github.com/repos/$REPOSITORY/actions/workflows/pages.yml/runs?branch=main&per_page=20")"
+            smoke_json="$(curl --fail --silent --show-error --location "${headers[@]}" "https://api.github.com/repos/$REPOSITORY/actions/workflows/live-smoke.yml/runs?branch=main&per_page=20")"
+            pages_line="$(printf '%s' "$pages_json" | jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha==$sha) | [.id,.status,(.conclusion//""),.event,.head_sha] | @tsv' | head -n1)"
+            smoke_line="$(printf '%s' "$smoke_json" | jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha==$sha) | [.id,.status,(.conclusion//""),.event,.head_sha] | @tsv' | head -n1)"
+            IFS=$'\t' read -r pages_id pages_status pages_conclusion pages_event pages_sha <<<"$pages_line"
+            IFS=$'\t' read -r smoke_id smoke_status smoke_conclusion smoke_event smoke_sha <<<"$smoke_line"
+            meta="$(curl --silent --show-error --location --max-time 20 "$base/release-meta.json" || true)"
+            live_sha="$(printf '%s' "$meta" | jq -r '.sha // ""' 2>/dev/null || true)"
+            live_cache="$(printf '%s' "$meta" | jq -r '.pwa_cache // ""' 2>/dev/null || true)"
+            echo "poll=$i pages=$pages_id/$pages_status/$pages_conclusion smoke=$smoke_id/$smoke_status/$smoke_conclusion live=$live_sha cache=$live_cache"
+            if [ "$pages_conclusion" = 'success' ] && [ "$smoke_conclusion" = 'success' ] && [ "$live_sha" = "$TARGET_SHA" ]; then break; fi
+            sleep 10
+          done
+          test -n "$pages_id" && test "$pages_conclusion" = 'success' || { echo 'Exact Pages success not found'; exit 1; }
+          test "$pages_sha" = "$TARGET_SHA" || { echo 'Pages SHA mismatch'; exit 1; }
+          test -n "$smoke_id" && test "$smoke_conclusion" = 'success' || { echo 'Exact Live Smoke success not found'; exit 1; }
+          test "$smoke_sha" = "$TARGET_SHA" || { echo 'Live Smoke SHA mismatch'; exit 1; }
+          test "$live_sha" = "$TARGET_SHA" || { echo 'Public release-meta SHA mismatch'; exit 1; }
+          test "$live_cache" = 'kinaraidee-beta-v14' || { echo 'Unexpected live cache marker'; exit 1; }
+          member="$(curl --fail --silent --show-error --location "$base/member.html")"
+          reset="$(curl --fail --silent --show-error --location "$base/reset-password.html")"
+          grep -Fq 'minlength="8"' <<<"$member"
+          grep -Fq 'p.length<8' <<<"$member"
+          grep -Fq 'minlength="8"' <<<"$reset"
+          grep -Fq 'p.length<8' <<<"$reset"
+          grep -Fq "location.href='member.html'" <<<"$reset"
+          if grep -q 'error\.message' <<<"$member$reset"; then echo 'Raw backend error exposed'; exit 1; fi
+          admin_code="$(curl --silent --location --output /dev/null --write-out '%{http_code}' "$base/admin.html")"
+          test "$admin_code" != '200' || { echo 'Private admin page is public'; exit 1; }
+          echo "EVIDENCE_ONLY_DESCENDANT Pages run=$pages_id Live Smoke run=$smoke_id SHA=$TARGET_SHA public_release_meta=$live_sha cache=$live_cache admin_http=$admin_code"
