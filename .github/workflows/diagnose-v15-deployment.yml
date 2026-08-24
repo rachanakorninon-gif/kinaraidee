@@ -1,0 +1,86 @@
+name: Diagnose v15 Deployment
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-v15-deployment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify merged-main deployment evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: 367162286d1e1452151df11dca805ed629bb5466
+          BASE_URL: https://rachanakorninon-gif.github.io/kinaraidee
+        shell: bash
+        run: |
+          set -euo pipefail
+          api="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&per_page=100"
+          pages_id=''
+          pages_conclusion=''
+          smoke_id=''
+          smoke_conclusion=''
+
+          for attempt in $(seq 1 20); do
+            json="$(curl --fail --silent --show-error --location \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "$api")"
+
+            parsed="$(printf '%s' "$json" | node -e '
+              let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const j=JSON.parse(s), runs=j.workflow_runs||[];
+                const pages=runs.find(r=>r.name==="Deploy Kinaraidee to GitHub Pages" && r.event==="push");
+                const smoke=runs.find(r=>r.name==="Kinaraidee Live Smoke Test" && r.event==="workflow_run");
+                console.log([pages?.id||"",pages?.conclusion||pages?.status||"",smoke?.id||"",smoke?.conclusion||smoke?.status||""].join("\t"));
+              });
+            ')"
+            IFS=$'\t' read -r pages_id pages_conclusion smoke_id smoke_conclusion <<< "$parsed"
+            echo "poll=${attempt} pages=${pages_id:-none}/${pages_conclusion:-none} smoke=${smoke_id:-none}/${smoke_conclusion:-none}"
+            if [ -n "$pages_id" ] && [ "$pages_conclusion" = success ] && [ -n "$smoke_id" ] && [ "$smoke_conclusion" = success ]; then
+              break
+            fi
+            sleep 10
+          done
+
+          test -n "$pages_id" || { echo 'No exact Pages push run found for target SHA'; exit 1; }
+          test "$pages_conclusion" = success || { echo "Pages run $pages_id is not success: $pages_conclusion"; exit 1; }
+          test -n "$smoke_id" || { echo 'No exact Live Smoke workflow_run found for target SHA'; exit 1; }
+          test "$smoke_conclusion" = success || { echo "Live Smoke run $smoke_id is not success: $smoke_conclusion"; exit 1; }
+
+          meta=''
+          for attempt in $(seq 1 12); do
+            meta="$(curl --fail --silent --show-error --location --retry 2 --retry-delay 2 "${BASE_URL}/release-meta.json" || true)"
+            if printf '%s' "$meta" | grep -Fq "$TARGET_SHA" && printf '%s' "$meta" | grep -Fq 'kinaraidee-beta-v15'; then
+              break
+            fi
+            echo "public-meta-poll=${attempt} value=${meta:-unavailable}"
+            sleep 10
+          done
+          printf '%s\n' "$meta" | grep -Fq "$TARGET_SHA" || { echo 'Public release-meta SHA does not match target'; exit 1; }
+          printf '%s\n' "$meta" | grep -Fq 'kinaraidee-beta-v15' || { echo 'Public release-meta cache is not v15'; exit 1; }
+
+          sw="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "${BASE_URL}/sw.js")"
+          printf '%s\n' "$sw" | grep -Fq "const CACHE='kinaraidee-beta-v15';" || { echo 'Live Service Worker is not v15'; exit 1; }
+          printf '%s\n' "$sw" | grep -Fq "'./data/history-ui.js'" || { echo 'Live Service Worker shell is missing history-ui.js'; exit 1; }
+
+          nearby="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "${BASE_URL}/data/nearby-restaurants.js")"
+          printf '%s\n' "$nearby" | grep -Fq 'nearbyLocationStatus' || { echo 'Live Nearby asset lacks separated Location status'; exit 1; }
+          printf '%s\n' "$nearby" | grep -Fq 'timeout:15000' || { echo 'Live Nearby asset lacks v15 mobile timeout'; exit 1; }
+
+          history="$(curl --fail --silent --show-error --location --retry 3 --retry-delay 2 "${BASE_URL}/data/history-ui.js")"
+          printf '%s\n' "$history" | grep -Fq '❤️ เมนูโปรด' || { echo 'Live history helper lacks Favorite badge'; exit 1; }
+          printf '%s\n' "$history" | grep -Fq '👍 เลือกกิน' || { echo 'Live history helper lacks accepted badge'; exit 1; }
+
+          echo "EVIDENCE pages_run=${pages_id} pages=${pages_conclusion} live_smoke_run=${smoke_id} smoke=${smoke_conclusion} target_sha=${TARGET_SHA} cache=kinaraidee-beta-v15"
+          echo "PUBLIC release_meta=${meta}"
+          echo 'LIVE_ASSETS nearby-location-status=PASS history-differentiation=PASS sw-v15=PASS'
