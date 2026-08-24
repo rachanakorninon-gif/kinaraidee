@@ -34,10 +34,15 @@ jobs:
           test -n "$marker" || { echo 'Unable to derive current PWA marker from sw.js'; exit 1; }
 
           grep -Fq 'dynamic-pwa-marker-v1' deployment-check.html
+          grep -Fq 'bounded-fetch-v1' deployment-check.html
           grep -Fq "sw.match(/const CACHE='(kinaraidee-beta-v\\d+)'/)" deployment-check.html
           grep -Fq "const markerMatches=Boolean(liveCache)&&m.pwa_cache===liveCache" deployment-check.html
           grep -Fq "const valid=validSha&&markerMatches" deployment-check.html
-          grep -Fq "cache:'no-store'" deployment-check.html
+          grep -Fq "cache:'no-store',signal:controller.signal" deployment-check.html
+          grep -Fq 'const controller=new AbortController()' deployment-check.html
+          grep -Fq 'setTimeout(()=>controller.abort(),15000)' deployment-check.html
+          grep -Fq "e.name==='AbortError'" deployment-check.html
+          grep -Fq 'clearTimeout(timeout)' deployment-check.html
 
           declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           test "$declared" = "$marker" || { echo "Runtime declaration drift: $declared != $marker"; exit 1; }
@@ -50,7 +55,7 @@ jobs:
             exit 1
           }
 
-          echo "Deployment diagnostic dynamically follows $marker"
+          echo "Deployment diagnostic dynamically follows $marker with bounded no-store fetches"
 
       - name: Preserve evidence boundary
         shell: bash
