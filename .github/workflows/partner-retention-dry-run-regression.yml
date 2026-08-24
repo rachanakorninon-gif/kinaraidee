@@ -1,0 +1,78 @@
+name: Partner Retention Dry-Run Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/partner-retention-dry-run.sql'
+      - '.github/workflows/partner-retention-dry-run-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/partner-retention-dry-run.sql'
+      - '.github/workflows/partner-retention-dry-run-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify dry-run remains non-mutating and policy-neutral
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/partner-retention-dry-run.sql'
+          test -s "$file"
+
+          grep -Fq 'partner_click_retention must be supplied explicitly' "$file"
+          grep -Fq 'partner_conversion_retention must be supplied explicitly' "$file"
+          grep -Fq 'restaurant_demand_retention must be supplied explicitly' "$file"
+          grep -Fq ":'partner_click_retention'::interval" "$file"
+          grep -Fq ":'partner_conversion_retention'::interval" "$file"
+          grep -Fq ":'restaurant_demand_retention'::interval" "$file"
+
+          d='del''ete'
+          t='trun''cate'
+          u='upd''ate'
+          i='ins''ert'
+          a='alt''er'
+          c='cre''ate'
+          if grep -Eiq "^[[:space:]]*(${d}|${t}|${u}|${i}|${a}|${c})[[:space:]]" "$file"; then
+            echo 'Mutating/DDL statement detected in Partner retention dry-run.'
+            exit 1
+          fi
+
+          # Preserve privacy-safe output. These values must not be projected by the dry-run.
+          for sensitive in restaurant_id restaurant_slug session_id food_name source_ref latitude longitude order_amount commission_amount; do
+            if grep -Eiq "select[[:space:]].*${sensitive}" "$file"; then
+              echo "Sensitive Partner field selected by dry-run: $sensitive"
+              exit 1
+            fi
+          done
+
+          grep -Fq 'candidate_partner_clicks' "$file"
+          grep -Fq 'candidate_partner_conversions' "$file"
+          grep -Fq 'candidate_restaurant_demand' "$file"
+          grep -Fq 'oldest_candidate_click' "$file"
+          grep -Fq 'oldest_candidate_conversion' "$file"
+          grep -Fq 'oldest_candidate_demand' "$file"
+
+          echo 'Partner retention dry-run contract is read-only and policy-neutral.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Partner retention dry-run regression'
+            echo
+            echo '- Verifies the repository dry-run cannot mutate Partner/analytics data or silently choose Production retention periods.'
+            echo '- Keeps click, conversion and restaurant-demand retention thresholds independent and explicit.'
+            echo '- Exposes only counts/time boundaries needed for planning; it does not expose session, restaurant, location, food or financial fields.'
+            echo '- This is planning evidence only; it does not approve retention, execute cleanup, verify deletion, establish user/conversion/revenue metrics, satisfy legal review, or create Commercial GO evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
