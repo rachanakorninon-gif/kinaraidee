@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Block private credential patterns including workflows
         shell: bash
@@ -63,6 +63,18 @@ jobs:
           grep -q "PRIVACY_NOTICE_VERSION='2026-08-21'" partner.html
           grep -q 'privacy_notice_version:PRIVACY_NOTICE_VERSION' partner.html
           grep -q 'privacy_acknowledged_at:new Date().toISOString()' partner.html
+      - name: Validate member auth error hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'minlength="8"' member.html
+          grep -q 'p.length<8' member.html
+          grep -q 'minlength="8"' reset-password.html
+          grep -q 'p.length<8' reset-password.html
+          if grep -q 'error\.message' member.html reset-password.html; then
+            echo 'Raw Supabase error.message must not be exposed in member auth pages.'
+            exit 1
+          fi
       - name: Validate surprise and current PWA integrity
         shell: bash
         run: |
