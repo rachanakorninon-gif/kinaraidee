@@ -14,7 +14,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Live public `release-meta.json` SHA = `b6300e5458f17195c72a72ffa7ed0000fee40e24` with Service Worker cache `kinaraidee-beta-v14`
 - Live verification confirmed public `member.html` / `reset-password.html` use the 8-character minimum, do not expose raw Supabase `error.message`, reset returns to `member.html`, and public `admin.html` returned HTTP 404
 - The Service Worker shell/cache marker remains v14 because this runtime change does not modify `sw.js` or the cached app shell
-- Prior verified v14 deployment evidence remains historical and is not reused as the current deployment proof
+- Prior verified v14 deployment evidence remains historical and is not reused as current PASS
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
