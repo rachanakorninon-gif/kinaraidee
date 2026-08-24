@@ -4,17 +4,20 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 - Current browser/PWA runtime candidate: `e5c19d048ae556153ebe66bdb4598ab0d168da97`
 - PWA cache marker: `kinaraidee-beta-v14`
-- Runtime change: member authentication/reset hardening — public member/reset pages use the Supabase-aligned 8-character minimum, no longer expose raw Supabase `error.message`, reset returns to `member.html`, and the clean Pages artifact/runtime lineage/Live Smoke contracts now include both auth pages while keeping owner/admin pages private
-- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
-- Current runtime deployment evidence is pending; no Pages or Live Smoke run is promoted to PASS for this candidate yet
-- Prior verified v14 deployment evidence remains historical and is not reused as current PASS: original Pages `32673914310` + Live Smoke `32673939090` on `e30aa999f6277b221bf8dae85aa3b23521ad6f06`, plus later evidence-only descendant checks
-- The Service Worker shell/cache marker remains v14 because this candidate does not change `sw.js` or the cached app shell
+- Runtime change: member authentication/reset hardening — public member/reset pages use the Supabase-aligned 8-character minimum, no longer expose raw Supabase `error.message`, reset returns to `member.html`, and the clean Pages artifact/runtime lineage/Live Smoke contracts include both auth pages while keeping owner/admin pages private
+- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
+- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24`
+- GitHub Pages run: `32737240239` — completed `success` on exact deployed SHA
+- Corresponding Live Smoke run: `32737301309` — completed `success` on the same SHA
+- Read-only diagnostic run: `32738157335` — confirmed exact Pages/Live Smoke run metadata and public-site state; temporary PR #165 was closed without merge
+- Live public `release-meta.json` SHA = `b6300e5458f17195c72a72ffa7ed0000fee40e24` with Service Worker cache `kinaraidee-beta-v14`
+- Live verification confirmed public `member.html` / `reset-password.html` use the 8-character minimum, do not expose raw Supabase `error.message`, reset returns to `member.html`, and public `admin.html` returned HTTP 404
+- The Service Worker shell/cache marker remains v14 because this runtime change does not modify `sw.js` or the cached app shell
+- Prior verified v14 deployment evidence remains historical and is not reused as the current deployment proof
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
 
-`PENDING FOR CURRENT RUNTIME DEPLOYMENT` means source/CI/runtime-lineage preparation exists, but this candidate is not yet allowed to inherit the prior v14 deployment PASS.
+`PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` is scoped to the merged-main GitHub Pages deployment, public release metadata/assets and corresponding automated Live Smoke for this runtime lineage.
 
-A future `PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` requires a successful GitHub Pages deployment and corresponding Live Smoke evidence that verifies the public `member.html` / `reset-password.html` contracts, release metadata, existing v14 PWA runtime, and non-public owner/admin paths on the same deployed lineage.
-
-That automated deployment PASS, when obtained, does **not** imply real keyboard/device interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, NF-05/NF-07, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness or Commercial GO.
+It does **not** imply real keyboard/device interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, NF-05/NF-07, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO.
