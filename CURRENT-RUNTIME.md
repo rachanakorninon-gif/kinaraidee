@@ -6,19 +6,20 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - PWA cache marker: `kinaraidee-beta-v14`
 - Runtime change: member authentication/reset hardening — public member/reset pages use the Supabase-aligned 8-character minimum, no longer expose raw Supabase `error.message`, reset returns to `member.html`, and the clean Pages artifact/runtime lineage/Live Smoke contracts include both auth pages while keeping owner/admin pages private
 - Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
-- Runtime merge SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24`
+- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24`
 - Verified evidence-only deployed descendant SHA: `4314f622964c271d3fb8bcc56152be1c35565256`
-- GitHub Pages run for the evidence-only descendant: `32739427482` — completed `success` on exact SHA
-- Corresponding Live Smoke run: `32739515806` — completed `success` on the same SHA
+- GitHub Pages run: `32739427482` — completed `success` for the verified evidence-only deployed descendant
+- Corresponding Live Smoke run: `32739515806` — completed `success` on the same evidence-only descendant SHA
 - Read-only diagnostic run: `32739705572` — confirmed exact Pages/Live Smoke run metadata and public-site state; temporary PR #167 was closed without merge
 - Live public `release-meta.json` SHA = `4314f622964c271d3fb8bcc56152be1c35565256` with Service Worker cache `kinaraidee-beta-v14`
 - The compare from runtime merge `b6300e5458f17195c72a72ffa7ed0000fee40e24` to deployed descendant `4314f622964c271d3fb8bcc56152be1c35565256` contains only workflow/release-evidence files; no browser/PWA runtime asset changed
 - Live verification confirmed public `member.html` / `reset-password.html` use the 8-character minimum, do not expose raw Supabase `error.message`, reset returns to `member.html`, and public `admin.html` returned HTTP 404
 - The Service Worker shell/cache marker remains v14 because no Service Worker/app-shell runtime change occurred
+- Prior verified v14 deployment evidence remains historical and is not reused as current PASS except where the evidence-only descendant is explicitly verified as runtime-equivalent
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
 
-`PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` is scoped to the merged-main GitHub Pages deployment lineage, public release metadata/assets and corresponding automated Live Smoke. An evidence-only deployed descendant does not create a newer browser/PWA runtime candidate.
+`PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` is scoped to the merged-main GitHub Pages deployment lineage, public release metadata/assets and corresponding automated Live Smoke. `Runtime merge/deployed SHA` identifies the runtime-changing merge expected by cross-document release guards; the separately recorded evidence-only deployed descendant identifies the current public release metadata without creating a newer browser/PWA runtime candidate.
 
 It does **not** imply real keyboard/device interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, NF-05/NF-07, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO.
