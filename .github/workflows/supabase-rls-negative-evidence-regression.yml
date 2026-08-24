@@ -48,19 +48,31 @@ jobs:
           grep -Fq '`user_food_history` DELETE' "$evidence"
           grep -Fq 'could not update/delete another user' "$evidence"
 
-          # Preserve the explicit limits: these probes are scoped security evidence,
-          # not a blanket Auth/RLS, Public Beta or Commercial PASS.
-          grep -Fq 'cross-user INSERT rejection or every mutation shape' "$evidence"
+          # Keep the newly verified cross-user INSERT denials explicit and scoped.
+          grep -Fq 'Cross-user INSERT negative probe' "$evidence"
+          grep -Fq '`member_profiles` INSERT with another member' "$evidence"
+          grep -Fq '`member_food_history` INSERT with another member' "$evidence"
+          grep -Fq '`user_food_history` INSERT with another member' "$evidence"
+          grep -Fq '`beta_feedback` INSERT with another member' "$evidence"
+          test "$(grep -Fc '| `42501` | **YES** |' "$evidence")" -eq 4
+          grep -Fq 'all four exercised cross-user INSERT attempts were rejected' "$evidence"
+          grep -Fq 'No probe row was intentionally retained' "$evidence"
+
+          # Preserve explicit limits: SQL-session negative probes are not a blanket
+          # Auth/RLS, external session lifecycle, Public Beta or Commercial PASS.
+          grep -Fq 'every INSERT payload/mutation shape' "$evidence"
+          grep -Fq 'real browser/mobile authenticated-session lifecycle' "$evidence"
+          grep -Fq 'privileged-backend/service-role authorization behavior' "$evidence"
           grep -Fq 'leaked-password protection' "$evidence"
           grep -Fq 'real-device behavior, Public Beta completion, or Commercial GO' "$evidence"
 
-          # Keep the canonical release summary aligned with the same evidence boundary.
+          # Keep the canonical release summary aligned with the same open boundaries.
           grep -Fq 'does not prove every authenticated per-user JWT/RLS path' "$release"
           grep -Fq 'Supabase leaked-password protection gate (#11)' "$release"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
-          # Keep the evidence tied to the hardened beta_feedback admin boundary.
+          # Keep beta_feedback evidence tied to the hardened private admin helper.
           grep -Fq 'private.is_admin_dashboard_owner()' "$auth"
           grep -Fq 'create or replace function private.is_admin_dashboard_owner()' "$contract"
           grep -Fq "set search_path = ''" "$contract"
@@ -90,8 +102,8 @@ jobs:
           {
             echo '## Supabase authenticated RLS negative evidence'
             echo
-            echo '- Guards the repository record for authenticated cross-user read isolation and selected UPDATE/DELETE negative paths.'
+            echo '- Guards authenticated cross-user read isolation plus selected INSERT/UPDATE/DELETE negative paths.'
             echo '- Keeps CURRENT-RELEASE.md aligned with the scoped RLS/Auth evidence boundary and open security gates.'
-            echo '- Keeps the evidence tied to the current private admin-helper contract for beta_feedback.'
-            echo '- This workflow validates documentation/source consistency only. It does not re-run the live SQL probes, prove every INSERT/mutation/JWT/session path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
+            echo '- Keeps beta_feedback evidence tied to the current private admin-helper contract.'
+            echo '- This workflow validates documentation/source consistency only. It does not re-run live SQL probes, prove every mutation/JWT/session/service-role path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
           } >> "$GITHUB_STEP_SUMMARY"
