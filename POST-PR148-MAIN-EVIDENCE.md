@@ -40,7 +40,11 @@ After PR #148, direct evidence/documentation commits advanced `main` to `e62730f
 
 That workflow is intended to prevent a stale canonical reviewed descendant from silently covering later browser/PWA runtime, Group API source, Partner API source, data, or Supabase migration changes. It checks that the `CURRENT-RELEASE.md` reviewed descendant exists, remains an ancestor of the PR head, and that guarded runtime/API/schema paths have not changed after that baseline without corresponding candidate/evidence advancement. It also preserves explicit Public Beta NOT COMPLETE, Commercial NO-GO, leaked-password NOT PASS, and governance NOT YET ENFORCED boundaries.
 
-This evidence-only change exists to exercise that new baseline guard through pull-request CI. A successful PR run may be recorded as repository consistency evidence only. It must not be promoted into deployment, device, partner-action, conversion, revenue, Public Beta completion, or Commercial GO evidence.
+PR #149 validated this guard through pull-request CI. PR #149 head `5f18b20bdb786c2001ea063428aa3f1f3d8ae084` merged as `5143c677cfe32e72d63340e03ff9071e8e1a6f01`. The `Kinaraidee Release Baseline Regression` run `32699731708` completed successfully. The same PR head also produced completed-success runs for Release Consistency, Beta QA, Beta integrity, Security Hygiene, Runtime Lineage Regression, Governance Required Checks Regression, Real Device Contract Regression, PWA Cache Upgrade Regression, Surprise Accessibility Regression, Credential Scanner Regression, History Sync Regression, Group Result Regression, Release Metadata Regression, and iOS Install Hint Regression.
+
+Repository compare from `e62730f1fbc3bd92dc67ebd089a145bbf391a573` to the PR #149 merge changes only `POST-PR148-MAIN-EVIDENCE.md`; no guarded browser/PWA runtime, Group API, Partner API, or Supabase migration path changes in that range.
+
+This PR #149 result is **repository consistency / lineage CI evidence only**. It does not prove a new Pages deployment, live Partner API probe, real-device acceptance, partner action, conversion, revenue, Public Beta completion, or Commercial GO.
 
 ## Evidence boundary
 
