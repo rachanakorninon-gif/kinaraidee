@@ -33,21 +33,37 @@ jobs:
           url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/partner-api'
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
+          curl_common=(--silent --show-error --connect-timeout 10 --max-time 30)
 
-          code="$(curl --silent --show-error --dump-header "$tmp/get.h" --output "$tmp/get.b" --write-out '%{http_code}' "$url")"
+          code="$(curl "${curl_common[@]}" --dump-header "$tmp/get.h" --output "$tmp/get.b" --write-out '%{http_code}' "$url")"
           test "$code" = '405' || { echo "GET expected 405, got $code"; exit 1; }
           grep -qi '^cache-control: no-store' "$tmp/get.h"
           grep -qi '^x-content-type-options: nosniff' "$tmp/get.h"
+          python - "$tmp/get.b" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f: body=json.load(f)
+          assert body == {'error':'method_not_allowed'}, body
+          PY
 
-          code="$(printf '{' | curl --silent --show-error --dump-header "$tmp/bad.h" --output "$tmp/bad.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url")"
+          code="$(printf '{' | curl "${curl_common[@]}" --dump-header "$tmp/bad.h" --output "$tmp/bad.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url")"
           test "$code" = '400' || { echo "Malformed JSON expected 400, got $code"; exit 1; }
+          python - "$tmp/bad.b" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f: body=json.load(f)
+          assert body == {'error':'invalid_json'}, body
+          PY
 
-          python - <<'PY' | curl --silent --show-error --dump-header "$tmp/large.h" --output "$tmp/large.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url" > "$tmp/large.code"
+          python - <<'PY' | curl "${curl_common[@]}" --dump-header "$tmp/large.h" --output "$tmp/large.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url" > "$tmp/large.code"
           import sys
           sys.stdout.write('x' * 33000)
           PY
           code="$(cat "$tmp/large.code")"
           test "$code" = '413' || { echo "Oversized body expected 413, got $code"; exit 1; }
+          python - "$tmp/large.b" <<'PY'
+          import json,sys
+          with open(sys.argv[1],encoding='utf-8') as f: body=json.load(f)
+          assert body == {'error':'request_too_large'}, body
+          PY
 
           echo 'Partner API rejection-only live probe passed.'
 
@@ -59,7 +75,8 @@ jobs:
             echo '## Partner API live rejection probe'
             echo
             echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
-            echo '- Expected contract: GET 405, malformed JSON 400, body over 32 KiB 413, with no-store/nosniff on the GET rejection response.'
+            echo '- Expected contract: GET 405/method_not_allowed, malformed JSON 400/invalid_json, body over 32 KiB 413/request_too_large, with no-store/nosniff on the GET rejection response.'
+            echo '- Each request is bounded by explicit connection and total-transfer timeouts.'
             echo '- Scheduled every 6 hours at minute 41 UTC and can also be dispatched manually.'
             echo '- Partner API Regression separately guards this workflow against JSON application-action payloads and expected 2xx assertions.'
             echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, alert delivery or Commercial GO.'
