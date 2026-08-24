@@ -8,7 +8,7 @@
 - v15 changes the real-device paths found during the 2026-08-24 focused session: Location status/error UX, Favorite/History differentiation and PWA shell membership for the new history helper.
 - Historical pre-fix browser/PWA runtime remains v14; its deployment/device evidence is retained only as historical scoped evidence and is not reused as post-v15 device PASS.
 - The exact public `release-meta.json` descendant read by each physical-device browser session before the v15 fix was not captured. The focused evidence below is therefore scoped to the then-live pre-fix v14 browser behavior, not asserted as v15 evidence.
-- Current Group API source candidate: PR #93 / `fefc29322ac13f706603bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only probe `32632951668` = SUCCESS. Backend evidence does **not** create a new device PASS by itself.
+- Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only probe `32632951668` = SUCCESS. Backend evidence does **not** create a new device PASS by itself.
 - `CURRENT-RUNTIME.md` and `CURRENT-RELEASE.md` are the canonical release-state references when older notes conflict.
 
 > Android evidence below comes from the same physical device/session family only. Device model, Android version and Chrome version were not captured, so those fields remain `not captured` rather than being guessed.
@@ -64,7 +64,7 @@
 - Android Nearby/Maps: Google Maps query included numeric coordinates = fallback with acquired coordinates **PASS**; this does not by itself create a new TC-08 permission-allow PASS.
 - iPhone Home + Surprise + Maps fallback + local 2-person Group result + member login/logout = **PASS** in the scopes observed.
 - iPhone TC-08 allow path = **FAIL on the pre-fix v14 runtime** after OS/Safari and per-site Location settings were set to allow but Kinaraidee still supplied no numeric coordinates to Maps.
-- v15 is now verified deployed, but none of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.
+- v15 is now verified deployed. None of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.
 
 ## Live-group focused regression — Android #1
 
