@@ -2,26 +2,20 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `e5c19d048ae556153ebe66bdb4598ab0d168da97`
-- PWA cache marker: `kinaraidee-beta-v14`
-- Runtime change: member authentication/reset hardening — public member/reset pages use the Supabase-aligned 8-character minimum, no longer expose raw Supabase `error.message`, reset returns to `member.html`, and the clean Pages artifact/runtime lineage/Live Smoke contracts include both auth pages while keeping owner/admin pages private
-- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
-- Runtime merge/deployed SHA: `b6300e5458f17195c72a72ffa7ed0000fee40e24`
-- Verified evidence-only deployed descendant SHA: `4314f622964c271d3fb8bcc56152be1c35565256`
-- Latest repository evidence-only merge descendant: `cf146f2c582a92d4a2a8972eaf8f2effcaccf880` (PR #168); this merge changes evidence/runtime declaration only and is not promoted to a newer public deployment SHA without matching Pages + Live Smoke evidence
-- PR #168 head `4a78fe61921f434e0fc361b69efbbf410f4e6aa5` completed the required pull-request regression suite successfully, including Release Consistency, Release Baseline Regression, Beta QA, Beta integrity, Security Hygiene, Runtime Lineage, Real Device Contract, Release Metadata, Governance Required Checks, PWA Cache Upgrade, iOS Install Hint, Accessibility and History Sync; this is repository CI evidence only
-- GitHub Pages run: `32739427482` — completed `success` for the verified evidence-only deployed descendant
-- Corresponding Live Smoke run: `32739515806` — completed `success` on the same evidence-only descendant SHA
-- Read-only diagnostic run: `32739705572` — confirmed exact Pages/Live Smoke run metadata and public-site state; temporary PR #167 was closed without merge
-- Live public `release-meta.json` SHA = `4314f622964c271d3fb8bcc56152be1c35565256` with Service Worker cache `kinaraidee-beta-v14`
-- The compare from runtime merge `b6300e5458f17195c72a72ffa7ed0000fee40e24` to deployed descendant `4314f622964c271d3fb8bcc56152be1c35565256` contains only workflow/release-evidence files; no browser/PWA runtime asset changed
-- Live verification confirmed public `member.html` / `reset-password.html` use the 8-character minimum, do not expose raw Supabase `error.message`, reset returns to `member.html`, and public `admin.html` returned HTTP 404
-- The Service Worker shell/cache marker remains v14 because no Service Worker/app-shell runtime change occurred
-- Prior verified v14 deployment evidence remains historical and is not reused as current PASS except where the evidence-only descendant is explicitly verified as runtime-equivalent
+- Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf`
+- PWA cache marker: `kinaraidee-beta-v15`
+- Runtime change: real-device follow-up hardening — Nearby now keeps Location state separate from partner-search state, exposes actionable geolocation permission/unavailable/timeout outcomes without the message being overwritten, gives mobile geolocation a longer low-accuracy acquisition window, and keeps Google Maps fallback available; Favorite/History now adds explicit `❤️ เมนูโปรด` / `👍 เลือกกิน` differentiation and summary counts through `data/history-ui.js`; the new UI helper is part of the atomic PWA shell.
+- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
+- Current runtime deployment evidence is pending. Do not reuse v14 Pages/Live Smoke run IDs, public metadata or device observations as deployment PASS for this v15 candidate.
+- Latest pre-v15 repository evidence-only merge descendant: `a006a0462a870d44991b833b79930bc7396216db` (PR #169); PR #169 records PR #168 lineage only and does not change browser/PWA assets.
+- Earlier evidence-only merge descendant `cf146f2c582a92d4a2a8972eaf8f2effcaccf880` (PR #168) likewise remains repository CI/lineage evidence rather than a promoted public deployment SHA without matching Pages + Live Smoke evidence.
+- The v15 cache bump is required because `data/nearby-restaurants.js` is an app-shell asset and `data/history-ui.js` is newly added to the shell.
+- Focused physical-device evidence collected immediately before this fix remains diagnostic/historical: Android exercised member auth/reset, Surprise, history/favorite persistence and coordinate-bearing Maps fallback; iPhone Safari exercised Home, Surprise, local Group flow, Google Maps fallback and login/logout, while the Kinaraidee geolocation allow path did not yield coordinates even after Safari/website Location settings were changed to allow. Those observations do not constitute v15 post-fix device PASS.
+- Prior verified v14 deployment evidence remains historical and is not reused as current PASS.
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
 
-`PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` is scoped to the merged-main GitHub Pages deployment lineage, public release metadata/assets and corresponding automated Live Smoke. `Runtime merge/deployed SHA` identifies the runtime-changing merge expected by cross-document release guards; the separately recorded evidence-only deployed descendant identifies the current verified public release metadata without creating a newer browser/PWA runtime candidate. A later evidence-only repository merge such as PR #168 may be recorded as lineage/CI evidence but must not be treated as the current public deployment SHA until a matching Pages + Live Smoke trace is verified.
+`PENDING FOR CURRENT RUNTIME DEPLOYMENT` means source/runtime lineage is declared but the merged-main GitHub Pages deployment, public `release-meta.json`, Service Worker v15 marker and corresponding Live Smoke have not yet been verified for this candidate. Evidence-only repository descendants before the v15 runtime change remain historical lineage and cannot be promoted into v15 deployment evidence.
 
-It does **not** imply real keyboard/device interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, NF-05/NF-07, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO.
+It does **not** imply real keyboard/device interaction PASS, post-fix Android/iPhone Location PASS, post-fix Favorite/History UX PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, NF-05/NF-07, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO.

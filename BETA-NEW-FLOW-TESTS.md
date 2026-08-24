@@ -22,8 +22,8 @@
 1. ใช้ Android PWA ที่เคยติดตั้ง/เคยเปิด build ก่อน release ปัจจุบัน
 2. เชื่อมต่ออินเทอร์เน็ตและเปิดแอปให้ Service Worker มีโอกาสตรวจ update
 3. ปิดแล้วเปิดจากไอคอนอีกครั้งตามรอบ activation ที่ผู้ใช้ปกติทำได้
-4. ผลที่คาดหวังสำหรับ release ปัจจุบัน: ได้ behavior ของ `kinaraidee-beta-v14` และเห็นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” โดยไม่ต้อง clear app/site data เอง
-5. ถ้าไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้ ไม่ใช้การติดตั้ง v14 ใหม่เป็น NF-04 PASS
+4. ผลที่คาดหวังสำหรับ release ปัจจุบัน: ได้ behavior ของ `kinaraidee-beta-v15` และเห็นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” โดยไม่ต้อง clear app/site data เอง
+5. ถ้าไม่สามารถยืนยันว่าอุปกรณ์เริ่มจาก build ก่อนหน้า ให้เว้นผลไว้ ไม่ใช้การติดตั้ง v15 ใหม่เป็น NF-04 PASS
 
 ## NF-05 iPhone/iPad install guidance
 1. เปิดด้วย Safari โดยยังไม่ได้ติดตั้งลงหน้าจอโฮม
@@ -42,11 +42,11 @@
 4. ผลที่คาดหวัง: app shell และไฟล์ `home-surprise.js` ที่ cache ไว้เปิดได้ โดยไม่อ้างว่าข้อมูลออนไลน์ใหม่ยังพร้อมใช้งาน
 
 ## NF-07 Update จาก cache รุ่นก่อนหน้า
-1. ใช้อุปกรณ์/installed PWA ที่ **ยืนยันได้ว่าเคยโหลด cache generation ก่อน `kinaraidee-beta-v14`** และยังไม่ได้ refresh/update เป็น v14 ก่อนเริ่ม test
+1. ใช้อุปกรณ์/installed PWA ที่ **ยืนยันได้ว่าเคยโหลด cache generation ก่อน `kinaraidee-beta-v15`** และยังไม่ได้ refresh/update เป็น v15 ก่อนเริ่ม test
 2. บันทึกหลักฐาน baseline ก่อน update เท่าที่ตรวจได้ เช่น behavior/marker ของ build เก่า หรือประวัติการติดตั้งที่ trace ได้; ห้ามสร้าง PASS จากการเดาว่า cache เก่า
 3. เปิดออนไลน์และรอให้หน้าโหลด/Service Worker update ตามพฤติกรรมปกติ
 4. ปิดแอป/แท็บแล้วเปิดใหม่ตาม activation path ปกติ โดยไม่ clear app/site data
-5. ผลที่คาดหวัง: behavior ล่าสุดของ `pwa-install.js` และ `home-surprise.js` ทำงาน และ release ปัจจุบันใช้ `kinaraidee-beta-v14`
+5. ผลที่คาดหวัง: behavior ล่าสุดของ `pwa-install.js`, `home-surprise.js`, `nearby-restaurants.js` และ `history-ui.js` ทำงาน และ release ปัจจุบันใช้ `kinaraidee-beta-v15`
 6. ถ้ายังเห็น behavior เก่า ให้บันทึกจำนวนรอบ reopen/reload ที่ต้องใช้, standalone/browser state และสิ่งที่เห็นจริง
 7. Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น ไม่ใช่ NF-07 real-device PASS
 

@@ -36,20 +36,54 @@ jobs:
           echo "Canonical reviewed baseline is an ancestor of HEAD: $baseline"
           echo 'Checking that descendants do not silently change runtime/API/schema sources.'
 
-          forbidden="$(git diff --name-only "$baseline"..HEAD -- \
-            index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html \
-            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data \
-            supabase/functions/group-api supabase/functions/partner-api \
-            supabase/migrations || true)"
+          browser_paths=(
+            index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html
+            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data
+          )
+          api_schema_paths=(
+            supabase/functions/group-api supabase/functions/partner-api supabase/migrations
+          )
 
-          if [ -n "$forbidden" ]; then
-            echo 'Runtime/API/schema files changed after the canonical reviewed baseline:'
-            printf '%s\n' "$forbidden"
-            echo 'Advance the appropriate runtime/API/security evidence candidate before treating the descendant as reviewed.'
+          browser_changed="$(git diff --name-only "$baseline"..HEAD -- "${browser_paths[@]}" || true)"
+          api_schema_changed="$(git diff --name-only "$baseline"..HEAD -- "${api_schema_paths[@]}" || true)"
+
+          if [ -n "$api_schema_changed" ]; then
+            echo 'API/schema files changed after the canonical reviewed baseline:'
+            printf '%s\n' "$api_schema_changed"
+            echo 'Advance the appropriate API/security evidence candidate before treating the descendant as reviewed.'
             exit 1
           fi
 
-          echo 'Descendants after the canonical reviewed baseline are evidence/workflow/documentation-only with respect to guarded runtime/API/schema paths.'
+          if [ -z "$browser_changed" ]; then
+            echo 'Descendants after the canonical reviewed baseline are evidence/workflow/documentation-only with respect to guarded runtime/API/schema paths.'
+            exit 0
+          fi
+
+          status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          if [ "$status" != 'PENDING FOR CURRENT RUNTIME DEPLOYMENT' ]; then
+            echo 'Browser/PWA runtime changed after the reviewed baseline without a pending declared runtime candidate:'
+            printf '%s\n' "$browser_changed"
+            exit 1
+          fi
+
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse pending browser runtime candidate'; exit 1; }
+          git cat-file -e "$candidate^{commit}" || { echo "Pending runtime candidate is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$baseline" "$candidate" || { echo 'Pending runtime candidate is not a descendant of the reviewed baseline'; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo 'Pending runtime candidate is not an ancestor of HEAD'; exit 1; }
+
+          declared_changes="$(git diff --name-only "$baseline".."$candidate" -- "${browser_paths[@]}" || true)"
+          test -n "$declared_changes" || { echo 'Pending runtime candidate declares no browser/PWA change'; exit 1; }
+
+          undeclared_after_candidate="$(git diff --name-only "$candidate"..HEAD -- "${browser_paths[@]}" || true)"
+          if [ -n "$undeclared_after_candidate" ]; then
+            echo 'Browser/PWA runtime files changed after the declared pending candidate:'
+            printf '%s\n' "$undeclared_after_candidate"
+            exit 1
+          fi
+
+          grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary is missing'; exit 1; }
+          echo "Declared pending browser runtime $candidate contains all runtime drift after reviewed baseline $baseline; API/schema paths remain clean."
 
       - name: Preserve readiness boundaries
         shell: bash
