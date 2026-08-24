@@ -32,6 +32,10 @@ jobs:
             declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
             test "$declared" = "$marker" || { echo "Runtime declaration marker $declared differs from sw.js $marker"; exit 1; }
           fi
+          test -s README.md || { echo 'Missing README.md'; exit 1; }
+          grep -Fq "Browser/PWA runtime ปัจจุบันใช้ cache generation \`$marker\`" README.md || { echo "README.md does not declare current browser/PWA marker $marker"; exit 1; }
+          version="${marker##*v}"
+          grep -Fq "ตรวจ PWA update จาก cache รุ่นเก่ามา v$version" README.md || { echo "README.md old-cache upgrade gate does not target v$version"; exit 1; }
           echo "Canonical browser/PWA marker: $marker"
 
       - name: Validate declared browser runtime candidate lineage
