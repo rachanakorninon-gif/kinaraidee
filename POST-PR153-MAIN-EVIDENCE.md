@@ -42,6 +42,17 @@ For PR head `a15c29fe74023b90b83870c56a1cc062c048ff32`, the following observed G
 - Kinaraidee History Sync Regression — run `32722789085`
 - Pages Source Diagnostic — run `32722789132`
 
+## Fresh repository-governance read-back
+
+After PR #153 evidence was recorded, fresh branch API read-back at `main` SHA `d971497b3b1b96eba635379fee5c084738864fa7` still reports:
+
+- `protected=false`
+- branch protection `enabled=false`
+- required-status-check enforcement `off`
+- required contexts/checks empty
+
+This is direct evidence that successful repository checks do **not** yet equal enforced merge governance. GitHub Issue #35 remains the Commercial Governance blocker until an authorized administration action enables branch protection/ruleset enforcement and a safe failing required-check proof demonstrates that merge is blocked.
+
 ## Evidence boundary
 
 This proves that the repository consistency / regression checks observed above passed on the PR #153 head and that PR #153 was merged. It does **not** prove or create any of the following:
