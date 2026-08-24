@@ -1,4 +1,5 @@
 name: Commercial Release Checklist Consistency
+# Validation note: this no-op comment intentionally exercises the current Group API evidence guard through pull-request CI.
 
 on:
   push:
