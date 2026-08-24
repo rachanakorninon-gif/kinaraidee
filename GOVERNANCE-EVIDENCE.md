@@ -1,65 +1,58 @@
 # Kinaraidee — Repository Governance Evidence
 
-Status: **PREPARED / ENFORCEMENT NOT VERIFIED**
+Status: **PASS FOR REPOSITORY GOVERNANCE ENFORCEMENT**
 
-This record captures the current repository-governance evidence without claiming that branch protection or a ruleset is enabled.
+This record captures verified GitHub repository-governance evidence for `main`. It is scoped to repository merge governance only and does not imply Public Beta or Commercial readiness.
 
-## Current observed state
+## Verified current state
 
-Fresh GitHub branch read-back on 2026-08-24 (Asia/Bangkok automation review) at `main` SHA `1b12f44248566a2e2ffe245ed6e783caa6868322` reports:
+Fresh GitHub branch read-back on 2026-08-24 at `main` SHA `901cd82294c3458f610ab820b6736dae80f47951` reports `protected=true`.
 
-- `protected=false`;
-- protection `enabled=false`;
-- required status-check enforcement = `off`;
-- required contexts/checks are empty.
+Issue #35 records the active repository ruleset `Protect main` with:
 
-PR #119 merged as `1b12f44248566a2e2ffe245ed6e783caa6868322` and changed only `GOVERNANCE-EVIDENCE.md`. Its scope explicitly preserved the existing browser/PWA and Group API runtime evidence boundaries.
+- target = default branch (`main`);
+- pull request required before merge;
+- required approvals = 0;
+- bypass list empty;
+- branch deletion restricted;
+- force pushes blocked;
+- required status-check job contexts:
+  - `release-consistency`;
+  - `static-qa`;
+  - `validate`;
+  - `repository-security-hygiene`;
+- require-branches-up-to-date intentionally off for the current policy.
 
-The current lineage also contains direct post-PR #114 commits on `main`, including `a04a2efc85048c4e0e04632f1632a3fb461856fb` and `a597db1150a02cd703a5dd003d5dc5a3db458f6a`. Their presence is consistent with the current absence of a pull-request enforcement rule. This is recorded as governance exposure evidence, not as an assertion about who intentionally bypassed a policy.
+The legacy branch-protection fields in the branch REST payload still show `protection.enabled=false` and required-status-check enforcement `off`; this is not contradictory because the repository is protected by the repository ruleset rather than the legacy branch-protection mechanism. The branch-level signal is `protected=true`, supplemented by the enforcement tests below.
 
-PR #119 itself is evidence/documentation-only and does not change the browser/PWA runtime candidate, Group API source candidate, Supabase schema/data, deployment configuration, device result, user metric, conversion or revenue.
+## Positive enforcement proof — PR #159
 
-Therefore Issue #35 remains a **Commercial Governance blocker**.
+PR #159 (`Verify Protect main ruleset enforcement`) changed only `RULESET-ENFORCEMENT-VALIDATION.md` and merged through the protected flow as `901cd82294c3458f610ab820b6736dae80f47951`.
 
-## Prepared required-check contract
+For head `62efa566d42c5f93d320673044fe7ed32577fcba`, inspected pull-request workflow runs completed successfully, including:
 
-The initial proposed required set is:
+- `Kinaraidee Release Consistency` run `32731041661` — success;
+- `Kinaraidee Beta QA` run `32731041664` — success;
+- `Beta integrity checks` run `32731041682` — success;
+- `Kinaraidee Security Hygiene` run `32731041678` — success;
+- `Governance Required Checks Regression` run `32731041723` — success.
 
-1. `Kinaraidee Release Consistency` / job `release-consistency`.
-2. `Beta integrity checks` / job `validate`.
-3. `Kinaraidee Beta QA` / job `static-qa`.
-4. `Kinaraidee Security Hygiene` / job `repository-security-hygiene`.
+Issue #35 records that an earlier merge attempt using workflow-name contexts was rejected; after the ruleset was corrected to the actual job/status contexts, PR #159 merged successfully.
 
-PR #114 added a regression workflow that protects these workflow/job identities and verifies that each candidate workflow retains an unfiltered `pull_request` trigger.
+## Negative enforcement proof — PR #160
 
-## PR #114 CI evidence
+PR #160 (`Negative-test Protect main required check blocking`) intentionally changed only the branch copy of `CURRENT-RUNTIME.md` to an invalid runtime candidate SHA. It was a temporary governance test and was never merged.
 
-For PR #114 head `0ffc70d1a1dace304b4acce8ee902d6f32462f1c`, the inspected pull-request workflow runs completed successfully, including:
+Recorded enforcement evidence:
 
-- `Governance Required Checks Regression` run `32646056459` — success.
-- `Kinaraidee Release Consistency` run `32646056475` — success.
-- `Beta integrity checks` run `32646056442` — success.
-- `Kinaraidee Beta QA` run `32646056461` — success.
-- `Kinaraidee Security Hygiene` run `32646056390` — success.
+- `Kinaraidee Release Consistency` run `32732740827` concluded failure;
+- GitHub rejected the merge with HTTP 405 and explicit rule violation that required status check `release-consistency` was failing;
+- PR #160 was closed without merge.
 
-Other inspected regression suites for the same PR head also completed successfully.
+This is the safe failing-check proof that the repository ruleset blocks merge while a selected required check is failing.
 
-Evidence boundary: successful PR checks prove the source-side required-check contract is coherent. They do **not** prove GitHub is enforcing those checks on `main`.
+## Governance conclusion
 
-## Evidence still required before governance PASS
+Issue #35 is closed as **COMPLETED / GOVERNANCE ENFORCEMENT VERIFIED**. The former Commercial Governance blocker for `main` protection/required-check enforcement is resolved.
 
-Do not mark governance PASS until all of the following have direct evidence:
-
-- branch protection or an equivalent repository ruleset is enabled for `main`;
-- pull requests are required before merge;
-- the intended release/security checks are configured as required checks;
-- force-push and branch deletion policy is configured as intended;
-- bypass/admin policy is reviewed and recorded;
-- a safe failing-check proof demonstrates that GitHub blocks merge while a required check is failing;
-- a subsequent branch/API read-back confirms the protection/ruleset is active.
-
-`GOVERNANCE-RUNBOOK.md` contains the safe verification procedure. No failing proof PR has been claimed in this record because enforcement is not currently enabled.
-
-## Scope boundary
-
-Repository-governance evidence does not replace deployment, Supabase/Auth security, real-device/accessibility, Privacy/Legal, monitoring/operations, payment or partner readiness evidence. Commercial GO remains independent of this prepared-but-not-enforced governance state.
+This conclusion is limited to repository governance. It does not establish deployment, real-device/accessibility, Supabase Auth, API monitoring/retention/abuse-control, Privacy/Legal, operations/rollback, payment, partner, conversion, revenue, Public Beta completion or Commercial GO.
