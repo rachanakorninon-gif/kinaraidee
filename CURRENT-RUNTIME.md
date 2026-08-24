@@ -2,7 +2,7 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `db539c75f87683a4225baeb5601509fe3bb26f6f`
+- Current browser/PWA runtime candidate: `0000000000000000000000000000000000000000`
 - PWA cache marker: `kinaraidee-beta-v14`
 - Runtime change: visible keyboard focus + reduced-motion accessibility hardening on the main app and public Feedback/Partner forms
 - Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
