@@ -3,11 +3,12 @@
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
 ## Release trace สำหรับรอบนี้
-- Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf` — `kinaraidee-beta-v15`, **PENDING deployment verification**.
+- Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf` — `kinaraidee-beta-v15`; merged/deployed SHA `367162286d1e1452151df11dca805ed629bb5466` with Pages `32748690413` = SUCCESS, Live Smoke `32748752875` = SUCCESS and read-only diagnostic `32749016604` = SUCCESS.
+- Public `release-meta.json` was independently verified as SHA `367162286d1e1452151df11dca805ed629bb5466` with `kinaraidee-beta-v15`; live `sw.js`, Nearby v15 markers and Favorite/History helper markers were also confirmed.
 - v15 changes the real-device paths found during the 2026-08-24 focused session: Location status/error UX, Favorite/History differentiation and PWA shell membership for the new history helper.
-- Last verified pre-fix browser/PWA runtime remains v14: runtime merge `b6300e5458f17195c72a72ffa7ed0000fee40e24`, verified evidence-only deployed descendant `4314f622964c271d3fb8bcc56152be1c35565256`, Pages run `32739427482`, Live Smoke `32739515806`.
-- The exact public `release-meta.json` descendant read by each physical-device browser session was not captured. The focused evidence below is therefore scoped to the then-live v14 browser behavior, not asserted as v15 evidence.
-- Current Group API source candidate: PR #93 / `fefc29322ac13f706603bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only probe `32632951668` = SUCCESS. Backend evidence does **not** create a new device PASS by itself.
+- Historical pre-fix browser/PWA runtime remains v14; its deployment/device evidence is retained only as historical scoped evidence and is not reused as post-v15 device PASS.
+- The exact public `release-meta.json` descendant read by each physical-device browser session before the v15 fix was not captured. The focused evidence below is therefore scoped to the then-live pre-fix v14 browser behavior, not asserted as v15 evidence.
+- Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only probe `32632951668` = SUCCESS. Backend evidence does **not** create a new device PASS by itself.
 - `CURRENT-RUNTIME.md` and `CURRENT-RELEASE.md` are the canonical release-state references when older notes conflict.
 
 > Android evidence below comes from the same physical device/session family only. Device model, Android version and Chrome version were not captured, so those fields remain `not captured` rather than being guessed.
@@ -63,7 +64,7 @@
 - Android Nearby/Maps: Google Maps query included numeric coordinates = fallback with acquired coordinates **PASS**; this does not by itself create a new TC-08 permission-allow PASS.
 - iPhone Home + Surprise + Maps fallback + local 2-person Group result + member login/logout = **PASS** in the scopes observed.
 - iPhone TC-08 allow path = **FAIL on the pre-fix v14 runtime** after OS/Safari and per-site Location settings were set to allow but Kinaraidee still supplied no numeric coordinates to Maps.
-- The v15 source changes are a response to these observations. None of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.
+- v15 is now verified deployed. None of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.
 
 ## Live-group focused regression — Android #1
 
@@ -85,8 +86,9 @@
 - New Flow NF-01–NF-10 ต้องมีผลตาม platform ที่เกี่ยวข้อง
 - NF-07 ต้องตรวจ upgrade จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v15` บนอุปกรณ์จริงอย่างน้อยหนึ่งเครื่อง
 - NF-09 ต้องผ่านบน TalkBack/VoiceOver environment ที่ทำงานได้จริง; source/static/synthetic evidence ไม่แทน assistive-tech device acceptance
-- v15 ต้องมี merged-main Pages + Live Smoke deployment trace ก่อนถือว่า current runtime deployed; automated deployment PASS ไม่แทน post-fix device retest
+- v15 merged-main Pages + Live Smoke deployment trace ผ่านแล้ว; automated deployment PASS ไม่แทน post-fix device retest
 - iPhone TC-08 pre-fix FAIL ต้องมี post-v15 focused retest ก่อนปิด defect
+- Favorite/History v15 visual differentiation ต้องมี physical-device focused retest ก่อนปิด defect
 - Blocker/Critical ต้องเป็น 0 ก่อน Beta acceptance/เพิ่ม traffic ตาม gate ที่กำหนด
 - ทุก FAIL ต้องมี defect/Issue หรือบันทึกเหตุผลที่ตามแก้ได้
 
