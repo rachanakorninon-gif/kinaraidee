@@ -17,7 +17,7 @@
 <main>
   <h1>🔎 ตรวจสอบเวอร์ชัน “กินอะไรดี”</h1>
   <p>หน้านี้ใช้ตรวจว่าโค้ดแก้ผลโหวตกลุ่ม สถานะสำหรับผู้ใช้ screen reader, accessibility runtime และ deployment metadata ขึ้นเว็บจริงหรือยัง โดยไม่เปลี่ยนข้อมูลผู้ใช้</p>
-  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1 · surprise-a11y-v2 · focus-motion-v14 · pages-actions-source-v1 · dynamic-pwa-marker-v1</div></div>
+  <div class="row"><strong>Deployment probe</strong><div id="probe" class="ok">2026-08-23-group-result-bridge · surprise-a11y-v1 · surprise-a11y-v2 · focus-motion-v14 · pages-actions-source-v1 · dynamic-pwa-marker-v1 · bounded-fetch-v1</div></div>
   <div class="row"><strong>Group result bridge</strong><div id="bridge" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>Surprise accessibility</strong><div id="surprise" class="wait">กำลังตรวจ…</div></div>
   <div class="row"><strong>PWA cache</strong><div id="cache" class="wait">กำลังตรวจ…</div></div>
@@ -29,7 +29,21 @@
 (async()=>{
   const $=id=>document.getElementById(id);
   const set=(id,text,ok)=>{const el=$(id);el.textContent=text;el.className=ok===true?'ok':ok===false?'bad':'wait'};
-  async function text(path){const sep=path.includes('?')?'&':'?';const r=await fetch(path+sep+'probe='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}
+  async function text(path){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    try{
+      const sep=path.includes('?')?'&':'?';
+      const r=await fetch(path+sep+'probe='+Date.now(),{cache:'no-store',signal:controller.signal});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.text();
+    }catch(e){
+      if(e&&e.name==='AbortError')throw new Error('หมดเวลารอตอบกลับ');
+      throw e;
+    }finally{
+      clearTimeout(timeout);
+    }
+  }
   async function run(){
     let liveCache='';
     set('bridge','กำลังตรวจ…');set('surprise','กำลังตรวจ…');set('cache','กำลังตรวจ…');set('meta','กำลังตรวจ…');
