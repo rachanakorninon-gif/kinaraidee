@@ -9,7 +9,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - GitHub Pages run: `32752667752` — **success** for exact merged-main SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 - Corresponding Live Smoke run: `32752716631` — **success** on the same deployed SHA.
-- Read-only diagnostic run: `32752914859` — temporary PR #180 verified the public deployment trace and was closed without merge.
+- Read-only diagnostic run: `32752782165` — **success** on temporary PR #180; the PR was closed without merge after evidence capture.
 - Public `release-meta.json` matched `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` and `kinaraidee-beta-v16`.
 - Live `sw.js` used v16 and included `data/member-sync.js` plus `data/home-surprise.js`; live member sync contained the durable outbox/cloud-snapshot guard/online retry and the home helper contained early member-sync bootstrap.
 - Prior verified deployment evidence remains historical and is not reused as current PASS. The prior verified browser/PWA deployment was v15 runtime merge `367162286d1e1452151df11dca805ed629bb5466`, Pages `32748690413`, Live Smoke `32748752875`, diagnostic `32749016604`.
