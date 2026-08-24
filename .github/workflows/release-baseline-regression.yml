@@ -37,7 +37,7 @@ jobs:
           echo 'Checking that descendants do not silently change runtime/API/schema sources.'
 
           forbidden="$(git diff --name-only "$baseline"..HEAD -- \
-            index.html 404.html privacy.html feedback.html partner.html \
+            index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html \
             manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data \
             supabase/functions/group-api supabase/functions/partner-api \
             supabase/migrations || true)"
@@ -58,5 +58,6 @@ jobs:
           grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || { echo 'Public Beta incomplete boundary is missing'; exit 1; }
           grep -Fq 'Commercial launch remains **NO-GO**' CURRENT-RELEASE.md || { echo 'Commercial NO-GO boundary is missing'; exit 1; }
           grep -Fq 'BLOCKED BY PLAN/CONFIGURATION — NOT PASS' CURRENT-RELEASE.md || { echo 'Supabase leaked-password gate boundary is missing'; exit 1; }
-          grep -Fq 'PREPARED / NOT YET ENFORCED' CURRENT-RELEASE.md || { echo 'Repository governance boundary is missing'; exit 1; }
+          grep -Fq 'Status: **ENFORCED FOR `main` THROUGH THE `Protect main` RULESET**' CURRENT-RELEASE.md || { echo 'Repository governance enforcement boundary is missing'; exit 1; }
+          grep -Fq 'Issue #35 is closed as completed' CURRENT-RELEASE.md || { echo 'Repository governance closure evidence is missing'; exit 1; }
           echo 'Release readiness boundaries preserved.'
