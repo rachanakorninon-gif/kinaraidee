@@ -51,6 +51,9 @@ jobs:
           runtime_status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' "$runtime" | head -n1)"
           deployed_sha="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
           marker="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$runtime" | head -n1)"
+          sw_marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js | head -n1)"
+          release_marker="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$release" | head -n1)"
+          checklist_marker="$(sed -n 's/^- Expected Service Worker cache: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$checklist" | head -n1)"
           group_candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' "$release" | head -n1)"
           group_evidence_candidate="$(sed -n 's/^PR #[0-9][0-9]* merged to `main` at `\([0-9a-f]\{40\}\)` and is the current Group API source candidate.*/\1/p' "$group" | head -n1)"
           group_version="$(sed -n 's/^- Observed deployed version at inspection time: `\([0-9][0-9]*\)`.*/\1/p' "$group" | head -n1)"
@@ -61,6 +64,10 @@ jobs:
           test -n "$runtime_candidate" || { echo 'Unable to parse runtime candidate from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$runtime_status" || { echo 'Unable to parse deployment status from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$marker" || { echo 'Unable to parse cache marker from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$sw_marker" || { echo 'Unable to parse cache marker from sw.js'; exit 1; }
+          test "$marker" = "$sw_marker" || { echo "CURRENT-RUNTIME.md marker $marker differs from sw.js $sw_marker"; exit 1; }
+          test -n "$release_marker" || { echo 'Unable to parse last canonical release cache marker'; exit 1; }
+          test -n "$checklist_marker" || { echo 'Unable to parse checklist cache marker'; exit 1; }
           test -n "$group_candidate" || { echo 'Unable to parse Group API candidate from CURRENT-RELEASE.md'; exit 1; }
           test -n "$group_evidence_candidate" || { echo 'Unable to parse Group API candidate from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
           test -n "$group_version" || { echo 'Unable to parse Group API deployed version from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
@@ -73,6 +80,8 @@ jobs:
               test -z "$deployed_sha" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
               grep -Fq 'Current runtime deployment evidence is pending' "$runtime" || { echo 'Pending runtime evidence boundary missing'; exit 1; }
               grep -Fq 'Prior verified v14 deployment evidence remains historical and is not reused as current PASS' "$runtime" || { echo 'Pending runtime must preserve prior-evidence boundary'; exit 1; }
+              test "$release_marker" = "$checklist_marker" || { echo "Last verified release/checklist marker drift while runtime is pending: $release_marker vs $checklist_marker"; exit 1; }
+              echo "Pending runtime marker $marker is source-canonical; release/checklist remain on last verified marker $release_marker until deployment evidence exists"
               ;;
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               test -n "$deployed_sha" || { echo 'PASS runtime must provide deployed SHA'; exit 1; }
@@ -80,6 +89,8 @@ jobs:
               grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$release" || { echo 'CURRENT-RELEASE.md deployed SHA drift'; exit 1; }
               grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md runtime candidate drift'; exit 1; }
               grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md deployed SHA drift'; exit 1; }
+              test "$release_marker" = "$marker" || { echo 'CURRENT-RELEASE.md cache marker drift'; exit 1; }
+              test "$checklist_marker" = "$marker" || { echo 'RELEASE-CHECKLIST.md cache marker drift'; exit 1; }
               ;;
             *)
               echo "Unexpected runtime deployment status: $runtime_status"
@@ -87,8 +98,6 @@ jobs:
               ;;
           esac
 
-          grep -Fq "PWA cache marker: \`$marker\`" "$release" || { echo 'CURRENT-RELEASE.md cache marker drift'; exit 1; }
-          grep -Fq "Expected Service Worker cache: \`$marker\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md cache marker drift'; exit 1; }
           grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
 
           test "$group_candidate" = "$group_evidence_candidate" || { echo 'Group API candidate drift between CURRENT-RELEASE.md and deployment evidence'; exit 1; }
@@ -109,7 +118,7 @@ jobs:
           grep -Fq 'Commercial launch remains **NO-GO**' "$release" || { echo 'Canonical release must preserve Commercial NO-GO gate'; exit 1; }
           grep -Fq 'ห้ามเปิดรับเงินจริง' "$checklist" || { echo 'Commercial checklist must preserve no-real-money gate'; exit 1; }
 
-          echo "Commercial release checklist preserves runtime $runtime_candidate / status $runtime_status / $marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
+          echo "Commercial release checklist preserves runtime $runtime_candidate / status $runtime_status / source marker $marker / last verified marker $release_marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
 
       - name: Record evidence boundary
         if: always()
@@ -120,7 +129,8 @@ jobs:
             echo
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
             echo '- Scope: cross-document release-state consistency only'
-            echo '- Accepts a new runtime as PENDING without reusing a prior deployed SHA; PASS still requires exact cross-document deployment trace'
-            echo '- Verifies cache marker, Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
+            echo '- A PENDING runtime must match sw.js but may intentionally differ from CURRENT-RELEASE/RELEASE-CHECKLIST, which remain on the last verified deployment until exact Pages + Live Smoke evidence exists'
+            echo '- A PASS runtime still requires exact candidate, deployed SHA and cache-marker cross-document trace'
+            echo '- Verifies Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
             echo '- Does not create device, user, conversion, payment, partner agreement, legal or Commercial readiness evidence'
           } >> "$GITHUB_STEP_SUMMARY"
