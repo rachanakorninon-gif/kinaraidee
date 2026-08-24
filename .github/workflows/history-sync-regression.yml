@@ -18,7 +18,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check member sync JavaScript syntax
-        run: node --check data/member-sync.js
+        run: |
+          node --check data/member-sync.js
+          node --check data/home-surprise.js
 
       - name: Verify cloud history maps to local history schema
         shell: bash
@@ -35,18 +37,22 @@ jobs:
             exit 1
           fi
 
-      - name: Verify optimistic writes cannot be overwritten by stale cloud snapshots
+      - name: Verify durable writes survive restart boundary
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq "pendingWrites=0,writeGeneration=0" data/member-sync.js
+          grep -Fq "const OUTBOX_KEY='kinaraideeMemberHistoryOutboxV1';" data/member-sync.js
+          grep -Fq "rows.push(op);" data/member-sync.js
+          grep -Fq "writeOutbox(rows);" data/member-sync.js
           grep -Fq "pendingWrites++;" data/member-sync.js
           grep -Fq "writeGeneration++;" data/member-sync.js
-          grep -Fq "if(!client||!user||loading||pendingWrites>0)return false;" data/member-sync.js
-          grep -Fq "const generationAtStart=writeGeneration;" data/member-sync.js
-          grep -Fq "if(pendingWrites>0||writeGeneration!==generationAtStart)return false;" data/member-sync.js
-          grep -Fq "if(saved&&pendingWrites===0)" data/member-sync.js
-          grep -Fq "loadCloudHistory({render:historyIsActive()})" data/member-sync.js
+          grep -Fq "if(!client||!user||loading||flushing||pendingWrites>0||outboxForCurrentUser().length>0)return false;" data/member-sync.js
+          grep -Fq "if(pendingWrites>0||writeGeneration!==generationAtStart||outboxForCurrentUser().length>0)return false;" data/member-sync.js
+          grep -Fq "rowMatchesOp(r,op)" data/member-sync.js
+          grep -Fq "window.addEventListener('online',()=>{if(user)settleAuthenticatedHistory()})" data/member-sync.js
+          grep -Fq "function ensureMemberSync()" data/home-surprise.js
+          grep -Fq "s.src='data/member-sync.js';" data/home-surprise.js
+          grep -Fq "ensureMemberSync();" data/home-surprise.js
 
       - name: Verify renderer still consumes local timestamp
         shell: bash
@@ -64,5 +70,7 @@ jobs:
             echo '- Protects the cloud-to-local history schema used by the main history renderer.'
             echo '- Prevents the Android real-device Invalid Date regression caused by a missing `at` field.'
             echo '- Verifies liked/picked actions map back to local liked/accepted booleans.'
-            echo '- Prevents an in-flight or pending member write from being overwritten by an older cloud snapshot after resume/network recovery.'
+            echo '- Guards a durable local outbox so an installed-PWA restart cannot erase a newly acknowledged member favorite before cloud reconciliation finishes.'
+            echo '- Prevents a cloud snapshot from replacing local history while durable or in-flight writes remain.'
+            echo '- Static CI does not replace the required post-deployment physical-device restart retest for Issue #177.'
           } >> "$GITHUB_STEP_SUMMARY"

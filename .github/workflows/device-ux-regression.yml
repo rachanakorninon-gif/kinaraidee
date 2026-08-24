@@ -21,6 +21,7 @@ jobs:
           set -euo pipefail
           node --check data/nearby-restaurants.js
           node --check data/history-ui.js
+          node --check data/member-sync.js
 
       - name: Verify Location status is persistent and actionable
         shell: bash
@@ -51,23 +52,28 @@ jobs:
           grep -Fq "loadScript('data/history-ui.js')" "$nearby"
           echo 'Favorite/History differentiation contract preserved'
 
-      - name: Verify v15 app-shell inclusion
+      - name: Verify current app-shell inclusion
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fq "const CACHE='kinaraidee-beta-v15';" sw.js
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test "$marker" = 'kinaraidee-beta-v16' || { echo "Expected v16 candidate, got: $marker"; exit 1; }
           grep -Fq "'./data/history-ui.js'" sw.js
           grep -Fq "'./data/nearby-restaurants.js'" sw.js
+          grep -Fq "'./data/member-sync.js'" sw.js
+          grep -Fq "'./data/home-surprise.js'" sw.js
           grep -Fq 'cache.addAll(SHELL)' sw.js
-          echo 'v15 app-shell contract preserved'
+          echo "$marker app-shell contract preserved"
 
       - name: Verify real-device evidence remains scoped
         shell: bash
         run: |
           set -euo pipefail
           matrix='BETA-DEVICE-MATRIX.md'
-          grep -Fq '| iPhone #1 | not captured | not captured | PASS | PASS |  | FAIL |' "$matrix"
-          grep -Fq 'pre-fix v14' "$matrix"
-          grep -Fq 'v15 device retest is still required' "$matrix"
-          grep -Fq 'None of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.' "$matrix"
+          grep -Fq 'Current browser/PWA runtime candidate:' "$matrix"
+          grep -Fq 'kinaraidee-beta-v16' "$matrix"
+          grep -Fq 'Latest verified deployed browser/PWA runtime remains v15' "$matrix"
+          grep -Fq 'This is not relabeled as v16 PASS.' "$matrix"
+          grep -Fq 'v16 persistence retest required' "$matrix"
+          grep -Fq 'Issue #177 must have post-v16 physical Android favorite → full restart → history retention PASS before close' "$matrix" || grep -Fq 'Issue #177 ต้องมี post-v16 physical Android favorite → full restart → history retention PASS ก่อนปิด' "$matrix"
           echo 'Real-device evidence boundary preserved'
