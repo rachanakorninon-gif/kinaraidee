@@ -39,21 +39,33 @@ jobs:
           grep -Fq 'test "$deployed_sha" = "$DEPLOY_HEAD_SHA"' "$smoke"
           grep -Fq 'Completed live-group result bridge: checked' "$smoke"
           grep -Fq 'Visible focus + reduced-motion source contract: checked on deployed assets' "$smoke"
+          grep -Fq 'Member auth/reset minimum-length + error-hygiene contract: checked' "$smoke"
 
-      - name: Verify current runtime deployment PASS is traceable and scoped
+      - name: Verify current runtime deployment status is evidence-gated and scoped
         shell: bash
         run: |
           set -euo pipefail
           file='CURRENT-RUNTIME.md'
-          grep -Fq 'Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' "$file"
-          deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$file" | head -n1)"
-          pages_run="$(sed -n 's/^- GitHub Pages run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
-          smoke_run="$(sed -n 's/^- Corresponding Live Smoke run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
-          diag_run="$(sed -n 's/^- Read-only diagnostic run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
-          test -n "$deployed" || { echo 'Missing deployed SHA evidence'; exit 1; }
-          test -n "$pages_run" || { echo 'Missing Pages run evidence'; exit 1; }
-          test -n "$smoke_run" || { echo 'Missing Live Smoke run evidence'; exit 1; }
-          test -n "$diag_run" || { echo 'Missing diagnostic run evidence'; exit 1; }
-          grep -Fq 'Prior verified v13 deployment evidence remains historical and is not reused as v14 PASS' "$file"
+          status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' "$file" | head -n1)"
+          case "$status" in
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
+              grep -Fq 'Current runtime deployment evidence is pending' "$file" || { echo 'Pending runtime must explicitly state that deployment evidence is pending'; exit 1; }
+              ;;
+            'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
+              deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$file" | head -n1)"
+              pages_run="$(sed -n 's/^- GitHub Pages run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
+              smoke_run="$(sed -n 's/^- Corresponding Live Smoke run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
+              diag_run="$(sed -n 's/^- Read-only diagnostic run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
+              test -n "$deployed" || { echo 'Missing deployed SHA evidence'; exit 1; }
+              test -n "$pages_run" || { echo 'Missing Pages run evidence'; exit 1; }
+              test -n "$smoke_run" || { echo 'Missing Live Smoke run evidence'; exit 1; }
+              test -n "$diag_run" || { echo 'Missing diagnostic run evidence'; exit 1; }
+              ;;
+            *)
+              echo "Unexpected runtime deployment status: $status"
+              exit 1
+              ;;
+          esac
+          grep -Fq 'Prior verified v14 deployment evidence remains historical and is not reused as current PASS' "$file"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$file"
           grep -Fq 'does **not** imply real keyboard/device interaction PASS' "$file"
