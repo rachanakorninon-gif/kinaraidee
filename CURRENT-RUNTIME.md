@@ -2,7 +2,7 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `80a57e75acb8b7bfefa6e9264d01bb9f059f7fbb`
+- Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf`
 - PWA cache marker: `kinaraidee-beta-v15`
 - Runtime change: real-device follow-up hardening — Nearby now keeps Location state separate from partner-search state, exposes actionable geolocation permission/unavailable/timeout outcomes without the message being overwritten, gives mobile geolocation a longer low-accuracy acquisition window, and keeps Google Maps fallback available; Favorite/History now adds explicit `❤️ เมนูโปรด` / `👍 เลือกกิน` differentiation and summary counts through `data/history-ui.js`; the new UI helper is part of the atomic PWA shell.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
