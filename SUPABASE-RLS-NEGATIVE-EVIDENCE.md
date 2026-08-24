@@ -2,10 +2,8 @@
 
 Status: **SCOPED PASS / READ + CROSS-USER MUTATION NEGATIVE EVIDENCE**
 
-Evidence date: 2026-08-23
-Repository baseline reviewed: `34ac370bf3ba0b334a06e1f9a9c51dd4775df459`
-
-Baseline note: compare from PR #114 merge `58ab88dc4c3ac8bf34359e7926523b6f2e07bbf0` through this baseline changes only governance/RLS evidence documents and `.github/workflows/supabase-rls-negative-evidence-regression.yml`; it does not change browser/PWA runtime assets, `supabase/functions/group-api/index.ts`, or Supabase RLS/policy migrations. The live RLS observations below therefore remain the scoped evidence under review rather than being reclassified as new runtime results.
+Evidence date: 2026-08-24
+Repository baseline reviewed before the new live probe: `a4087cd6d52e49168a1b49f3b066766a6a4d83d2`
 
 Supabase project: Kinaraidee production project
 
@@ -13,7 +11,7 @@ Supabase project: Kinaraidee production project
 
 Verify that current Supabase grants and Row Level Security policies prevent an authenticated user from reading or mutating another user's rows on owner-scoped member/profile/history/feedback surfaces.
 
-The member identity used for the probe is intentionally omitted from repository evidence. No row contents were copied into GitHub.
+The member identities used for the probes are intentionally omitted from repository evidence. No row contents or UUIDs were copied into GitHub.
 
 ## Documentation basis
 
@@ -21,16 +19,16 @@ Current Supabase guidance treats grants and RLS as separate layers: grants decid
 
 ## Live metadata inspection
 
-A read-only catalog query verified all current `public` base tables have RLS enabled.
+A read-only catalog query verified the reviewed `public` owner-scoped tables have RLS enabled and the expected role grants/policies remain present.
 
-For the owner-scoped tables exercised in the authenticated probe:
+For the exercised tables:
 
 - `member_profiles`: authenticated SELECT/INSERT/UPDATE granted; policies scope SELECT/INSERT/UPDATE to `auth.uid() = user_id`.
 - `member_food_history`: authenticated SELECT/INSERT/DELETE granted; policies scope those operations to `auth.uid() = user_id`.
 - `user_food_history`: authenticated SELECT/INSERT/DELETE granted; policies scope those operations to `auth.uid() = user_id`.
-- `beta_feedback`: authenticated SELECT/INSERT granted; SELECT permits the row owner or the existing private admin-owner check, and INSERT only permits an unowned row or the authenticated user's own `user_id`.
+- `beta_feedback`: authenticated SELECT/INSERT granted; SELECT permits the row owner or the private admin-owner check, while INSERT permits an unowned row or the authenticated user's own `user_id`.
 
-Server-side / deny-by-default tables including Group API storage and partner analytics/audit surfaces remain without direct anon/authenticated SELECT grants where direct browser access is not required.
+Server-side / deny-by-default tables remain outside direct browser access where direct access is not required.
 
 ## Live authenticated read negative probe
 
@@ -47,11 +45,9 @@ Observed results:
 
 Result: **no cross-user rows were visible in the tested authenticated read paths**.
 
-## Cross-user mutation negative probe
+## Cross-user UPDATE/DELETE negative probe
 
-A second transaction used the same authenticated identity and deliberately targeted only rows whose `user_id` belonged to another user.
-
-The statements were constrained so a correct RLS policy must make the target set invisible before mutation. The transaction was rolled back after the checks.
+A second transaction used the same authenticated identity and deliberately targeted only rows whose `user_id` belonged to another user. The transaction was rolled back after the checks.
 
 Observed affected-row counts:
 
@@ -65,9 +61,28 @@ Result: **the tested authenticated identity could not update/delete another user
 
 No own-row UPDATE/DELETE was performed by this probe.
 
+## Cross-user INSERT negative probe — 2026-08-24
+
+A fresh transaction selected two existing member identities internally: one as the authenticated actor and one as the target `user_id`. The identities were stored only in transaction-local settings and were not emitted in the query result or repository evidence.
+
+The transaction then set the local Postgres role to `authenticated`, supplied request JWT claims for the actor, and attempted inserts whose `user_id` was the other member. Each attempt was wrapped so the exact SQLSTATE could be recorded without committing a row. The entire transaction was rolled back at the end.
+
+Observed results:
+
+| Attempt | SQLSTATE | RLS denial observed |
+| --- | --- | --- |
+| `member_profiles` INSERT with another member's `user_id` | `42501` | **YES** |
+| `member_food_history` INSERT with another member's `user_id` | `42501` | **YES** |
+| `user_food_history` INSERT with another member's `user_id` | `42501` | **YES** |
+| `beta_feedback` INSERT with another member's `user_id` | `42501` | **YES** |
+
+Result: **all four exercised cross-user INSERT attempts were rejected by Row Level Security**.
+
+No probe row was intentionally retained; the transaction ended with `ROLLBACK`.
+
 ## Anonymous boundary already covered separately
 
-The repository already contains `Supabase Anonymous Data API Access Probe`, which uses GET-only requests against the live Data API and requires HTTP 401/403 for relations that must not expose rows anonymously. That probe intentionally never prints response bodies.
+The repository also contains `Supabase Anonymous Data API Access Probe`, which uses GET-only requests against the live Data API and requires denial for relations that must not expose rows anonymously. That probe intentionally never prints response bodies.
 
 This authenticated SQL evidence complements that anonymous live boundary; it does not replace it.
 
@@ -76,14 +91,17 @@ This authenticated SQL evidence complements that anonymous live boundary; it doe
 This scoped PASS means only:
 
 - current grants/RLS metadata match the reviewed owner-scoped design;
-- the tested authenticated identity could not SELECT another user's rows from the four tested read surfaces; and
-- the tested cross-user UPDATE/DELETE attempts affected zero rows on the three exercised mutation paths.
+- the tested authenticated identity could not SELECT another user's rows from the four tested read surfaces;
+- the tested cross-user UPDATE/DELETE attempts affected zero rows on the three exercised paths; and
+- the four exercised cross-user INSERT attempts were rejected with SQLSTATE `42501`.
 
 It does **not** prove:
 
-- cross-user INSERT rejection or every mutation shape;
+- every INSERT payload/mutation shape or every owner-scoped table;
+- a real browser/mobile authenticated-session lifecycle or token refresh/revocation behavior;
 - every authenticated user/session or every future schema state;
-- admin authorization behavior beyond the policy metadata review;
+- privileged-backend/service-role authorization behavior;
+- admin authorization behavior beyond the current policy/helper review;
 - Auth leaked-password protection;
 - Group API application-event monitoring, retention cleanup, or complete abuse controls;
 - real-device behavior, Public Beta completion, or Commercial GO.
