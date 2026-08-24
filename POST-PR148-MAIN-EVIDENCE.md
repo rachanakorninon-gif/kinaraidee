@@ -34,6 +34,14 @@ PR #148 head `1415e5f83b9fe9f66182f08f99079f94e78762cc` produced completed-succe
 
 The PR #148 change strengthens the static regression contract for the rejection-only Partner API probe by requiring the shared curl options (`--silent --show-error --connect-timeout 10 --max-time 30`) and byte-exact `--data-binary @-` delivery in addition to the existing 405/400/413 payload assertions.
 
+## Post-PR148 canonical baseline guard
+
+After PR #148, direct evidence/documentation commits advanced `main` to `e62730f1fbc3bd92dc67ebd089a145bbf391a573` and added `.github/workflows/release-baseline-regression.yml`.
+
+That workflow is intended to prevent a stale canonical reviewed descendant from silently covering later browser/PWA runtime, Group API source, Partner API source, data, or Supabase migration changes. It checks that the `CURRENT-RELEASE.md` reviewed descendant exists, remains an ancestor of the PR head, and that guarded runtime/API/schema paths have not changed after that baseline without corresponding candidate/evidence advancement. It also preserves explicit Public Beta NOT COMPLETE, Commercial NO-GO, leaked-password NOT PASS, and governance NOT YET ENFORCED boundaries.
+
+This evidence-only change exists to exercise that new baseline guard through pull-request CI. A successful PR run may be recorded as repository consistency evidence only. It must not be promoted into deployment, device, partner-action, conversion, revenue, Public Beta completion, or Commercial GO evidence.
+
 ## Evidence boundary
 
 The successful PR runs above prove only that the repository/workflow contracts exercised on the PR head completed successfully. They do **not** prove a new scheduled/manual live Partner API probe run after PR #148, successful product-action requests, production traffic baseline, alert delivery, complete anonymous abuse controls, retention approval, partner agreement, conversion/reconciliation, revenue, real-device acceptance, Public Beta completion, or Commercial GO.
@@ -48,5 +56,7 @@ At PR #148 merge, fresh `main` branch read-back still reports:
 - branch protection disabled
 - required status checks enforcement `off`
 - no required contexts/checks enforced
+
+Fresh read-back after the baseline-guard direct commit at `e62730f1fbc3bd92dc67ebd089a145bbf391a573` still reports the same unprotected state.
 
 Repository governance therefore remains **PREPARED / NOT YET ENFORCED**. CI success does not substitute for GitHub branch-protection/ruleset enforcement.
