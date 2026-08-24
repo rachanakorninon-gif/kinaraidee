@@ -71,7 +71,7 @@ jobs:
           fi
           echo "Declared Group API candidate $candidate remains clean"
 
-      - name: Validate declared Partner API source candidate lineage
+      - name: Validate declared Partner API source candidate lineage and live rejection evidence
         shell: bash
         run: |
           set -euo pipefail
@@ -87,11 +87,15 @@ jobs:
             printf '%s\n' "$changed"
             exit 1
           fi
-          grep -Fq 'Status: **SOURCE/DEPLOYMENT HARDENING VERIFIED — LIVE REJECTION RUN NOT YET PROMOTED TO PASS**' "$evidence" || {
-            echo 'Partner API evidence boundary must remain explicit until a confirmed live rejection run exists'
-            exit 1
+          grep -Fq 'Status: **SOURCE/DEPLOYMENT HARDENING + LIVE REJECTION CONTRACT VERIFIED**' "$evidence" || {
+            echo 'Partner API evidence must preserve the verified live-rejection status'; exit 1;
           }
-          echo "Declared Partner API candidate $candidate remains clean"
+          grep -Fq '32675596758' "$evidence" || { echo 'Missing canonical Partner API main live-probe run ID'; exit 1; }
+          grep -Fq '5ca280f4832e0d0fc1aa7057bb68f4df001d4067' "$evidence" || { echo 'Missing canonical Partner API main live-probe SHA'; exit 1; }
+          grep -Fq '32675626819' "$evidence" || { echo 'Missing read-only Partner API run diagnostic evidence'; exit 1; }
+          grep -Fq 'VERIFIED PASS — REJECTION BEHAVIOR ONLY' "$evidence" || { echo 'Partner API live evidence boundary is missing'; exit 1; }
+          grep -Fq 'does not prove successful product-action requests' "$evidence" || { echo 'Partner API overclaim boundary is missing'; exit 1; }
+          echo "Declared Partner API candidate $candidate remains clean with scoped live rejection evidence"
 
       - name: Validate atomic app-shell strategy
         shell: bash
