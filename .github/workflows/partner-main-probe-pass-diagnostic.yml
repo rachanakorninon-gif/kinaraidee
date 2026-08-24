@@ -1,0 +1,41 @@
+name: Partner Main Probe Pass Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/partner-main-probe-pass-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find exact Partner API probe run for merged fix
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TARGET_SHA: 5ca280f4832e0d0fc1aa7057bb68f4df001d4067
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+          curl --fail --silent --show-error --location \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$REPOSITORY/actions/workflows/partner-api-live-probe.yml/runs?branch=main&per_page=30" > "$tmp"
+          RUNS_FILE="$tmp" TARGET_SHA="$TARGET_SHA" node <<'NODE'
+          const fs=require('fs'), sha=process.env.TARGET_SHA;
+          const runs=JSON.parse(fs.readFileSync(process.env.RUNS_FILE,'utf8')).workflow_runs||[];
+          const r=runs.find(x=>x.head_sha===sha && x.event==='push');
+          console.log('Exact Partner API main probe:',r&&{id:r.id,status:r.status,conclusion:r.conclusion,event:r.event,head_sha:r.head_sha,created_at:r.created_at,html_url:r.html_url});
+          if(!r) process.exit(2);
+          if(r.status!=='completed'||r.conclusion!=='success') process.exit(3);
+          NODE
+      - name: Evidence boundary
+        if: always()
+        run: echo 'Read-only workflow metadata diagnostic only; does not invoke Partner API or modify production data.'
