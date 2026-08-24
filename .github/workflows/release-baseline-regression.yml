@@ -1,0 +1,62 @@
+name: Kinaraidee Release Baseline Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate canonical reviewed baseline lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          baseline="$(sed -n 's/^- Latest reviewed `main` descendant: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$baseline" || { echo 'Unable to parse latest reviewed main descendant from CURRENT-RELEASE.md'; exit 1; }
+          git cat-file -e "$baseline^{commit}" || { echo "Reviewed baseline is not present in repository history: $baseline"; exit 1; }
+          git merge-base --is-ancestor "$baseline" HEAD || { echo "Reviewed baseline is not an ancestor of HEAD: $baseline"; exit 1; }
+
+          if [ "$baseline" = "$(git rev-parse HEAD)" ]; then
+            echo "Canonical reviewed baseline is HEAD: $baseline"
+            exit 0
+          fi
+
+          echo "Canonical reviewed baseline is an ancestor of HEAD: $baseline"
+          echo 'Checking that descendants do not silently change runtime/API/schema sources.'
+
+          forbidden="$(git diff --name-only "$baseline"..HEAD -- \
+            index.html 404.html privacy.html feedback.html partner.html \
+            manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data \
+            supabase/functions/group-api supabase/functions/partner-api \
+            supabase/migrations || true)"
+
+          if [ -n "$forbidden" ]; then
+            echo 'Runtime/API/schema files changed after the canonical reviewed baseline:'
+            printf '%s\n' "$forbidden"
+            echo 'Advance the appropriate runtime/API/security evidence candidate before treating the descendant as reviewed.'
+            exit 1
+          fi
+
+          echo 'Descendants after the canonical reviewed baseline are evidence/workflow/documentation-only with respect to guarded runtime/API/schema paths.'
+
+      - name: Preserve readiness boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RELEASE.md || { echo 'Public Beta incomplete boundary is missing'; exit 1; }
+          grep -Fq 'Commercial launch remains **NO-GO**' CURRENT-RELEASE.md || { echo 'Commercial NO-GO boundary is missing'; exit 1; }
+          grep -Fq 'BLOCKED BY PLAN/CONFIGURATION — NOT PASS' CURRENT-RELEASE.md || { echo 'Supabase leaked-password gate boundary is missing'; exit 1; }
+          grep -Fq 'PREPARED / NOT YET ENFORCED' CURRENT-RELEASE.md || { echo 'Repository governance boundary is missing'; exit 1; }
+          echo 'Release readiness boundaries preserved.'
