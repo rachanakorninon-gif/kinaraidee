@@ -47,7 +47,10 @@ jobs:
           grep -Fq 'prefers-reduced-motion:reduce' feedback.html
           grep -Fq 'button:focus-visible' partner.html
           grep -Fq 'prefers-reduced-motion:reduce' partner.html
-          grep -Fq "const CACHE='kinaraidee-beta-v14';" sw.js
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive current Service Worker cache marker'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md || { echo "CURRENT-RUNTIME.md does not match $marker"; exit 1; }
+          echo "Accessibility source contracts preserved on $marker"
 
       - name: Explain evidence boundary
         run: |
