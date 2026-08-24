@@ -42,7 +42,7 @@ jobs:
           test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RUNTIME.md'; exit 1; }
           git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of HEAD: $candidate"; exit 1; }
-          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           if [ -n "$changed" ]; then
             echo 'Browser/PWA runtime files changed after the declared candidate; CURRENT-RUNTIME.md must advance before release:'
             printf '%s\n' "$changed"

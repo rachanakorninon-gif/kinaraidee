@@ -9,6 +9,8 @@ on:
       - 'privacy.html'
       - 'feedback.html'
       - 'partner.html'
+      - 'member.html'
+      - 'reset-password.html'
       - 'deployment-check.html'
       - 'manifest.webmanifest'
       - 'icon.svg'
@@ -41,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -59,6 +61,23 @@ jobs:
           grep -Fq "const accepted=r.action==='picked';" data/member-sync.js
           grep -Fq "at:Number.isFinite(parsedAt)?parsedAt:Date.now()" data/member-sync.js
           grep -Fq "new Date(h.at).toLocaleString('th-TH')" index.html
+      - name: Verify member auth pages before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'minlength="8"' member.html
+          grep -Fq 'p.length<8' member.html
+          grep -Fq 'minlength="8"' reset-password.html
+          grep -Fq 'p.length<8' reset-password.html
+          grep -Fq "location.href='member.html'" reset-password.html
+          if grep -q 'error\.message' member.html reset-password.html; then
+            echo 'Raw Supabase error.message must not be exposed in public member auth pages.'
+            exit 1
+          fi
+          if grep -q "location.href='admin.html'" reset-password.html; then
+            echo 'Member password reset must not redirect to the private owner dashboard.'
+            exit 1
+          fi
       - name: Verify completed live-group result bridge before deploy
         shell: bash
         run: |
@@ -128,7 +147,7 @@ jobs:
           test -n "$candidate" || { echo 'Unable to parse browser/PWA runtime candidate SHA from CURRENT-RUNTIME.md'; exit 1; }
           git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate SHA is not present in repository history: $candidate"; exit 1; }
           git merge-base --is-ancestor "$candidate" HEAD || { echo "Runtime candidate SHA is not an ancestor of deployment HEAD: $candidate"; exit 1; }
-          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           if [ -n "$changed" ]; then
             echo 'Deployment blocked: browser/PWA runtime files changed after the declared candidate:'
             printf '%s\n' "$changed"
@@ -165,13 +184,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html deployment-check.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html deployment-check.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
           test -n "$marker" || { echo 'Unable to derive release marker for release-meta.json'; exit 1; }
           printf '{"sha":"%s","pwa_cache":"%s"}\n' "$GITHUB_SHA" "$marker" > _site/release-meta.json
           find _site -maxdepth 2 -type f | sort
+          test -s _site/member.html
+          test -s _site/reset-password.html
           test -s _site/deployment-check.html
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
@@ -179,6 +200,7 @@ jobs:
           test ! -e _site/.git
           test ! -e _site/.github
           test ! -e _site/supabase
+          test ! -e _site/admin.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

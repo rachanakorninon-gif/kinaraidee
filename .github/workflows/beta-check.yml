@@ -71,6 +71,11 @@ jobs:
           grep -q 'p.length<8' member.html
           grep -q 'minlength="8"' reset-password.html
           grep -q 'p.length<8' reset-password.html
+          grep -Fq "location.href='member.html'" reset-password.html
+          if grep -q "location.href='admin.html'" reset-password.html; then
+            echo 'Member reset flow must not redirect to private admin page.'
+            exit 1
+          fi
           if grep -q 'error\.message' member.html reset-password.html; then
             echo 'Raw Supabase error.message must not be exposed in member auth pages.'
             exit 1
