@@ -51,7 +51,7 @@ No paid-plan upgrade is authorized or inferred.
 
 ## Real-device / accessibility status
 
-Public Beta remains **NOT COMPLETE**. CI, source inspection and Live Smoke do not replace these gates:
+Public Beta is still **NOT COMPLETE**; Public Beta remains **NOT COMPLETE**. CI, source inspection and Live Smoke do not replace these gates:
 
 - iPhone TC-08 remains open in Issue #171. The observed physical Safari failure predates the v15 Location UX fix and must be retested on the current deployed v16 runtime; automated deployment/source evidence does not prove browser geolocation success.
 - Android Favorite/History visual differentiation was verified on the physical v15 restart retest and Issue #172 is closed. The same restart exposed Issue #177: a newly liked item disappeared after reopen. Issue #177 remains open until a post-v16 physical Android favorite → full restart → History retention retest passes.
