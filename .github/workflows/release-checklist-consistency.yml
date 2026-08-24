@@ -79,7 +79,7 @@ jobs:
             'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
               test -z "$deployed_sha" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
               grep -Fq 'Current runtime deployment evidence is pending' "$runtime" || { echo 'Pending runtime evidence boundary missing'; exit 1; }
-              grep -Fq 'Prior verified v14 deployment evidence remains historical and is not reused as current PASS' "$runtime" || { echo 'Pending runtime must preserve prior-evidence boundary'; exit 1; }
+              grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS' "$runtime" || { echo 'Pending runtime must preserve prior-evidence boundary'; exit 1; }
               test "$release_marker" = "$checklist_marker" || { echo "Last verified release/checklist marker drift while runtime is pending: $release_marker vs $checklist_marker"; exit 1; }
               echo "Pending runtime marker $marker is source-canonical; release/checklist remain on last verified marker $release_marker until deployment evidence exists"
               ;;
