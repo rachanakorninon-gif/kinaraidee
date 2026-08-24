@@ -1,0 +1,59 @@
+name: Deployment Diagnostic Regression
+
+on:
+  pull_request:
+    paths:
+      - 'deployment-check.html'
+      - 'sw.js'
+      - 'CURRENT-RUNTIME.md'
+      - '.github/workflows/deployment-diagnostic-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'deployment-check.html'
+      - 'sw.js'
+      - 'CURRENT-RUNTIME.md'
+      - '.github/workflows/deployment-diagnostic-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify deployment diagnostic derives live PWA marker
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
+          test -n "$marker" || { echo 'Unable to derive current PWA marker from sw.js'; exit 1; }
+
+          grep -Fq 'dynamic-pwa-marker-v1' deployment-check.html
+          grep -Fq "sw.match(/const CACHE='(kinaraidee-beta-v\\d+)'/)" deployment-check.html
+          grep -Fq "m.pwa_cache===liveCache" deployment-check.html
+          grep -Fq "Boolean(liveCache)&&m.pwa_cache===liveCache" deployment-check.html
+          grep -Fq "cache:'no-store'" deployment-check.html
+
+          declared="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test "$declared" = "$marker" || { echo "Runtime declaration drift: $declared != $marker"; exit 1; }
+
+          # The diagnostic may retain historical markers only in explicitly historical comments.
+          current_literal_count="$(grep -F "$marker" deployment-check.html | grep -v 'Historical cache milestone' | wc -l | tr -d ' ')"
+          test "$current_literal_count" = '0' || {
+            echo "Deployment diagnostic must derive the current marker dynamically; found hardcoded $marker outside the historical note."
+            exit 1
+          }
+
+          echo "Deployment diagnostic dynamically follows $marker"
+
+      - name: Preserve evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RUNTIME.md
+          echo 'Static diagnostic contract checks do not create real-device, Beta-user, payment, partner, conversion, revenue, or Commercial GO evidence.'
