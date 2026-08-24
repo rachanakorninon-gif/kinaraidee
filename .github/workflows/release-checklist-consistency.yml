@@ -1,0 +1,77 @@
+name: Commercial Release Checklist Consistency
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'RELEASE-CHECKLIST.md'
+      - 'CURRENT-RELEASE.md'
+      - 'CURRENT-RUNTIME.md'
+      - '.github/workflows/release-checklist-consistency.yml'
+  pull_request:
+    paths:
+      - 'RELEASE-CHECKLIST.md'
+      - 'CURRENT-RELEASE.md'
+      - 'CURRENT-RUNTIME.md'
+      - '.github/workflows/release-checklist-consistency.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  commercial-release-checklist-consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate checklist matches canonical runtime state
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime='CURRENT-RUNTIME.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          for f in "$runtime" "$release" "$checklist"; do
+            test -s "$f" || { echo "Missing required release-state file: $f"; exit 1; }
+          done
+
+          runtime_candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
+          deployed_sha="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
+          marker="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$runtime" | head -n1)"
+          group_candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' "$release" | head -n1)"
+
+          test -n "$runtime_candidate" || { echo 'Unable to parse runtime candidate from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$deployed_sha" || { echo 'Unable to parse deployed SHA from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$marker" || { echo 'Unable to parse cache marker from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$group_candidate" || { echo 'Unable to parse Group API candidate from CURRENT-RELEASE.md'; exit 1; }
+
+          grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$release" || { echo 'CURRENT-RELEASE.md runtime candidate drift'; exit 1; }
+          grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$release" || { echo 'CURRENT-RELEASE.md deployed SHA drift'; exit 1; }
+          grep -Fq "PWA cache marker: \`$marker\`" "$release" || { echo 'CURRENT-RELEASE.md cache marker drift'; exit 1; }
+
+          grep -Fq "Current browser/PWA runtime candidate: \`$runtime_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md runtime candidate drift'; exit 1; }
+          grep -Fq "Runtime merge/deployed SHA: \`$deployed_sha\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md deployed SHA drift'; exit 1; }
+          grep -Fq "Expected Service Worker cache: \`$marker\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md cache marker drift'; exit 1; }
+          grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
+
+          grep -Fq 'Public Beta remains **NOT COMPLETE**' "$release" || { echo 'Canonical release must preserve incomplete Public Beta gate'; exit 1; }
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release" || { echo 'Canonical release must preserve Commercial NO-GO gate'; exit 1; }
+          grep -Fq 'ห้ามเปิดรับเงินจริง' "$checklist" || { echo 'Commercial checklist must preserve no-real-money gate'; exit 1; }
+
+          echo "Commercial release checklist matches runtime $runtime_candidate / deployed $deployed_sha / $marker / Group $group_candidate"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Commercial release checklist consistency'
+            echo
+            echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo '- Scope: cross-document release-state consistency only'
+            echo '- Verifies runtime candidate, deployed SHA, cache marker, Group API candidate and incomplete/NO-GO safety language'
+            echo '- Does not create device, user, conversion, payment, partner, legal or Commercial readiness evidence'
+          } >> "$GITHUB_STEP_SUMMARY"
