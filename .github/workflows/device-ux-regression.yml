@@ -1,0 +1,73 @@
+name: Device UX Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-device-ux-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Syntax-check browser helpers
+        run: |
+          set -euo pipefail
+          node --check data/nearby-restaurants.js
+          node --check data/history-ui.js
+
+      - name: Verify Location status is persistent and actionable
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='data/nearby-restaurants.js'
+          grep -Fq "nearbyLocationStatus" "$file"
+          grep -Fq "setPartnerStatus" "$file"
+          grep -Fq "setLocationStatus" "$file"
+          grep -Fq "error.code===1" "$file"
+          grep -Fq "error.code===2" "$file"
+          grep -Fq "error.code===3" "$file"
+          grep -Fq "timeout:15000" "$file"
+          grep -Fq "role=\"status\" aria-live=\"polite\"" "$file"
+          grep -Fq "Google Maps แทนได้ครับ" "$file"
+          echo 'Location UX contract preserved'
+
+      - name: Verify Favorite and History differentiation
+        shell: bash
+        run: |
+          set -euo pipefail
+          history='data/history-ui.js'
+          nearby='data/nearby-restaurants.js'
+          grep -Fq "เมนูโปรด / ประวัติ" "$history"
+          grep -Fq "❤️ เมนูโปรด" "$history"
+          grep -Fq "👍 เลือกกิน" "$history"
+          grep -Fq "kinaraideeHistory" "$history"
+          grep -Fq "loadScript('data/history-ui.js')" "$nearby"
+          echo 'Favorite/History differentiation contract preserved'
+
+      - name: Verify v15 app-shell inclusion
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "const CACHE='kinaraidee-beta-v15';" sw.js
+          grep -Fq "'./data/history-ui.js'" sw.js
+          grep -Fq "'./data/nearby-restaurants.js'" sw.js
+          grep -Fq 'cache.addAll(SHELL)' sw.js
+          echo 'v15 app-shell contract preserved'
+
+      - name: Verify real-device evidence remains scoped
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='BETA-DEVICE-MATRIX.md'
+          grep -Fq '| iPhone #1 | not captured | not captured | PASS | PASS |  | FAIL |' "$matrix"
+          grep -Fq 'pre-fix v14' "$matrix"
+          grep -Fq 'v15 device retest is still required' "$matrix"
+          grep -Fq 'None of the pre-fix PASS/FAIL observations are relabeled as post-v15 device results.' "$matrix"
+          echo 'Real-device evidence boundary preserved'
