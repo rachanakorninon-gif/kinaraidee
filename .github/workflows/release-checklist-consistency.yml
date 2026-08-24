@@ -7,6 +7,7 @@ on:
       - 'RELEASE-CHECKLIST.md'
       - 'CURRENT-RELEASE.md'
       - 'CURRENT-RUNTIME.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - '.github/workflows/release-checklist-consistency.yml'
   pull_request:
@@ -14,6 +15,7 @@ on:
       - 'RELEASE-CHECKLIST.md'
       - 'CURRENT-RELEASE.md'
       - 'CURRENT-RUNTIME.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - '.github/workflows/release-checklist-consistency.yml'
   workflow_dispatch:
@@ -37,9 +39,10 @@ jobs:
           runtime='CURRENT-RUNTIME.md'
           release='CURRENT-RELEASE.md'
           checklist='RELEASE-CHECKLIST.md'
+          group='GROUP-API-DEPLOYMENT-EVIDENCE.md'
           partner='PARTNER-API-HARDENING-EVIDENCE.md'
 
-          for f in "$runtime" "$release" "$checklist" "$partner"; do
+          for f in "$runtime" "$release" "$checklist" "$group" "$partner"; do
             test -s "$f" || { echo "Missing required release-state file: $f"; exit 1; }
           done
 
@@ -47,6 +50,8 @@ jobs:
           deployed_sha="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$runtime" | head -n1)"
           marker="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' "$runtime" | head -n1)"
           group_candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' "$release" | head -n1)"
+          group_evidence_candidate="$(sed -n 's/^PR #[0-9][0-9]* merged to `main` at `\([0-9a-f]\{40\}\)` and is the current Group API source candidate.*/\1/p' "$group" | head -n1)"
+          group_version="$(sed -n 's/^- Observed deployed version at inspection time: `\([0-9][0-9]*\)`.*/\1/p' "$group" | head -n1)"
           partner_candidate="$(sed -n 's/^- PR #[0-9][0-9]* merged as `\([0-9a-f]\{40\}\)`.*/\1/p' "$partner" | head -n1)"
           partner_version="$(sed -n 's/^- Connected Supabase inspection after PR #[0-9][0-9]* verified `partner-api` ACTIVE version \([0-9][0-9]*\).*/\1/p' "$partner" | head -n1)"
           partner_probe_run="$(sed -n 's/^- Partner API Live Rejection Probe run `\([0-9][0-9]*\)` completed \*\*success\*\*.*/\1/p' "$partner" | head -n1)"
@@ -55,6 +60,8 @@ jobs:
           test -n "$deployed_sha" || { echo 'Unable to parse deployed SHA from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$marker" || { echo 'Unable to parse cache marker from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$group_candidate" || { echo 'Unable to parse Group API candidate from CURRENT-RELEASE.md'; exit 1; }
+          test -n "$group_evidence_candidate" || { echo 'Unable to parse Group API candidate from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
+          test -n "$group_version" || { echo 'Unable to parse Group API deployed version from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
           test -n "$partner_candidate" || { echo 'Unable to parse Partner API candidate from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
           test -n "$partner_version" || { echo 'Unable to parse Partner API deployed version from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
           test -n "$partner_probe_run" || { echo 'Unable to parse Partner API live rejection run from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
@@ -68,6 +75,13 @@ jobs:
           grep -Fq "Expected Service Worker cache: \`$marker\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md cache marker drift'; exit 1; }
           grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
 
+          test "$group_candidate" = "$group_evidence_candidate" || { echo 'Group API candidate drift between CURRENT-RELEASE.md and deployment evidence'; exit 1; }
+          git cat-file -e "${group_evidence_candidate}^{commit}" || { echo 'Group API candidate commit missing from repository history'; exit 1; }
+          git merge-base --is-ancestor "$group_evidence_candidate" HEAD || { echo 'Group API candidate is not an ancestor of HEAD'; exit 1; }
+          test -z "$(git diff --name-only "$group_evidence_candidate"..HEAD -- supabase/functions/group-api)" || { echo 'Group API source changed after recorded deployment candidate; refresh deployment evidence'; exit 1; }
+          grep -Fq "ACTIVE version $group_version" "$release" || grep -Fq "ACTIVE v$group_version" "$release" || { echo 'CURRENT-RELEASE.md Group API deployed-version drift'; exit 1; }
+          grep -Fq 'deployment/source parity for inspected v6 payload: **VERIFIED**' "$group" || { echo 'Group API deployment/source evidence boundary changed or missing'; exit 1; }
+
           git cat-file -e "${partner_candidate}^{commit}" || { echo 'Partner API candidate commit missing from repository history'; exit 1; }
           git merge-base --is-ancestor "$partner_candidate" HEAD || { echo 'Partner API candidate is not an ancestor of HEAD'; exit 1; }
           test -z "$(git diff --name-only "$partner_candidate"..HEAD -- supabase/functions/partner-api)" || { echo 'Partner API source changed after recorded candidate; refresh deployment evidence'; exit 1; }
@@ -79,7 +93,7 @@ jobs:
           grep -Fq 'Commercial launch remains **NO-GO**' "$release" || { echo 'Canonical release must preserve Commercial NO-GO gate'; exit 1; }
           grep -Fq 'ห้ามเปิดรับเงินจริง' "$checklist" || { echo 'Commercial checklist must preserve no-real-money gate'; exit 1; }
 
-          echo "Commercial release checklist matches runtime $runtime_candidate / deployed $deployed_sha / $marker / Group $group_candidate / Partner $partner_candidate v$partner_version probe $partner_probe_run"
+          echo "Commercial release checklist matches runtime $runtime_candidate / deployed $deployed_sha / $marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
 
       - name: Record evidence boundary
         if: always()
@@ -90,6 +104,6 @@ jobs:
             echo
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
             echo '- Scope: cross-document release-state consistency only'
-            echo '- Verifies runtime candidate, deployed SHA, cache marker, Group API candidate, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
+            echo '- Verifies runtime candidate, deployed SHA, cache marker, Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
             echo '- Does not create device, user, conversion, payment, partner agreement, legal or Commercial readiness evidence'
           } >> "$GITHUB_STEP_SUMMARY"
