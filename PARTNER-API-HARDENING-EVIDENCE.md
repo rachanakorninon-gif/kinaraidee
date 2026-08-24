@@ -54,6 +54,12 @@ Before PR #126, a read-only data pre-check found 0 out-of-range coordinate rows 
 
 This coordinate validation does not establish TC-08 real-device location acceptance or full Partner API input/abuse-control completeness.
 
+## Release-consistency guard validation
+
+A post-PR #146 direct `main` commit (`75965769d6f83d48197f1e218d50476878c6081b`) extended `Commercial Release Checklist Consistency` so Partner API candidate ancestry, source drift, deployed version, canonical live-rejection run and evidence-boundary language are checked together.
+
+This document-only change intentionally triggers that workflow through a pull request so the new guard is exercised by PR CI rather than being treated as valid merely because the workflow file exists on `main`. It introduces no new Partner API source, deployment, endpoint, user, partner, conversion or revenue evidence.
+
 ## Still-open Commercial/Security work
 
 The following remain open and must not be inferred from source/deployment/live-rejection hardening:
