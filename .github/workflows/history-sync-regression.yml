@@ -54,6 +54,19 @@ jobs:
           grep -Fq "s.src='data/member-sync.js';" data/home-surprise.js
           grep -Fq "ensureMemberSync();" data/home-surprise.js
 
+      - name: Verify durability fix remains in the deployed PWA release boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="$(grep -oE 'kinaraidee-beta-v[0-9]+' sw.js | head -1)"
+          test -n "$marker" || { echo 'Cannot derive canonical PWA marker from sw.js'; exit 1; }
+          grep -Fq "'./data/member-sync.js'" sw.js
+          grep -Fq "$marker" CURRENT-RUNTIME.md
+          grep -Fq "$marker" CURRENT-RELEASE.md
+          grep -Fq 'Issue #177 remains open until a post-' CURRENT-RELEASE.md
+          grep -Fq 'physical Android favorite' CURRENT-RELEASE.md
+          echo "History durability release boundary aligned to $marker"
+
       - name: Verify renderer still consumes local timestamp
         shell: bash
         run: |
@@ -72,5 +85,6 @@ jobs:
             echo '- Verifies liked/picked actions map back to local liked/accepted booleans.'
             echo '- Guards a durable local outbox so an installed-PWA restart cannot erase a newly acknowledged member favorite before cloud reconciliation finishes.'
             echo '- Prevents a cloud snapshot from replacing local history while durable or in-flight writes remain.'
+            echo '- Verifies the durability helper stays in the current Service Worker app shell and canonical release documents keep the physical Issue #177 retest open.'
             echo '- Static CI does not replace the required post-deployment physical-device restart retest for Issue #177.'
           } >> "$GITHUB_STEP_SUMMARY"
