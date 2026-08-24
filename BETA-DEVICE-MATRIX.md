@@ -3,7 +3,7 @@
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
 ## Release trace สำหรับรอบนี้
-- Current browser/PWA runtime candidate: `80a57e75acb8b7bfefa6e9264d01bb9f059f7fbb` — `kinaraidee-beta-v15`, **PENDING deployment verification**.
+- Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf` — `kinaraidee-beta-v15`, **PENDING deployment verification**.
 - v15 changes the real-device paths found during the 2026-08-24 focused session: Location status/error UX, Favorite/History differentiation and PWA shell membership for the new history helper.
 - Last verified pre-fix browser/PWA runtime remains v14: runtime merge `b6300e5458f17195c72a72ffa7ed0000fee40e24`, verified evidence-only deployed descendant `4314f622964c271d3fb8bcc56152be1c35565256`, Pages run `32739427482`, Live Smoke `32739515806`.
 - The exact public `release-meta.json` descendant read by each physical-device browser session was not captured. The focused evidence below is therefore scoped to the then-live v14 browser behavior, not asserted as v15 evidence.
