@@ -6,7 +6,8 @@ on:
       - '.github/workflows/partner-api-live-probe.yml'
       - 'supabase/functions/partner-api/index.ts'
   push:
-    branches: ['main']
+    branches:
+      - main
     paths:
       - '.github/workflows/partner-api-live-probe.yml'
       - 'supabase/functions/partner-api/index.ts'
@@ -22,7 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Verify rejection-only live Partner API contract
         shell: bash
@@ -32,37 +34,22 @@ jobs:
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
 
-          code="$(curl -sS -D "$tmp/get.h" -o "$tmp/get.b" -w '%{http_code}' "$url")"
+          code="$(curl --silent --show-error --dump-header "$tmp/get.h" --output "$tmp/get.b" --write-out '%{http_code}' "$url")"
           test "$code" = '405' || { echo "GET expected 405, got $code"; exit 1; }
           grep -qi '^cache-control: no-store' "$tmp/get.h"
           grep -qi '^x-content-type-options: nosniff' "$tmp/get.h"
 
-          code="$(printf '{' | curl -sS -D "$tmp/bad.h" -o "$tmp/bad.b" -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data-binary @- "$url")"
+          code="$(printf '{' | curl --silent --show-error --dump-header "$tmp/bad.h" --output "$tmp/bad.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url")"
           test "$code" = '400' || { echo "Malformed JSON expected 400, got $code"; exit 1; }
 
-          python - <<'PY' | curl -sS -D "$tmp/large.h" -o "$tmp/large.b" -w '%{http_code}' -X POST -H 'Content-Type: application/json' --data-binary @- "$url" > "$tmp/large.code"
-import sys
-sys.stdout.write('x' * 33000)
-PY
+          python - <<'PY' | curl --silent --show-error --dump-header "$tmp/large.h" --output "$tmp/large.b" --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data-binary @- "$url" > "$tmp/large.code"
+          import sys
+          sys.stdout.write('x' * 33000)
+          PY
           code="$(cat "$tmp/large.code")"
           test "$code" = '413' || { echo "Oversized body expected 413, got $code"; exit 1; }
 
-          echo 'Partner API rejection-only live probe passed: GET=405 malformed=400 oversized=413.'
-
-      - name: Guard probe from accidental mutation
-        shell: bash
-        run: |
-          set -euo pipefail
-          file='.github/workflows/partner-api-live-probe.yml'
-          json_action_key='"act''ion"'
-          if grep -Fq "$json_action_key" "$file"; then
-            echo 'JSON application action payload detected in rejection-only probe.'
-            exit 1
-          fi
-          if grep -Eq "test[[:space:]]+\"\$code\"[[:space:]]*=[[:space:]]*'2[0-9][0-9]'" "$file"; then
-            echo 'Expected 2xx response detected in rejection-only probe.'
-            exit 1
-          fi
+          echo 'Partner API rejection-only live probe passed.'
 
       - name: Record evidence boundary
         if: always()
@@ -74,6 +61,6 @@ PY
             echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
             echo '- Expected contract: GET 405, malformed JSON 400, body over 32 KiB 413, with no-store/nosniff on the GET rejection response.'
             echo '- Scheduled every 6 hours at minute 41 UTC and can also be dispatched manually.'
-            echo '- The workflow statically rejects a JSON application-action key and expected 2xx assertions so it cannot become a search/click/conversion generator by accident.'
+            echo '- Partner API Regression separately guards this workflow against JSON application-action payloads and expected 2xx assertions.'
             echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, alert delivery or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
