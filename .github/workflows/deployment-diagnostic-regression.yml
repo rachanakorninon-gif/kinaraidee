@@ -43,7 +43,8 @@ jobs:
           test "$declared" = "$marker" || { echo "Runtime declaration drift: $declared != $marker"; exit 1; }
 
           # The diagnostic may retain historical markers only in explicitly historical comments.
-          current_literal_count="$(grep -F "$marker" deployment-check.html | grep -v 'Historical cache milestone' | wc -l | tr -d ' ')"
+          # Use awk so a correct zero-match result remains successful under `set -o pipefail`.
+          current_literal_count="$(awk -v marker="$marker" 'index($0, marker) && !index($0, "Historical cache milestone") { count++ } END { print count+0 }' deployment-check.html)"
           test "$current_literal_count" = '0' || {
             echo "Deployment diagnostic must derive the current marker dynamically; found hardcoded $marker outside the historical note."
             exit 1
