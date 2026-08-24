@@ -80,7 +80,7 @@ jobs:
           git merge-base --is-ancestor "$group_evidence_candidate" HEAD || { echo 'Group API candidate is not an ancestor of HEAD'; exit 1; }
           test -z "$(git diff --name-only "$group_evidence_candidate"..HEAD -- supabase/functions/group-api)" || { echo 'Group API source changed after recorded deployment candidate; refresh deployment evidence'; exit 1; }
           grep -Fq "ACTIVE version $group_version" "$release" || grep -Fq "ACTIVE v$group_version" "$release" || { echo 'CURRENT-RELEASE.md Group API deployed-version drift'; exit 1; }
-          grep -Fq 'deployment/source parity for inspected v6 payload: **VERIFIED**' "$group" || { echo 'Group API deployment/source evidence boundary changed or missing'; exit 1; }
+          grep -Fq "deployment/source parity for inspected v$group_version payload: **VERIFIED**" "$group" || { echo 'Group API deployment/source evidence boundary changed or missing'; exit 1; }
 
           git cat-file -e "${partner_candidate}^{commit}" || { echo 'Partner API candidate commit missing from repository history'; exit 1; }
           git merge-base --is-ancestor "$partner_candidate" HEAD || { echo 'Partner API candidate is not an ancestor of HEAD'; exit 1; }
