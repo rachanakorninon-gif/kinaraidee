@@ -24,7 +24,7 @@ jobs:
           test -n "$candidate" || { echo 'Unable to parse runtime candidate'; exit 1; }
           git cat-file -e "$candidate^{commit}"
           git merge-base --is-ancestor "$candidate" HEAD
-          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           test -z "$changed" || { echo 'Current branch already has undeclared browser/PWA runtime drift:'; printf '%s\n' "$changed"; exit 1; }
 
       - name: Verify docs-only descendant does not trip runtime guard
@@ -38,7 +38,7 @@ jobs:
           printf '\n<!-- runtime-lineage-regression docs-only fixture -->\n' >> README.md
           git add README.md
           git commit -m 'docs-only regression fixture' >/dev/null
-          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           test -z "$changed" || { echo 'Docs-only change incorrectly appears as browser/PWA runtime drift'; printf '%s\n' "$changed"; exit 1; }
           git reset --hard "$original" >/dev/null
 
@@ -53,9 +53,24 @@ jobs:
           printf '\n// runtime-lineage-regression fixture\n' >> data/home-surprise.js
           git add data/home-surprise.js
           git commit -m 'runtime regression fixture' >/dev/null
-          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           test -n "$changed" || { echo 'Runtime drift was not detected'; exit 1; }
           printf '%s\n' "$changed" | grep -Fxq 'data/home-surprise.js' || { echo 'Expected runtime file missing from drift set'; printf '%s\n' "$changed"; exit 1; }
+          git reset --hard "$original" >/dev/null
+
+      - name: Verify member auth runtime change is detected
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          original="$(git rev-parse HEAD)"
+          git config user.name 'runtime-lineage-regression'
+          git config user.email 'runtime-lineage-regression@users.noreply.github.com'
+          printf '\n<!-- member runtime regression fixture -->\n' >> member.html
+          git add member.html
+          git commit -m 'member runtime regression fixture' >/dev/null
+          changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
+          printf '%s\n' "$changed" | grep -Fxq 'member.html' || { echo 'Expected member.html runtime drift was not detected'; printf '%s\n' "$changed"; exit 1; }
           git reset --hard "$original" >/dev/null
 
       - name: Verify production guards remain wired
@@ -66,5 +81,7 @@ jobs:
           grep -Fq 'Block deploy when declared browser runtime candidate is stale' .github/workflows/pages.yml
           grep -Fq 'CURRENT-RUNTIME.md' .github/workflows/release-consistency.yml
           grep -Fq 'CURRENT-RUNTIME.md' .github/workflows/pages.yml
+          grep -Fq 'member.html reset-password.html' .github/workflows/release-consistency.yml
+          grep -Fq 'member.html reset-password.html' .github/workflows/pages.yml
           grep -Fq 'git diff --name-only "$candidate"..HEAD' .github/workflows/release-consistency.yml
           grep -Fq 'git diff --name-only "$candidate"..HEAD' .github/workflows/pages.yml
