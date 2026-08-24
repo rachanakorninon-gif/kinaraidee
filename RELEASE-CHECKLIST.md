@@ -7,7 +7,7 @@
 ## Current runtime candidate
 - Current browser/PWA runtime candidate: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf` (PR #174 v15 runtime lineage)
 - Runtime merge/deployed SHA: `367162286d1e1452151df11dca805ed629bb5466` (PR #174 merged)
-- Current Group API source candidate: `fefc29322ac13f706603bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
+- Current Group API source candidate: `fefc29322ac13f7066038a663bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
 - Expected Service Worker cache: `kinaraidee-beta-v15`
 - PR #174 hardens real-device follow-up UX: separated Location/partner-search status, actionable geolocation errors, 15-second low-accuracy mobile timeout, explicit Favorite/History differentiation, and `data/history-ui.js` in the atomic PWA shell.
 - Verified browser/PWA deployment evidence: Pages run `32748690413` = success and Live Smoke run `32748752875` = success for deployed SHA `367162286d1e1452151df11dca805ed629bb5466`; read-only diagnostic run `32749016604` confirmed exact run metadata and public v15 assets, and temporary PR #175 was closed without merge.
