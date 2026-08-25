@@ -95,6 +95,22 @@ jobs:
           grep -Fq 'prefers-reduced-motion:reduce' <<<"$feedback"
           grep -Fq 'button:focus-visible' <<<"$partner"
           grep -Fq 'prefers-reduced-motion:reduce' <<<"$partner"
+
+          # PR #201 public-form recovery contract must be present in the deployed artifact.
+          # These checks are non-mutating: they inspect public source only and do not submit forms.
+          grep -Fq 'if(sendBtn.disabled)return' <<<"$feedback"
+          grep -Fq 'catch(error)' <<<"$feedback"
+          grep -Fq 'finally{' <<<"$feedback"
+          grep -Fq 'sendBtn.disabled=false' <<<"$feedback"
+          grep -Fq "sendBtn.removeAttribute('aria-busy')" <<<"$feedback"
+          grep -Fq 'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง' <<<"$feedback"
+          grep -Fq 'if(b.disabled)return' <<<"$partner"
+          grep -Fq 'catch(error)' <<<"$partner"
+          grep -Fq 'finally{' <<<"$partner"
+          grep -Fq 'b.disabled=false' <<<"$partner"
+          grep -Fq "b.removeAttribute('aria-busy')" <<<"$partner"
+          grep -Fq 'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง' <<<"$partner"
+
           grep -Fq "status.setAttribute('aria-live','assertive')" <<<"$surprise"
           grep -Fq "document.body.appendChild(status)" <<<"$surprise"
           grep -Fq "b.setAttribute('aria-busy',on?'true':'false')" <<<"$surprise"
@@ -175,9 +191,10 @@ jobs:
             echo '- Visible focus + reduced-motion source contract: checked on deployed assets'
             echo '- Surprise persistent live-region contract: checked'
             echo '- Completed live-group result bridge: checked'
+            echo '- Public Feedback/Partner failure-recovery source contract: checked on deployed assets (non-mutating)'
             echo '- Partner renderer/privacy wiring: checked'
             echo '- Member auth/reset minimum-length + error-hygiene contract: checked'
             echo '- Development-only exposure check: completed'
             echo
-            echo '> Automated live evidence does not replace keyboard/device interaction, TalkBack/VoiceOver, NF-05/NF-07/NF-09, full real-device matrix, or Commercial GO.'
+            echo '> Automated live evidence does not replace real Feedback/Partner submission, keyboard/device interaction, TalkBack/VoiceOver, NF-05/NF-07/NF-09, full real-device matrix, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
