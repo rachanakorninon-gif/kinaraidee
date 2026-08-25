@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace; this descendant does not supersede the browser/PWA runtime source candidate).
+- Canonical reviewed `main` baseline: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace). This baseline is intentionally allowed to remain an ancestor of newer QA/workflow/documentation-only descendants; `Kinaraidee Release Baseline Regression` blocks guarded browser/API/schema drift after it, so a docs-only merge does not require baseline churn.
 - Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` (PR #201 public-form resilience runtime lineage).
 - Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged).
 - PWA cache marker: `kinaraidee-beta-v16`.
