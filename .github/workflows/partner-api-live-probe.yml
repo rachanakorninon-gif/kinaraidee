@@ -14,6 +14,12 @@ on:
   schedule:
     - cron: '41 */6 * * *'
   workflow_dispatch:
+    inputs:
+      alert_self_test:
+        description: 'Controlled alert-delivery self-test; skips live API requests and intentionally fails the probe step'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,8 +35,15 @@ jobs:
 
       - name: Verify rejection-only live Partner API contract
         shell: bash
+        env:
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           set -euo pipefail
+          if [ "$ALERT_SELF_TEST" = 'true' ]; then
+            echo 'Controlled alert-delivery self-test requested. No live Partner API request will be sent.'
+            exit 1
+          fi
+
           url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/partner-api'
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
@@ -73,20 +86,31 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ALERT_TITLE: Partner API live probe failure
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           set -euo pipefail
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$ALERT_TITLE\"" --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
+          if [ "$ALERT_SELF_TEST" = 'true' ]; then
+            alert_title='Partner API alert delivery self-test'
+            alert_intro='Controlled Partner API alert-delivery self-test reached the GitHub Issue path. No live Partner API request was sent by the failing probe step.'
+            alert_scope='controlled alert-path verification only; not a production failure'
+          else
+            alert_title='Partner API live probe failure'
+            alert_intro='Automated Partner API rejection-only monitor failed.'
+            alert_scope='non-mutating rejection contracts only'
+          fi
+
+          export ALERT_TITLE="$alert_title"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
           body=$(cat <<EOF
-          Automated Partner API rejection-only monitor failed.
+          $alert_intro
 
           - Workflow run: $run_url
           - Repository SHA: $GITHUB_SHA
           - Trigger: $GITHUB_EVENT_NAME
-          - Scope: non-mutating rejection contracts only
+          - Scope: $alert_scope
 
-          This alert does not establish root cause, user impact, data loss, security incident, retention failure, partner/commercial readiness, conversion or revenue status. Inspect the failed job before changing production behavior.
+          This alert does not establish root cause, user impact, data loss, security incident, retention failure, monitoring SLA, partner/commercial readiness, conversion or revenue status.
           EOF
           )
 
@@ -94,23 +118,29 @@ jobs:
             gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
             echo "Updated existing alert issue #$existing"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$ALERT_TITLE" --body "$body"
-            echo 'Opened Partner API live probe failure issue'
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$alert_title" --body "$body"
+            echo "Opened alert issue: $alert_title"
           fi
 
       - name: Record evidence boundary
         if: always()
         shell: bash
+        env:
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           {
             echo '## Partner API live rejection probe'
             echo
+            echo "- Trigger: \`${GITHUB_EVENT_NAME}\`"
+            echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo "- Controlled alert self-test: \`${ALERT_SELF_TEST}\`"
             echo '- Executes only non-mutating rejection paths against the public Partner API endpoint.'
             echo '- Expected contract: GET 405/method_not_allowed, malformed JSON 400/invalid_json, body over 32 KiB 413/request_too_large, with no-store/nosniff on the GET rejection response.'
-            echo '- Each request is bounded by explicit connection and total-transfer timeouts.'
+            echo '- Each live request is bounded by explicit connection and total-transfer timeouts.'
             echo '- Scheduled every 6 hours at minute 41 UTC and can also be dispatched manually.'
             echo '- Partner API Regression separately guards this workflow against JSON application-action payloads and expected 2xx assertions.'
-            echo '- Failure path: opens or updates a GitHub Issue titled `Partner API live probe failure` with the exact workflow-run URL and SHA.'
-            echo '- Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end.'
+            echo '- Self-test boundary: when alert_self_test=true, the live API step exits before any API request and exercises only the GitHub Issue alert path.'
+            echo '- Failure path: production probe failures open/update `Partner API live probe failure`; controlled self-tests use `Partner API alert delivery self-test` to avoid false incident evidence.'
+            echo '- Alert-delivery verification requires an inspected controlled or real failure run plus the resulting issue/comment evidence.'
             echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
