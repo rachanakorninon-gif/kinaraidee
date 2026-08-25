@@ -116,6 +116,8 @@ jobs:
           test -s "$probe"
           grep -Fq "cron: '23 */6 * * *'" "$probe"
           grep -Fq 'issues: write' "$probe"
+          grep -Fq -- '--connect-timeout 10' "$probe"
+          grep -Fq -- '--max-time 30' "$probe"
           grep -Fq 'expect 405 method_not_allowed' "$probe"
           grep -Fq 'expect 400 invalid_room_id' "$probe"
           grep -Fq 'expect 403 forbidden' "$probe"
@@ -137,7 +139,7 @@ jobs:
             exit 1
           fi
 
-          echo 'Scheduled Group API live probe remains rejection-only and carries a GitHub Issue failure-alert path.'
+          echo 'Scheduled Group API live probe remains rejection-only, request-bounded and carries a GitHub Issue failure-alert path.'
 
       - name: Record evidence boundary
         if: always()
@@ -154,7 +156,7 @@ jobs:
             echo '- Rejects direct privileged-key assignment while allowing the expected server-side environment lookup.'
             echo '- Requires structured operational event markers for create/vote/read/close outcomes.'
             echo '- Rejects event logging that directly includes room IDs, host tokens, voter IDs, tags, request headers or request payloads.'
-            echo '- Guards that the scheduled live probe runs every six hours and expects only rejection-class HTTP responses, including chunked oversized-body 413.'
+            echo '- Guards that the scheduled live probe runs every six hours, uses explicit 10-second connect / 30-second request timeouts, and expects only rejection-class HTTP responses, including chunked oversized-body 413.'
             echo '- Requires a GitHub Issue failure-alert mechanism that records the exact run URL and SHA while deduplicating against an existing open alert issue.'
             echo '- Alert-delivery verification remains a separate runtime evidence gate until a controlled or real failure exercises the path.'
             echo '- This is static source/workflow-contract evidence only.'
