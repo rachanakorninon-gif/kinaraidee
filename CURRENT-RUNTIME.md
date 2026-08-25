@@ -9,6 +9,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Current runtime deployment evidence is pending for candidate `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; prior v16 deployment evidence must not be reused as PASS for the changed Feedback/Partner form runtime.
 - Last verified browser/PWA deployment remains runtime merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`, Pages `32752667752`, Live Smoke `32752716631`, diagnostic `32752782165`, with public `release-meta.json` matching `kinaraidee-beta-v16` before this candidate.
+- Physical Android post-v16 Favorite/History restart evidence remains scoped PASS for the tested installed-PWA session: the app was fully closed the installed PWA from Recent Apps and reopened without clearing data, with the fresh favorite retained. Issue #177 is closed **completed** for that tested Android session.
 - Prior physical-device evidence remains scoped historical/current evidence only for the exact behaviors tested: Android Favorite/History restart #177, iPhone/Safari Location #171, and iPhone/Safari #1 NF-05. It does not validate the changed public form submission paths.
 - Public Beta is still **NOT COMPLETE**
 
