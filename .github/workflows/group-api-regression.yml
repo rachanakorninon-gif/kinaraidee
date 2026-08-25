@@ -94,7 +94,7 @@ jobs:
           grep -Fq "cron: '23 */6 * * *'" "$probe"
           grep -Fq 'alert_self_test:' "$probe"
           grep -Fq 'Controlled alert-delivery self-test; skips live API requests' "$probe"
-          grep -Fq "if [ \"$ALERT_SELF_TEST\" = 'true' ]; then" "$probe"
+          grep -Fq 'if [ "$ALERT_SELF_TEST" = '\''true'\'' ]; then' "$probe"
           grep -Fq 'No live Group API request will be sent' "$probe"
           grep -Fq 'issues: write' "$probe"
           grep -Fq 'curl_common=(--silent --show-error --location --connect-timeout 10 --max-time 30)' "$probe"
