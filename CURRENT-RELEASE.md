@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `f43e4f8645f06c6b29941e7caa1df0922b73d32d` (PR #193 canonical release-baseline sync merged after PR #192; compare from `46dcce2ab4c6098985b51b757951a9ea734c975d` shows only `CURRENT-RELEASE.md` changed, with no browser/PWA runtime, Group API or Partner API source supersession).
+- Latest reviewed `main` descendant: `3793d6a95fc43566ca6aabf71adc7f5c9019be8f` (PR #198 merged after PR #197 and the post-v16 Android evidence lineage. Compare from prior canonical baseline `f43e4f8645f06c6b29941e7caa1df0922b73d32d` shows 15 commits changing only device/evidence documentation and regression workflows: `.github/workflows/device-ux-regression.yml`, `.github/workflows/history-sync-regression.yml`, `.github/workflows/ios-install-hint-regression.yml`, `BETA-DEVICE-MATRIX.md`, `BETA-NEW-FLOW-TESTS.md`, `CURRENT-RELEASE.md` and `CURRENT-RUNTIME.md`. No browser/PWA runtime asset, Group API source or Partner API source was changed or superseded by this lineage).
 - Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941` (PR #179 v16 runtime lineage).
 - Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` (PR #179 merged).
 - PWA cache marker: `kinaraidee-beta-v16`.
