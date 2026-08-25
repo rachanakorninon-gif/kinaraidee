@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   probe-live-group-api:
@@ -64,6 +65,36 @@ jobs:
 
           echo 'Live Group API rejection contracts, including the streamed actual-body 8 KiB guard, passed without creating/updating/closing any room or vote data.'
 
+      - name: Open or update Group API probe failure issue
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: Group API live probe failure
+        run: |
+          set -euo pipefail
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$ALERT_TITLE\"" --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
+          body=$(cat <<EOF
+          Automated Group API rejection-only monitor failed.
+
+          - Workflow run: $run_url
+          - Repository SHA: $GITHUB_SHA
+          - Trigger: $GITHUB_EVENT_NAME
+          - Scope: non-mutating rejection contracts only
+
+          This alert does not establish root cause, user impact, data loss, security incident, retention failure, or Commercial readiness status. Inspect the failed job before changing production behavior.
+          EOF
+          )
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+            echo "Updated existing alert issue #$existing"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$ALERT_TITLE" --body "$body"
+            echo 'Opened Group API live probe failure issue'
+          fi
+
       - name: Record probe scope
         if: always()
         shell: bash
@@ -76,6 +107,8 @@ jobs:
             echo '- Schedule: every 6 hours at minute 23 UTC, plus workflow_dispatch and workflow-file pushes'
             echo '- Scope: unsupported method, malformed identifiers/tokens, overlong voter ID and streamed chunked >8 KiB rejection contracts'
             echo '- Mutation boundary: deliberately performs no successful create/vote/update/close action'
+            echo '- Failure path: opens or updates a GitHub Issue titled `Group API live probe failure` with the exact workflow-run URL and SHA'
+            echo '- Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end'
             echo '- Supabase platform/application log inspection remains a separate evidence layer'
             echo '- This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
