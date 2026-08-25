@@ -60,6 +60,18 @@ A post-PR #146 direct `main` commit (`75965769d6f83d48197f1e218d50476878c6081b`)
 
 This document-only change intentionally triggers that workflow through a pull request so the new guard is exercised by PR CI rather than being treated as valid merely because the workflow file exists on `main`. It introduces no new Partner API source, deployment, endpoint, user, partner, conversion or revenue evidence.
 
+## Retention decision gate — NOT APPROVED
+
+Partner retention decision status: **NOT APPROVED**.
+
+`PARTNER-RETENTION-DECISION.md` is the canonical policy decision record. PR #231 merged the decision gate onto current `main` at `4f9304928a2360b9d3d37aec9e42fde1dc6a8544` after the original PR #230 was closed without merge and rebased safely.
+
+The decision record intentionally leaves the Decision owner, Privacy/Legal approver, Operations owner, per-table retention periods for `partner_clicks`, `partner_conversions`, and `restaurant_search_demand`, Privacy/Terms reference, and approval timestamp as **UNSET**. Existing row-count/timestamp observations and `supabase/partner-retention-dry-run.sql` remain planning evidence only and must not be interpreted as an approved retention interval.
+
+Even after a future real approval, cleanup still requires separate implementation and execution evidence: idempotent purge/anonymization logic as applicable, business-critical data safeguards, controlled execution, post-run verification, reconciliation checks, rollback/incident handling, and monitoring/ownership evidence.
+
+This section does not establish retention approval, cleanup PASS, Privacy/Legal approval, partner readiness, conversion/revenue reconciliation, Public Beta completion, or Commercial GO.
+
 ## Still-open Commercial/Security work
 
 The following remain open and must not be inferred from source/deployment/live-rejection hardening:
