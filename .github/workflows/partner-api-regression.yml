@@ -61,13 +61,14 @@ jobs:
           grep -Fq "if(action==='track_click')" "$file"
           grep -Fq "if(action==='dashboard_summary')" "$file"
 
-      - name: Guard recurring live probe as rejection-only
+      - name: Guard recurring live probe as rejection-only and alertable
         shell: bash
         run: |
           set -euo pipefail
           probe='.github/workflows/partner-api-live-probe.yml'
           test -s "$probe"
           grep -Fq "cron: '41 */6 * * *'" "$probe"
+          grep -Fq 'issues: write' "$probe"
           grep -Fq 'curl_common=(--silent --show-error --connect-timeout 10 --max-time 30)' "$probe"
           grep -Fq -- '--data-binary @-' "$probe"
           grep -Fq "test \"\$code\" = '405'" "$probe"
@@ -76,6 +77,15 @@ jobs:
           grep -Fq "{'error':'method_not_allowed'}" "$probe"
           grep -Fq "{'error':'invalid_json'}" "$probe"
           grep -Fq "{'error':'request_too_large'}" "$probe"
+          grep -Fq 'if: failure()' "$probe"
+          grep -Fq 'GH_TOKEN:' "$probe"
+          grep -Fq 'github.token' "$probe"
+          grep -Fq 'ALERT_TITLE: Partner API live probe failure' "$probe"
+          grep -Fq 'gh issue list' "$probe"
+          grep -Fq 'gh issue comment' "$probe"
+          grep -Fq 'gh issue create' "$probe"
+          grep -Fq '/actions/runs/${GITHUB_RUN_ID}' "$probe"
+          grep -Fq 'Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end' "$probe"
           json_action_key='"act''ion"'
           if grep -Fq "$json_action_key" "$probe"; then
             echo 'JSON application action payload detected in rejection-only probe.'
@@ -96,5 +106,7 @@ jobs:
             echo '- Guards repository source against unbounded request-body parsing and requires a 32 KiB byte budget with early cancellation.'
             echo '- Verifies no-store/nosniff response headers and preserves the existing owner-auth boundary markers.'
             echo '- Guards the six-hour live probe as rejection-only, requires silent/show-error plus explicit connection/total-transfer timeouts, preserves byte-exact data-binary request delivery, checks exact rejection error payloads, and prevents JSON application actions or expected 2xx assertions.'
-            echo '- This is static/source workflow evidence only. It does not prove a specific live probe run, complete anonymous rate limiting, retention approval, alert delivery, partner commercial readiness, or Commercial GO.'
+            echo '- Requires a GitHub Issue failure-alert mechanism that records the exact run URL and SHA while deduplicating against an existing open alert issue.'
+            echo '- Alert-delivery verification remains a separate runtime evidence gate until a controlled or real failure exercises the path.'
+            echo '- This is static/source workflow evidence only. It does not prove a specific live probe run, complete anonymous rate limiting, retention approval, partner commercial readiness, conversion/revenue, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
