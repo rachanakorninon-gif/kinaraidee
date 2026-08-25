@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - 'ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+      - 'MONITORING-RUNBOOK.md'
       - '.github/workflows/alert-delivery-evidence-regression.yml'
       - '.github/workflows/group-api-live-observability-probe.yml'
       - '.github/workflows/partner-api-live-probe.yml'
   pull_request:
     paths:
       - 'ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+      - 'MONITORING-RUNBOOK.md'
       - '.github/workflows/alert-delivery-evidence-regression.yml'
       - '.github/workflows/group-api-live-observability-probe.yml'
       - '.github/workflows/partner-api-live-probe.yml'
@@ -30,7 +32,9 @@ jobs:
         run: |
           set -euo pipefail
           file='ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+          runbook='MONITORING-RUNBOOK.md'
           test -s "$file"
+          test -s "$runbook"
 
           grep -Fq '.github/workflows/group-api-live-observability-probe.yml' "$file"
           grep -Fq '.github/workflows/partner-api-live-probe.yml' "$file"
@@ -40,6 +44,18 @@ jobs:
           grep -Fq 'does not prove monitoring SLA/SLO' "$file"
           grep -Fq 'Public Beta completion' "$file"
           grep -Fq 'Commercial GO' "$file"
+
+          # Keep the operational runbook aligned with the canonical evidence boundary.
+          grep -Fq 'PR #220' "$runbook"
+          grep -Fq 'PR #221' "$runbook"
+          grep -Fq 'Group API alert delivery self-test' "$runbook"
+          grep -Fq 'Partner API alert delivery self-test' "$runbook"
+          if [ "$(grep -Fc '**Actual alert delivery is still NOT VERIFIED**' "$runbook")" -lt 2 ]; then
+            echo 'Monitoring runbook must keep Group and Partner actual alert delivery NOT VERIFIED until evidence exists'
+            exit 1
+          fi
+          grep -Fq 'actual alert delivery ยัง NOT VERIFIED' "$runbook"
+          grep -Fq 'ห้ามเปลี่ยนสถานะ actual alert delivery เป็น PASS หากยังไม่ได้ตรวจทั้ง workflow run และ resulting issue/comment จริง' "$runbook"
 
           extract_section() {
             local start="$1"
