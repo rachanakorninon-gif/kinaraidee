@@ -26,13 +26,14 @@ jobs:
           body="$(mktemp)"
           oversized="$(mktemp)"
           trap 'rm -f "$body" "$oversized"' EXIT
+          curl_common=(--silent --show-error --location --connect-timeout 10 --max-time 30)
 
           expect(){
             expected_status="$1"
             expected_error="$2"
             shift 2
             : > "$body"
-            status="$(curl --silent --show-error --location --output "$body" --write-out '%{http_code}' "$@")"
+            status="$(curl "${curl_common[@]}" --output "$body" --write-out '%{http_code}' "$@")"
             test "$status" = "$expected_status" || { echo "Unexpected status: $status (expected $expected_status)"; cat "$body"; exit 1; }
             grep -Fq "\"error\":\"$expected_error\"" "$body" || { echo "Unexpected response body"; cat "$body"; exit 1; }
           }
@@ -106,6 +107,7 @@ jobs:
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
             echo '- Schedule: every 6 hours at minute 23 UTC, plus workflow_dispatch and workflow-file pushes'
             echo '- Scope: unsupported method, malformed identifiers/tokens, overlong voter ID and streamed chunked >8 KiB rejection contracts'
+            echo '- Network boundary: every live request has a 10-second connection timeout and 30-second total-transfer timeout'
             echo '- Mutation boundary: deliberately performs no successful create/vote/update/close action'
             echo '- Failure path: opens or updates a GitHub Issue titled `Group API live probe failure` with the exact workflow-run URL and SHA'
             echo '- Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end'
