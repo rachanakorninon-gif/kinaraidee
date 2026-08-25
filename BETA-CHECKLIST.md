@@ -78,12 +78,17 @@
 ## Backend / Security / Operations gates ที่ยังเปิด
 - [x] Group API source candidate PR #93 deploy เป็น Supabase ACTIVE version 6 และตรวจ source/deployment parity แล้ว
 - [x] Canonical rejection-only Group API probe `32632951668` = SUCCESS รวม chunked >8 KiB → HTTP 413
+- [x] Partner API source/deployment hardening ตรวจ Supabase ACTIVE version 15 และ source/deployment parity แล้วตาม `PARTNER-API-HARDENING-EVIDENCE.md`
+- [x] Partner API merged-main rejection-only probe `32675596758` = SUCCESS: GET=405, malformed JSON=400, oversized body=413 โดยไม่สร้าง successful product action
 - [x] `main` repository governance ถูก enforce ผ่าน active `Protect main` ruleset; PR #159 positive merge path และ PR #160 failing-required-check block path ถูกพิสูจน์แล้ว และ Issue #35 ปิด completed
 - [ ] Group API application structured-event ingestion / real monitoring baseline / owner-alert-escalation path — Issue #45
 - [ ] Group API actual end-to-end alert delivery verification — controlled self-test mechanism/evidence guard มีแล้ว แต่ยังต้อง exact run + resulting issue/comment จริง
 - [ ] อนุมัติ Group API retention period + implement/verify cleanup โดยไม่ลบ active rooms — Issue #45
 - [ ] Complete anonymous Group API rate/quota/abuse-control strategy — Issue #45
+- [ ] Partner API monitoring baseline / owner / alert channel / escalation / support path — Issue #123
 - [ ] Partner API actual end-to-end alert delivery verification — controlled self-test mechanism/evidence guard มีแล้ว แต่ยังต้อง exact run + resulting issue/comment จริง
+- [ ] อนุมัติ Partner API retention สำหรับ click/search/session/conversion data + cleanup/anonymization verification — Issue #123
+- [ ] Complete anonymous Partner API rate/quota/abuse-control strategy — Issue #123
 - [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor — Issue #11; สถานะปัจจุบัน blocked by plan/configuration, ไม่ใช่ PASS
 - [ ] Rollback/restore/recovery drill จริงพร้อม evidence
 

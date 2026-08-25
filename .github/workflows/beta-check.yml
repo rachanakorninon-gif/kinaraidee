@@ -111,6 +111,10 @@ jobs:
           grep -Fq 'NO-GO' BETA-CHECKLIST.md
           grep -Fq 'Protect main' BETA-CHECKLIST.md
           grep -Fq 'actual end-to-end alert delivery verification' BETA-CHECKLIST.md
+          grep -Fq 'Partner API source/deployment hardening' BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST missing Partner API deployment evidence'; exit 1; }
+          grep -Fq '32675596758' BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST Partner API rejection-probe evidence drift'; exit 1; }
+          grep -Fq 'Partner API monitoring baseline / owner / alert channel / escalation / support path' BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST must keep Partner API monitoring ownership open'; exit 1; }
+          grep -Fq 'Complete anonymous Partner API rate/quota/abuse-control strategy' BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST must keep Partner API abuse-control gate open'; exit 1; }
       - name: Validate SEO and recovery wiring
         shell: bash
         run: |
