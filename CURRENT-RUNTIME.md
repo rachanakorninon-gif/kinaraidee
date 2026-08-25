@@ -11,6 +11,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run: `32802473505`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment. The workflow verifies public `feedback.html`, `partner.html`, `release-meta.json` and `sw.js`, requires the public release-meta SHA to equal the successful Pages head SHA, and requires the live Service Worker/release metadata cache marker to match `kinaraidee-beta-v16`.
+- Latest verified evidence-only deployed descendant: `5489cbbdc9ff618f1d32fa438ef91476dd350768` (PR #215 merge). Pages run `32843512340` completed **success** for that SHA and corresponding Live Smoke run `32843553479` completed **success**. PR #215 changes the Pages diagnostic predeploy contract only and does not supersede the PR #201 browser/PWA runtime candidate or prove real form submission/device behavior.
 - Read-only diagnostic run: `32752782165`.
 - Read-only diagnostic run `32752782165` is historical PR #179 diagnostic evidence only; no new diagnostic result is invented for PR #201.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA. This validates source recovery-state contracts only; it does not submit a form.
@@ -21,7 +22,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current candidate contains source hardening for public form failure recovery plus a static regression guard. Merged-main Pages and Live Smoke now establish a scoped deployment trace for the exact PR #201 merge SHA, including public release metadata/cache consistency. They do **not** establish successful real Feedback or Partner form submission, backend insert acceptance, or device interaction for the changed submission paths.
+The current candidate contains source hardening for public form failure recovery plus a static regression guard. Merged-main Pages and Live Smoke now establish a scoped deployment trace for the exact PR #201 merge SHA, including public release metadata/cache consistency. Later workflow/documentation-only deployments, including the verified PR #215 descendant above, may update public release metadata without changing the browser/PWA runtime candidate. They do **not** establish successful real Feedback or Partner form submission, backend insert acceptance, or device interaction for the changed submission paths.
 
 The diagnostic run listed above is retained only because the release-metadata regression contract requires an explicit diagnostic evidence field for a PASS state. It is historical PR #179 diagnostic evidence and does not prove PR #201 form behavior or create a fresh diagnostic result.
 
