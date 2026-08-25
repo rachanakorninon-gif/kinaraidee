@@ -34,7 +34,7 @@ Verified v16 evidence:
 
 Prior verified v15 deployment evidence remains historical: Pages `32748690413`, Live Smoke `32748752875` and diagnostic `32749016604` for merge `367162286d1e1452151df11dca805ed629bb5466`. It is not reused as current deployment PASS.
 
-This v16 deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. The separate Android physical-device evidence below is scoped to one tested installed-PWA session and must not be generalized to the full device matrix.
+This v16 deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. Separate current-v16 physical-device evidence below is scoped to one Android installed-PWA Favorite/History restart path and one iPhone/Safari Location path; neither may be generalized to the full device matrix.
 
 ## Supabase security evidence
 
@@ -53,7 +53,8 @@ No paid-plan upgrade is authorized or inferred.
 
 Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do not replace these gates:
 
-- iPhone TC-08 remains open in Issue #171. The observed physical Safari failure predates the v15 Location UX fix and must be retested on the current deployed v16 runtime; automated deployment/source evidence does not prove browser geolocation success.
+- iPhone TC-08 / Issue #171 is **PASS and closed completed** for the tested physical iPhone/Safari v16 session. On 2026-08-25 Kinaraidee displayed a persistent successful Location state after `ใช้ตำแหน่งปัจจุบัน`, partner/no-partner status remained separate, and Google Maps received the menu name plus numeric coordinates rather than generic `ใกล้ฉัน`. Exact coordinate values are intentionally not retained in repository evidence. Exact iPhone model/iOS/Safari versions were not captured and are not guessed.
+- The historical pre-fix v14 iPhone TC-08 failure remains historical evidence and is not rewritten as if it had passed.
 - Android Favorite/History visual differentiation was verified on the physical v15 restart retest and Issue #172 is closed.
 - The same v15 restart exposed Issue #177 when a newly liked item disappeared after reopen. On 2026-08-25 a physical Android post-v16 retest created a fresh favorite, observed favorite count **4 → 5**, fully closed the installed PWA from Recent Apps, reopened without clearing data, and confirmed the same favorite remained with count **5**. Issue #177 is closed completed for that tested Android session.
 - NF-09 TalkBack/VoiceOver remains open until a functioning assistive-technology environment is validated and current v16 behavior is retested end-to-end.
@@ -61,7 +62,7 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.
 - NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed v15→v16 installed-PWA transition is not promoted to NF-07 PASS because the exact older-cache marker was not independently captured on-device.
 - NF-05 still requires real iPhone/iPad Safari install-hint suppression/standalone evidence.
-- Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total.
+- Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; the current iPhone TC-08 PASS covers only iPhone #1.
 - Remaining TC-01–TC-15 / NF-01–NF-10 results must be scored only from actual device evidence.
 
 Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to v16 full-matrix PASS.
@@ -94,7 +95,7 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current v16 browser/PWA deployment trace is verified and Issue #177's focused Android restart persistence acceptance is complete. Minimum open evidence still includes physical iPhone Location retest for Issue #171, real-device/accessibility acceptance, keyboard/reduced-motion checks, NF-05/NF-07/NF-09, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current v16 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance and Issue #171's focused iPhone/Safari Location acceptance are complete for the tested sessions. Minimum open evidence still includes additional Android/iPhone device-count coverage, real-device/accessibility acceptance, keyboard/reduced-motion checks, NF-05/NF-07/NF-09, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
@@ -120,7 +121,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - Merged PR #179 / `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` supersedes the prior v15 browser/PWA deployment trace.
-- Historical v15 evidence remains historical support only; the only current-v16 physical-device promotion in this document is the explicitly recorded Android fresh-favorite full-restart PASS for #177.
+- Historical v15 evidence remains historical support only; current-v16 physical-device promotions in this document are explicitly limited to Android fresh-favorite full-restart PASS for #177 and iPhone/Safari Location PASS for #171.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Public accessibility/source/synthetic/deployment evidence does not close NF-09, NF-07, NF-05 or iPhone TC-08/#171 physical-device requirements.
+- Public accessibility/source/synthetic/deployment evidence does not close NF-09, NF-07, NF-05, second-device requirements or the remaining full-device-matrix gates.
