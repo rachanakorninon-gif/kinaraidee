@@ -5,18 +5,17 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941` (PR #179 v16 runtime lineage)
-- Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` (PR #179 merged)
+- Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` (PR #201 public-form resilience runtime)
+- Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged)
 - Current Group API source candidate: `fefc29322ac13f7066038a663bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
 - Expected Service Worker cache: `kinaraidee-beta-v16`
-- PR #179 hardens member-history restart durability with a durable local outbox, cloud-snapshot guard, retry-after-restart/online recovery, recent-row dedupe, early member-sync bootstrap and atomic v16 app-shell inclusion.
-- Verified browser/PWA deployment evidence: Pages run `32752667752` = success and Live Smoke run `32752716631` = success for deployed SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`; read-only diagnostic run `32752782165` confirmed exact run/public v16 state through temporary PR #180, closed without merge.
-- Live public `release-meta.json` matched deployed SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` and live Service Worker marker `kinaraidee-beta-v16`.
-- Diagnostic verification confirmed live Service Worker v16 app-shell membership plus member-history durable outbox/cloud-snapshot/online-retry markers and early member-sync bootstrap.
-- Historical v15 deployment/device evidence remains historical support only and is not reused as post-v16 device PASS.
+- PR #201 hardens Feedback and Partner application submission recovery with duplicate-submit guards and `try/catch/finally`, restoring disabled/`aria-busy` state after submission failures. It does not create a new Service Worker cache generation.
+- Verified browser/PWA deployment evidence: Pages run `32802440796` = success and Live Smoke run `32802473505` = success for deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`; Public Form Resilience Regression run `32802440775` = success on the exact merged-main SHA.
+- Live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
+- Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support, while the current browser/PWA deployment trace is PR #201.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
 - Historical persistent Surprise accessibility implementation remains present, but real TalkBack/VoiceOver acceptance is still required on the current v16 runtime.
-- Regression guards include Surprise accessibility, Group Result, History Sync, PWA cache upgrade, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
+- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -26,30 +25,30 @@
 - [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
 - [x] Live-group completed 2/2 vote → final-result path มี same-device Android post-fix evidence ว่าแสดงผลกลุ่ม + reroll + handoff สำเร็จหลัง PR #42; ข้อนี้ไม่แทน multi-device matrix และไม่ถือเป็น fresh v6 device regression
-- [ ] iPhone TC-08 Location allow path ถูก retest บน deployed v16 และ Issue #171 ปิดด้วย physical-device evidence; pre-fix v14 FAIL ห้ามใช้เป็น current result
-- [x] Favorite/History differentiation (`❤️ เมนูโปรด` / `👍 เลือกกิน`) มี physical Android v15 restart evidence และ Issue #172 ปิดแล้ว; หลักฐานนี้ไม่แทน v16 persistence retest
-- [ ] Issue #177 ต้องมี post-v16 physical Android favorite → full restart → History retention PASS ก่อนปิด; v15 FAIL ห้าม relabel เป็น v16 PASS
+- [x] iPhone TC-08 Location allow path มี physical-device v16 evidence และ Issue #171 ปิด completed; exact model/OS/Safari version ไม่ได้ถูกบันทึกและไม่เดาเพิ่ม
+- [x] Favorite/History differentiation (`❤️ เมนูโปรด` / `👍 เลือกกิน`) มี physical Android evidence และ Issue #172 ปิดแล้ว
+- [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
 - [ ] Surprise busy-state accessibility ถูก retest ด้วย TalkBack และ/หรือ VoiceOver บน deployed current v16 runtime พร้อมบันทึก evidence จริง
 - [ ] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages
 - [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
-- [ ] NF-05 iPhone/iPad install guidance + suppression/standalone ถูกตรวจบนอุปกรณ์จริง
+- [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
 - [x] TC-12 Partner application มี Android same-device evidence หลังเพิ่ม privacy acknowledgement fields และ backend fields ถูกยืนยัน; ยังไม่แทน cross-platform/full-matrix evidence
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
 - [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง
-- [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; post-v16 restart persistence #177 ยังเปิด
+- [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; #177 ผ่านเฉพาะ tested Android session
 - [ ] Blocker = 0 และ Critical = 0
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
-- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current v16 runtime candidate / deployed commit SHA และ matching deployment evidence
-- [x] GitHub Pages deployment ของ `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` สำเร็จและ trace กลับไปยัง commit ได้ — run `32752667752`
-- [x] Public `release-meta.json` ถูกตรวจและมี deployed SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` กับ live Service Worker marker `kinaraidee-beta-v16`
-- [x] Corresponding Live Smoke ของ runtime SHA เดียวกันสำเร็จ — run `32752716631`
-- [x] Read-only diagnostic run `32752782165` ยืนยัน exact deployment/public v16 state; temporary PR #180 closed without merge
+- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current PR #201 runtime candidate / deployed commit SHA และ matching deployment evidence
+- [x] GitHub Pages deployment ของ `00bdcb7f432d542b732cf355336e9f08798e4320` สำเร็จและ trace กลับไปยัง commit ได้ — run `32802440796`
+- [x] Public `release-meta.json` ถูกตรวจและมี deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` กับ live Service Worker marker `kinaraidee-beta-v16`
+- [x] Corresponding Live Smoke ของ runtime SHA เดียวกันสำเร็จ — run `32802473505`
+- [x] Public Form Resilience Regression run `32802440775` ยืนยัน source recovery-state contracts บน exact merged-main SHA โดยไม่ submit form จริง
 - [x] Public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
-- [x] Live deployed assets contain the v16 durable member-history outbox/cloud-snapshot guard/online retry and early member-sync bootstrap contracts
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
+- [ ] real Feedback/Partner form submission acceptance ยังต้องใช้หลักฐานจริง; static regression และ deployment trace ห้ามใช้แทน backend insert/device interaction PASS
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
 
 ## Product
@@ -58,17 +57,18 @@
 - [ ] visible keyboard focus และ reduced-motion behavior ผ่าน real-platform acceptance ตาม scope ที่กำหนด
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v6 ยังไม่มี fresh multi-device regression จาก automated probe
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
-- [ ] ร้านใกล้ตัว / Location allow-deny / Maps fallback ผ่าน real-device test ตาม matrix; iPhone TC-08 pre-fix v14 FAIL ต้อง retest บน current v16
-- [x] Favorite/History visual differentiation มี physical Android v15 restart evidence (#172 closed); ข้อนี้ไม่แทน v16 restart persistence #177
-- [ ] favorite/history persistence ใหม่ของ v16 ผ่าน physical Android favorite → full restart → History retention retest และ Issue #177 ปิด
+- [x] iPhone/Safari #1 Location allow + Maps fallback มี scoped v16 PASS ตาม Issue #171; ยังไม่แทน device matrix ทั้งหมด
+- [x] Favorite/History visual differentiation มี physical Android evidence (#172 closed)
+- [x] favorite/history persistence ใหม่ของ v16 ผ่าน physical Android favorite → full restart → History retention สำหรับ tested installed-PWA session และ Issue #177 ปิด
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องบน Android/iPhone ที่ใช้ทดสอบ
 - [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุด; Android same-device/backend evidence มีแล้วแต่ full-matrix ยังเปิด
 - [x] Android same-device member-history defects #38/#40 ผ่าน retest หลัง fixes ตาม evidence ที่บันทึก
 - [ ] Member history sync/write-race/restart-durability behavior ผ่านบน device matrix ที่จำเป็นและไม่มี regression หลัง release candidate ล่าสุด
 - [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา `kinaraidee-beta-v16` ผ่านการทดสอบตาม platform ที่กำหนด
-- [ ] iPhone/iPad Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” ทำงานตามที่ออกแบบ; synthetic implementation evidence ไม่แทน NF-05 device PASS
-- [ ] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด
+- [x] iPhone/Safari #1 Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” มี NF-05 scoped PASS บน v16; ยังไม่แทน iPadOS/second iPhone
+- [ ] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission
+- [ ] Partner application recovery path ใช้งานจริงได้หลัง network/submission failure ตาม device/platform scope; PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance
 - [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
 
 ## Accounts & Payments

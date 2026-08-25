@@ -6,35 +6,34 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `3793d6a95fc43566ca6aabf71adc7f5c9019be8f` (PR #198 scoped iPhone NF-05 physical-evidence merge; compare from prior canonical baseline `f43e4f8645f06c6b29941e7caa1df0922b73d32d` shows only QA workflows and release/device evidence documents changed, with no browser/PWA runtime, Group API or Partner API source supersession).
-- Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941` (PR #179 v16 runtime lineage).
-- Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` (PR #179 merged).
+- Latest reviewed `main` descendant: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace; this descendant does not supersede the browser/PWA runtime source candidate).
+- Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` (PR #201 public-form resilience runtime lineage).
+- Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged).
 - PWA cache marker: `kinaraidee-beta-v16`.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
-PR #179 addresses Issue #177 discovered during the physical Android v15 restart retest. It adds a durable member-history outbox, prevents cloud snapshots from replacing local history while durable/in-flight writes remain, retries pending writes after restart/online recovery, deduplicates recent server rows before retry, starts member sync early from the directly loaded home helper, and advances the atomic PWA shell to v16.
+PR #201 hardens the public Feedback and Partner application submission paths with duplicate-submit guards plus `try/catch/finally`, restoring disabled/`aria-busy` state after network/SDK failures and preserving generic user-facing error hygiene. This source change does not create a new Service Worker generation; the cache marker remains v16.
 
-Historical v15 deployment/device observations remain historical scoped evidence. They are not reused as post-v16 physical-device acceptance except where a distinct current-v16 retest is explicitly recorded below.
+The prior PR #179 v16 member-history durability runtime remains historical/scoped evidence for the member-history fixes and physical-device retests already recorded. It is superseded as the current browser/PWA runtime candidate by PR #201, but those prior physical results are not rewritten or generalized.
 
 ## Browser/PWA deployment evidence
 
 Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 
-Verified v16 evidence:
+Verified current evidence:
 
-- PR #179 merged as `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
-- Pages workflow run `32752667752` completed **success** for exact merged-main SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
-- Corresponding Live Smoke run `32752716631` completed **success** on the same deployed SHA.
-- Read-only diagnostic run `32752782165` completed **success** on temporary PR #180, which was closed without merge after evidence capture.
-- Live public `release-meta.json` matched `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` and `kinaraidee-beta-v16`.
-- Live `sw.js` used `kinaraidee-beta-v16` and included `data/member-sync.js` plus `data/home-surprise.js` in the app shell.
-- Live `data/member-sync.js` contained the durable outbox/cloud-snapshot guard/online retry contract and live `data/home-surprise.js` contained early member-sync bootstrap.
+- PR #201 merged as `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
+- Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
+- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16`.
+- Live Smoke verifies public `feedback.html`, `partner.html`, `release-meta.json` and `sw.js`, requires the public release-meta SHA to equal the successful Pages head SHA, and requires the live Service Worker/release metadata cache marker to match `kinaraidee-beta-v16`.
 
-Prior verified v15 deployment evidence remains historical: Pages `32748690413`, Live Smoke `32748752875` and diagnostic `32749016604` for merge `367162286d1e1452151df11dca805ed629bb5466`. It is not reused as current deployment PASS.
+Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`. It is not reused as the current deployment trace after PR #201.
 
-This v16 deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke. Separate current-v16 physical-device evidence below is scoped to one Android installed-PWA Favorite/History restart path and one iPhone/Safari session covering Location and NF-05 install-guidance behavior; neither may be generalized to the full device matrix.
+This current deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke and the static Public Form Resilience contract. It does **not** establish successful real Feedback or Partner form submission, backend insert acceptance, or device interaction for the changed submission paths.
 
 ## Supabase security evidence
 
@@ -56,16 +55,17 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - iPhone TC-08 / Issue #171 is **PASS and closed completed** for the tested physical iPhone/Safari v16 session. On 2026-08-25 Kinaraidee displayed a persistent successful Location state after `ใช้ตำแหน่งปัจจุบัน`, partner/no-partner status remained separate, and Google Maps received the menu name plus numeric coordinates rather than generic `ใกล้ฉัน`. Exact coordinate values are intentionally not retained in repository evidence. Exact iPhone model/iOS/Safari versions were not captured and are not guessed.
 - The historical pre-fix v14 iPhone TC-08 failure remains historical evidence and is not rewritten as if it had passed.
 - NF-05 is **PASS for iPhone/Safari #1** on deployed v16. Physical-device evidence on 2026-08-25 verified the install guidance in Safari, Add to Home Screen, launch from the installed Home Screen icon in standalone mode, no install hint in standalone mode, and no repeated install hint after pressing `เข้าใจแล้ว` and reloading Safari within the suppression window. This does not prove iPadOS or a second iPhone model.
-- Android Favorite/History visual differentiation was verified on the physical v15 restart retest and Issue #172 is closed.
-- The same v15 restart exposed Issue #177 when a newly liked item disappeared after reopen. On 2026-08-25 a physical Android post-v16 retest created a fresh favorite, observed favorite count **4 → 5**, fully closed the installed PWA from Recent Apps, reopened without clearing data, and confirmed the same favorite remained with count **5**. Issue #177 is closed completed for that tested Android session.
+- Android Favorite/History visual differentiation was verified and Issue #172 is closed.
+- Issue #177 is closed completed and **PASS for the tested physical Android installed-PWA session**. A fresh favorite was created on v16, the app was fully closed from Recent Apps and reopened without clearing data, and the same favorite remained. This scoped result does not prove the full device matrix.
 - NF-09 TalkBack/VoiceOver remains open until a functioning assistive-technology environment is validated and current v16 behavior is retested end-to-end.
 - visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.
 - reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.
-- NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed v15→v16 installed-PWA transition is not promoted to NF-07 PASS because the exact older-cache marker was not independently captured on-device.
-- Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; the current iPhone TC-08/NF-05 PASS covers only iPhone #1.
+- NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.
+- Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; current iPhone evidence covers only iPhone #1.
 - Remaining TC-01–TC-15 / NF-01–NF-10 results must be scored only from actual device evidence.
+- Real Feedback and Partner application submission behavior for PR #201 remains open; deployment/static regression evidence does not establish successful or failure-recovery interaction on a physical device or backend insert acceptance.
 
-Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to v16 full-matrix PASS.
+Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to full-matrix PASS.
 
 ## Group API / operations evidence
 
@@ -95,13 +95,14 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current v16 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance, Issue #171's focused iPhone/Safari Location acceptance and NF-05 on iPhone/Safari #1 are complete for the tested sessions. Minimum open evidence still includes additional Android/iPhone device-count coverage, real-device/accessibility acceptance, keyboard/reduced-motion checks, NF-07/NF-09, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #201 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance, Issue #171's focused iPhone/Safari Location acceptance and NF-05 on iPhone/Safari #1 are complete for the tested sessions. Minimum open evidence still includes real Feedback/Partner form interaction for the changed PR #201 paths, additional Android/iPhone device-count coverage, real-device/accessibility acceptance, keyboard/reduced-motion checks, NF-07/NF-09, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
 - Public Beta technical/device/accessibility acceptance on the current v16 runtime;
+- real Feedback/Partner submission acceptance for the PR #201 changed paths where required by the Beta/Product scope;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
@@ -116,12 +117,12 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #179 v16 runtime lineage `a7ca994be76541af57b224c57f267843113df941`; deployed merge SHA = `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
+- Current browser/PWA runtime candidate = PR #201 runtime lineage `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; deployed merge SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Current PWA cache marker = `kinaraidee-beta-v16`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
-- Merged PR #179 / `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` supersedes the prior v15 browser/PWA deployment trace.
-- Historical v15 evidence remains historical support only; current-v16 physical-device promotions in this document are explicitly limited to Android fresh-favorite full-restart PASS for #177 and iPhone/Safari #1 Location + NF-05 PASS.
+- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` supersedes PR #179 as the current browser/PWA deployment trace while retaining the same v16 Service Worker generation.
+- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #201 form-submission acceptance.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Public accessibility/source/synthetic/deployment evidence does not close NF-09, NF-07, second-device requirements or the remaining full-device-matrix gates.
+- Public accessibility/source/synthetic/deployment evidence does not close NF-09, NF-07, second-device requirements, real form-submission acceptance or the remaining full-device-matrix gates.
