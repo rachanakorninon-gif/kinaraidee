@@ -1,0 +1,75 @@
+name: Partner Retention Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PARTNER-RETENTION-DECISION.md'
+      - 'supabase/partner-retention-dry-run.sql'
+      - '.github/workflows/partner-retention-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PARTNER-RETENTION-DECISION.md'
+      - 'supabase/partner-retention-dry-run.sql'
+      - '.github/workflows/partner-retention-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate retention decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PARTNER-RETENTION-DECISION.md'
+          test -s "$file"
+          grep -q 'Status: \*\*NOT APPROVED\*\*\|Status: \*\*APPROVED\*\*' "$file"
+          grep -q 'partner_clicks.*retention period' "$file"
+          grep -q 'partner_conversions.*retention period' "$file"
+          grep -q 'restaurant_search_demand.*retention period' "$file"
+          grep -q 'Privacy/Terms reference' "$file"
+          grep -q 'Commercial GO' "$file"
+
+          if grep -q 'Status: \*\*NOT APPROVED\*\*' "$file"; then
+            required_unset=(
+              'Decision owner: **UNSET**'
+              'Privacy/Legal approver: **UNSET**'
+              'Operations owner: **UNSET**'
+              '`partner_clicks` retention period: **UNSET**'
+              '`partner_conversions` retention period: **UNSET**'
+              '`restaurant_search_demand` retention period: **UNSET**'
+              'Privacy/Terms reference: **UNSET**'
+              'Approved at: **UNSET**'
+            )
+            for marker in "${required_unset[@]}"; do
+              grep -Fq -- "$marker" "$file" || { echo "NOT APPROVED decision contains inferred/fabricated value: $marker"; exit 1; }
+            done
+          fi
+
+          if grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED retention decision still contains UNSET fields.'
+              exit 1
+            fi
+            grep -q 'After approval, cleanup still requires separate implementation and evidence' "$file"
+          fi
+
+      - name: Keep dry-run read-only and policy-neutral
+        shell: bash
+        run: |
+          set -euo pipefail
+          sql='supabase/partner-retention-dry-run.sql'
+          test -s "$sql"
+          if grep -Eiq '^[[:space:]]*(delete|update|insert|truncate|drop|alter|create)[[:space:]]' "$sql"; then
+            echo 'Partner retention dry-run contains a mutating/DDL statement.'
+            exit 1
+          fi
+          grep -Eiq 'partner_clicks' "$sql"
+          grep -Eiq 'partner_conversions' "$sql"
+          grep -Eiq 'restaurant_search_demand' "$sql"
+          echo 'Partner retention decision/dry-run boundaries are intact.'
