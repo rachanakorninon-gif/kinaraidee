@@ -50,13 +50,13 @@ No paid-plan upgrade is authorized or inferred.
 
 ## Real-device / accessibility status
 
-Public Beta remains **NOT COMPLETE**. CI, source inspection and Live Smoke do not replace these gates:
+Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do not replace these gates:
 
 - iPhone TC-08 / Issue #171 is **PASS and closed completed** for the tested physical iPhone/Safari v16 session. On 2026-08-25 Kinaraidee displayed a persistent successful Location state after `ใช้ตำแหน่งปัจจุบัน`, partner/no-partner status remained separate, and Google Maps received the menu name plus numeric coordinates rather than generic `ใกล้ฉัน`. Exact coordinate values are intentionally not retained in repository evidence. Exact iPhone model/iOS/Safari versions were not captured and are not guessed.
 - The historical pre-fix v14 iPhone TC-08 failure remains historical evidence and is not rewritten as if it had passed.
 - NF-05 is **PASS for iPhone/Safari #1** on deployed v16. Physical-device evidence on 2026-08-25 verified the install guidance in Safari, Add to Home Screen, launch from the installed Home Screen icon in standalone mode, no install hint in standalone mode, and no repeated install hint after pressing `เข้าใจแล้ว` and reloading Safari within the suppression window. This does not prove iPadOS or a second iPhone model.
 - Android Favorite/History visual differentiation was verified and Issue #172 is closed.
-- Issue #177 is **PASS and closed completed** for the tested physical Android installed-PWA session. A fresh favorite was created on v16, the app was fully closed from Recent Apps and reopened without clearing data, and the same favorite remained. This scoped result does not prove the full device matrix.
+- Issue #177 is closed completed and **PASS for the tested physical Android installed-PWA session**. A fresh favorite was created on v16, the app was fully closed from Recent Apps and reopened without clearing data, and the same favorite remained. This scoped result does not prove the full device matrix.
 - NF-09 TalkBack/VoiceOver remains open until a functioning assistive-technology environment is validated and current v16 behavior is retested end-to-end.
 - visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.
 - reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.
