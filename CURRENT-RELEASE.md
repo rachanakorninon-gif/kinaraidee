@@ -6,7 +6,7 @@
 
 ## Current source/runtime state
 
-- Latest reviewed `main` descendant: `f43e4f8645f06c6b29941e7caa1df0922b73d32d` (PR #193 canonical release-baseline sync merged after PR #192; compare from `46dcce2ab4c6098985b51b757951a9ea734c975d` shows only `CURRENT-RELEASE.md` changed, with no browser/PWA runtime, Group API or Partner API source supersession).
+- Latest reviewed `main` descendant: `3793d6a95fc43566ca6aabf71adc7f5c9019be8f` (PR #198 scoped iPhone NF-05 physical-evidence merge; compare from prior canonical baseline `f43e4f8645f06c6b29941e7caa1df0922b73d32d` shows only QA workflows and release/device evidence documents changed, with no browser/PWA runtime, Group API or Partner API source supersession).
 - Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941` (PR #179 v16 runtime lineage).
 - Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` (PR #179 merged).
 - PWA cache marker: `kinaraidee-beta-v16`.
