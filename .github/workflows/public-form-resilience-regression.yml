@@ -6,6 +6,7 @@ on:
       - 'feedback.html'
       - 'partner.html'
       - 'BETA-TEST-CASES.md'
+      - '.github/workflows/live-smoke.yml'
       - '.github/workflows/public-form-resilience-regression.yml'
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - 'feedback.html'
       - 'partner.html'
       - 'BETA-TEST-CASES.md'
+      - '.github/workflows/live-smoke.yml'
       - '.github/workflows/public-form-resilience-regression.yml'
   workflow_dispatch:
 
@@ -47,6 +49,33 @@ jobs:
           grep -q "กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง" partner.html
 
           echo 'Public form submission recovery contract is present'
+
+      - name: Guard deployed-source live smoke contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          smoke='.github/workflows/live-smoke.yml'
+
+          grep -Fq 'feedback="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/feedback.html")"' "$smoke"
+          grep -Fq 'partner="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/partner.html")"' "$smoke"
+          grep -Fq '# These checks are non-mutating: they inspect public source only and do not submit forms.' "$smoke"
+
+          grep -Fq "grep -Fq 'if(sendBtn.disabled)return' <<<\"\$feedback\"" "$smoke"
+          grep -Fq "grep -Fq 'catch(error)' <<<\"\$feedback\"" "$smoke"
+          grep -Fq "grep -Fq 'finally{' <<<\"\$feedback\"" "$smoke"
+          grep -Fq "grep -Fq 'sendBtn.disabled=false' <<<\"\$feedback\"" "$smoke"
+          grep -Fq "grep -Fq \"sendBtn.removeAttribute('aria-busy')\" <<<\"\$feedback\"" "$smoke"
+
+          grep -Fq "grep -Fq 'if(b.disabled)return' <<<\"\$partner\"" "$smoke"
+          grep -Fq "grep -Fq 'catch(error)' <<<\"\$partner\"" "$smoke"
+          grep -Fq "grep -Fq 'finally{' <<<\"\$partner\"" "$smoke"
+          grep -Fq "grep -Fq 'b.disabled=false' <<<\"\$partner\"" "$smoke"
+          grep -Fq "grep -Fq \"b.removeAttribute('aria-busy')\" <<<\"\$partner\"" "$smoke"
+
+          grep -Fq 'Public Feedback/Partner failure-recovery source contract: checked on deployed assets (non-mutating)' "$smoke"
+          grep -Fq 'Automated live evidence does not replace real Feedback/Partner submission' "$smoke"
+
+          echo 'Live Smoke preserves the non-mutating deployed public-form recovery contract'
 
       - name: Guard physical-device acceptance boundary
         shell: bash
