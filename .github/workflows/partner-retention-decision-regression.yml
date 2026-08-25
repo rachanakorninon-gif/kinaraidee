@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'PARTNER-RETENTION-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - 'supabase/partner-retention-dry-run.sql'
       - '.github/workflows/partner-retention-decision-regression.yml'
   push:
     branches: [main]
     paths:
       - 'PARTNER-RETENTION-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - 'supabase/partner-retention-dry-run.sql'
       - '.github/workflows/partner-retention-decision-regression.yml'
   workflow_dispatch:
@@ -27,7 +29,9 @@ jobs:
         run: |
           set -euo pipefail
           file='PARTNER-RETENTION-DECISION.md'
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
           test -s "$file"
+          test -s "$evidence"
           grep -q 'Status: \*\*NOT APPROVED\*\*\|Status: \*\*APPROVED\*\*' "$file"
           grep -q 'partner_clicks.*retention period' "$file"
           grep -q 'partner_conversions.*retention period' "$file"
@@ -49,6 +53,8 @@ jobs:
             for marker in "${required_unset[@]}"; do
               grep -Fq -- "$marker" "$file" || { echo "NOT APPROVED decision contains inferred/fabricated value: $marker"; exit 1; }
             done
+            grep -Fq 'Partner retention decision status: **NOT APPROVED**' "$evidence" || { echo 'Partner API evidence must preserve NOT APPROVED retention status'; exit 1; }
+            grep -Fq '`PARTNER-RETENTION-DECISION.md`' "$evidence" || { echo 'Partner API evidence must link the retention decision record'; exit 1; }
           fi
 
           if grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
@@ -72,4 +78,4 @@ jobs:
           grep -Eiq 'partner_clicks' "$sql"
           grep -Eiq 'partner_conversions' "$sql"
           grep -Eiq 'restaurant_search_demand' "$sql"
-          echo 'Partner retention decision/dry-run boundaries are intact.'
+          echo 'Partner retention decision/dry-run/evidence boundaries are intact.'
