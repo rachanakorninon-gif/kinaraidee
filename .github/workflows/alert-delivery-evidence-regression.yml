@@ -1,6 +1,13 @@
 name: Alert Delivery Evidence Regression
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+      - '.github/workflows/alert-delivery-evidence-regression.yml'
+      - '.github/workflows/group-api-live-observability-probe.yml'
+      - '.github/workflows/partner-api-live-probe.yml'
   pull_request:
     paths:
       - 'ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
