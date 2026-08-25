@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   rejection-probe:
@@ -67,6 +68,36 @@ jobs:
 
           echo 'Partner API rejection-only live probe passed.'
 
+      - name: Open or update Partner API probe failure issue
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: Partner API live probe failure
+        run: |
+          set -euo pipefail
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$ALERT_TITLE\"" --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
+          body=$(cat <<EOF
+          Automated Partner API rejection-only monitor failed.
+
+          - Workflow run: $run_url
+          - Repository SHA: $GITHUB_SHA
+          - Trigger: $GITHUB_EVENT_NAME
+          - Scope: non-mutating rejection contracts only
+
+          This alert does not establish root cause, user impact, data loss, security incident, retention failure, partner/commercial readiness, conversion or revenue status. Inspect the failed job before changing production behavior.
+          EOF
+          )
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+            echo "Updated existing alert issue #$existing"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$ALERT_TITLE" --body "$body"
+            echo 'Opened Partner API live probe failure issue'
+          fi
+
       - name: Record evidence boundary
         if: always()
         shell: bash
@@ -79,5 +110,7 @@ jobs:
             echo '- Each request is bounded by explicit connection and total-transfer timeouts.'
             echo '- Scheduled every 6 hours at minute 41 UTC and can also be dispatched manually.'
             echo '- Partner API Regression separately guards this workflow against JSON application-action payloads and expected 2xx assertions.'
-            echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence, alert delivery or Commercial GO.'
+            echo '- Failure path: opens or updates a GitHub Issue titled `Partner API live probe failure` with the exact workflow-run URL and SHA.'
+            echo '- Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end.'
+            echo '- Success is scoped to rejection behavior only; it is not complete abuse control, retention approval, partner readiness, revenue evidence or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
