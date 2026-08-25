@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: '23 */6 * * *'
   workflow_dispatch:
+    inputs:
+      alert_self_test:
+        description: 'Controlled alert-delivery self-test; skips live API requests and intentionally fails the probe step'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,8 +26,15 @@ jobs:
     steps:
       - name: Verify non-mutating live rejection contracts
         shell: bash
+        env:
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           set -euo pipefail
+          if [ "$ALERT_SELF_TEST" = 'true' ]; then
+            echo 'Controlled alert-delivery self-test requested. No live Group API request will be sent.'
+            exit 1
+          fi
+
           url='https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/group-api'
           body="$(mktemp)"
           oversized="$(mktemp)"
@@ -38,26 +51,16 @@ jobs:
             grep -Fq "\"error\":\"$expected_error\"" "$body" || { echo "Unexpected response body"; cat "$body"; exit 1; }
           }
 
-          # Unsupported GET: no request body or identifiers.
           expect 405 method_not_allowed "$url"
-
-          # Malformed room identifiers must be rejected before UUID-column DB queries.
           expect 400 invalid_room_id -H 'Content-Type: application/json' --data '{"action":"get_room","roomId":"not-a-uuid"}' "$url"
           expect 400 invalid_vote -H 'Content-Type: application/json' --data '{"action":"submit_vote","roomId":"not-a-uuid","voterId":"probe","tags":[]}' "$url"
-
-          # Host-only actions reject malformed identifier/token shapes without a DB lookup.
           expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"get_votes","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
           expect 403 forbidden -H 'Content-Type: application/json' --data '{"action":"close_room","roomId":"not-a-uuid","hostToken":"bad"}' "$url"
 
-          # Overlong voter identifiers are rejected instead of being silently truncated.
           long_voter="$(printf 'x%.0s' $(seq 1 121))"
           payload="$(printf '{\"action\":\"submit_vote\",\"roomId\":\"00000000-0000-4000-8000-000000000000\",\"voterId\":\"%s\",\"tags\":[]}' "$long_voter")"
           expect 400 invalid_vote -H 'Content-Type: application/json' --data "$payload" "$url"
 
-          # The deployed API must enforce the 8 KiB contract against actual body
-          # bytes, not only Content-Length. Force HTTP/1.1 chunked transfer so no
-          # useful Content-Length is available to the early reject. Current v6
-          # reads through a bounded stream and cancels once the byte budget is exceeded.
           printf '{"action":"unknown","padding":"' > "$oversized"
           head -c 9000 /dev/zero | tr '\0' 'x' >> "$oversized"
           printf '"}' >> "$oversized"
@@ -71,20 +74,31 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          ALERT_TITLE: Group API live probe failure
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           set -euo pipefail
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$ALERT_TITLE\"" --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
+          if [ "$ALERT_SELF_TEST" = 'true' ]; then
+            alert_title='Group API alert delivery self-test'
+            alert_intro='Controlled Group API alert-delivery self-test reached the GitHub Issue path. No live Group API request was sent by the failing probe step.'
+            alert_scope='controlled alert-path verification only; not a production failure'
+          else
+            alert_title='Group API live probe failure'
+            alert_intro='Automated Group API rejection-only monitor failed.'
+            alert_scope='non-mutating rejection contracts only'
+          fi
+
+          export ALERT_TITLE="$alert_title"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
           body=$(cat <<EOF
-          Automated Group API rejection-only monitor failed.
+          $alert_intro
 
           - Workflow run: $run_url
           - Repository SHA: $GITHUB_SHA
           - Trigger: $GITHUB_EVENT_NAME
-          - Scope: non-mutating rejection contracts only
+          - Scope: $alert_scope
 
-          This alert does not establish root cause, user impact, data loss, security incident, retention failure, or Commercial readiness status. Inspect the failed job before changing production behavior.
+          This alert does not establish root cause, user impact, data loss, security incident, retention failure, monitoring SLA, or Commercial readiness status.
           EOF
           )
 
@@ -92,25 +106,29 @@ jobs:
             gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
             echo "Updated existing alert issue #$existing"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$ALERT_TITLE" --body "$body"
-            echo 'Opened Group API live probe failure issue'
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$alert_title" --body "$body"
+            echo "Opened alert issue: $alert_title"
           fi
 
       - name: Record probe scope
         if: always()
         shell: bash
+        env:
+          ALERT_SELF_TEST: ${{ inputs.alert_self_test || false }}
         run: |
           {
             echo '## Group API live rejection probe'
             echo
             echo "- Trigger: \`${GITHUB_EVENT_NAME}\`"
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo "- Controlled alert self-test: \`${ALERT_SELF_TEST}\`"
             echo '- Schedule: every 6 hours at minute 23 UTC, plus workflow_dispatch and workflow-file pushes'
             echo '- Scope: unsupported method, malformed identifiers/tokens, overlong voter ID and streamed chunked >8 KiB rejection contracts'
             echo '- Network boundary: every live request has a 10-second connection timeout and 30-second total-transfer timeout'
             echo '- Mutation boundary: deliberately performs no successful create/vote/update/close action'
-            echo '- Failure path: opens or updates a GitHub Issue titled `Group API live probe failure` with the exact workflow-run URL and SHA'
-            echo '- Alert-delivery verification remains open until a controlled or real failure proves the issue path end-to-end'
+            echo '- Self-test boundary: when alert_self_test=true, the live API step exits before any API request and exercises only the GitHub Issue alert path'
+            echo '- Failure path: production probe failures open/update `Group API live probe failure`; controlled self-tests use `Group API alert delivery self-test` to avoid false incident evidence'
+            echo '- Alert-delivery verification requires an inspected controlled or real failure run plus the resulting issue/comment evidence'
             echo '- Supabase platform/application log inspection remains a separate evidence layer'
-            echo '- This does not prove rate limiting/quota controls, monitoring thresholds, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
+            echo '- This does not prove rate limiting/quota controls, monitoring thresholds/SLA, retention cleanup, load/security testing, real-device behavior, or Production readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
