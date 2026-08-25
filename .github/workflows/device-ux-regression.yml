@@ -76,6 +76,9 @@ jobs:
           grep -Fq 'TC-06 เมนูโปรด | PASS (v16 restart)' "$matrix"
           grep -Fq 'Issue #177 closed completed' "$matrix"
           grep -Fq 'Historical v15 restart FAIL remains recorded' "$matrix"
-          grep -Fq 'iPhone TC-08/#171 ต้องมี focused device retest บน verified deployed v16 ก่อนปิด' "$matrix"
+          grep -Fq 'PASS (v16)' "$matrix"
+          grep -Fq 'Issue #171 closed completed' "$matrix"
+          grep -Fq 'Exact coordinates are intentionally not retained' "$matrix"
+          grep -Fq 'ยังต้องมี iPhone Safari เครื่องที่ 2' "$matrix"
           grep -Fq 'ห้ามกรอก PASS จากการคาดเดา' "$matrix"
           echo 'Real-device evidence boundary preserved'
