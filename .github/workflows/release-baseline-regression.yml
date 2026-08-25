@@ -23,8 +23,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          baseline="$(sed -n 's/^- Latest reviewed `main` descendant: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
-          test -n "$baseline" || { echo 'Unable to parse latest reviewed main descendant from CURRENT-RELEASE.md'; exit 1; }
+          baseline="$(sed -n 's/^- Canonical reviewed `main` baseline: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$baseline" || { echo 'Unable to parse canonical reviewed main baseline from CURRENT-RELEASE.md'; exit 1; }
           git cat-file -e "$baseline^{commit}" || { echo "Reviewed baseline is not present in repository history: $baseline"; exit 1; }
           git merge-base --is-ancestor "$baseline" HEAD || { echo "Reviewed baseline is not an ancestor of HEAD: $baseline"; exit 1; }
 
@@ -34,7 +34,7 @@ jobs:
           fi
 
           echo "Canonical reviewed baseline is an ancestor of HEAD: $baseline"
-          echo 'Checking that descendants do not silently change runtime/API/schema sources.'
+          echo 'A docs/workflow-only descendant does not require baseline churn; guarded runtime/API/schema drift is checked below.'
 
           browser_paths=(
             index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html
