@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'PARTNER-MONITORING-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - '.github/workflows/partner-api-live-probe.yml'
       - '.github/workflows/partner-api-regression.yml'
       - '.github/workflows/partner-monitoring-decision-regression.yml'
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'PARTNER-MONITORING-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
       - '.github/workflows/partner-api-live-probe.yml'
       - '.github/workflows/partner-api-regression.yml'
       - '.github/workflows/partner-monitoring-decision-regression.yml'
@@ -29,8 +31,10 @@ jobs:
         run: |
           set -euo pipefail
           file='PARTNER-MONITORING-DECISION.md'
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
           probe='.github/workflows/partner-api-live-probe.yml'
           test -s "$file"
+          test -s "$evidence"
           test -s "$probe"
 
           grep -q 'Status: \*\*NOT APPROVED\*\*\|Status: \*\*APPROVED\*\*' "$file"
@@ -60,6 +64,9 @@ jobs:
             for marker in "${required_unset[@]}"; do
               grep -Fq -- "$marker" "$file" || { echo "NOT APPROVED monitoring decision contains inferred/fabricated value: $marker"; exit 1; }
             done
+            grep -Fq 'Partner monitoring decision status: **NOT APPROVED**' "$evidence"
+            grep -Fq '`PARTNER-MONITORING-DECISION.md` is the canonical monitoring ownership/escalation decision record.' "$evidence"
+            grep -Fq 'approval timestamp as **UNSET**' "$evidence"
           fi
 
           if grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
@@ -76,9 +83,12 @@ jobs:
           set -euo pipefail
           probe='.github/workflows/partner-api-live-probe.yml'
           file='PARTNER-MONITORING-DECISION.md'
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
           grep -Fq 'Partner API live probe failure' "$probe"
           grep -Fq 'Partner API alert delivery self-test' "$probe"
           grep -Fq 'alert_self_test' "$probe"
           grep -Fq 'controlled alert-delivery test' "$file"
           grep -Fq 'does not prove alert delivery' "$file"
-          echo 'Partner monitoring decision and alert-evidence boundaries are intact.'
+          grep -Fq 'does not establish alert delivery PASS' "$evidence"
+          grep -Fq 'approved production monitoring owner/channel/escalation/support decision plus execution evidence' "$evidence"
+          echo 'Partner monitoring decision, Partner API evidence linkage, and alert-evidence boundaries are intact.'

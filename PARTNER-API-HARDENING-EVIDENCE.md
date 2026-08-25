@@ -72,13 +72,25 @@ Even after a future real approval, cleanup still requires separate implementatio
 
 This section does not establish retention approval, cleanup PASS, Privacy/Legal approval, partner readiness, conversion/revenue reconciliation, Public Beta completion, or Commercial GO.
 
+## Production monitoring decision gate — NOT APPROVED
+
+Partner monitoring decision status: **NOT APPROVED**.
+
+`PARTNER-MONITORING-DECISION.md` is the canonical monitoring ownership/escalation decision record. PR #234 merged the decision gate onto `main` as `386b732f1493284504132ab273b35068ae699d39` after its PR-head regression suite completed successfully.
+
+The decision record intentionally leaves monitoring owner, primary alert channel, backup/escalation contact, support/on-call path, failure/escalation thresholds, expected response target, review cadence, Operations/Commercial approver, and approval timestamp as **UNSET**. Existing scheduled rejection-only probes, GitHub Issue failure-alert implementation, controlled alert self-test mechanism, CI/static checks, and successful probe history do not determine or approve those values automatically.
+
+Even after a future real approval, monitoring still requires separate execution evidence: controlled alert delivery with resulting issue/comment evidence, an operational owner/handling path, real monitor-history baseline review, and escalation/support verification appropriate to the selected operating model.
+
+This section does not establish alert delivery PASS, monitoring SLA/SLO, Production support readiness, retention approval, partner readiness, conversion/revenue reconciliation, Public Beta completion, or Commercial GO.
+
 ## Still-open Commercial/Security work
 
 The following remain open and must not be inferred from source/deployment/live-rejection hardening:
 
 - complete anonymous rate/quota/abuse-control strategy;
 - approved retention policy for partner search/click/session data and verified cleanup behavior;
-- production monitoring baseline, owner, alert channel, escalation path and recurring scheduled-run history;
+- approved production monitoring owner/channel/escalation/support decision plus execution evidence and recurring scheduled-run history;
 - real partner agreement/commercial evidence;
 - real conversion/reconciliation evidence for any enabled commission model;
 - Production Privacy/Legal approval and Commercial GO.
