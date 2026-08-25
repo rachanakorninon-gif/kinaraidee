@@ -35,6 +35,8 @@
 7. เมื่อติดตั้งและเปิดแบบ standalone แล้ว คำแนะนำไม่ควรแสดง
 8. ทดสอบบน iPadOS ที่รายงาน User Agent แบบ Mac ด้วยถ้ามีอุปกรณ์รองรับ
 
+Current physical evidence: iPhone/Safari #1 on deployed v16 completed steps 1–7 on 2026-08-25. Exact iPhone model, iOS version and Safari version were not captured and remain `not captured`; iPadOS step 8 remains untested.
+
 ## NF-06 Offline after update
 1. เปิดแอปออนไลน์หลังอัปเดตล่าสุดอย่างน้อยหนึ่งครั้ง
 2. ปิดเครือข่าย

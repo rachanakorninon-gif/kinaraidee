@@ -178,7 +178,20 @@ jobs:
           console.log('Synthetic iOS install hint PASS: active bootstrap wiring, render, dismiss, 7-day suppression, cooldown expiry, standalone suppression, iPad desktop-UA detection');
           NODE
 
+      - name: Verify scoped physical NF-05 evidence remains recorded
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='BETA-DEVICE-MATRIX.md'
+          grep -Fq 'iPhone NF-05 install guidance = **PASS on deployed v16 on 2026-08-25 for iPhone/Safari #1**' "$matrix"
+          grep -Fq 'Add to Home Screen succeeded' "$matrix"
+          grep -Fq '`เข้าใจแล้ว` suppression survived a Safari reload' "$matrix"
+          grep -Fq 'Exact iPhone/iOS/Safari versions remain `not captured`' "$matrix"
+          grep -Fq 'iPhone Safari อย่างน้อย 2 รุ่นต้องผ่าน core flow' "$matrix"
+          echo 'Scoped physical NF-05 evidence boundary preserved'
+
       - name: Explain evidence boundary
         run: |
           echo 'Synthetic PWA install-hint regression passed.'
-          echo 'This guards NF-05 implementation and active-bootstrap wiring but does not constitute iPhone/iPad Safari real-device PASS.'
+          echo 'Physical NF-05 PASS is separately recorded only for iPhone/Safari #1.'
+          echo 'This does not establish iPadOS, a second iPhone, full device-matrix acceptance, Public Beta PASS or Commercial GO.'
