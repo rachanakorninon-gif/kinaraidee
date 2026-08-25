@@ -1,0 +1,91 @@
+name: Alert Delivery Evidence Regression
+
+on:
+  pull_request:
+    paths:
+      - 'ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+      - '.github/workflows/alert-delivery-evidence-regression.yml'
+      - '.github/workflows/group-api-live-observability-probe.yml'
+      - '.github/workflows/partner-api-live-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate alert-delivery evidence contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='ALERT-DELIVERY-SELF-TEST-EVIDENCE.md'
+          test -s "$file"
+
+          grep -Fq '.github/workflows/group-api-live-observability-probe.yml' "$file"
+          grep -Fq '.github/workflows/partner-api-live-probe.yml' "$file"
+          grep -Fq 'alert_self_test=true' "$file"
+          grep -Fq 'Group API alert delivery self-test' "$file"
+          grep -Fq 'Partner API alert delivery self-test' "$file"
+          grep -Fq 'does not prove monitoring SLA/SLO' "$file"
+          grep -Fq 'Public Beta completion' "$file"
+          grep -Fq 'Commercial GO' "$file"
+
+          extract_section() {
+            local start="$1"
+            local end="$2"
+            awk -v start="$start" -v end="$end" '
+              $0 == start {capture=1}
+              capture && $0 == end {exit}
+              capture {print}
+            ' "$file"
+          }
+
+          validate_section() {
+            local label="$1"
+            local section="$2"
+            local status
+            status="$(printf '%s\n' "$section" | sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' | head -n1)"
+            case "$status" in
+              'NOT VERIFIED')
+                ;;
+              'PASS')
+                if printf '%s\n' "$section" | grep -Eq '\*\*(NOT CAPTURED|NOT VERIFIED)\*\*'; then
+                  echo "$label is marked PASS while required evidence is still missing"
+                  exit 1
+                fi
+                if printf '%s\n' "$section" | grep -Fq -- '- [ ]'; then
+                  echo "$label is marked PASS while PASS criteria remain unchecked"
+                  exit 1
+                fi
+                ;;
+              *)
+                echo "$label has unsupported status: ${status:-<missing>}"
+                exit 1
+                ;;
+            esac
+          }
+
+          group_section="$(extract_section '## Group API alert-delivery self-test' '## Partner API alert-delivery self-test')"
+          partner_section="$(extract_section '## Partner API alert-delivery self-test' '## Evidence boundary')"
+          test -n "$group_section"
+          test -n "$partner_section"
+          validate_section 'Group API alert-delivery evidence' "$group_section"
+          validate_section 'Partner API alert-delivery evidence' "$partner_section"
+
+          echo 'Alert-delivery evidence contract is internally consistent'
+
+      - name: Preserve controlled self-test safety markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          group='.github/workflows/group-api-live-observability-probe.yml'
+          partner='.github/workflows/partner-api-live-probe.yml'
+          grep -Fq 'alert_self_test' "$group"
+          grep -Fq 'Group API alert delivery self-test' "$group"
+          grep -Fq 'alert_self_test' "$partner"
+          grep -Fq 'Partner API alert delivery self-test' "$partner"
+          echo 'Controlled self-test workflow markers remain present'
