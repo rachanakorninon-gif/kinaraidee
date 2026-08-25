@@ -2,24 +2,18 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `a7ca994be76541af57b224c57f267843113df941`
-- Runtime merge/deployed SHA: `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`
+- Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
 - PWA cache marker: `kinaraidee-beta-v16`
-- Runtime change: member-history restart durability hardening after physical Android v15 retest. `data/member-sync.js` records member liked/picked actions in a durable localStorage outbox before cloud reconciliation, keeps cloud snapshots from replacing local history while durable/in-flight writes remain, retries pending writes after restart/online recovery, and deduplicates recent server rows before retry. `data/home-surprise.js` starts member sync early from the directly loaded home helper. Service Worker cache is bumped because both helpers are app-shell assets.
-- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
-- GitHub Pages run: `32752667752` — **success** for exact merged-main SHA `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
-- Corresponding Live Smoke run: `32752716631` — **success** on the same deployed SHA.
-- Read-only diagnostic run: `32752782165` — **success** on temporary PR #180; the PR was closed without merge after evidence capture.
-- Public `release-meta.json` matched `1d21613c3c7d3e62ed8f7e5c3f00700606129c58` and `kinaraidee-beta-v16`.
-- Live `sw.js` used v16 and included `data/member-sync.js` plus `data/home-surprise.js`; live member sync contained the durable outbox/cloud-snapshot guard/online retry and the home helper contained early member-sync bootstrap.
-- Prior verified deployment evidence remains historical and is not reused as current PASS. The prior verified browser/PWA deployment was v15 runtime merge `367162286d1e1452151df11dca805ed629bb5466`, Pages `32748690413`, Live Smoke `32748752875`, diagnostic `32749016604`.
-- Physical Android post-v15 evidence verified Favorite/History visual differentiation (#172) but exposed restart persistence defect #177. A focused physical Android post-v16 retest on 2026-08-25 then created a new favorite, confirmed the count changed 4 → 5, fully closed the installed PWA from Recent Apps, reopened without clearing data, and confirmed the new favorite plus count 5 were retained. Issue #177 is closed **completed** for that tested Android session.
-- Physical iPhone/Safari post-fix evidence on 2026-08-25 verified the v16 Location path: Kinaraidee displayed a persistent successful Location state, partner status did not overwrite it, and Google Maps received the menu name plus numeric coordinates rather than generic `ใกล้ฉัน`. Issue #171 is closed **completed** for that tested iPhone/Safari session. Exact coordinates are intentionally not retained in repository evidence.
-- Physical iPhone/Safari NF-05 evidence on 2026-08-25 verified install guidance in Safari, Add to Home Screen, standalone launch from the installed icon, standalone suppression of the install hint, and 7-day suppression after pressing `เข้าใจแล้ว` and reloading Safari. This PASS is scoped to iPhone/Safari #1; exact model/iOS/Safari versions were not captured and are not guessed.
+- Runtime change: public Feedback and Partner application submission recovery hardening. `feedback.html` and `partner.html` now guard duplicate activation, wrap submission paths in `try/catch/finally`, restore disabled/`aria-busy` state after failures, and keep generic user-facing network error hygiene. The Service Worker app-shell generation is unchanged because these public forms are not being promoted as a new cached-shell generation by this change.
+- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
+- Current runtime deployment evidence is pending for candidate `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; prior v16 deployment evidence must not be reused as PASS for the changed Feedback/Partner form runtime.
+- Prior verified deployment evidence remains historical and is not reused as current PASS. The last verified browser/PWA deployment remains runtime merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`, Pages `32752667752`, Live Smoke `32752716631`, diagnostic `32752782165`, with public `release-meta.json` matching `kinaraidee-beta-v16` before this candidate.
+- Physical Android post-v16 Favorite/History restart evidence remains scoped PASS for the tested installed-PWA session: the app was fully closed the installed PWA from Recent Apps and reopened without clearing data, with the fresh favorite retained. Issue #177 is closed **completed** for that tested Android session.
+- Prior physical-device evidence remains scoped historical/current evidence only for the exact behaviors tested: Android Favorite/History restart #177, iPhone/Safari Location #171, and iPhone/Safari #1 NF-05. It does not validate the changed public form submission paths.
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
 
-`PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE` means the merged-main GitHub Pages deployment, public release metadata, live Service Worker v16 marker and relevant live assets were verified for the current runtime. The additional device evidence above is separately scoped to one Android installed-PWA Favorite/History restart path and one iPhone/Safari session covering Location and NF-05 install-guidance behavior.
+The pending candidate contains source hardening for public form failure recovery plus a static regression guard. CI success can validate source/contract consistency only. A merged-main Pages/Live Smoke/public deployment trace is still required before the changed form runtime can be marked deployed, and real form-submission acceptance remains a separate device/Beta gate.
 
-It does **not** imply NF-07 old-cache acceptance, real keyboard interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, a second iPhone model, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO.
+This candidate does **not** imply real form-submission PASS, NF-07 old-cache acceptance, real keyboard interaction PASS, reduced-motion behavior on a physical platform, TalkBack/VoiceOver NF-09, a second iPhone model, the full Android/iPhone matrix, full Public Beta acceptance, payment/partner/legal readiness, leaked-password protection PASS or Commercial GO. It also creates no feedback submissions, partner applications, user/device results, conversion, payment or revenue evidence.

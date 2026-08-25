@@ -1,0 +1,53 @@
+name: Public Form Resilience Regression
+
+on:
+  pull_request:
+    paths:
+      - 'feedback.html'
+      - 'partner.html'
+      - '.github/workflows/public-form-resilience-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'feedback.html'
+      - 'partner.html'
+      - '.github/workflows/public-form-resilience-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-form-resilience:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard recoverable submission state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          grep -q "if(sendBtn.disabled)return" feedback.html
+          grep -q "try{" feedback.html
+          grep -q "catch(error)" feedback.html
+          grep -q "finally{" feedback.html
+          grep -q "sendBtn.disabled=false" feedback.html
+          grep -q "sendBtn.removeAttribute('aria-busy')" feedback.html
+          grep -q "กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง" feedback.html
+
+          grep -q "if(b.disabled)return" partner.html
+          grep -q "try{" partner.html
+          grep -q "catch(error)" partner.html
+          grep -q "finally{" partner.html
+          grep -q "b.disabled=false" partner.html
+          grep -q "b.removeAttribute('aria-busy')" partner.html
+          grep -q "กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง" partner.html
+
+          echo 'Public form submission recovery contract is present'
+
+      - name: Preserve evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'Static regression only: this workflow does not submit feedback or partner applications and does not create user, partner, conversion, revenue, real-device, Public Beta completion, or Commercial GO evidence.' >> "$GITHUB_STEP_SUMMARY"
