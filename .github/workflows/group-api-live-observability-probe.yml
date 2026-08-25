@@ -88,10 +88,8 @@ jobs:
             alert_scope='non-mutating rejection contracts only'
           fi
 
-          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$alert_title\"" --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' 2>/dev/null || true)"
-          if [ -z "$existing" ]; then
-            existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --json number,title --jq ".[] | select(.title == \"$alert_title\") | .number" | head -n1)"
-          fi
+          export ALERT_TITLE="$alert_title"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --json number,title --jq '.[] | select(.title == env.ALERT_TITLE) | .number' | head -n1)"
           body=$(cat <<EOF
           $alert_intro
 
