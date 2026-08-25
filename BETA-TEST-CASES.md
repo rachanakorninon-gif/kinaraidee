@@ -55,14 +55,26 @@
 3. ผลที่คาดหวัง: ไปยัง Maps/search fallback ได้
 
 ## TC-11 Feedback
-1. เปิดหน้า Feedback
-2. กรอกและส่งข้อมูลทดสอบที่ระบุว่าเป็น Beta test
-3. ผลที่คาดหวัง: มีสถานะสำเร็จ/ผิดพลาดที่ผู้ใช้เข้าใจได้
+1. เปิดหน้า Feedback บน deployed runtime ปัจจุบัน
+2. กรอกข้อมูลที่ระบุชัดว่าเป็น Beta test
+3. ทดสอบ duplicate-submit guard โดยกดส่งซ้ำระหว่างที่ปุ่มอยู่สถานะกำลังส่ง และยืนยันว่าไม่เกิดการส่งซ้ำจากการกดติดกัน
+4. ทดสอบ failure recovery ด้วยเงื่อนไขเครือข่ายที่ทำซ้ำได้ เช่น ตัดเครือข่ายก่อนกดส่ง แล้วบันทึกผลจริง
+5. หลัง failure ยืนยันว่าปุ่มส่งกลับมาใช้งานได้, `aria-busy` ไม่ค้าง และมีข้อความผิดพลาดที่ผู้ใช้เข้าใจได้
+6. คืนเครือข่ายแล้วทดสอบส่งข้อมูล Beta test ตามรอบที่ได้รับอนุญาต และบันทึกผลจริงแยกจาก failure-recovery รอบก่อน
+7. ผลที่คาดหวัง: success/error state ชัดเจน, failure ไม่ทำให้ปุ่มค้าง disabled และผู้ใช้ลองใหม่ได้
+
+> Static/CI `Public Form Resilience Regression`, Pages และ Live Smoke ไม่เพียงพอสำหรับ TC-11 PASS ของ interaction จริง และห้ามสรุป backend insert acceptance หากไม่ได้ตรวจหลักฐานของรอบส่งจริง
 
 ## TC-12 Partner application
-1. เปิดหน้าสมัครร้านพาร์ตเนอร์
-2. กรอกข้อมูลทดสอบที่ระบุว่าเป็น Beta test
-3. ผลที่คาดหวัง: ส่งได้หรือแสดง validation/error อย่างถูกต้อง
+1. เปิดหน้าสมัครร้านพาร์ตเนอร์บน deployed runtime ปัจจุบัน
+2. กรอกข้อมูลทดสอบที่ระบุชัดว่าเป็น Beta test และหลีกเลี่ยงข้อมูลส่วนบุคคลจริงที่ไม่จำเป็น
+3. ทดสอบ duplicate-submit guard โดยกดส่งซ้ำระหว่างที่ปุ่มอยู่สถานะกำลังส่ง และยืนยันว่าไม่เกิดการส่งซ้ำจากการกดติดกัน
+4. ทดสอบ failure recovery ด้วยเงื่อนไขเครือข่ายที่ทำซ้ำได้ เช่น ตัดเครือข่ายก่อนกดส่ง แล้วบันทึกผลจริง
+5. หลัง failure ยืนยันว่าปุ่มส่งกลับมาใช้งานได้, `aria-busy` ไม่ค้าง และ validation/error state ยังเข้าใจได้
+6. คืนเครือข่ายแล้วทดสอบ submission เฉพาะเมื่อรอบ Beta อนุญาตให้สร้างรายการทดสอบ และบันทึกผลจริงแยกจาก failure-recovery รอบก่อน
+7. ผลที่คาดหวัง: validation/success/error state ถูกต้อง, failure ไม่ทำให้ปุ่มค้าง disabled และผู้ใช้ลองใหม่ได้
+
+> Static/CI `Public Form Resilience Regression`, Pages และ Live Smoke ไม่เพียงพอสำหรับ TC-12 PASS ของ interaction จริง และห้ามนับการสร้าง partner test record เป็น partner/commercial readiness evidence
 
 ## TC-13 PWA
 1. บนอุปกรณ์/browser ที่รองรับ ติดตั้งแอป
