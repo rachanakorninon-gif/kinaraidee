@@ -1,0 +1,84 @@
+name: Partner Monitoring Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PARTNER-MONITORING-DECISION.md'
+      - '.github/workflows/partner-api-live-probe.yml'
+      - '.github/workflows/partner-api-regression.yml'
+      - '.github/workflows/partner-monitoring-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PARTNER-MONITORING-DECISION.md'
+      - '.github/workflows/partner-api-live-probe.yml'
+      - '.github/workflows/partner-api-regression.yml'
+      - '.github/workflows/partner-monitoring-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate monitoring decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PARTNER-MONITORING-DECISION.md'
+          probe='.github/workflows/partner-api-live-probe.yml'
+          test -s "$file"
+          test -s "$probe"
+
+          grep -q 'Status: \*\*NOT APPROVED\*\*\|Status: \*\*APPROVED\*\*' "$file"
+          grep -Fq 'Monitoring owner:' "$file"
+          grep -Fq 'Primary alert channel:' "$file"
+          grep -Fq 'Backup/escalation contact:' "$file"
+          grep -Fq 'Support/on-call path:' "$file"
+          grep -Fq 'Probe failure threshold:' "$file"
+          grep -Fq 'Escalation threshold/window:' "$file"
+          grep -Fq 'Expected response target:' "$file"
+          grep -Fq 'Monitoring review cadence:' "$file"
+          grep -Fq 'Commercial GO' "$file"
+
+          if grep -q 'Status: \*\*NOT APPROVED\*\*' "$file"; then
+            required_unset=(
+              'Monitoring owner: **UNSET**'
+              'Primary alert channel: **UNSET**'
+              'Backup/escalation contact: **UNSET**'
+              'Support/on-call path: **UNSET**'
+              'Probe failure threshold: **UNSET**'
+              'Escalation threshold/window: **UNSET**'
+              'Expected response target: **UNSET**'
+              'Monitoring review cadence: **UNSET**'
+              'Operations/Commercial approver: **UNSET**'
+              'Approved at: **UNSET**'
+            )
+            for marker in "${required_unset[@]}"; do
+              grep -Fq -- "$marker" "$file" || { echo "NOT APPROVED monitoring decision contains inferred/fabricated value: $marker"; exit 1; }
+            done
+          fi
+
+          if grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED monitoring decision still contains UNSET fields.'
+              exit 1
+            fi
+            grep -Fq 'After approval, monitoring still requires separate execution evidence' "$file"
+          fi
+
+      - name: Preserve implemented alert mechanism without promoting it to monitoring PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe='.github/workflows/partner-api-live-probe.yml'
+          file='PARTNER-MONITORING-DECISION.md'
+          grep -Fq 'Partner API live probe failure' "$probe"
+          grep -Fq 'Partner API alert delivery self-test' "$probe"
+          grep -Fq 'alert_self_test' "$probe"
+          grep -Fq 'controlled alert-delivery test' "$file"
+          grep -Fq 'does not prove alert delivery' "$file"
+          echo 'Partner monitoring decision and alert-evidence boundaries are intact.'
