@@ -25,4 +25,4 @@ After approval, monitoring still requires separate execution evidence: a control
 
 ## Evidence boundary
 
-This decision record is governance/planning evidence only. It does not prove application structured-event ingestion, alert delivery, monitoring SLA/SLO, Production support readiness, retention approval, abuse-control completeness, successful Group API product actions, load/security testing, Privacy/Legal approval, Public Beta completion, or Commercial GO.
+This decision record is governance/planning evidence only. It does not prove application structured-event ingestion. It does not prove alert delivery, monitoring SLA/SLO, Production support readiness, retention approval, abuse-control completeness, successful Group API product actions, load/security testing, Privacy/Legal approval, Public Beta completion, or Commercial GO.
