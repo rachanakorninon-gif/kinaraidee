@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md BETA-CHECKLIST.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Block private credential patterns including workflows
         shell: bash
@@ -96,6 +96,21 @@ jobs:
           grep -q "'./data/pwa-install.js'" sw.js
           grep -q "'./404.html'" sw.js
           if grep -q 'Promise.allSettled' sw.js; then echo 'Non-atomic shell install detected'; exit 1; fi
+      - name: Validate beta checklist against current runtime evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$marker" && test -n "$candidate" && test -n "$deployed" || { echo 'Unable to parse CURRENT-RUNTIME release markers'; exit 1; }
+          grep -Fq "\`$marker\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST PWA marker drift'; exit 1; }
+          grep -Fq "\`$candidate\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST runtime candidate drift'; exit 1; }
+          grep -Fq "\`$deployed\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST deployed SHA drift'; exit 1; }
+          grep -Fq 'Public Beta' BETA-CHECKLIST.md
+          grep -Fq 'NO-GO' BETA-CHECKLIST.md
+          grep -Fq 'Protect main' BETA-CHECKLIST.md
+          grep -Fq 'actual end-to-end alert delivery verification' BETA-CHECKLIST.md
       - name: Validate SEO and recovery wiring
         shell: bash
         run: |
