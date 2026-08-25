@@ -5,12 +5,14 @@ on:
     paths:
       - 'feedback.html'
       - 'partner.html'
+      - 'BETA-TEST-CASES.md'
       - '.github/workflows/public-form-resilience-regression.yml'
   push:
     branches: [main]
     paths:
       - 'feedback.html'
       - 'partner.html'
+      - 'BETA-TEST-CASES.md'
       - '.github/workflows/public-form-resilience-regression.yml'
   workflow_dispatch:
 
@@ -45,6 +47,22 @@ jobs:
           grep -q "กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง" partner.html
 
           echo 'Public form submission recovery contract is present'
+
+      - name: Guard physical-device acceptance boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          grep -q '^## TC-11 Feedback' BETA-TEST-CASES.md
+          grep -q '^## TC-12 Partner application' BETA-TEST-CASES.md
+          grep -q 'duplicate-submit guard' BETA-TEST-CASES.md
+          grep -q 'failure recovery' BETA-TEST-CASES.md
+          grep -q 'aria-busy.*ไม่ค้าง' BETA-TEST-CASES.md
+          grep -q 'Public Form Resilience Regression.*ไม่เพียงพอสำหรับ TC-11 PASS' BETA-TEST-CASES.md
+          grep -q 'Public Form Resilience Regression.*ไม่เพียงพอสำหรับ TC-12 PASS' BETA-TEST-CASES.md
+          grep -q 'ห้ามนับการสร้าง partner test record เป็น partner/commercial readiness evidence' BETA-TEST-CASES.md
+
+          echo 'Physical form acceptance boundary is present'
 
       - name: Preserve evidence boundary
         shell: bash
