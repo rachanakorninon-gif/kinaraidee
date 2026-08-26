@@ -54,7 +54,7 @@ jobs:
             fi
           fi
 
-          grep -Fq 'does not establish a complete Production access roster' "$decision"
+          grep -Fq 'do not establish a complete Production access roster' "$decision"
 
       - name: Record evidence boundary
         if: always()
