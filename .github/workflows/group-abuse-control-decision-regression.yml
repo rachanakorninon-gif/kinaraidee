@@ -1,0 +1,103 @@
+name: Group Abuse-Control Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'GROUP-ABUSE-CONTROL-DECISION.md'
+      - 'GROUP-API-HARDENING-PLAN.md'
+      - '.github/workflows/group-abuse-control-decision-regression.yml'
+      - 'supabase/functions/group-api/**'
+  push:
+    branches: [main]
+    paths:
+      - 'GROUP-ABUSE-CONTROL-DECISION.md'
+      - 'GROUP-API-HARDENING-PLAN.md'
+      - '.github/workflows/group-abuse-control-decision-regression.yml'
+      - 'supabase/functions/group-api/**'
+
+permissions:
+  contents: read
+
+jobs:
+  abuse-control-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Group API abuse-control decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='GROUP-ABUSE-CONTROL-DECISION.md'
+          test -f "$file"
+
+          grep -q '^Status: \*\*NOT APPROVED\*\*$\|^Status: \*\*APPROVED\*\*$' "$file"
+          grep -q 'Anonymous friend voting through invite links must remain available' "$file"
+          grep -q 'does not implement a rate limiter or quota' "$file"
+          grep -q 'does not prove abuse resistance' "$file"
+          grep -q 'Public Beta completion' "$file"
+          grep -q 'Commercial GO' "$file"
+
+          required_fields=(
+            'Decision owner'
+            'Operations/Security approver'
+            'Privacy/Legal reviewer'
+            'Public Beta traffic envelope'
+            'Production traffic envelope'
+            'Allowed rate-limit/quota identifier'
+            '`create_room` limit/window'
+            '`submit_vote` limit/window'
+            'Other protected actions/limits'
+            'Over-limit response behavior'
+            'False-positive bypass/recovery path'
+            'Shared-network/NAT handling'
+            'Data retained for abuse control'
+            'Abuse-control data retention period'
+            'Privacy/Terms reference'
+            'Monitoring/alert dependency'
+            'Approved at'
+          )
+
+          for field in "${required_fields[@]}"; do
+            grep -Fq -- "- ${field}: **" "$file" || {
+              echo "Missing decision field: $field"
+              exit 1
+            }
+          done
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for field in "${required_fields[@]}"; do
+              grep -Fq -- "- ${field}: **UNSET**" "$file" || {
+                echo "NOT APPROVED decision contains inferred/fabricated value: $field"
+                exit 1
+              }
+            done
+          else
+            if grep -q ': \*\*UNSET\*\*$' "$file"; then
+              echo 'APPROVED decision still contains UNSET fields'
+              exit 1
+            fi
+          fi
+
+          echo 'Group API abuse-control decision boundary is consistent'
+
+      - name: Preserve current partial-hardening scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          plan='GROUP-API-HARDENING-PLAN.md'
+          test -f "$plan"
+          grep -q 'partial abuse hardening' "$plan"
+          grep -q 'complete anonymous abuse-control PASS' "$plan"
+          grep -q 'traffic envelope' "$plan"
+          grep -q 'privacy' "$plan"
+          echo 'Existing Group API hardening plan still treats abuse control as incomplete'
+
+      - name: Evidence boundary summary
+        run: |
+          {
+            echo '## Group Abuse-Control Decision Regression'
+            echo '- Validates governance/decision-record consistency only.'
+            echo '- Does not execute rate limiting, quotas, successful Group API actions, load/security tests, or device tests.'
+            echo '- Does not create Public Beta or Commercial PASS evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
