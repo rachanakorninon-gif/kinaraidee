@@ -1,0 +1,85 @@
+name: Data Rights Exercise Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'DATA-RIGHTS-EXERCISE-DECISION.md'
+      - 'DATA-GOVERNANCE-DRAFT.md'
+      - '.github/workflows/data-rights-exercise-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'DATA-RIGHTS-EXERCISE-DECISION.md'
+      - 'DATA-GOVERNANCE-DRAFT.md'
+      - '.github/workflows/data-rights-exercise-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  data-rights-exercise-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify decision state and evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='DATA-RIGHTS-EXERCISE-DECISION.md'
+          governance='DATA-GOVERNANCE-DRAFT.md'
+          test -s "$file"
+          test -s "$governance"
+
+          grep -Fq '## 3. Data-rights request procedure' "$governance"
+          grep -Fq 'Status: **NOT APPROVED**' "$file" || grep -Fq 'Status: **APPROVED**' "$file"
+          grep -Fq 'actual controlled execution evidence remains separate' "$file"
+          grep -Fq 'Do not run destructive Production SQL' "$file"
+          grep -Fq 'does not establish a Production Privacy Policy' "$file"
+          grep -Fq 'Commercial GO' "$file"
+
+          fields=(
+            'Exercise owner'
+            'Privacy/Legal reviewer or approver'
+            'Safe exercise environment'
+            'Approved synthetic/production-like fixture source'
+            'Identity-verification method category'
+            'Data classes in scope'
+            'Access/export verification method'
+            'Correction verification method'
+            'Deletion/anonymization verification method'
+            'Dependency/cascade verification method'
+            'Exception/hold review method'
+            'Completion-evidence storage location'
+            'Approved at'
+          )
+
+          if grep -Fq 'Status: **NOT APPROVED**' "$file"; then
+            for label in "${fields[@]}"; do
+              grep -Fq -- "- ${label}: **UNSET**" "$file"
+            done
+            echo 'Data-rights exercise decision remains NOT APPROVED with policy-sensitive fields UNSET.'
+            exit 0
+          fi
+
+          for label in "${fields[@]}"; do
+            value="$(sed -n "s/^- ${label}: \\*\\*\\(.*\\)\\*\\*$/\\1/p" "$file" | head -n1)"
+            if [ -z "$value" ] || [ "$value" = 'UNSET' ]; then
+              echo "APPROVED data-rights exercise decision requires a non-UNSET value for: $label"
+              exit 1
+            fi
+          done
+
+          echo 'Approved decision record shape is complete; actual controlled exercise evidence is still required separately.'
+
+      - name: Write evidence boundary summary
+        if: always()
+        run: |
+          {
+            echo '## Data-rights exercise decision regression'
+            echo
+            echo '- This workflow validates governance/evidence shape only.'
+            echo '- It does not execute access, correction, export, deletion or anonymization.'
+            echo '- It does not create a data-rights PASS, legal approval, Public Beta completion or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
