@@ -7,6 +7,8 @@ on:
       - 'RELEASE-CHECKLIST.md'
       - 'ROLLBACK-RUNBOOK.md'
       - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'PARTNER-API-ROLLBACK-REFERENCE.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   push:
@@ -16,6 +18,8 @@ on:
       - 'RELEASE-CHECKLIST.md'
       - 'ROLLBACK-RUNBOOK.md'
       - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'PARTNER-API-ROLLBACK-REFERENCE.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   workflow_dispatch:
@@ -102,6 +106,34 @@ jobs:
           grep -Fq 'GROUP-API-DEPLOYMENT-EVIDENCE.md' "$runbook"
           grep -Fq 'PROCEDURE WRITTEN / NOT YET DRILL-VERIFIED' "$runbook"
 
+      - name: Verify Partner API rollback anchors match canonical evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
+          reference='PARTNER-API-ROLLBACK-REFERENCE.md'
+          test -s "$evidence"
+          test -s "$reference"
+
+          candidate_sha="$(sed -nE 's/^- PR #126 merged as `([0-9a-f]{40})`.*/\1/p' "$evidence" | head -n1)"
+          deployed_version="$(sed -nE 's/.*`partner-api` ACTIVE version ([0-9]+).*/\1/p' "$evidence" | head -n1)"
+          bundle_sha="$(sed -nE 's/.*bundle SHA-256 `([0-9a-f]{64})`.*/\1/p' "$evidence" | head -n1)"
+          probe_run="$(sed -nE 's/^- Partner API Live Rejection Probe run `([0-9]+)`.*/\1/p' "$evidence" | head -n1)"
+          source_blob="$(git rev-parse "$candidate_sha:supabase/functions/partner-api/index.ts")"
+
+          for value in "$candidate_sha" "$deployed_version" "$bundle_sha" "$probe_run" "$source_blob"; do
+            test -n "$value"
+          done
+
+          grep -Fq "PR #126 / \`$candidate_sha\`" "$reference"
+          grep -Fq "current repository source blob: \`$source_blob\`" "$reference"
+          grep -Fq "ACTIVE version $deployed_version" "$reference"
+          grep -Fq "current inspected bundle SHA-256: \`$bundle_sha\`" "$reference"
+          grep -Fq "run \`$probe_run\`" "$reference"
+          grep -Fq 'PARTNER-API-HARDENING-EVIDENCE.md' "$reference"
+          grep -Fq 'REFERENCE WRITTEN / NOT DRILL-VERIFIED' "$reference"
+          grep -Fq 'Partner API rollback เป็น **NOT VERIFIED**' "$reference"
+
       - name: Verify linked integrity check remains read-only
         shell: bash
         run: |
@@ -126,6 +158,7 @@ jobs:
             echo '- Guards recovery/rollback governance fields from fabricated approval or RPO/RTO values.'
             echo '- Keeps Commercial Release Checklist recovery/drill gates open while the canonical decision is NOT APPROVED.'
             echo '- Derives current Group API deployment anchors from canonical evidence and requires the rollback runbook to match them.'
+            echo '- Derives current Partner API source/deployment/live-rejection anchors and requires the rollback reference to match them.'
             echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
             echo '- Static CI success is not backup availability, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
