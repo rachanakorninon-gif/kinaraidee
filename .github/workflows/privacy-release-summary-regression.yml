@@ -1,0 +1,84 @@
+name: Privacy Release Summary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/privacy-release-summary-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/privacy-release-summary-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  privacy-release-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate release summary respects Privacy Legal decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          test -s "$decision"
+          test -s "$release"
+          test -s "$checklist"
+
+          grep -Fq 'Production Privacy/Terms/controller/contact/retention/legal decisions' "$release"
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+          grep -Fq 'Public Beta remains **NOT COMPLETE**' "$release"
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            # Canonical release state must not imply Production Privacy/Legal readiness while the decision is still open.
+            if grep -Eqi 'Privacy.?Legal[^\n]*(PASS|APPROVED|READY)' "$release"; then
+              echo 'CURRENT-RELEASE.md appears to promote Privacy/Legal readiness while the canonical decision is NOT APPROVED.'
+              exit 1
+            fi
+
+            open_items=(
+              '- [ ] Privacy Policy ฉบับ Production เผยแพร่จริง'
+              '- [ ] Terms of Service เผยแพร่จริง'
+              '- [ ] ช่องทางติดต่อเจ้าของบริการจริง'
+              '- [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้'
+            )
+            for item in "${open_items[@]}"; do
+              grep -Fq -- "$item" "$checklist" || {
+                echo "Privacy/Legal checklist gate must remain open while decision is NOT APPROVED: $item"
+                exit 1
+              }
+            done
+          else
+            grep -q '^Status: \*\*APPROVED\*\*$' "$decision" || {
+              echo 'Privacy/Legal status must be NOT APPROVED or APPROVED.'
+              exit 1
+            }
+            # Approval only makes downstream evidence review eligible. It never auto-promotes Commercial GO.
+            grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Privacy / Legal release-summary regression'
+            echo
+            echo '- Keeps CURRENT-RELEASE.md and RELEASE-CHECKLIST.md aligned with the canonical Production Privacy/Legal decision.'
+            echo '- NOT APPROVED cannot be promoted to Privacy/Legal PASS/READY in the release summary and Commercial checklist gates must remain open.'
+            echo '- A future APPROVED decision does not auto-create policy publication, legal review, retention execution, Public Beta completion, or Commercial GO.'
+            echo '- This workflow creates no user, device, payment, partner, conversion, revenue, or legal evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
