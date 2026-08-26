@@ -77,21 +77,21 @@ Group API เป็น public Edge Function โดย `verify_jwt=false` เพ�
 
 **Current reference evidence ณ 2026-08-23 (ใช้เพื่อเตรียมความพร้อม ไม่ใช่คำสั่งให้ rollback):**
 
-- current Group API source candidate: PR #87 / `3b2375e50368add46e8b683111c30ed41be75715`
-- current inspected source blob: `9f6cadc6dd9385f8b786aeec56c7d87134cb9e39`
-- current inspected deployment: Supabase `group-api` ACTIVE version 5
-- current inspected bundle SHA-256: `d2f70b4345ce05af1c4645764f4de205695593b79ba4f165a7fdd7aef52bf150`
-- current v5 rejection-only live verification: run `32631490603` on `524c185517b27c55c56218c8331b2a2ecec0f949`
-- historical v4 source candidate: PR #83 / `a4237ce6746478caa8f0b9da60d4456b6dce4758`; v4 had inspected source/deployment parity and rejection-only live verification run `32629629579`
+- current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`
+- current inspected source blob: `04e7f595ef73b9fdbdf377ba3b8936a818a109be`
+- current inspected deployment: Supabase `group-api` ACTIVE version 6
+- current inspected bundle SHA-256: `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`
+- current v6 rejection-only live verification: run `32632951668` on `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`
+- historical v5 evidence is superseded for current source/deployment parity; use `GROUP-API-DEPLOYMENT-EVIDENCE.md` for the current verified anchors and prior-version history
 
-เลข/version ข้างต้นเป็น evidence anchors เท่านั้น. ก่อน incident rollback จริงต้องตรวจ `CURRENT-RELEASE.md`, current Supabase deployment และ incident scope ใหม่เสมอ เพราะ source candidate อาจเปลี่ยนไปแล้ว.
+เลข/version ข้างต้นเป็น evidence anchors เท่านั้น. ก่อน incident rollback จริงต้องตรวจ `CURRENT-RELEASE.md`, `GROUP-API-DEPLOYMENT-EVIDENCE.md`, current Supabase deployment และ incident scope ใหม่เสมอ เพราะ source candidate อาจเปลี่ยนไปแล้ว.
 
 **ขั้นตอน Group API rollback:**
 
 1. บันทึก bad backend source commit, current Supabase function version/status, deployed source/bundle hash และ incident symptoms ก่อนแก้ไข
 2. เลือก rollback source จาก repository commit ที่มีหลักฐานเหมาะกับ contract ที่ต้องกู้คืน; ห้ามเลือกเพียงเพราะเป็น version ก่อนหน้า
 3. เปรียบเทียบ bad source → rollback source โดยตรวจอย่างน้อย method contract, input validation, room expiry/state, host-token authorization, request-size protection, response security headers และ privacy-safe logging boundary
-4. หาก rollback source เก่ากว่าจะไม่มี hardening ใหม่บางส่วน ให้บันทึก security trade-off และใช้ rollback เฉพาะเมื่อ incident severity ทำให้การย้อนนั้นปลอดภัยกว่าการคง bad release
+4. หาก rollback sourceเก่ากว่าจะไม่มี hardening ใหม่บางส่วน ให้บันทึก security trade-off และใช้ rollback เฉพาะเมื่อ incident severity ทำให้การย้อนนั้นปลอดภัยกว่าการคง bad release
 5. Deploy Edge Function source ที่เลือกโดยคง `verify_jwt`/environment configuration ตาม approved product/security model; ห้ามนำ credential มาใส่ใน repository หรือ logs
 6. Inspect function หลัง deploy: status/version, source payload, bundle hash และ `verify_jwt` แล้วบันทึก source/deployment parity
 7. ใช้ non-mutating live rejection checks ที่เหมาะกับ rollback sourceก่อนทำ successful write test; แยก platform request-log evidence ออกจาก application structured-event ingestion
