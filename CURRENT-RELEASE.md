@@ -57,7 +57,7 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - NF-05 is **PASS for iPhone/Safari #1** on deployed v16. Physical-device evidence on 2026-08-25 verified the install guidance in Safari, Add to Home Screen, launch from the installed Home Screen icon in standalone mode, no install hint in standalone mode, and no repeated install hint after pressing `เข้าใจแล้ว` and reloading Safari within the suppression window. This does not prove iPadOS or a second iPhone model.
 - Android Favorite/History visual differentiation was verified and Issue #172 is closed.
 - Issue #177 is closed completed and **PASS for the tested physical Android installed-PWA session**. A fresh favorite was created on v16, the app was fully closed from Recent Apps and reopened without clearing data, and the same favorite remained. This scoped result does not prove the full device matrix.
-- NF-09 TalkBack/VoiceOver remains open until a functioning assistive-technology environment is validated and current v16 behavior is retested end-to-end.
+- NF-09 / Issue #57 is **PASS and closed completed for the tested physical iPhone/VoiceOver session on deployed PR #201/v16**. On 2026-08-26 the VoiceOver environment was validated first with external Calculator control activation; VoiceOver then focused and activated Surprise, announced `กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่` once, reached a result, returned to ready state, and a second Surprise round started/completed successfully. Exact iPhone/iOS/Safari-or-PWA versions were not captured and are not guessed. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT and this iPhone PASS does not create Android TalkBack or second-device PASS.
 - visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.
 - reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.
 - NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.
@@ -95,13 +95,13 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #201 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance, Issue #171's focused iPhone/Safari Location acceptance and NF-05 on iPhone/Safari #1 are complete for the tested sessions. Minimum open evidence still includes real Feedback/Partner form interaction for the changed PR #201 paths, additional Android/iPhone device-count coverage, real-device/accessibility acceptance, keyboard/reduced-motion checks, NF-07/NF-09, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #201 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance, Issue #171's focused iPhone/Safari Location acceptance, NF-05 on iPhone/Safari #1 and NF-09 / Issue #57 on iPhone/VoiceOver #1 are complete for the tested sessions. Minimum open evidence still includes real Feedback/Partner form interaction for the changed PR #201 paths, additional Android/iPhone device-count coverage, real keyboard/reduced-motion checks, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance on the current v16 runtime;
+- Public Beta technical/device/accessibility acceptance on the current v16 runtime beyond the scoped iPhone VoiceOver PASS;
 - real Feedback/Partner submission acceptance for the PR #201 changed paths where required by the Beta/Product scope;
 - Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
@@ -125,4 +125,4 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #201 form-submission acceptance.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Public accessibility/source/synthetic/deployment evidence does not close NF-09, NF-07, second-device requirements, real form-submission acceptance or the remaining full-device-matrix gates.
+- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, real form-submission acceptance, keyboard/reduced-motion checks or the remaining full-device-matrix gates.
