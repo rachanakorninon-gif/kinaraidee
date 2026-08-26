@@ -136,6 +136,21 @@ jobs:
           if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
             grep -Fq 'NOT APPROVED' "$retention"
             grep -Fq 'NOT VERIFIED' "$retention"
+          else
+            # Production Privacy/Legal approval requires real approved retention decisions for applicable data classes.
+            # Cleanup/anonymization execution remains a separate evidence gate and may still be NOT VERIFIED.
+            if grep -Fq 'DECISIONS INCOMPLETE' "$retention"; then
+              echo 'Privacy/Legal is APPROVED while the canonical retention index still says DECISIONS INCOMPLETE.'
+              exit 1
+            fi
+            if grep -Eq '\| \*\*NOT APPROVED([^*]|\*[^*])*\*\* \|' "$retention"; then
+              echo 'Privacy/Legal is APPROVED while a retention decision row is still NOT APPROVED.'
+              exit 1
+            fi
+            if grep -Fq 'No approved per-class decision record yet' "$retention"; then
+              echo 'Privacy/Legal is APPROVED while an applicable data class still lacks an approved retention decision record.'
+              exit 1
+            fi
           fi
 
           # Even after Privacy/Legal approval, retention execution remains a separate evidence gate.
@@ -151,6 +166,7 @@ jobs:
             echo '- Supports both NOT APPROVED and future APPROVED decision states without weakening evidence requirements.'
             echo '- NOT APPROVED requires canonical decision fields to remain UNSET and Commercial Privacy/Terms/contact/retention checklist gates to remain open.'
             echo '- APPROVED is rejected while any UNSET decision field remains; approval only makes checklist completion eligible for separate evidence review.'
+            echo '- APPROVED is also rejected while the canonical retention index still has incomplete or unapproved retention decisions; cleanup execution remains a separate gate.'
             echo '- Retention cleanup/execution remains a separate evidence gate and is not inferred from Privacy/Legal approval.'
             echo '- Static CI success is not Production Privacy Policy publication, Terms acceptance, legal/PDPA approval, approved retention execution, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
