@@ -1,0 +1,69 @@
+name: Production Access Release Summary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/production-access-release-summary-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/production-access-release-summary-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  access-release-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Production access release boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PRODUCTION-ACCESS-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          test -s "$decision"
+          test -s "$release"
+          test -s "$checklist"
+
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
+          grep -Eq 'Commercial.*\*\*NO-GO\*\*' "$release"
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            grep -Fq -- '- [ ] ระบุผู้มีสิทธิ์ deploy/แก้ Production' "$checklist"
+            if grep -Eq 'Production access[^\n]*(PASS|READY|APPROVED)|access review[^\n]*(PASS|READY|APPROVED)' "$release"; then
+              echo 'Release summary appears to promote Production access while the canonical decision is NOT APPROVED.'
+              exit 1
+            fi
+          else
+            if grep -q '\*\*UNSET\*\*' "$decision"; then
+              echo 'APPROVED Production access decision still contains UNSET fields.'
+              exit 1
+            fi
+          fi
+
+          grep -Fq 'do not establish a complete Production access roster' "$decision"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Production access release-summary regression'
+            echo
+            echo '- A NOT APPROVED Production-access decision keeps deploy/access ownership gates open.'
+            echo '- Repository governance evidence cannot be promoted into Production/Supabase access-review PASS.'
+            echo '- Even a future APPROVED access decision does not by itself establish Public Beta completion or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
