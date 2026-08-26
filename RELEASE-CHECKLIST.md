@@ -14,7 +14,7 @@
 - Live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
 - Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support, while the current browser/PWA deployment trace is PR #201.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
-- Historical persistent Surprise accessibility implementation remains present, but real TalkBack/VoiceOver acceptance is still required on the current v16 runtime.
+- Surprise busy-state accessibility now has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; the prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT and second-device/full-matrix accessibility coverage is still open.
 - Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
 
 ## Beta Exit Evidence
@@ -28,7 +28,7 @@
 - [x] iPhone TC-08 Location allow path มี physical-device v16 evidence และ Issue #171 ปิด completed; exact model/OS/Safari version ไม่ได้ถูกบันทึกและไม่เดาเพิ่ม
 - [x] Favorite/History differentiation (`❤️ เมนูโปรด` / `👍 เลือกกิน`) มี physical Android evidence และ Issue #172 ปิดแล้ว
 - [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
-- [ ] Surprise busy-state accessibility ถูก retest ด้วย TalkBack และ/หรือ VoiceOver บน deployed current v16 runtime พร้อมบันทึก evidence จริง
+- [x] NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session และ Issue #57 ปิด completed; Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT และข้อนี้ไม่แทน second-device/full-matrix accessibility PASS
 - [ ] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages
 - [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
@@ -53,7 +53,7 @@
 
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix บน current v16 scope ที่เกี่ยวข้อง
-- [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; Surprise busy announcement ต้องมี post-deployment TalkBack/VoiceOver evidence
+- [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่
 - [ ] visible keyboard focus และ reduced-motion behavior ผ่าน real-platform acceptance ตาม scope ที่กำหนด
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v6 ยังไม่มี fresh multi-device regression จาก automated probe
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
