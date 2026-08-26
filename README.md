@@ -68,7 +68,8 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Browser/PWA runtime ปัจจุบันใช้ cache generation `kinaraidee-beta-v16`; exact merged-main Pages + corresponding Live Smoke + public metadata trace ถูกยืนยันแล้วสำหรับ v16
 - v16 ยังคง atomic app-shell install ด้วย `cache.addAll(SHELL)`; ถ้า shell file ใดโหลดไม่สำเร็จ install จะไม่ถือว่าสมบูรณ์
 - v16 เพิ่ม durable localStorage outbox สำหรับ member Favorite/Picked history, ป้องกัน stale cloud snapshot ทับ local writes และ retry pending writes หลัง restart/กลับมาออนไลน์
-- automated deployment PASS ของ v16 ไม่แทน post-v16 physical Android Favorite → full restart → History retention retest; Issue #177 ยังต้องหลักฐานจากอุปกรณ์จริงก่อนปิด
+- post-v16 physical Android Favorite → full restart → History retention มี scoped PASS จาก session ที่ทดสอบจริงและ Issue #177 ปิดแล้ว; หลักฐานนี้ไม่แทน NF-07, accessibility หรือ device-matrix gates อื่น
+- NF-09 มี scoped PASS บน physical iPhone/VoiceOver session ที่ทดสอบจริง; Android TalkBack เดิมยังเป็น `INCONCLUSIVE / TEST ENVIRONMENT` และ coverage อุปกรณ์อื่นยังเป็น gate แยก
 - visible keyboard focus และ reduced-motion accessibility hardening จาก v14 ยังคงอยู่ แต่ acceptance บนอุปกรณ์/แพลตฟอร์มจริงยังต้องทดสอบแยก
 - `404.html` เป็น recovery route สำหรับ GitHub Pages
 - `robots.txt` และ `sitemap.xml` รองรับการค้นพบหน้า Public Beta
@@ -109,7 +110,8 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - Live deployment verification ของ release candidate ไม่เป็น FAIL/BLOCKED สำหรับรายการที่จำเป็นต่อรอบนั้น
 - ตรวจ iPadOS Safari เพิ่มเมื่อมีอุปกรณ์จริง โดยเฉพาะกรณี User Agent แบบ Mac
 - ตรวจ PWA update จาก cache รุ่นเก่ามา v16 โดยไม่บังคับผู้ใช้ล้างข้อมูลเอง
-- ตรวจ post-v16 Favorite → ปิด PWA เต็มรูปแบบ → เปิดใหม่ → History/Favorite ยังอยู่บน Android จริงก่อนปิด Issue #177
+- post-v16 Favorite → ปิด PWA เต็มรูปแบบ → เปิดใหม่ → History/Favorite ยังอยู่ มี scoped PASS บน Android session ที่ทดสอบจริงแล้ว; ยังต้องเก็บ device coverage อื่นตาม matrix
+- NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device accessibility coverage ยังไม่ครบ
 - ตรวจ visible keyboard focus และ reduced-motion behavior บนอุปกรณ์/แพลตฟอร์มจริงก่อนถือว่า accessibility acceptance ผ่าน
 - ทุก FAIL มี defect ที่ตามแก้ได้
 - Blocker = 0 และ Critical = 0
