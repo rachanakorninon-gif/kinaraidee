@@ -1,0 +1,82 @@
+name: Privacy Approval Traceability Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - '.github/workflows/privacy-approval-traceability-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - '.github/workflows/privacy-approval-traceability-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  approval-traceability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate approved Privacy Legal traceability fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+          test -s "$file"
+
+          # Current NOT APPROVED state must remain policy-neutral and must not fabricate future evidence.
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            grep -Fq 'Privacy Policy URL/version: **UNSET**' "$file"
+            grep -Fq 'Terms of Service URL/version: **UNSET**' "$file"
+            grep -Fq 'Approved at: **UNSET**' "$file"
+            exit 0
+          fi
+
+          grep -q '^Status: \*\*APPROVED\*\*$' "$file" || {
+            echo 'Privacy/Legal status must be NOT APPROVED or APPROVED.'
+            exit 1
+          }
+
+          privacy_value="$(sed -n 's/^- Privacy Policy URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+          terms_value="$(sed -n 's/^- Terms of Service URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+          approved_value="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+
+          [[ "$privacy_value" =~ ^https://[^[:space:]]+ ]] || {
+            echo 'APPROVED Privacy Policy reference must begin with a traceable HTTPS URL.'
+            exit 1
+          }
+          [[ "$terms_value" =~ ^https://[^[:space:]]+ ]] || {
+            echo 'APPROVED Terms reference must begin with a traceable HTTPS URL.'
+            exit 1
+          }
+
+          node - "$approved_value" <<'NODE'
+          const value = process.argv[2];
+          const parsed = Date.parse(value);
+          if (!value || Number.isNaN(parsed)) {
+            console.error('APPROVED timestamp must be a parseable date/time value.');
+            process.exit(1);
+          }
+          const now = Date.now();
+          if (parsed > now + 5 * 60 * 1000) {
+            console.error('APPROVED timestamp must not be materially in the future.');
+            process.exit(1);
+          }
+          NODE
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Privacy approval traceability regression'
+            echo
+            echo '- NOT APPROVED keeps Privacy Policy, Terms and approval timestamp fields UNSET.'
+            echo '- A future APPROVED state requires traceable HTTPS Privacy/Terms references and a parseable non-future approval timestamp.'
+            echo '- This guard validates evidence shape only; it does not review legal substance, publish policies, approve PDPA compliance, or create Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
