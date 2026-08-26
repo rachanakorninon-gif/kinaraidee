@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'RECOVERY-DRILL-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   push:
     branches: ['main']
     paths:
       - 'RECOVERY-DRILL-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   workflow_dispatch:
@@ -48,6 +50,26 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Commercial Release Checklist keeps recovery gates open
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='RELEASE-CHECKLIST.md'
+          test -s "$file"
+          grep -Fq -- '- [ ] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ' "$file"
+          grep -Fq -- '- [ ] Rollback procedure ถูกทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและมี Evidence Record จริง' "$file"
+          grep -Fq 'ไม่ถือว่า Production operations/rollback readiness ผ่าน' "$file"
+
+          if grep -Fq -- '- [x] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ' "$file"; then
+            echo 'Commercial checklist must not mark backup/recovery readiness complete while the recovery decision is NOT APPROVED.'
+            exit 1
+          fi
+
+          if grep -Fq -- '- [x] Rollback procedure ถูกทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและมี Evidence Record จริง' "$file"; then
+            echo 'Commercial checklist must not mark the recovery drill complete without executed evidence.'
+            exit 1
+          fi
+
       - name: Verify linked integrity check remains read-only
         shell: bash
         run: |
@@ -70,6 +92,7 @@ jobs:
             echo '## Recovery drill decision regression'
             echo
             echo '- Guards recovery/rollback governance fields from fabricated approval or RPO/RTO values.'
+            echo '- Keeps Commercial Release Checklist recovery/drill gates open while the canonical decision is NOT APPROVED.'
             echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
             echo '- Static CI success is not backup availability, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
