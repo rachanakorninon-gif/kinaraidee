@@ -186,7 +186,7 @@ jobs:
           grep -Fq 'iPhone NF-05 install guidance = **PASS on deployed v16 on 2026-08-25 for iPhone/Safari #1**' "$matrix"
           grep -Fq 'Add to Home Screen succeeded' "$matrix"
           grep -Fq '`เข้าใจแล้ว` suppression survived a Safari reload' "$matrix"
-          grep -Fq 'Exact iPhone/iOS/Safari versions remain `not captured`' "$matrix"
+          grep -Eq 'Exact iPhone/iOS/Safari(/PWA)? versions remain `not captured`' "$matrix"
           grep -Fq 'iPhone Safari อย่างน้อย 2 รุ่นต้องผ่าน core flow' "$matrix"
           echo 'Scoped physical NF-05 evidence boundary preserved'
 
