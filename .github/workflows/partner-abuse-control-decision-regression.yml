@@ -1,0 +1,105 @@
+name: Partner Abuse-Control Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PARTNER-ABUSE-CONTROL-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - '.github/workflows/partner-abuse-control-decision-regression.yml'
+      - 'supabase/functions/partner-api/**'
+  push:
+    branches: [main]
+    paths:
+      - 'PARTNER-ABUSE-CONTROL-DECISION.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - '.github/workflows/partner-abuse-control-decision-regression.yml'
+      - 'supabase/functions/partner-api/**'
+
+permissions:
+  contents: read
+
+jobs:
+  abuse-control-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Partner API abuse-control decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PARTNER-ABUSE-CONTROL-DECISION.md'
+          test -f "$file"
+
+          grep -q '^Status: \*\*NOT APPROVED\*\*$\|^Status: \*\*APPROVED\*\*$' "$file"
+          grep -q '`find_partners`' "$file"
+          grep -q '`track_search`' "$file"
+          grep -q '`track_click`' "$file"
+          grep -q 'does not implement a rate limiter or quota' "$file"
+          grep -q 'does not prove abuse resistance' "$file"
+          grep -q 'Public Beta completion' "$file"
+          grep -q 'Commercial GO' "$file"
+
+          required_fields=(
+            'Decision owner'
+            'Operations/Security approver'
+            'Privacy/Legal reviewer'
+            'Public Beta traffic envelope'
+            'Production traffic envelope'
+            'Allowed anonymous client/session identifier'
+            '`find_partners` limit/window'
+            '`track_search` limit/window'
+            '`track_click` limit/window'
+            'Other protected anonymous actions/limits'
+            'Over-limit response behavior'
+            'False-positive bypass/recovery path'
+            'Shared-network/NAT handling'
+            'Data retained for abuse control'
+            'Abuse-control data retention period'
+            'Privacy/Terms reference'
+            'Monitoring/alert dependency'
+            'Approved at'
+          )
+
+          for field in "${required_fields[@]}"; do
+            grep -Fq -- "- ${field}: **" "$file" || {
+              echo "Missing decision field: $field"
+              exit 1
+            }
+          done
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for field in "${required_fields[@]}"; do
+              grep -Fq -- "- ${field}: **UNSET**" "$file" || {
+                echo "NOT APPROVED decision contains inferred/fabricated value: $field"
+                exit 1
+              }
+            done
+          else
+            if grep -q ': \*\*UNSET\*\*$' "$file"; then
+              echo 'APPROVED decision still contains UNSET fields'
+              exit 1
+            fi
+          fi
+
+          echo 'Partner API abuse-control decision boundary is consistent'
+
+      - name: Preserve current incomplete-hardening scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='PARTNER-API-HARDENING-EVIDENCE.md'
+          test -f "$evidence"
+          grep -q 'complete anonymous rate/quota/abuse-control strategy' "$evidence"
+          grep -q 'complete anonymous abuse controls' "$evidence"
+          grep -q 'Commercial GO' "$evidence"
+          echo 'Existing Partner API evidence still treats anonymous abuse control as incomplete'
+
+      - name: Evidence boundary summary
+        run: |
+          {
+            echo '## Partner Abuse-Control Decision Regression'
+            echo '- Validates governance/decision-record consistency only.'
+            echo '- Does not execute rate limiting, quotas, successful Partner API actions, load/security tests, or device tests.'
+            echo '- Does not create partner, conversion, revenue, Public Beta, or Commercial PASS evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
