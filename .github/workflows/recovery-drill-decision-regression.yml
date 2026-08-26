@@ -1,0 +1,75 @@
+name: Recovery Drill Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'RECOVERY-DRILL-DECISION.md'
+      - 'supabase/recovery-integrity-check.sql'
+      - '.github/workflows/recovery-drill-decision-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'RECOVERY-DRILL-DECISION.md'
+      - 'supabase/recovery-integrity-check.sql'
+      - '.github/workflows/recovery-drill-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decision-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify recovery drill remains unapproved without real decisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='RECOVERY-DRILL-DECISION.md'
+          test -s "$file"
+          grep -Fq 'Status: **NOT APPROVED**' "$file"
+          grep -Fq 'Approved RPO target: **UNSET**' "$file"
+          grep -Fq 'Approved RTO target: **UNSET**' "$file"
+          grep -Fq 'Decision owner: **UNSET**' "$file"
+          grep -Fq 'Operations approver: **UNSET**' "$file"
+          grep -Fq 'does not execute a backup, restore or rollback' "$file"
+          grep -Fq 'does not prove backup availability, restore integrity, measured RPO/RTO' "$file"
+
+          if grep -Eqi '^Status:[[:space:]]*\*\*APPROVED\*\*' "$file"; then
+            echo 'Recovery drill must not be marked APPROVED without reviewed decision evidence.'
+            exit 1
+          fi
+
+          if grep -Eqi 'Approved RP[OT] target:[[:space:]]*\*\*[0-9]+' "$file"; then
+            echo 'Numeric RPO/RTO target detected while decision is NOT APPROVED.'
+            exit 1
+          fi
+
+      - name: Verify linked integrity check remains read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/recovery-integrity-check.sql'
+          code="$(mktemp)"
+          trap 'rm -f "$code"' EXIT
+          test -s "$file"
+          sed -E 's/--.*$//' "$file" > "$code"
+          if grep -Eqi '^[[:space:]]*(insert|update|delete|truncate|alter|drop|create|grant|revoke)\b' "$code"; then
+            echo 'Mutation or DDL statement detected in recovery integrity SQL.'
+            exit 1
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Recovery drill decision regression'
+            echo
+            echo '- Guards recovery/rollback governance fields from fabricated approval or RPO/RTO values.'
+            echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
+            echo '- Static CI success is not backup availability, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
