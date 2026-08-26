@@ -1,0 +1,105 @@
+name: Distribution Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'DISTRIBUTION-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - 'CURRENT-RELEASE.md'
+      - '.github/workflows/distribution-decision-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'DISTRIBUTION-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - 'CURRENT-RELEASE.md'
+      - '.github/workflows/distribution-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decision-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate distribution decision state
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='DISTRIBUTION-DECISION.md'
+          test -s "$file"
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
+          fields=(
+            'Distribution mode (Web/PWA only, native stores, or phased):'
+            'Distribution owner/approver:'
+            'Google Play developer account status/reference:'
+            'Apple Developer account status/reference:'
+            'Native packaging/build approach:'
+            'Store subscription/payment policy review reference:'
+            'Store privacy/data-safety metadata review reference:'
+            'Store support/contact metadata reference:'
+            'Rollout/rollback approach by channel:'
+            'Approved at:'
+          )
+          for marker in "${fields[@]}"; do
+            grep -Fq -- "$marker" "$file" || { echo "Missing distribution field: $marker"; exit 1; }
+          done
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for marker in "${fields[@]}"; do
+              grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
+            done
+          else
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED distribution decision still contains UNSET fields.'
+              exit 1
+            fi
+            approved_at=$(sed -n 's/^- Approved at: //p' "$file")
+            python - "$approved_at" <<'PY'
+          import datetime as dt
+          import sys
+          value = sys.argv[1].strip().replace('**', '')
+          try:
+              parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+          except ValueError:
+              raise SystemExit('Approved at must be a valid ISO-8601 timestamp.')
+          if parsed.tzinfo is None:
+              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          if parsed > dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=5):
+              raise SystemExit('Approved at must not be materially in the future.')
+          PY
+          fi
+          grep -Fq 'does not prove store enrollment' "$file"
+          grep -Fq 'does not establish Apple/Google account ownership' "$file"
+
+      - name: Verify release gates remain evidence based
+        shell: bash
+        run: |
+          set -euo pipefail
+          checklist='RELEASE-CHECKLIST.md'
+          release='CURRENT-RELEASE.md'
+          test -s "$checklist"
+          test -s "$release"
+          grep -Fq 'Public Beta' "$release"
+          grep -Fq 'Commercial' "$release"
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' DISTRIBUTION-DECISION.md; then
+            if grep -Eq 'Distribution[^\n]*(APPROVED|READY|PASS)' "$release"; then
+              echo 'CURRENT-RELEASE.md appears to promote Distribution while decision is NOT APPROVED.'
+              exit 1
+            fi
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Distribution decision regression'
+            echo
+            echo '- NOT APPROVED requires all distribution/account/store-policy fields to remain UNSET.'
+            echo '- APPROVED only records a reviewed channel decision; store enrollment, policy approval, native testing and rollout evidence remain separate.'
+            echo '- Static CI success is not App Store/Google Play approval, payment approval, Public Beta PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
