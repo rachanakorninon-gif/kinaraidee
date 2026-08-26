@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/payment-premium-decision-regression.yml'
   push:
     branches: ['main']
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/payment-premium-decision-regression.yml'
   workflow_dispatch:
@@ -69,6 +71,32 @@ jobs:
           fi
           grep -Fq -- '- [ ] ห้ามเปิดรับเงินจริงหาก payment gate ข้อใดที่จำเป็นยังไม่ผ่าน' "$checklist"
 
+      - name: Verify canonical release summary respects payment evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PAYMENT-PREMIUM-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          test -s "$release"
+
+          # The canonical release summary must continue to state that Commercial launch is blocked
+          # on real Payment/Premium provider + lifecycle evidence rather than planning/CI alone.
+          grep -Fq 'Payment/Premium provider and real subscription lifecycle evidence' "$release" || {
+            echo 'CURRENT-RELEASE.md is missing the Payment/Premium Commercial blocker.'
+            exit 1
+          }
+          grep -Fq 'No user-count, conversion, revenue, payment success, partner readiness, legal approval, full device-matrix PASS, full Public Beta PASS or Commercial GO is inferred from this document.' "$release" || {
+            echo 'CURRENT-RELEASE.md is missing the payment/commercial evidence boundary.'
+            exit 1
+          }
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            if grep -Eq 'Payment/Premium[^\n]*(APPROVED|READY|PASS)' "$release"; then
+              echo 'Canonical release summary appears to promote Payment/Premium while decision is NOT APPROVED.'
+              exit 1
+            fi
+          fi
+
       - name: Record evidence boundary
         if: always()
         shell: bash
@@ -77,6 +105,7 @@ jobs:
             echo '## Payment / Premium decision regression'
             echo
             echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and Commercial payment checklist gates to remain open.'
+            echo '- CURRENT-RELEASE.md must keep Payment/Premium as a Commercial blocker until provider-backed lifecycle evidence exists.'
             echo '- APPROVED only establishes a reviewed decision record; provider-backed transaction and entitlement evidence remains separate.'
             echo '- Static CI success is not merchant onboarding, payment execution, conversion, revenue, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
