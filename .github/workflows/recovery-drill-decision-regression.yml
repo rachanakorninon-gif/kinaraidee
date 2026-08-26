@@ -95,9 +95,9 @@ jobs:
           done
 
           grep -Fq "PR #$candidate_pr / \`$candidate_sha\`" "$runbook"
-          grep -Fq "repository source blob: \`$source_blob\`" "$runbook"
+          grep -Fq "current inspected source blob: \`$source_blob\`" "$runbook"
           grep -Fq "ACTIVE version $deployed_version" "$runbook"
-          grep -Fq "bundle SHA-256: \`$bundle_sha\`" "$runbook"
+          grep -Fq "current inspected bundle SHA-256: \`$bundle_sha\`" "$runbook"
           grep -Fq "run \`$probe_run\`" "$runbook"
           grep -Fq 'GROUP-API-DEPLOYMENT-EVIDENCE.md' "$runbook"
           grep -Fq 'PROCEDURE WRITTEN / NOT YET DRILL-VERIFIED' "$runbook"
