@@ -5,12 +5,14 @@ on:
     paths:
       - 'DATA-RIGHTS-EXERCISE-DECISION.md'
       - 'DATA-GOVERNANCE-DRAFT.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - '.github/workflows/data-rights-exercise-decision-regression.yml'
   push:
     branches: [main]
     paths:
       - 'DATA-RIGHTS-EXERCISE-DECISION.md'
       - 'DATA-GOVERNANCE-DRAFT.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - '.github/workflows/data-rights-exercise-decision-regression.yml'
   workflow_dispatch:
 
@@ -29,8 +31,10 @@ jobs:
           set -euo pipefail
           file='DATA-RIGHTS-EXERCISE-DECISION.md'
           governance='DATA-GOVERNANCE-DRAFT.md'
+          privacy='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
           test -s "$file"
           test -s "$governance"
+          test -s "$privacy"
 
           grep -Fq '## 3. Data-rights request procedure' "$governance"
           grep -Fq 'Status: **NOT APPROVED**' "$file" || grep -Fq 'Status: **APPROVED**' "$file"
@@ -63,6 +67,11 @@ jobs:
             exit 0
           fi
 
+          if ! grep -Fq 'Status: **APPROVED**' "$privacy"; then
+            echo 'APPROVED data-rights exercise requires Production Privacy/Legal decision to be APPROVED first.'
+            exit 1
+          fi
+
           for label in "${fields[@]}"; do
             value="$(sed -n "s/^- ${label}: \\*\\*\\(.*\\)\\*\\*$/\\1/p" "$file" | head -n1)"
             if [ -z "$value" ] || [ "$value" = 'UNSET' ]; then
@@ -71,7 +80,39 @@ jobs:
             fi
           done
 
-          echo 'Approved decision record shape is complete; actual controlled exercise evidence is still required separately.'
+          evidence_location="$(sed -n 's/^- Completion-evidence storage location: \\*\\*\\(.*\\)\\*\\*$/\\1/p' "$file" | head -n1)"
+          case "$evidence_location" in
+            https://*) ;;
+            *.md)
+              if [ ! -f "$evidence_location" ]; then
+                echo "Completion-evidence Markdown path does not exist: $evidence_location"
+                exit 1
+              fi
+              ;;
+            *)
+              echo 'Completion-evidence storage location must be an HTTPS reference or an existing repository Markdown file.'
+              exit 1
+              ;;
+          esac
+
+          approved_at="$(sed -n 's/^- Approved at: \\*\\*\\(.*\\)\\*\\*$/\\1/p' "$file" | head -n1)"
+          python3 - "$approved_at" <<'PY'
+          import datetime as dt
+          import sys
+
+          raw = sys.argv[1].strip()
+          try:
+              parsed = dt.datetime.fromisoformat(raw.replace('Z', '+00:00'))
+          except ValueError as exc:
+              raise SystemExit(f'Approved at must be an ISO-8601 timestamp: {raw}') from exc
+          if parsed.tzinfo is None:
+              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          now = dt.datetime.now(dt.timezone.utc)
+          if parsed.astimezone(dt.timezone.utc) > now + dt.timedelta(minutes=5):
+              raise SystemExit(f'Approved at cannot be materially in the future: {raw}')
+          PY
+
+          echo 'Approved decision record shape and prerequisite traceability are complete; actual controlled exercise evidence is still required separately.'
 
       - name: Write evidence boundary summary
         if: always()
@@ -79,7 +120,8 @@ jobs:
           {
             echo '## Data-rights exercise decision regression'
             echo
-            echo '- This workflow validates governance/evidence shape only.'
+            echo '- This workflow validates governance/evidence shape and prerequisite traceability only.'
+            echo '- APPROVED requires an approved Production Privacy/Legal decision, traceable evidence location and valid approval timestamp.'
             echo '- It does not execute access, correction, export, deletion or anonymization.'
             echo '- It does not create a data-rights PASS, legal approval, Public Beta completion or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
