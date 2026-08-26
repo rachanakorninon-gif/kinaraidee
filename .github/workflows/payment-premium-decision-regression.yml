@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/payment-premium-decision-regression.yml'
@@ -11,6 +12,7 @@ on:
     branches: ['main']
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/payment-premium-decision-regression.yml'
@@ -31,7 +33,9 @@ jobs:
         run: |
           set -euo pipefail
           file='PAYMENT-PREMIUM-DECISION.md'
+          privacy='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
           test -s "$file"
+          test -s "$privacy"
           grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
           required_fields=(
             'Payment provider:' 'Merchant/business account:' 'Supported currency/market:'
@@ -46,6 +50,22 @@ jobs:
             for marker in "${required_fields[@]}"; do grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }; done
           else
             if grep -q '\*\*UNSET\*\*' "$file"; then echo 'APPROVED payment decision still contains UNSET fields.'; exit 1; fi
+            grep -q '^Status: \*\*APPROVED\*\*$' "$privacy" || { echo 'Payment cannot be APPROVED before Production Privacy/Legal is APPROVED.'; exit 1; }
+            approved_at=$(sed -n 's/^- Approved at: //p' "$file")
+            python - "$approved_at" <<'PY'
+          import datetime as dt
+          import sys
+          value = sys.argv[1].strip().replace('**', '')
+          try:
+              parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+          except ValueError:
+              raise SystemExit('Approved at must be a valid ISO-8601 timestamp.')
+          if parsed.tzinfo is None:
+              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          now = dt.datetime.now(dt.timezone.utc)
+          if parsed > now + dt.timedelta(minutes=5):
+              raise SystemExit('Approved at must not be materially in the future.')
+          PY
           fi
           grep -Fq 'does not itself prove subscribe/renew/cancel/payment-failure execution' "$file"
           grep -Fq 'They do not prove a merchant account exists' "$file"
@@ -79,8 +99,6 @@ jobs:
           release='CURRENT-RELEASE.md'
           test -s "$release"
 
-          # The canonical release summary must continue to state that Commercial launch is blocked
-          # on real Payment/Premium provider + lifecycle evidence rather than planning/CI alone.
           grep -Fq 'Payment/Premium provider and real subscription lifecycle evidence' "$release" || {
             echo 'CURRENT-RELEASE.md is missing the Payment/Premium Commercial blocker.'
             exit 1
@@ -106,6 +124,7 @@ jobs:
             echo
             echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and Commercial payment checklist gates to remain open.'
             echo '- CURRENT-RELEASE.md must keep Payment/Premium as a Commercial blocker until provider-backed lifecycle evidence exists.'
+            echo '- APPROVED additionally requires Production Privacy/Legal approval and a valid approval timestamp.'
             echo '- APPROVED only establishes a reviewed decision record; provider-backed transaction and entitlement evidence remains separate.'
             echo '- Static CI success is not merchant onboarding, payment execution, conversion, revenue, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
