@@ -69,6 +69,8 @@ Current physical evidence: iPhone/Safari #1 on deployed v16 completed steps 1–
 8. ถ้า external control activation ใช้งานไม่ได้หรือไม่สามารถยืนยัน actual action ได้ ให้บันทึก `INCONCLUSIVE / TEST ENVIRONMENT` แทน PASS/FAIL ของ Kinaraidee
 9. Source/static/synthetic accessibility checks หรือการอ่าน accessible name อย่างเดียวไม่เพียงพอสำหรับ full NF-09 PASS
 
+Current physical evidence: iPhone/VoiceOver #1 on deployed PR #201 / v16 completed NF-09 on 2026-08-26. The accessibility environment was validated first with Calculator external-control activation; VoiceOver then focused and activated Surprise, announced `กำลังเลือกเมนูอาหารให้ กรุณารอสักครู่` exactly once according to the physical tester, reached a result, returned to ready state, and a second Surprise round started/completed successfully. Issue #57 is closed completed. Exact iPhone model, iOS and Safari/PWA versions were not captured and remain `not captured`. This PASS does not establish Android TalkBack or other-device acceptance.
+
 ## NF-10 Online recovery
 1. เปิดแอปขณะออฟไลน์หลังเคย cache app shell แล้ว
 2. กลับมาออนไลน์โดยไม่ปิดหน้า

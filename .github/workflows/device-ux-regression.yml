@@ -72,7 +72,7 @@ jobs:
           matrix='BETA-DEVICE-MATRIX.md'
           grep -Fq 'Current browser/PWA runtime candidate:' "$matrix"
           grep -Fq 'kinaraidee-beta-v16' "$matrix"
-          grep -Fq 'Verified v16 deployment evidence:' "$matrix"
+          grep -Eq 'Verified (v16|current) deployment evidence:' "$matrix"
           grep -Fq 'TC-06 เมนูโปรด | PASS (v16 restart)' "$matrix"
           grep -Fq 'Issue #177 closed completed' "$matrix"
           grep -Fq 'Historical v15 restart FAIL remains recorded' "$matrix"

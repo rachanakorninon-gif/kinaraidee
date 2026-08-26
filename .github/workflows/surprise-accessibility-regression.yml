@@ -52,9 +52,23 @@ jobs:
           grep -Fq "PWA cache marker: \`$marker\`" CURRENT-RUNTIME.md || { echo "CURRENT-RUNTIME.md does not match $marker"; exit 1; }
           echo "Accessibility source contracts preserved on $marker"
 
+      - name: Verify scoped physical NF-09 evidence remains recorded
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='BETA-DEVICE-MATRIX.md'
+          tests='BETA-NEW-FLOW-TESTS.md'
+          grep -Fq 'iPhone NF-09 VoiceOver = **PASS on deployed PR #201/v16 on 2026-08-26 for iPhone #1**' "$matrix"
+          grep -Fq 'Issue #57 closed completed' "$matrix"
+          grep -Fq 'Android TalkBack #1 ยังคง INCONCLUSIVE' "$matrix"
+          grep -Fq 'Current physical evidence: iPhone/VoiceOver #1 on deployed PR #201 / v16 completed NF-09 on 2026-08-26.' "$tests"
+          grep -Fq 'This PASS does not establish Android TalkBack or other-device acceptance.' "$tests"
+          echo 'Scoped physical VoiceOver NF-09 evidence boundary preserved'
+
       - name: Explain evidence boundary
         run: |
           echo 'Static accessibility regression guard passed.'
           echo 'The live region is required to remain outside hidden .screen containers during loading.'
           echo 'Visible-focus and reduced-motion source contracts are guarded for the main app and public forms.'
-          echo 'TalkBack/VoiceOver, keyboard interaction and motion-preference behavior still require real-device/assistive-technology acceptance before related issues can close.'
+          echo 'Physical NF-09 PASS is separately recorded only for the tested iPhone/VoiceOver session on PR #201/v16.'
+          echo 'Android TalkBack, keyboard interaction, reduced-motion behavior, second-device coverage and full Public Beta acceptance remain separate evidence gates.'
