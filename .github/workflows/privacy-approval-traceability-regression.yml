@@ -31,8 +31,12 @@ jobs:
 
           # Current NOT APPROVED state must remain policy-neutral and must not fabricate future evidence.
           if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            grep -Fq 'Service/controller legal identity: **UNSET**' "$file"
+            grep -Fq 'Production contact channel: **UNSET**' "$file"
             grep -Fq 'Privacy Policy URL/version: **UNSET**' "$file"
             grep -Fq 'Terms of Service URL/version: **UNSET**' "$file"
+            grep -Fq 'PDPA/legal reviewer or approver: **UNSET**' "$file"
+            grep -Fq 'Approved retention decision reference: **UNSET**' "$file"
             grep -Fq 'Approved at: **UNSET**' "$file"
             exit 0
           fi
@@ -42,9 +46,31 @@ jobs:
             exit 1
           }
 
-          privacy_value="$(sed -n 's/^- Privacy Policy URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
-          terms_value="$(sed -n 's/^- Terms of Service URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
-          approved_value="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+          field_value() {
+            local label="$1"
+            sed -n "s/^- ${label}: \\*\\*\\(.*\\)\\*\\*$/\\1/p" "$file" | head -n1
+          }
+
+          controller_value="$(field_value 'Service/controller legal identity')"
+          contact_value="$(field_value 'Production contact channel')"
+          privacy_value="$(field_value 'Privacy Policy URL/version')"
+          terms_value="$(field_value 'Terms of Service URL/version')"
+          reviewer_value="$(field_value 'PDPA/legal reviewer or approver')"
+          retention_value="$(field_value 'Approved retention decision reference')"
+          approved_value="$(field_value 'Approved at')"
+
+          for pair in \
+            "controller:$controller_value" \
+            "contact:$contact_value" \
+            "reviewer:$reviewer_value" \
+            "retention:$retention_value"; do
+            name="${pair%%:*}"
+            value="${pair#*:}"
+            if [ -z "$value" ] || [ "$value" = 'UNSET' ]; then
+              echo "APPROVED Privacy/Legal decision requires a traceable $name value."
+              exit 1
+            fi
+          done
 
           [[ "$privacy_value" =~ ^https://[^[:space:]]+ ]] || {
             echo 'APPROVED Privacy Policy reference must begin with a traceable HTTPS URL.'
@@ -54,6 +80,18 @@ jobs:
             echo 'APPROVED Terms reference must begin with a traceable HTTPS URL.'
             exit 1
           }
+
+          # The retention reference may be a traceable HTTPS record or a repository Markdown evidence/decision file.
+          if [[ "$retention_value" =~ ^https://[^[:space:]]+ ]]; then
+            :
+          else
+            retention_path="${retention_value%%[[:space:]#]*}"
+            retention_path="${retention_path//\`/}"
+            [[ "$retention_path" == *.md ]] && test -s "$retention_path" || {
+              echo 'APPROVED retention reference must be an HTTPS URL or an existing repository Markdown file.'
+              exit 1
+            }
+          fi
 
           node - "$approved_value" <<'NODE'
           const value = process.argv[2];
@@ -76,7 +114,7 @@ jobs:
           {
             echo '## Privacy approval traceability regression'
             echo
-            echo '- NOT APPROVED keeps Privacy Policy, Terms and approval timestamp fields UNSET.'
-            echo '- A future APPROVED state requires traceable HTTPS Privacy/Terms references and a parseable non-future approval timestamp.'
-            echo '- This guard validates evidence shape only; it does not review legal substance, publish policies, approve PDPA compliance, or create Commercial GO.'
+            echo '- NOT APPROVED keeps controller/contact, Privacy/Terms, legal reviewer, retention reference and approval timestamp fields UNSET.'
+            echo '- A future APPROVED state requires traceable controller/contact/reviewer values, HTTPS Privacy/Terms references, a traceable retention decision reference and a parseable non-future approval timestamp.'
+            echo '- This guard validates evidence shape only; it does not review legal substance, publish policies, approve PDPA compliance, execute retention cleanup, or create Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
