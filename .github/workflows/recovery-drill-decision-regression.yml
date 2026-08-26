@@ -84,7 +84,7 @@ jobs:
           test -s "$runbook"
 
           candidate_pr="$(sed -nE 's/^PR #([0-9]+) merged to .*current Group API source candidate.*/\1/p' "$evidence" | head -n1)"
-          candidate_sha="$(sed -nE 's/^PR #[0-9]+ merged to `([0-9a-f]{40})`.*/\1/p' "$evidence" | head -n1)"
+          candidate_sha="$(sed -nE 's/^PR #[0-9]+ merged to `main` at `([0-9a-f]{40})` and is the current Group API source candidate.*/\1/p' "$evidence" | head -n1)"
           deployed_version="$(sed -nE 's/^- Observed deployed version at inspection time: `([0-9]+)`.*/\1/p' "$evidence" | head -n1)"
           source_blob="$(sed -nE 's/.*repository blob `([0-9a-f]{40})`.*/\1/p' "$evidence" | head -n1)"
           bundle_sha="$(sed -nE 's/^- Supabase-reported deployed bundle SHA-256 at inspection time: `([0-9a-f]{64})`.*/\1/p' "$evidence" | head -n1)"
