@@ -5,6 +5,8 @@ on:
     paths:
       - 'RECOVERY-DRILL-DECISION.md'
       - 'RELEASE-CHECKLIST.md'
+      - 'ROLLBACK-RUNBOOK.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   push:
@@ -12,6 +14,8 @@ on:
     paths:
       - 'RECOVERY-DRILL-DECISION.md'
       - 'RELEASE-CHECKLIST.md'
+      - 'ROLLBACK-RUNBOOK.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'supabase/recovery-integrity-check.sql'
       - '.github/workflows/recovery-drill-decision-regression.yml'
   workflow_dispatch:
@@ -70,6 +74,34 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Group API rollback anchors match canonical deployment evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='GROUP-API-DEPLOYMENT-EVIDENCE.md'
+          runbook='ROLLBACK-RUNBOOK.md'
+          test -s "$evidence"
+          test -s "$runbook"
+
+          candidate_pr="$(sed -nE 's/^PR #([0-9]+) merged to .*current Group API source candidate.*/\1/p' "$evidence" | head -n1)"
+          candidate_sha="$(sed -nE 's/^PR #[0-9]+ merged to `([0-9a-f]{40})`.*/\1/p' "$evidence" | head -n1)"
+          deployed_version="$(sed -nE 's/^- Observed deployed version at inspection time: `([0-9]+)`.*/\1/p' "$evidence" | head -n1)"
+          source_blob="$(sed -nE 's/.*repository blob `([0-9a-f]{40})`.*/\1/p' "$evidence" | head -n1)"
+          bundle_sha="$(sed -nE 's/^- Supabase-reported deployed bundle SHA-256 at inspection time: `([0-9a-f]{64})`.*/\1/p' "$evidence" | head -n1)"
+          probe_run="$(sed -nE 's/^Canonical `Group API Live Observability Probe` run `([0-9]+)`.*/\1/p' "$evidence" | head -n1)"
+
+          for value in "$candidate_pr" "$candidate_sha" "$deployed_version" "$source_blob" "$bundle_sha" "$probe_run"; do
+            test -n "$value"
+          done
+
+          grep -Fq "PR #$candidate_pr / \`$candidate_sha\`" "$runbook"
+          grep -Fq "repository source blob: \`$source_blob\`" "$runbook"
+          grep -Fq "ACTIVE version $deployed_version" "$runbook"
+          grep -Fq "bundle SHA-256: \`$bundle_sha\`" "$runbook"
+          grep -Fq "run \`$probe_run\`" "$runbook"
+          grep -Fq 'GROUP-API-DEPLOYMENT-EVIDENCE.md' "$runbook"
+          grep -Fq 'PROCEDURE WRITTEN / NOT YET DRILL-VERIFIED' "$runbook"
+
       - name: Verify linked integrity check remains read-only
         shell: bash
         run: |
@@ -93,6 +125,7 @@ jobs:
             echo
             echo '- Guards recovery/rollback governance fields from fabricated approval or RPO/RTO values.'
             echo '- Keeps Commercial Release Checklist recovery/drill gates open while the canonical decision is NOT APPROVED.'
+            echo '- Derives current Group API deployment anchors from canonical evidence and requires the rollback runbook to match them.'
             echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
             echo '- Static CI success is not backup availability, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
