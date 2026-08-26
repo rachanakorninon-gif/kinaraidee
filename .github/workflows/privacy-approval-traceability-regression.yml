@@ -42,16 +42,9 @@ jobs:
             exit 1
           }
 
-          privacy_line="$(grep -F 'Privacy Policy URL/version:' "$file" | head -n1)"
-          terms_line="$(grep -F 'Terms of Service URL/version:' "$file" | head -n1)"
-          approved_line="$(grep -F 'Approved at:' "$file" | head -n1)"
-
-          privacy_value="${privacy_line#*- Privacy Policy URL/version: }"
-          terms_value="${terms_line#*- Terms of Service URL/version: }"
-          approved_value="${approved_line#*- Approved at: }"
-          privacy_value="${privacy_value#**}"; privacy_value="${privacy_value%**}"
-          terms_value="${terms_value#**}"; terms_value="${terms_value%**}"
-          approved_value="${approved_value#**}"; approved_value="${approved_value%**}"
+          privacy_value="$(sed -n 's/^- Privacy Policy URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+          terms_value="$(sed -n 's/^- Terms of Service URL\/version: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
+          approved_value="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file" | head -n1)"
 
           [[ "$privacy_value" =~ ^https://[^[:space:]]+ ]] || {
             echo 'APPROVED Privacy Policy reference must begin with a traceable HTTPS URL.'
