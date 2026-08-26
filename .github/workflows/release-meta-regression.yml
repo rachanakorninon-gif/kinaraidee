@@ -68,5 +68,5 @@ jobs:
           esac
           grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS' "$file"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$file"
-          grep -Fq 'does **not** imply' "$file"
+          grep -Eq 'does( \*\*not\*\*| not) imply' "$file"
           grep -Fq 'Commercial GO' "$file"
