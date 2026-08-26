@@ -1,0 +1,81 @@
+name: Data Rights Release Summary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'DATA-RIGHTS-EXERCISE-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/data-rights-release-summary-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'DATA-RIGHTS-EXERCISE-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/data-rights-release-summary-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  data-rights-release-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify data-rights evidence boundary in release documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='DATA-RIGHTS-EXERCISE-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          test -s "$decision"
+          test -s "$release"
+          test -s "$checklist"
+
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+          grep -Fq 'Public Beta remains **NOT COMPLETE**' "$release"
+          grep -Fq -- '- [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้' "$checklist"
+
+          if grep -Fq 'Status: **NOT APPROVED**' "$decision"; then
+            fields=(
+              'Exercise owner'
+              'Privacy/Legal reviewer or approver'
+              'Safe exercise environment'
+              'Approved synthetic/production-like fixture source'
+              'Identity-verification method category'
+              'Data classes in scope'
+              'Access/export verification method'
+              'Correction verification method'
+              'Deletion/anonymization verification method'
+              'Dependency/cascade verification method'
+              'Exception/hold review method'
+              'Completion-evidence storage location'
+              'Approved at'
+            )
+            for label in "${fields[@]}"; do
+              grep -Fq -- "- ${label}: **UNSET**" "$decision"
+            done
+            echo 'Data-rights exercise remains NOT APPROVED; release/checklist gates remain open.'
+            exit 0
+          fi
+
+          grep -Fq 'Status: **APPROVED**' "$decision"
+          grep -Fq 'actual controlled execution evidence remains separate' "$decision"
+          grep -Fq 'Commercial GO' "$decision"
+          echo 'Data-rights decision may be approved, but release documents still require separate execution and Commercial evidence.'
+
+      - name: Write evidence boundary summary
+        if: always()
+        run: |
+          {
+            echo '## Data-rights release-summary regression'
+            echo
+            echo '- This workflow checks consistency between the canonical data-rights decision and release/checklist boundaries.'
+            echo '- It does not execute access, export, correction, deletion or anonymization.'
+            echo '- It does not create user-request, Privacy/Legal, Beta, payment, partner, revenue or Commercial GO evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
