@@ -1,0 +1,80 @@
+name: Data Retention Decision Index Regression
+
+on:
+  pull_request:
+    paths:
+      - 'DATA-RETENTION-DECISION-INDEX.md'
+      - 'GROUP-API-RETENTION-DECISION.md'
+      - 'PARTNER-RETENTION-DECISION.md'
+      - 'DATA-GOVERNANCE-DRAFT.md'
+      - '.github/workflows/data-retention-decision-index-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'DATA-RETENTION-DECISION-INDEX.md'
+      - 'GROUP-API-RETENTION-DECISION.md'
+      - 'PARTNER-RETENTION-DECISION.md'
+      - 'DATA-GOVERNANCE-DRAFT.md'
+      - '.github/workflows/data-retention-decision-index-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  retention-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify retention decision boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          index='DATA-RETENTION-DECISION-INDEX.md'
+          group='GROUP-API-RETENTION-DECISION.md'
+          partner='PARTNER-RETENTION-DECISION.md'
+          governance='DATA-GOVERNANCE-DRAFT.md'
+
+          for file in "$index" "$group" "$partner" "$governance"; do
+            test -s "$file" || { echo "Missing required file: $file"; exit 1; }
+          done
+
+          grep -q 'COMMERCIAL PRIVACY GATE NOT PASSED' "$index"
+          grep -q 'GROUP-API-RETENTION-DECISION.md' "$index"
+          grep -q 'PARTNER-RETENTION-DECISION.md' "$index"
+          grep -q 'DATA-GOVERNANCE-DRAFT.md' "$index"
+          grep -q 'This index asserts no user count' "$index"
+
+          group_status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$group" | head -n1)"
+          partner_status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$partner" | head -n1)"
+
+          test -n "$group_status" || { echo 'Unable to parse Group retention status'; exit 1; }
+          test -n "$partner_status" || { echo 'Unable to parse Partner retention status'; exit 1; }
+
+          if [ "$group_status" = 'NOT APPROVED' ]; then
+            grep -q '| Group rooms / votes | .* | \*\*NOT APPROVED\*\* |' "$index"
+            grep -q 'Approved retention period after `expires_at`: \*\*UNSET\*\*' "$group"
+            grep -q 'Privacy Policy / Terms wording reference: \*\*UNSET\*\*' "$group"
+          else
+            [ "$group_status" = 'APPROVED' ] || { echo "Unexpected Group status: $group_status"; exit 1; }
+            ! grep -q '\*\*UNSET\*\*' "$group" || { echo 'Approved Group decision still contains UNSET fields'; exit 1; }
+          fi
+
+          if [ "$partner_status" = 'NOT APPROVED' ]; then
+            grep -q '| Partner clicks / conversions / restaurant search demand | .* | \*\*NOT APPROVED\*\* |' "$index"
+            grep -q '`partner_clicks` retention period: \*\*UNSET\*\*' "$partner"
+            grep -q '`partner_conversions` retention period: \*\*UNSET\*\*' "$partner"
+            grep -q '`restaurant_search_demand` retention period: \*\*UNSET\*\*' "$partner"
+            grep -q 'Privacy/Terms reference: \*\*UNSET\*\*' "$partner"
+          else
+            [ "$partner_status" = 'APPROVED' ] || { echo "Unexpected Partner status: $partner_status"; exit 1; }
+            ! grep -q '\*\*UNSET\*\*' "$partner" || { echo 'Approved Partner decision still contains UNSET fields'; exit 1; }
+          fi
+
+          grep -q 'TBD.*ยังไม่ได้อนุมัติ' "$governance"
+          grep -q 'Commercial legal/privacy gate ยัง \*\*NOT PASSED\*\*' "$governance"
+
+          echo "Group retention status: $group_status"
+          echo "Partner retention status: $partner_status"
+          echo 'Retention decision index boundaries are consistent.'
