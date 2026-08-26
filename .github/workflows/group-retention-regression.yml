@@ -70,18 +70,24 @@ jobs:
           decision='GROUP-API-RETENTION-DECISION.md'
           test -s "$decision"
 
+          grep -Fq 'Current Group API v6 behavior rejects `get_votes` with `410 room_closed`' "$decision"
+          grep -Fq 'not an approved retention/privacy policy' "$decision"
+
           if grep -Fq 'Status: **NOT APPROVED**' "$decision"; then
             grep -Fq 'Approved retention period after `expires_at`: **UNSET**' "$decision"
+            grep -Fq 'Approved `get_votes` behavior after `expires_at`: **UNSET**' "$decision"
             grep -Fq 'Decision owner: **UNSET**' "$decision"
             grep -Fq 'Privacy Policy / Terms wording reference: **UNSET**' "$decision"
+            grep -Fq 'GET_VOTES POLICY NOT APPROVED' "$decision"
             grep -Fq 'CLEANUP NOT IMPLEMENTED / CLEANUP NOT VERIFIED' "$decision"
-            echo 'Retention decision is explicitly NOT APPROVED; no policy value is inferred.'
+            echo 'Retention decision is explicitly NOT APPROVED; no retention or get_votes policy value is inferred.'
           elif grep -Fq 'Status: **APPROVED**' "$decision"; then
-            if grep -Eq '^(\- )?(Decision owner|Decision date|Approved retention period after `expires_at`|Scope|Privacy Policy / Terms wording reference|Operations owner for cleanup): \*\*UNSET\*\*$' "$decision"; then
+            if grep -Eq '^(\- )?(Decision owner|Decision date|Approved retention period after `expires_at`|Approved `get_votes` behavior after `expires_at`|Scope|Privacy Policy / Terms wording reference|Operations owner for cleanup): \*\*UNSET\*\*$' "$decision"; then
               echo 'Retention decision says APPROVED but required approval fields remain UNSET.'
               exit 1
             fi
-            echo 'Retention decision is marked APPROVED with required fields populated; cleanup verification remains a separate gate.'
+            grep -Fq '`get_votes` expiry/retention behavior matches the approved product/privacy decision' "$decision"
+            echo 'Retention decision is marked APPROVED with required fields populated; implementation and cleanup verification remain separate gates.'
           else
             echo 'Retention decision status must be exactly NOT APPROVED or APPROVED.'
             exit 1
@@ -97,7 +103,8 @@ jobs:
             echo '- Ensures the committed retention diagnostic remains read-only and contains no mutation/DDL statements.'
             echo '- Preserves checks for expired vs active rooms, vote relationships and orphan detection.'
             echo '- Requires retention evidence to keep policy/cleanup/Commercial boundaries explicit.'
-            echo '- Requires an explicit retention decision record; NOT APPROVED cannot silently acquire an inferred retention window.'
+            echo '- Requires an explicit retention decision record; NOT APPROVED cannot silently acquire an inferred retention window or get_votes policy.'
+            echo '- Records current get_votes 410-on-expiry behavior as implementation fact only, not approved policy.'
             echo '- APPROVED still does not equal cleanup PASS; destructive implementation and verification remain separate evidence gates.'
             echo '- This is static repository evidence only.'
             echo '- It does not execute cleanup, verify cascade deletion, prove Privacy/Legal compliance, or mark Commercial GO.'
