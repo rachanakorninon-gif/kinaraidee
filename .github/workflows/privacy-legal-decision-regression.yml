@@ -28,57 +28,118 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify Production Privacy Legal decision remains unapproved
+      - name: Validate Production Privacy Legal decision state
         shell: bash
         run: |
           set -euo pipefail
           file='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
           test -s "$file"
-          grep -Fq 'Status: **NOT APPROVED**' "$file"
-          grep -Fq 'Service/controller legal identity: **UNSET**' "$file"
-          grep -Fq 'Production contact channel: **UNSET**' "$file"
-          grep -Fq 'Privacy Policy URL/version: **UNSET**' "$file"
-          grep -Fq 'Terms of Service URL/version: **UNSET**' "$file"
-          grep -Fq 'PDPA/legal reviewer or approver: **UNSET**' "$file"
-          grep -Fq 'Approved retention decision reference: **UNSET**' "$file"
-          grep -Fq 'Payment-provider disclosure review: **UNSET**' "$file"
-          grep -Fq 'Partner-tracking disclosure/agreement review: **UNSET**' "$file"
+
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
+          required_fields=(
+            'Service/controller legal identity:'
+            'Production contact channel:'
+            'Privacy Policy URL/version:'
+            'Terms of Service URL/version:'
+            'PDPA/legal reviewer or approver:'
+            'Processing-purpose/legal-basis review:'
+            'Approved retention decision reference:'
+            'Data-rights procedure owner:'
+            'Supabase/vendor disclosure review:'
+            'Maps/location disclosure review:'
+            'Payment-provider disclosure review:'
+            'Partner-tracking disclosure/agreement review:'
+            'Approved at:'
+          )
+          for marker in "${required_fields[@]}"; do
+            grep -Fq -- "$marker" "$file" || { echo "Missing Privacy/Legal decision field: $marker"; exit 1; }
+          done
           grep -Fq 'They do not prove Production Privacy Policy publication' "$file"
 
-          if grep -Eqi '^Status:[[:space:]]*\*\*APPROVED\*\*' "$file"; then
-            echo 'Production Privacy/Legal must not be marked APPROVED without reviewed real evidence.'
-            exit 1
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            required_unset=(
+              'Service/controller legal identity: **UNSET**'
+              'Production contact channel: **UNSET**'
+              'Privacy Policy URL/version: **UNSET**'
+              'Terms of Service URL/version: **UNSET**'
+              'PDPA/legal reviewer or approver: **UNSET**'
+              'Processing-purpose/legal-basis review: **UNSET**'
+              'Approved retention decision reference: **UNSET**'
+              'Data-rights procedure owner: **UNSET**'
+              'Supabase/vendor disclosure review: **UNSET**'
+              'Maps/location disclosure review: **UNSET**'
+              'Payment-provider disclosure review: **UNSET**'
+              'Partner-tracking disclosure/agreement review: **UNSET**'
+              'Approved at: **UNSET**'
+            )
+            for marker in "${required_unset[@]}"; do
+              grep -Fq -- "$marker" "$file" || { echo "NOT APPROVED Privacy/Legal decision contains inferred/fabricated value or missing UNSET marker: $marker"; exit 1; }
+            done
           fi
 
-      - name: Verify Commercial checklist keeps Privacy Legal gates open
+          if grep -q '^Status: \*\*APPROVED\*\*$' "$file"; then
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED Privacy/Legal decision still contains UNSET fields.'
+              exit 1
+            fi
+            grep -Fq 'Do not change Status to **APPROVED** until every applicable field above contains a real reviewed value' "$file"
+            grep -Fq 'If a field is genuinely not applicable, record the reviewed rationale explicitly' "$file"
+          fi
+
+      - name: Verify Commercial checklist respects Privacy Legal decision boundary
         shell: bash
         run: |
           set -euo pipefail
-          file='RELEASE-CHECKLIST.md'
-          test -s "$file"
-          grep -Fq -- '- [ ] Privacy Policy ฉบับ Production เผยแพร่จริง' "$file"
-          grep -Fq -- '- [ ] Terms of Service เผยแพร่จริง' "$file"
-          grep -Fq -- '- [ ] ช่องทางติดต่อเจ้าของบริการจริง' "$file"
-          grep -Fq -- '- [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้' "$file"
+          decision='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+          checklist='RELEASE-CHECKLIST.md'
+          test -s "$checklist"
 
-          for item in \
-            '- [x] Privacy Policy ฉบับ Production เผยแพร่จริง' \
-            '- [x] Terms of Service เผยแพร่จริง' \
-            '- [x] ช่องทางติดต่อเจ้าของบริการจริง' \
-            '- [x] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้'; do
-            if grep -Fq -- "$item" "$file"; then
-              echo "Commercial Privacy/Legal checklist item is marked complete while canonical decision is NOT APPROVED: $item"
-              exit 1
-            fi
-          done
+          open_items=(
+            '- [ ] Privacy Policy ฉบับ Production เผยแพร่จริง'
+            '- [ ] Terms of Service เผยแพร่จริง'
+            '- [ ] ช่องทางติดต่อเจ้าของบริการจริง'
+            '- [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้'
+          )
+          checked_items=(
+            '- [x] Privacy Policy ฉบับ Production เผยแพร่จริง'
+            '- [x] Terms of Service เผยแพร่จริง'
+            '- [x] ช่องทางติดต่อเจ้าของบริการจริง'
+            '- [x] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้'
+          )
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            for item in "${open_items[@]}"; do
+              grep -Fq -- "$item" "$checklist" || { echo "Commercial Privacy/Legal checklist gate must remain open while decision is NOT APPROVED: $item"; exit 1; }
+            done
+            for item in "${checked_items[@]}"; do
+              if grep -Fq -- "$item" "$checklist"; then
+                echo "Commercial Privacy/Legal checklist item is marked complete while canonical decision is NOT APPROVED: $item"
+                exit 1
+              fi
+            done
+          else
+            # Approval makes checklist completion eligible for evidence review; it does not auto-check anything.
+            grep -Fq 'Privacy Policy ฉบับ Production' "$checklist"
+            grep -Fq 'Terms of Service' "$checklist"
+            grep -Fq 'ช่องทางติดต่อเจ้าของบริการจริง' "$checklist"
+            grep -Fq 'retention/deletion' "$checklist"
+          fi
 
       - name: Verify retention approval is not inferred
         shell: bash
         run: |
           set -euo pipefail
-          test -s 'DATA-RETENTION-DECISION-INDEX.md'
-          grep -Fq 'NOT APPROVED' 'DATA-RETENTION-DECISION-INDEX.md'
-          grep -Fq 'NOT VERIFIED' 'DATA-RETENTION-DECISION-INDEX.md'
+          decision='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+          retention='DATA-RETENTION-DECISION-INDEX.md'
+          test -s "$retention"
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            grep -Fq 'NOT APPROVED' "$retention"
+            grep -Fq 'NOT VERIFIED' "$retention"
+          fi
+
+          # Even after Privacy/Legal approval, retention execution remains a separate evidence gate.
+          grep -Fq 'cleanup' "$retention"
 
       - name: Record evidence boundary
         if: always()
@@ -87,8 +148,9 @@ jobs:
           {
             echo '## Privacy / Legal decision regression'
             echo
-            echo '- Keeps Production Privacy/Legal status NOT APPROVED until real reviewed identities, documents and decisions exist.'
-            echo '- Keeps Commercial checklist Privacy/Terms/contact/retention gates open while approval is absent.'
-            echo '- Re-checks retention is not promoted from policy-neutral planning or dry-run evidence.'
-            echo '- Static CI success is not Production Privacy Policy publication, Terms acceptance, legal/PDPA approval, approved retention, Public Beta PASS, or Commercial GO.'
+            echo '- Supports both NOT APPROVED and future APPROVED decision states without weakening evidence requirements.'
+            echo '- NOT APPROVED requires canonical decision fields to remain UNSET and Commercial Privacy/Terms/contact/retention checklist gates to remain open.'
+            echo '- APPROVED is rejected while any UNSET decision field remains; approval only makes checklist completion eligible for separate evidence review.'
+            echo '- Retention cleanup/execution remains a separate evidence gate and is not inferred from Privacy/Legal approval.'
+            echo '- Static CI success is not Production Privacy Policy publication, Terms acceptance, legal/PDPA approval, approved retention execution, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
