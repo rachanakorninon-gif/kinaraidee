@@ -1,0 +1,82 @@
+name: Payment Premium Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/payment-premium-decision-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/payment-premium-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decision-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Payment Premium decision state
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PAYMENT-PREMIUM-DECISION.md'
+          test -s "$file"
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
+          required_fields=(
+            'Payment provider:' 'Merchant/business account:' 'Supported currency/market:'
+            'Premium price/billing cadence:' 'Free vs Premium entitlement definition:'
+            'Provider-supported sandbox/test environment:' 'Server-side entitlement/webhook verification design:'
+            'Renewal/cancel/payment-failure behavior:' 'Refund/dispute/chargeback process:'
+            'Transaction audit/reconciliation owner:' 'Privacy/Terms/payment disclosure reference:'
+            'Commercial owner/approver:' 'Approved at:'
+          )
+          for marker in "${required_fields[@]}"; do grep -Fq -- "$marker" "$file" || { echo "Missing payment decision field: $marker"; exit 1; }; done
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for marker in "${required_fields[@]}"; do grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }; done
+          else
+            if grep -q '\*\*UNSET\*\*' "$file"; then echo 'APPROVED payment decision still contains UNSET fields.'; exit 1; fi
+          fi
+          grep -Fq 'does not itself prove subscribe/renew/cancel/payment-failure execution' "$file"
+          grep -Fq 'They do not prove a merchant account exists' "$file"
+
+      - name: Verify Commercial checklist respects payment decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PAYMENT-PREMIUM-DECISION.md'
+          checklist='RELEASE-CHECKLIST.md'
+          test -s "$checklist"
+          open_items=(
+            '- [ ] เลือก payment provider / merchant account จริง'
+            '- [ ] กำหนดราคา Premium จริงและเงื่อนไข Free/Premium ชัดเจน'
+            '- [ ] ทดสอบ subscribe / renew / cancel / payment failure ใน sandbox หรือ environment ที่ provider รองรับ'
+            '- [ ] กำหนด entitlement ระหว่าง Free และ Premium'
+            '- [ ] webhook/payment status handling ป้องกันการให้สิทธิ์จาก client อย่างเดียว'
+            '- [ ] มี transaction ID / audit trail / reconciliation ที่ตรวจสอบได้'
+            '- [ ] refund/cancel policy สอดคล้องกับ flow ที่ระบบรองรับ'
+          )
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            for item in "${open_items[@]}"; do grep -Fq -- "$item" "$checklist" || { echo "Payment checklist gate must remain open: $item"; exit 1; }; done
+          fi
+          grep -Fq -- '- [ ] ห้ามเปิดรับเงินจริงหาก payment gate ข้อใดที่จำเป็นยังไม่ผ่าน' "$checklist"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Payment / Premium decision regression'
+            echo
+            echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and Commercial payment checklist gates to remain open.'
+            echo '- APPROVED only establishes a reviewed decision record; provider-backed transaction and entitlement evidence remains separate.'
+            echo '- Static CI success is not merchant onboarding, payment execution, conversion, revenue, Public Beta PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
