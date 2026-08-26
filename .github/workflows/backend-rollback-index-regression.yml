@@ -1,0 +1,76 @@
+name: Backend Rollback Index Regression
+
+on:
+  pull_request:
+    paths:
+      - 'BACKEND-ROLLBACK-INDEX.md'
+      - 'ROLLBACK-RUNBOOK.md'
+      - 'PARTNER-API-ROLLBACK-REFERENCE.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'RECOVERY-DRILL-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/backend-rollback-index-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'BACKEND-ROLLBACK-INDEX.md'
+      - 'ROLLBACK-RUNBOOK.md'
+      - 'PARTNER-API-ROLLBACK-REFERENCE.md'
+      - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
+      - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'RECOVERY-DRILL-DECISION.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/backend-rollback-index-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rollback-index-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify backend rollback index remains evidence-bound
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='BACKEND-ROLLBACK-INDEX.md'
+          test -s "$file"
+          grep -Fq 'Status: **REFERENCE INDEX WRITTEN / NOT DRILL-VERIFIED**' "$file"
+          grep -Fq '`ROLLBACK-RUNBOOK.md`' "$file"
+          grep -Fq '`GROUP-API-DEPLOYMENT-EVIDENCE.md`' "$file"
+          grep -Fq '`PARTNER-API-ROLLBACK-REFERENCE.md`' "$file"
+          grep -Fq '`PARTNER-API-HARDENING-EVIDENCE.md`' "$file"
+          grep -Fq '`RECOVERY-DRILL-DECISION.md`' "$file"
+          grep -Fq '`RELEASE-CHECKLIST.md`' "$file"
+          grep -Fq 'PROCEDURE WRITTEN / NOT YET DRILL-VERIFIED' "$file"
+          grep -Fq 'REFERENCE WRITTEN / NOT DRILL-VERIFIED' "$file"
+          grep -Fq 'Partner API rollback success remains **NOT VERIFIED**' "$file"
+          grep -Fq 'Static documentation or CI success for this index is **not**' "$file"
+
+      - name: Verify source documents keep rollback drill open
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'PROCEDURE WRITTEN / NOT YET DRILL-VERIFIED' ROLLBACK-RUNBOOK.md
+          grep -Fq 'Status: **REFERENCE WRITTEN / NOT DRILL-VERIFIED**' PARTNER-API-ROLLBACK-REFERENCE.md
+          grep -Fq 'Partner API rollback เป็น **NOT VERIFIED**' PARTNER-API-ROLLBACK-REFERENCE.md
+          grep -Fq 'Status: **NOT APPROVED**' RECOVERY-DRILL-DECISION.md
+          grep -Fq -- '- [ ] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ' RELEASE-CHECKLIST.md
+          grep -Fq -- '- [ ] Rollback procedure ถูกทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและมี Evidence Record จริง' RELEASE-CHECKLIST.md
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Backend rollback index regression'
+            echo
+            echo '- Keeps Group and Partner rollback references discoverable from one evidence-bound index.'
+            echo '- Keeps recovery approval and rollback-drill gates open until real approved/executed evidence exists.'
+            echo '- Static CI success is not backup/restore availability, rollback execution, measured RPO/RTO, device acceptance, Public Beta PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"

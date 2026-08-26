@@ -16,6 +16,7 @@
 - Core flow “ไม่รู้เลย” / recommendation / nearby restaurant ใช้งานไม่ได้ใน release ล่าสุด
 - Service Worker ทำให้ผู้ใช้ค้างกับ app shell ที่เสียหรือ update ไม่สำเร็จ
 - Group API/backend release ล่าสุดทำให้ create/join/vote/read/close contract เสีย หรือเพิ่ม privacy/security exposure
+- Partner API/backend release ล่าสุดทำให้ discovery/tracking/admin/conversion contract เสีย หรือเพิ่ม privacy/security exposure
 - พบการเผยแพร่ development-only file, secret หรือข้อมูลที่ไม่ควร public
 - พบ privacy/security regression ที่ควรหยุดการกระจาย release ทันที
 - Live smoke, backend probe หรือ real-device evidence พบ Blocker/Critical ที่เกิดจาก release ล่าสุด
@@ -108,6 +109,44 @@ Group API เป็น public Edge Function โดย `verify_jwt=false` เพ�
 - application structured-event observability/monitoring baseline
 - frontend/PWA regression หรืออุปกรณ์ที่ cache runtime เก่า
 
+### Partner API Edge Function rollback path
+
+Partner API มี public discovery/tracking paths และ privileged owner/admin paths จึงต้องรักษาทั้ง anonymous product behavior และ authorization/security boundaries ระหว่าง rollback
+
+Canonical current anchors อยู่ใน `PARTNER-API-ROLLBACK-REFERENCE.md` ซึ่งปัจจุบันบันทึก:
+
+- current Partner API source candidate: PR #126 / `3bc28e0eac80cf45cbb4b40f460dea95d616c830`
+- current repository source blob: `3b4a1dfc7a61f321cd47c3fbe0ae650c0d088619`
+- current inspected deployment: Supabase `partner-api` ACTIVE version 15
+- current inspected bundle SHA-256: `8adde9353c1037db0a519b7f0cba6d949dd039d8b0346fd98e892389818439bb`
+- canonical rejection-only live verification: run `32675596758` on `5ca280f4832e0d0fc1aa7057bb68f4df001d4067`
+
+ค่าข้างต้นเป็น evidence anchors เท่านั้น ไม่ใช่ rollback target อัตโนมัติ. ก่อน incident rollback จริงต้องตรวจ `CURRENT-RELEASE.md`, `PARTNER-API-HARDENING-EVIDENCE.md`, `PARTNER-API-ROLLBACK-REFERENCE.md`, repository source ปัจจุบัน, Supabase deployment และ incident scope ใหม่เสมอ.
+
+**ขั้นตอน Partner API rollback:**
+
+1. บันทึก bad source SHA, current Supabase function version/status, source blob/bundle hash และ incident symptoms ก่อนเปลี่ยน Production
+2. เลือก rollback source จาก repository commit ที่ trace ได้และมี contract/security evidence เหมาะสม; ห้ามเลือกเพียงเพราะเลข version ต่ำกว่า
+3. เปรียบเทียบ bad source → rollback source โดยตรวจ method/action contract, owner/admin authorization, bounded request-size handling, UTF-8/JSON rejection behavior, response security headers, coordinate validation assumptions และ privacy-safe logging boundary
+4. ถ้า rollback source เก่ากว่าจะไม่มี hardening ใหม่บางส่วน ให้บันทึก security trade-off ก่อน deploy
+5. Deploy source ที่เลือกโดยห้ามนำ credential/service-role secret มาใส่ repository หรือ logs
+6. Inspect function หลัง deploy: status/version, source/deployment parity และ source/blob/bundle hash ใหม่
+7. เริ่ม verification ด้วย rejection-only/non-mutating checks ก่อน successful product-action tests
+8. ถ้า incident scope กระทบ `find_partners`, `track_search`, `track_click`, owner/admin actions หรือ conversion paths ให้ใช้ controlled positive-flow evidence แยกต่างหาก และห้ามนับ test activity เป็น partner/conversion/revenue evidence
+9. Re-run Security/Performance Advisor ตามขอบเขต backend/DDL change ที่เกี่ยวข้อง
+10. อัปเดต canonical Partner API deployment/rollback evidence และ incident tracker โดยคง historical evidence ตามจริง
+
+**สิ่งที่ Partner API rollback ไม่แก้โดยอัตโนมัติ:**
+
+- approved Partner retention/cleanup policy
+- complete anonymous rate/quota/abuse-control strategy
+- monitoring owner/channel/escalation/SLA decision
+- actual alert-delivery verification
+- leaked/compromised credentials
+- incompatible database/schema changes
+- partner agreement, conversion/reconciliation, payment หรือ revenue readiness
+- Production Privacy/Legal approval
+
 ## Verification หลัง rollback
 
 ต้องแยกหลักฐาน automated, backend และ real-device ออกจากกัน
@@ -135,7 +174,7 @@ Group API เป็น public Edge Function โดย `verify_jwt=false` เพ�
 - rollback release SHA/cache generation
 - core flow ที่ตรวจ
 - PWA update/reopen/offline behavior ตามกรณี
-- backend/group flow ที่ได้รับผลกระทบตาม incident scope
+- backend/group/partner flow ที่ได้รับผลกระทบตาม incident scope
 - PASS/FAIL/N/A พร้อม defect link หาก FAIL
 
 ## Evidence Record
@@ -174,7 +213,8 @@ Group API เป็น public Edge Function โดย `verify_jwt=false` เพ�
 2. pipeline/verification ที่จำเป็นไม่มี FAIL ที่ถูกละเลย
 3. ถ้า drill ครอบคลุม frontend/PWA: public deployment หลัง rollback ถูกตรวจจริง
 4. ถ้า drill ครอบคลุม Group API/backend: post-deploy source/version parity และ scoped live behavior ถูกตรวจจริง
-5. ถ้า drill ครอบคลุม PWA ต้องมี real-device update evidence อย่างน้อยหนึ่งอุปกรณ์ที่เกี่ยวข้อง
-6. มี Evidence Record ครบและไม่มีการเติม PASS จากการคาดเดา
+5. ถ้า drill ครอบคลุม Partner API/backend: post-deploy source/version parity และ scoped rejection behavior ถูกตรวจจริง; controlled positive-flow evidence เพิ่มเมื่อ incident scope ต้องใช้
+6. ถ้า drill ครอบคลุม PWA ต้องมี real-device update evidence อย่างน้อยหนึ่งอุปกรณ์ที่เกี่ยวข้อง
+7. มี Evidence Record ครบและไม่มีการเติม PASS จากการคาดเดา
 
 จนกว่าจะครบทุกข้อ ให้คงสถานะ rollback drill เป็น **NOT VERIFIED** ใน `RELEASE-CHECKLIST.md`
