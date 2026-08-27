@@ -38,6 +38,7 @@ jobs:
           test -s "$release"
           test -s "$checklist"
 
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$decision"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
           grep -Eq 'Commercial.*\*\*NO-GO\*\*' "$release"
 
@@ -47,11 +48,14 @@ jobs:
               echo 'Release summary appears to promote Production access while the canonical decision is NOT APPROVED.'
               exit 1
             fi
-          else
+          elif grep -q '^Status: \*\*APPROVED\*\*$' "$decision"; then
             if grep -q '\*\*UNSET\*\*' "$decision"; then
               echo 'APPROVED Production access decision still contains UNSET fields.'
               exit 1
             fi
+          else
+            echo 'Production access decision has an unsupported status.'
+            exit 1
           fi
 
           grep -Fq 'do not establish a complete Production access roster' "$decision"
@@ -63,6 +67,7 @@ jobs:
           {
             echo '## Production access release-summary regression'
             echo
+            echo '- Only NOT APPROVED and APPROVED are accepted canonical Production-access states.'
             echo '- A NOT APPROVED Production-access decision keeps deploy/access ownership gates open.'
             echo '- Repository governance evidence cannot be promoted into Production/Supabase access-review PASS.'
             echo '- Even a future APPROVED access decision does not by itself establish Public Beta completion or Commercial GO.'
