@@ -26,10 +26,11 @@ Complete this section only from an explicit product/privacy/operations decision 
 - Privacy Policy / Terms wording reference: **UNSET**
 - Operations owner for cleanup: **UNSET**
 - Review / reapproval date or trigger: **UNSET**
+- Approved at: **UNSET**
 
 ## Approval rule
 
-The status above may change to **APPROVED** only after all required decision fields are populated from a real approved decision. Repository automation, schema defaults, historical row counts, current API behavior, synthetic test data, or assistant inference must not populate approval values.
+The status above may change to **APPROVED** only after all required decision fields are populated from a real approved decision. `Approved at` must be a timezone-qualified ISO-8601 timestamp representing the actual approval time and must not be fabricated or set to a future time. Repository automation, schema defaults, historical row counts, current API behavior, synthetic test data, or assistant inference must not populate approval values.
 
 Until status is APPROVED:
 
@@ -56,5 +57,7 @@ Approval alone is not cleanup PASS. A later cleanup implementation must separate
 ## Evidence boundary
 
 Current status remains **NOT APPROVED / CLEANUP NOT IMPLEMENTED / CLEANUP NOT VERIFIED / GET_VOTES POLICY NOT APPROVED**.
+
+An approval timestamp is decision traceability only. It does not prove cleanup execution, deletion/anonymization results, Privacy/Legal compliance, Public Beta completion, or Commercial GO.
 
 No user count, deletion count, traffic level, retention duration, legal approval, test result, or production outcome is asserted by this record.

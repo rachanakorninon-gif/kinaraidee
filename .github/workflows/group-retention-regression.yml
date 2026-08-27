@@ -33,21 +33,16 @@ jobs:
           set -euo pipefail
           file='supabase/group-retention-diagnostic.sql'
           test -s "$file"
-
-          # Remove full-line SQL comments before checking executable text.
           executable="$(sed -E '/^[[:space:]]*--/d' "$file")"
-
           if grep -Eqi '(^|[^[:alnum:]_])(delete|update|insert|truncate|drop|alter|create|grant|revoke|call|do|merge|copy)([^[:alnum:]_]|$)' <<<"$executable"; then
             echo 'Mutation or DDL keyword detected in read-only retention diagnostic.'
             exit 1
           fi
-
           grep -Fq 'from public.group_rooms' "$file"
           grep -Fq 'from public.group_votes' "$file"
           grep -Fq 'expires_at <= now()' "$file"
           grep -Fq 'expires_at > now()' "$file"
           grep -Fq 'left join public.group_rooms' "$file"
-
           echo 'Retention diagnostic remains read-only and preserves lifecycle checks.'
 
       - name: Verify evidence boundary is explicit
@@ -69,25 +64,47 @@ jobs:
           set -euo pipefail
           decision='GROUP-API-RETENTION-DECISION.md'
           test -s "$decision"
-
           grep -Fq 'Current Group API v6 behavior rejects `get_votes` with `410 room_closed`' "$decision"
           grep -Fq 'not an approved retention/privacy policy' "$decision"
+          grep -Fq 'Approved at' "$decision"
 
           if grep -Fq 'Status: **NOT APPROVED**' "$decision"; then
-            grep -Fq 'Approved retention period after `expires_at`: **UNSET**' "$decision"
-            grep -Fq 'Approved `get_votes` behavior after `expires_at`: **UNSET**' "$decision"
-            grep -Fq 'Decision owner: **UNSET**' "$decision"
-            grep -Fq 'Privacy Policy / Terms wording reference: **UNSET**' "$decision"
+            required_unset=(
+              'Decision owner: **UNSET**'
+              'Decision date: **UNSET**'
+              'Approved retention period after `expires_at`: **UNSET**'
+              'Approved `get_votes` behavior after `expires_at`: **UNSET**'
+              'Scope: **UNSET**'
+              'Exception / legal-hold policy: **UNSET**'
+              'Privacy Policy / Terms wording reference: **UNSET**'
+              'Operations owner for cleanup: **UNSET**'
+              'Review / reapproval date or trigger: **UNSET**'
+              'Approved at: **UNSET**'
+            )
+            for marker in "${required_unset[@]}"; do
+              grep -Fq -- "$marker" "$decision" || { echo "NOT APPROVED decision contains inferred/fabricated value: $marker"; exit 1; }
+            done
             grep -Fq 'GET_VOTES POLICY NOT APPROVED' "$decision"
             grep -Fq 'CLEANUP NOT IMPLEMENTED / CLEANUP NOT VERIFIED' "$decision"
-            echo 'Retention decision is explicitly NOT APPROVED; no retention or get_votes policy value is inferred.'
+            echo 'Retention decision is explicitly NOT APPROVED; no retention/get_votes value or approval time is inferred.'
           elif grep -Fq 'Status: **APPROVED**' "$decision"; then
-            if grep -Eq '^(\- )?(Decision owner|Decision date|Approved retention period after `expires_at`|Approved `get_votes` behavior after `expires_at`|Scope|Privacy Policy / Terms wording reference|Operations owner for cleanup): \*\*UNSET\*\*$' "$decision"; then
+            if grep -Eq '^(\- )?(Decision owner|Decision date|Approved retention period after `expires_at`|Approved `get_votes` behavior after `expires_at`|Scope|Exception / legal-hold policy|Privacy Policy / Terms wording reference|Operations owner for cleanup|Review / reapproval date or trigger|Approved at): \*\*UNSET\*\*$' "$decision"; then
               echo 'Retention decision says APPROVED but required approval fields remain UNSET.'
               exit 1
             fi
+            approved_at="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$decision")"
+            test -n "$approved_at" || { echo 'APPROVED retention decision is missing Approved at.'; exit 1; }
+            APPROVED_AT="$approved_at" node - <<'NODE'
+          const value = process.env.APPROVED_AT;
+          if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+            throw new Error('Approved at must be timezone-qualified ISO-8601.');
+          }
+          const ms = Date.parse(value);
+          if (!Number.isFinite(ms)) throw new Error('Approved at is not parseable.');
+          if (ms > Date.now() + 5 * 60 * 1000) throw new Error('Approved at cannot be in the future.');
+          NODE
             grep -Fq '`get_votes` expiry/retention behavior matches the approved product/privacy decision' "$decision"
-            echo 'Retention decision is marked APPROVED with required fields populated; implementation and cleanup verification remain separate gates.'
+            echo 'Retention decision is APPROVED with traceable decision fields; implementation and cleanup verification remain separate gates.'
           else
             echo 'Retention decision status must be exactly NOT APPROVED or APPROVED.'
             exit 1
@@ -103,9 +120,7 @@ jobs:
             echo '- Ensures the committed retention diagnostic remains read-only and contains no mutation/DDL statements.'
             echo '- Preserves checks for expired vs active rooms, vote relationships and orphan detection.'
             echo '- Requires retention evidence to keep policy/cleanup/Commercial boundaries explicit.'
-            echo '- Requires an explicit retention decision record; NOT APPROVED cannot silently acquire an inferred retention window or get_votes policy.'
-            echo '- Records current get_votes 410-on-expiry behavior as implementation fact only, not approved policy.'
-            echo '- APPROVED still does not equal cleanup PASS; destructive implementation and verification remain separate evidence gates.'
-            echo '- This is static repository evidence only.'
-            echo '- It does not execute cleanup, verify cascade deletion, prove Privacy/Legal compliance, or mark Commercial GO.'
+            echo '- Requires an explicit retention decision record; NOT APPROVED cannot silently acquire an inferred retention window, get_votes policy, or approval timestamp.'
+            echo '- APPROVED requires a real non-future timezone-qualified approval timestamp, but still does not equal cleanup PASS.'
+            echo '- This is static repository evidence only and does not execute cleanup, prove Privacy/Legal compliance, or mark Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
