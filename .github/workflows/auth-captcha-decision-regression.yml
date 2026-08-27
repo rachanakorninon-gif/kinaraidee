@@ -77,10 +77,11 @@ jobs:
             }
           fi
 
-          grep -Fq 'Captcha OFF' "$security" || {
-            echo 'SECURITY.md must retain the current Captcha configuration/evidence boundary until a reviewed transition updates it.'
+          grep -Fq 'หากจะเปิด Auth Captcha ต้องมี reviewed client token wiring, failure/retry behavior และ real-device/accessibility evidence ก่อนเปิด server-side' "$security" || {
+            echo 'SECURITY.md must retain the Auth Captcha enablement safety gate.'
             exit 1
           }
+          grep -Fq 'Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence' "$security"
           grep -Fq 'does not establish Public Beta completion or Commercial GO' "$file"
           grep -Fq 'Secrets must never be committed to the repository.' "$file"
 
