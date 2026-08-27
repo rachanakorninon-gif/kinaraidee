@@ -1,0 +1,80 @@
+name: NF-07 Physical Upgrade Evidence Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "NF07-PHYSICAL-UPGRADE-EVIDENCE.md"
+      - "BETA-NEW-FLOW-TESTS.md"
+      - ".github/workflows/pwa-cache-upgrade-regression.yml"
+      - ".github/workflows/nf07-physical-upgrade-evidence-regression.yml"
+  pull_request:
+    paths:
+      - "NF07-PHYSICAL-UPGRADE-EVIDENCE.md"
+      - "BETA-NEW-FLOW-TESTS.md"
+      - ".github/workflows/pwa-cache-upgrade-regression.yml"
+      - ".github/workflows/nf07-physical-upgrade-evidence-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify NF-07 evidence contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='NF07-PHYSICAL-UPGRADE-EVIDENCE.md'
+          tests='BETA-NEW-FLOW-TESTS.md'
+          synthetic='.github/workflows/pwa-cache-upgrade-regression.yml'
+
+          test -f "$evidence"
+          test -f "$tests"
+          test -f "$synthetic"
+
+          grep -Fq 'NF-07 result:' "$evidence"
+          grep -Fq 'Verifiably older Kinaraidee build/cache:' "$evidence"
+          grep -Fq 'App/site data was not cleared manually:' "$evidence"
+          grep -Fq 'Evidence location:' "$evidence"
+          grep -Fq 'Tester / session reference:' "$evidence"
+          grep -Fq 'kinaraidee-beta-v16' "$evidence"
+          grep -Fq 'INCONCLUSIVE / BASELINE NOT VERIFIED' "$evidence"
+          grep -Fq 'Synthetic `PWA Cache Upgrade Regression` evidence remains implementation evidence only' "$evidence"
+
+          grep -Fq 'ยืนยันได้ว่าเคยโหลด cache generation ก่อน `kinaraidee-beta-v16`' "$tests"
+          grep -Fq 'ห้ามสร้าง PASS จากการเดาว่า cache เก่า' "$tests"
+          grep -Fq 'Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น ไม่ใช่ NF-07 real-device PASS' "$tests"
+
+          grep -Fq 'This guards cache cleanup logic but does not constitute NF-07 real-device upgrade PASS.' "$synthetic"
+
+          result=$(sed -n 's/^NF-07 result: \*\*\(.*\)\*\*$/\1/p' "$evidence" | head -n1)
+          if [ -z "$result" ]; then
+            echo 'Could not parse NF-07 result' >&2
+            exit 1
+          fi
+
+          if [ "$result" = 'PASS' ]; then
+            if grep -Eq '^(Device / model|OS / version|Browser or installed-PWA context / version|Tester / session reference|Evidence location|Test date/time): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
+              echo 'NF-07 PASS is not traceable: required metadata is missing' >&2
+              exit 1
+            fi
+            if grep -Eq '^(Verifiably older Kinaraidee build/cache|Normal online Service Worker update was allowed to occur|App/tab was closed and reopened through the normal activation path|App/site data was not cleared manually|Current cache/build marker is `kinaraidee-beta-v16`|App remains usable after the upgrade path without manual data clearing): NOT VERIFIED$' "$evidence"; then
+              echo 'NF-07 PASS conflicts with unverified required steps' >&2
+              exit 1
+            fi
+            if grep -Eq '^(Older cache/build marker or trace reference|Proof that the app was not already refreshed/updated to v16 before test start): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
+              echo 'NF-07 PASS lacks a verifiable pre-v16 baseline' >&2
+              exit 1
+            fi
+          fi
+
+      - name: Explain evidence boundary
+        run: |
+          echo 'NF-07 evidence contract is internally consistent.'
+          echo 'This static guard does not create a physical-device NF-07 result or Public Beta PASS.'
