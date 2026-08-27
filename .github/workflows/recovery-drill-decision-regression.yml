@@ -62,7 +62,9 @@ jobs:
             exit 1
           fi
 
-          if grep -Eqi 'Approved backup (cadence/schedule|retention/history window):[[:space:]]*\*\*(?!UNSET)' "$file"; then
+          cadence_line="$(grep -F 'Approved backup cadence/schedule:' "$file" | head -n1)"
+          retention_line="$(grep -F 'Approved backup retention/history window:' "$file" | head -n1)"
+          if [ "$cadence_line" != '- Approved backup cadence/schedule: **UNSET**' ] || [ "$retention_line" != '- Approved backup retention/history window: **UNSET**' ]; then
             echo 'Backup cadence or retention value detected while decision is NOT APPROVED.'
             exit 1
           fi
