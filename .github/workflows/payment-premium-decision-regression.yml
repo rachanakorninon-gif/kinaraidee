@@ -70,14 +70,14 @@ jobs:
           grep -Fq 'does not itself prove subscribe/renew/cancel/payment-failure execution' "$file"
           grep -Fq 'They do not prove a merchant account exists' "$file"
 
-      - name: Verify Commercial checklist respects payment decision boundary
+      - name: Verify Commercial checklist respects payment decision and execution boundaries
         shell: bash
         run: |
           set -euo pipefail
           decision='PAYMENT-PREMIUM-DECISION.md'
           checklist='RELEASE-CHECKLIST.md'
           test -s "$checklist"
-          open_items=(
+          all_open_items=(
             '- [ ] เลือก payment provider / merchant account จริง'
             '- [ ] กำหนดราคา Premium จริงและเงื่อนไข Free/Premium ชัดเจน'
             '- [ ] ทดสอบ subscribe / renew / cancel / payment failure ใน sandbox หรือ environment ที่ provider รองรับ'
@@ -86,9 +86,24 @@ jobs:
             '- [ ] มี transaction ID / audit trail / reconciliation ที่ตรวจสอบได้'
             '- [ ] refund/cancel policy สอดคล้องกับ flow ที่ระบบรองรับ'
           )
+          execution_open_items=(
+            '- [ ] เลือก payment provider / merchant account จริง'
+            '- [ ] ทดสอบ subscribe / renew / cancel / payment failure ใน sandbox หรือ environment ที่ provider รองรับ'
+            '- [ ] webhook/payment status handling ป้องกันการให้สิทธิ์จาก client อย่างเดียว'
+            '- [ ] มี transaction ID / audit trail / reconciliation ที่ตรวจสอบได้'
+            '- [ ] refund/cancel policy สอดคล้องกับ flow ที่ระบบรองรับ'
+          )
           if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
-            for item in "${open_items[@]}"; do grep -Fq -- "$item" "$checklist" || { echo "Payment checklist gate must remain open: $item"; exit 1; }; done
+            for item in "${all_open_items[@]}"; do
+              grep -Fq -- "$item" "$checklist" || { echo "Payment decision/checklist gate must remain open before approval: $item"; exit 1; }
+            done
           fi
+          for item in "${execution_open_items[@]}"; do
+            grep -Fq -- "$item" "$checklist" || {
+              echo "Payment execution/provider-evidence gate must remain open until separate provider-backed evidence exists: $item"
+              exit 1
+            }
+          done
           grep -Fq -- '- [ ] ห้ามเปิดรับเงินจริงหาก payment gate ข้อใดที่จำเป็นยังไม่ผ่าน' "$checklist"
 
       - name: Verify canonical release summary respects payment evidence boundary
@@ -122,7 +137,9 @@ jobs:
           {
             echo '## Payment / Premium decision regression'
             echo
-            echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and Commercial payment checklist gates to remain open.'
+            echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and all Commercial payment checklist gates to remain open.'
+            echo '- APPROVED may establish reviewed decision outputs such as price and Free/Premium entitlement, subject to the decision contract.'
+            echo '- Merchant-account reality, subscription lifecycle execution, webhook/entitlement execution, transaction/reconciliation and refund/cancel execution gates remain open in both decision states until separate provider-backed evidence exists.'
             echo '- CURRENT-RELEASE.md must keep Payment/Premium as a Commercial blocker until provider-backed lifecycle evidence exists.'
             echo '- APPROVED additionally requires Production Privacy/Legal approval and a valid approval timestamp.'
             echo '- APPROVED only establishes a reviewed decision record; provider-backed transaction and entitlement evidence remains separate.'
