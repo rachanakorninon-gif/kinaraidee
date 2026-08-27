@@ -83,7 +83,7 @@ jobs:
             echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
             exit 1
           }
-          grep -Fq 'Leaked Password Protection' "$release" || {
+          grep -Fq 'Supabase leaked-password protection gate (#11)' "$release" || {
             echo 'CURRENT-RELEASE.md must retain the leaked-password blocker in the canonical release summary.'
             exit 1
           }
