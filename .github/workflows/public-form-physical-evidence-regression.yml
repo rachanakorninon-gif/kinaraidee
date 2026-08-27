@@ -54,8 +54,8 @@ jobs:
           require_text "$evidence" 'TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.'
 
           require_text "$tests" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
-          require_text "$release" 'TC-11'
-          require_text "$release" 'TC-12'
+          require_text "$release" 'Real Feedback and Partner application submission behavior for PR #201 remains open'
+          require_text "$release" 'real Feedback/Partner form interaction for the changed PR #201 paths'
           require_text "$checklist" 'Feedback'
           require_text "$checklist" 'Partner'
 
