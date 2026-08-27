@@ -37,6 +37,7 @@ jobs:
           grep -q 'partner_conversions.*retention period' "$file"
           grep -q 'restaurant_search_demand.*retention period' "$file"
           grep -q 'Privacy/Terms reference' "$file"
+          grep -q 'Approved at' "$file"
           grep -q 'Commercial GO' "$file"
 
           if grep -q 'Status: \*\*NOT APPROVED\*\*' "$file"; then
@@ -55,14 +56,26 @@ jobs:
             done
             grep -Fq 'Partner retention decision status: **NOT APPROVED**' "$evidence" || { echo 'Partner API evidence must preserve NOT APPROVED retention status'; exit 1; }
             grep -Fq '`PARTNER-RETENTION-DECISION.md`' "$evidence" || { echo 'Partner API evidence must link the retention decision record'; exit 1; }
-          fi
-
-          if grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
+          elif grep -q 'Status: \*\*APPROVED\*\*' "$file"; then
             if grep -q '\*\*UNSET\*\*' "$file"; then
               echo 'APPROVED retention decision still contains UNSET fields.'
               exit 1
             fi
+            approved_at="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file")"
+            test -n "$approved_at" || { echo 'APPROVED retention decision is missing Approved at.'; exit 1; }
+            APPROVED_AT="$approved_at" node - <<'NODE'
+          const value = process.env.APPROVED_AT;
+          if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+            throw new Error('Approved at must be timezone-qualified ISO-8601.');
+          }
+          const ms = Date.parse(value);
+          if (!Number.isFinite(ms)) throw new Error('Approved at is not parseable.');
+          if (ms > Date.now() + 5 * 60 * 1000) throw new Error('Approved at cannot be in the future.');
+          NODE
             grep -q 'After approval, cleanup still requires separate implementation and evidence' "$file"
+          else
+            echo 'Retention decision status must be exactly NOT APPROVED or APPROVED.'
+            exit 1
           fi
 
       - name: Keep dry-run read-only and policy-neutral
