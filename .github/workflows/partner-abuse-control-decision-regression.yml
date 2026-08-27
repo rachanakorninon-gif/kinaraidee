@@ -80,6 +80,20 @@ jobs:
               echo 'APPROVED decision still contains UNSET fields'
               exit 1
             fi
+            approved_at="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file")"
+            [[ "$approved_at" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$ ]] || {
+              echo 'Approved at must be ISO-8601 with timezone'
+              exit 1
+            }
+            approved_epoch="$(date -d "$approved_at" +%s 2>/dev/null)" || {
+              echo 'Approved at is not a valid timestamp'
+              exit 1
+            }
+            now_epoch="$(date +%s)"
+            if (( approved_epoch > now_epoch + 300 )); then
+              echo 'Approved at cannot be in the future'
+              exit 1
+            fi
           fi
 
           echo 'Partner API abuse-control decision boundary is consistent'
@@ -100,6 +114,7 @@ jobs:
           {
             echo '## Partner Abuse-Control Decision Regression'
             echo '- Validates governance/decision-record consistency only.'
+            echo '- Approval timestamp validation is decision traceability only, not execution PASS.'
             echo '- Does not execute rate limiting, quotas, successful Partner API actions, load/security tests, or device tests.'
             echo '- Does not create partner, conversion, revenue, Public Beta, or Commercial PASS evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
