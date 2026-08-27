@@ -65,6 +65,19 @@ jobs:
             for marker in "${fields[@]}"; do
               grep -F "$marker" "$decision" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
             done
+
+            grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth" || {
+              echo 'While the plan decision is NOT APPROVED, Auth evidence must retain the observed Free-plan baseline.'
+              exit 1
+            }
+            grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" || {
+              echo 'While the plan decision is NOT APPROVED, Auth evidence must retain leaked-password protection as NOT PASS.'
+              exit 1
+            }
+            grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth" || {
+              echo 'While the plan decision is NOT APPROVED, Auth evidence must not authorize a paid-plan upgrade.'
+              exit 1
+            }
           else
             if grep -q '\*\*UNSET\*\*' "$decision"; then
               echo 'APPROVED Supabase plan decision still contains UNSET fields.'
@@ -74,26 +87,22 @@ jobs:
               echo 'APPROVED plan decision must identify leaked-password protection when it remains the stated blocker.'
               exit 1
             }
+
+            # APPROVED authorizes a later plan/configuration change. It must not require
+            # the pre-upgrade Free/NOT-PASS observation to remain forever, because the
+            # actual upgrade and fresh advisor verification are separate execution evidence.
+            grep -Fq 'Security PASS for leaked-password protection still requires the setting to be enabled and a fresh Security Advisor result showing the WARN removed.' "$decision" || {
+              echo 'APPROVED decision must preserve the post-change verification requirement.'
+              exit 1
+            }
           fi
 
-          grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth" || {
-            echo 'Auth evidence must retain the observed Free-plan baseline.'
-            exit 1
-          }
-          grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" || {
-            echo 'Auth evidence must retain leaked-password protection as NOT PASS.'
-            exit 1
-          }
-          grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth" || {
-            echo 'Auth evidence must not authorize a paid-plan upgrade.'
-            exit 1
-          }
           grep -Fq 'Supabase Auth leaked-password protection ถูกเปิดและ Security Advisor ถูกตรวจซ้ำ' "$security" || {
             echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
             exit 1
           }
           grep -Fq 'Supabase leaked-password protection gate (#11)' "$release" || {
-            echo 'CURRENT-RELEASE.md must retain the leaked-password blocker in the canonical release summary.'
+            echo 'CURRENT-RELEASE.md must retain the leaked-password blocker until separate post-change security evidence advances it.'
             exit 1
           }
           grep -Fq '**APPROVED** would authorize the plan/configuration change only; it would not by itself establish Security PASS.' "$decision" || {
@@ -112,7 +121,8 @@ jobs:
           {
             echo '## Supabase plan decision regression'
             echo
-            echo '- NOT APPROVED keeps plan, billing, ownership and execution fields UNSET.'
-            echo '- APPROVED may authorize a plan/configuration change, but leaked-password Security PASS still requires enablement plus a fresh advisor result.'
+            echo '- NOT APPROVED keeps plan, billing, ownership and execution fields UNSET and preserves the current Free/NOT-PASS observation.'
+            echo '- APPROVED may authorize a later plan/configuration change; it does not require stale pre-upgrade evidence to remain unchanged.'
+            echo '- Leaked-password Security PASS still requires actual enablement plus a fresh Security Advisor result.'
             echo '- The guard does not purchase a plan, mutate Supabase, create users, or establish Public Beta/Commercial PASS.'
           } >> "$GITHUB_STEP_SUMMARY"
