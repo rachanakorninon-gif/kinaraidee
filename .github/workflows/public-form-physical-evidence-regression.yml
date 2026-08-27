@@ -40,14 +40,14 @@ jobs:
           require_text(){
             file="$1"
             text="$2"
-            grep -Fq "$text" "$file" || { echo "Missing required text in $file: $text"; exit 1; }
+            grep -Fq -- "$text" "$file" || { echo "Missing required text in $file: $text"; exit 1; }
           }
 
           require_count(){
             file="$1"
             text="$2"
             expected="$3"
-            actual="$(grep -Fc "$text" "$file" || true)"
+            actual="$(grep -Fc -- "$text" "$file" || true)"
             [ "$actual" -eq "$expected" ] || { echo "Expected $expected occurrences in $file: $text (found $actual)"; exit 1; }
           }
 
@@ -90,7 +90,7 @@ jobs:
           require_text "$evidence" 'Privacy notice version recorded as expected: **PASS**'
           require_text "$evidence" 'Privacy acknowledgement timestamp recorded as expected: **PASS**'
 
-          if grep -Fq '**NOT VERIFIED**' "$evidence"; then
+          if grep -Fq -- '**NOT VERIFIED**' "$evidence"; then
             echo 'PASS status cannot coexist with NOT VERIFIED acceptance fields.'
             exit 1
           fi
