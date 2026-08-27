@@ -75,11 +75,10 @@ jobs:
           grep -Fq 'does not itself prove that any restaurant agreed' "$file"
           grep -Fq 'They do not prove a commercial agreement' "$file"
 
-      - name: Verify restaurant-partner checklist remains evidence-gated
+      - name: Verify restaurant-partner checklist remains execution-gated
         shell: bash
         run: |
           set -euo pipefail
-          decision='PARTNER-COMMERCIAL-DECISION.md'
           checklist='RELEASE-CHECKLIST.md'
           test -s "$checklist"
           open_items=(
@@ -91,11 +90,12 @@ jobs:
             '- [ ] pending / confirmed / cancelled flow ถูกทดสอบ'
             '- [ ] มีขั้นตอน dispute / cancel / refund ที่ชัดเจน'
           )
-          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
-            for item in "${open_items[@]}"; do
-              grep -Fq -- "$item" "$checklist" || { echo "Partner-commercial checklist gate must remain open: $item"; exit 1; }
-            done
-          fi
+          for item in "${open_items[@]}"; do
+            grep -Fq -- "$item" "$checklist" || {
+              echo "Partner-commercial execution gate must remain open until separate partner-backed evidence exists: $item"
+              exit 1
+            }
+          done
 
       - name: Verify canonical release keeps real-partner evidence open
         shell: bash
@@ -126,8 +126,9 @@ jobs:
           {
             echo '## Partner commercial decision regression'
             echo
-            echo '- NOT APPROVED requires policy-sensitive partner-commercial fields to remain UNSET and Restaurant Partners checklist gates to remain open.'
+            echo '- NOT APPROVED requires policy-sensitive partner-commercial fields to remain UNSET.'
             echo '- APPROVED only establishes a reviewed commercial decision record; partner-backed agreement and execution evidence remains separate.'
+            echo '- Restaurant-partner execution checklist gates remain open in both decision states until separate partner-backed evidence exists.'
             echo '- CURRENT-RELEASE.md must keep real partner agreements and verified reconciliation as a Commercial blocker until evidence exists.'
             echo '- Static CI success is not a partner agreement, conversion, commission, reconciliation, payment, revenue, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
