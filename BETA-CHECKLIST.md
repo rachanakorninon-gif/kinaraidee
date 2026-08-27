@@ -45,10 +45,11 @@
 - [x] Android device/session #1: Partner application + privacy acknowledgement backend confirmation เป็น historical evidence ก่อน PR #201 form-resilience runtime change
 - [x] Android device/session #1: 404 recovery
 - [x] Android device/session #1: background/resume + lock/unlock result persistence
-- [x] Android device/session #1: TalkBack accessible name + button role partial evidence for Surprise; NF-09 ยังไม่ PASS
+- [x] Android device/session #1: TalkBack accessible name + button role partial evidence for Surprise; later Android TalkBack follow-up remains **INCONCLUSIVE / TEST ENVIRONMENT**, not a new app FAIL and not an NF-09 PASS
 - [x] Android installed-PWA v16 session: fresh favorite persisted after fully closing from Recent Apps and reopening without clearing data; Issue #177 closed completed for that tested session only
 - [x] iPhone/Safari #1 v16: TC-08 Location allow path passed for the tested session; Issue #171 closed completed
 - [x] iPhone/Safari #1 v16: NF-05 install guidance / Add to Home Screen / standalone launch / suppression after “เข้าใจแล้ว” passed for the tested session only
+- [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
 
 ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior หรือ full device matrix
 
@@ -62,7 +63,7 @@
 - [ ] NF-04 Android PWA update-specific path มีหลักฐานจริงถ้ากำหนดเป็น gate
 - [x] NF-05 iPhone install guidance + “เข้าใจแล้ว” suppression มี scoped physical iPhone/Safari #1 PASS บน v16; iPadOS/second-iPhone coverage ยังเปิด
 - [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด
-- [ ] NF-09 Surprise busy/ready accessibility ผ่านด้วย TalkBack/VoiceOver environment ที่ทำงานได้จริง; สถานะล่าสุดเป็น **INCONCLUSIVE / test-environment issue**, ไม่ใช่ PASS และไม่ใช่ new app FAIL
+- [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
 - [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed PR #201/v16
 - [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference
 - [ ] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
