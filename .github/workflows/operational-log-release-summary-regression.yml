@@ -1,0 +1,89 @@
+name: Operational Log Release Summary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
+      - 'DATA-RETENTION-DECISION-INDEX.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/operational-log-release-summary-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
+      - 'DATA-RETENTION-DECISION-INDEX.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/operational-log-release-summary-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  operational-log-release-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard operational-log retention evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          decision='OPERATIONAL-LOG-RETENTION-DECISION.md'
+          index='DATA-RETENTION-DECISION-INDEX.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          for file in "$decision" "$index" "$release" "$checklist"; do
+            test -s "$file" || { echo "Missing required file: $file"; exit 1; }
+          done
+
+          status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$decision" | head -n1)"
+          test -n "$status" || { echo 'Unable to parse operational-log retention status'; exit 1; }
+
+          case "$status" in
+            'NOT APPROVED')
+              grep -q '| Operational / platform logs | .* | \*\*NOT APPROVED\*\* |' "$index" || {
+                echo 'Retention index no longer records operational/platform logs as NOT APPROVED'; exit 1;
+              }
+              grep -q 'DECISIONS INCOMPLETE / COMMERCIAL PRIVACY GATE NOT PASSED' "$index" || {
+                echo 'Retention index prematurely promotes the Commercial privacy gate'; exit 1;
+              }
+              grep -q 'Platform request-log retention period: \*\*UNSET\*\*' "$decision"
+              grep -q 'Application structured-event retention period: \*\*UNSET\*\*' "$decision"
+              grep -q 'Provider/configuration evidence location: \*\*UNSET\*\*' "$decision"
+              grep -q 'Approval timestamp: \*\*UNSET\*\*' "$decision"
+              ;;
+            'APPROVED')
+              ! grep -q '\*\*UNSET\*\*' "$decision" || {
+                echo 'Approved operational-log retention decision still contains UNSET fields'; exit 1;
+              }
+              ;;
+            *)
+              echo "Unsupported operational-log retention status: $status"
+              exit 1
+              ;;
+          esac
+
+          # Decision approval is not execution evidence. These release gates must remain open
+          # until provider configuration/export-delete behavior and broader retention/privacy
+          # evidence are observed separately.
+          grep -q '^- \[ \] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้' "$checklist" || {
+            echo 'Commercial retention/deletion checklist gate must remain open'; exit 1;
+          }
+          grep -q 'Operational/platform logs' "$index"
+          grep -q 'CONFIGURATION / EXPORT-DELETE NOT VERIFIED' "$index" || {
+            echo 'Operational-log configuration/export-delete evidence boundary is missing'; exit 1;
+          }
+
+          grep -q 'Public Beta is still \*\*NOT COMPLETE\*\*' "$release" || {
+            echo 'Operational-log decision must not promote Public Beta completion'; exit 1;
+          }
+          grep -q 'Supabase Auth leaked-password protection remains \*\*BLOCKED BY PLAN/CONFIGURATION — NOT PASS\*\*' "$release" || {
+            echo 'Operational-log evidence must not erase independent Security gates'; exit 1;
+          }
+
+          echo "Operational-log retention status: $status"
+          echo 'Operational-log retention remains separated from provider execution, Public Beta completion and Commercial readiness.'
