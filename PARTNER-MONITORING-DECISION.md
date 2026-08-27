@@ -21,6 +21,8 @@ This document is the decision gate for Production monitoring ownership and escal
 
 Do not change Status to **APPROVED** until every decision field above has a real reviewed value and the selected alert channel/support path are usable by the responsible operator. Existing scheduled rejection-only probes, GitHub Issue failure-alert implementation, controlled alert self-test mechanism, CI/static checks, and successful probe history do not determine these values automatically.
 
+When approved, `Approved at` must be a real ISO-8601 date-time for the completed review and must not be a future timestamp. This approval timestamp records the decision only; it is not execution evidence.
+
 After approval, monitoring still requires separate execution evidence: a controlled alert-delivery test, resulting alert/issue evidence, owner acknowledgement or documented handling path, baseline review from real monitor history, and an escalation/support verification appropriate to the chosen operating model.
 
 ## Evidence boundary
