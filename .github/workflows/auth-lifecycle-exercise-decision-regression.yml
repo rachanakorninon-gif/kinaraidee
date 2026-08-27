@@ -58,7 +58,7 @@ jobs:
               grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
             done
             grep -Fq 'remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence' "$release"
-            grep -Fq -- '- [ ] Remaining external authenticated API/JWT lifecycle / privileged-backend negative authorization evidence' "$checklist" || true
+            grep -Fq -- '- [ ] Remaining external authenticated API/JWT lifecycle / privileged-backend negative authorization evidence' "$checklist"
           else
             if grep -q '\*\*UNSET\*\*' "$file"; then
               echo 'APPROVED auth lifecycle exercise still contains UNSET fields.'
