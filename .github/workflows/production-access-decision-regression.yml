@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - 'PRODUCTION-ACCESS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/production-access-decision-regression.yml'
   push:
     branches: ['main']
     paths:
       - 'PRODUCTION-ACCESS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
       - '.github/workflows/production-access-decision-regression.yml'
   workflow_dispatch:
 
@@ -27,7 +31,11 @@ jobs:
         run: |
           set -euo pipefail
           file='PRODUCTION-ACCESS-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
           test -s "$file"
+          test -s "$release"
+          test -s "$checklist"
           grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
           fields=(
             'Production service owner/on-call/contact:'
@@ -48,6 +56,18 @@ jobs:
             for marker in "${fields[@]}"; do
               grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
             done
+            grep -Fq 'Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence' "$release" || {
+              echo 'CURRENT-RELEASE must keep Production ownership/access/operations evidence open while access is NOT APPROVED.'
+              exit 1
+            }
+            grep -Fq -- '- [ ] ระบุผู้มีสิทธิ์ deploy/แก้ Production' "$checklist" || {
+              echo 'RELEASE-CHECKLIST must keep Production deploy authority unchecked while access is NOT APPROVED.'
+              exit 1
+            }
+            if grep -Eq 'Production (access|deploy|ownership).*(PASS|READY|APPROVED)' "$release"; then
+              echo 'CURRENT-RELEASE must not promote Production access readiness while decision is NOT APPROVED.'
+              exit 1
+            fi
           else
             if grep -q '\*\*UNSET\*\*' "$file"; then
               echo 'APPROVED Production access decision still contains UNSET fields.'
@@ -70,6 +90,8 @@ jobs:
           fi
           grep -Fq 'does not prove a restore drill' "$file"
           grep -Fq 'do not establish a complete Production access roster' "$file"
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+          grep -Fq 'ห้ามผ่านจากการคาดเดา' "$checklist"
 
       - name: Record evidence boundary
         if: always()
@@ -79,7 +101,8 @@ jobs:
             echo '## Production access decision regression'
             echo
             echo '- NOT APPROVED requires ownership/access-review/emergency-control fields to remain UNSET.'
-            echo '- APPROVED requires real reviewable values and a valid approval timestamp.'
+            echo '- NOT APPROVED also keeps Production deploy authority and Commercial release ownership/operations evidence open in canonical release docs.'
+            echo '- APPROVED requires real reviewable values and a valid approval timestamp, but does not auto-complete Commercial checklist items.'
             echo '- Repository ruleset enforcement and owner-admin evidence do not establish the full Production/Supabase access roster.'
             echo '- Static CI success is not an access-review sign-off, rollback/recovery drill, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
