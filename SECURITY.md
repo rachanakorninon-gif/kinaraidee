@@ -52,6 +52,7 @@ Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหร
 - [ ] owner/admin endpoints ปฏิเสธผู้ใช้ทั่วไป
 - [ ] password recovery/session expiry/sign-out ทำงานตามที่ออกแบบ
 - [ ] Supabase Auth leaked-password protection ถูกเปิดและ Security Advisor ถูกตรวจซ้ำ
+- [ ] หากจะเปิด Auth Captcha ต้องมี reviewed client token wiring, failure/retry behavior และ real-device/accessibility evidence ก่อนเปิด server-side
 - [ ] repository/public build ไม่มี secret และ credential-scanner regression ยังทำงาน
 - [ ] `main` มี branch protection/ruleset + required release/security checks และมีหลักฐานว่า failing check block merge ได้จริง
 - [ ] Edge Functions/API validate auth + payload สำหรับ operation สำคัญ
@@ -68,6 +69,7 @@ Blocker/Critical ที่ยังเปิดอยู่ = NO-GO สำหร
 - Deployment trace ยืนยันได้เฉพาะ artifact/version ที่เผยแพร่ ไม่แทน RLS/auth negative tests หรือ real-device behavior
 - Source/deployment parity ของ Edge Function ไม่แทน live monitoring, retention cleanup, abuse-control หรือ production traffic evidence
 - เอกสาร policy/runbook ไม่ใช่ PASS จนกว่าจะมีการตั้งค่า/ทดสอบ/อนุมัติจริงตาม gate นั้น
+- Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence
 - ห้ามใช้ historical PASS กับ runtime/backend ที่เปลี่ยน behavior ที่เกี่ยวข้องโดยอัตโนมัติ
 
 ## Incident Response ขั้นต่ำ

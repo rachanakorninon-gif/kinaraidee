@@ -1,0 +1,98 @@
+name: Auth Captcha Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'AUTH-CAPTCHA-DECISION.md'
+      - 'SECURITY.md'
+      - 'member.html'
+      - '.github/workflows/auth-captcha-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'AUTH-CAPTCHA-DECISION.md'
+      - 'SECURITY.md'
+      - 'member.html'
+      - '.github/workflows/auth-captcha-decision-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  captcha-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Auth captcha decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='AUTH-CAPTCHA-DECISION.md'
+          security='SECURITY.md'
+          member='member.html'
+
+          test -f "$file"
+          test -f "$security"
+          test -f "$member"
+
+          status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$file")"
+          case "$status" in
+            'NOT APPROVED'|'APPROVED') ;;
+            *) echo "Unexpected Captcha decision status: $status"; exit 1 ;;
+          esac
+
+          fields=(
+            'Decision owner:'
+            'Security reviewer/approver:'
+            'Captcha provider:'
+            'Approved environment:'
+            'Public site-key/config reference:'
+            'Signup integration plan:'
+            'Login integration plan:'
+            'Password-recovery integration plan:'
+            'Accessibility/fallback plan:'
+            'Abuse-risk rationale:'
+            'Privacy/Terms disclosure reference:'
+            'Real-device acceptance evidence location:'
+            'Approved at:'
+          )
+
+          if [ "$status" = 'NOT APPROVED' ]; then
+            for marker in "${fields[@]}"; do
+              grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
+            done
+            if grep -Eqi 'captchaToken|captcha_token|hcaptcha|turnstile|recaptcha' "$member"; then
+              echo 'Client Captcha wiring appears present while decision remains NOT APPROVED; review the decision/evidence boundary before merge.'
+              exit 1
+            fi
+          else
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED Captcha decision still contains UNSET fields.'
+              exit 1
+            fi
+            grep -Eqi 'captchaToken|captcha_token|hcaptcha|turnstile|recaptcha' "$member" || {
+              echo 'APPROVED Captcha decision requires client Captcha wiring evidence in member.html.'
+              exit 1
+            }
+          fi
+
+          grep -Fq 'หากจะเปิด Auth Captcha ต้องมี reviewed client token wiring, failure/retry behavior และ real-device/accessibility evidence ก่อนเปิด server-side' "$security" || {
+            echo 'SECURITY.md must retain the Auth Captcha enablement safety gate.'
+            exit 1
+          }
+          grep -Fq 'Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence' "$security"
+          grep -Fq 'does not establish Public Beta completion or Commercial GO' "$file"
+          grep -Fq 'Secrets must never be committed to the repository.' "$file"
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Auth Captcha decision regression'
+            echo
+            echo '- NOT APPROVED keeps policy-sensitive fields UNSET and rejects unreviewed client Captcha wiring.'
+            echo '- APPROVED requires resolved decision fields plus client integration evidence; it still does not imply real-device PASS.'
+            echo '- Server-side enablement, provider selection, device results, Public Beta completion and Commercial GO remain separate evidence gates.'
+          } >> "$GITHUB_STEP_SUMMARY"
