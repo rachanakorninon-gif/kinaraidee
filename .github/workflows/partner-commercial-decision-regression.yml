@@ -1,0 +1,133 @@
+name: Partner Commercial Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/partner-commercial-decision-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/partner-commercial-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decision-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate partner commercial decision state
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='PARTNER-COMMERCIAL-DECISION.md'
+          test -s "$file"
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
+          required_fields=(
+            'Commercial owner/approver:' 'Legal/Privacy reviewer:' 'Initial partner cohort definition:'
+            'Partner identity/contact verification method:' 'Agreement/acceptance evidence format:'
+            'Commission/package model:' 'Commission rate/fee schedule:'
+            'Destination URL / menu-keyword review owner:' 'Conversion verification method:'
+            'Reconciliation owner/process:' 'Pending / confirmed / cancelled operating rule:'
+            'Dispute / cancel / refund rule:' 'Tax/invoice/accounting handling reference:'
+            'Privacy/Terms/partner disclosure reference:' 'Commercial evidence location:' 'Approved at:'
+          )
+          for marker in "${required_fields[@]}"; do
+            grep -Fq -- "$marker" "$file" || { echo "Missing partner-commercial decision field: $marker"; exit 1; }
+          done
+
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for marker in "${required_fields[@]}"; do
+              grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
+            done
+          else
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED partner-commercial decision still contains UNSET fields.'
+              exit 1
+            fi
+            approved_at=$(sed -n 's/^- Approved at: //p' "$file")
+            python - "$approved_at" <<'PY'
+          import datetime as dt
+          import sys
+          value = sys.argv[1].strip().replace('**', '')
+          try:
+              parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+          except ValueError:
+              raise SystemExit('Approved at must be a valid ISO-8601 timestamp.')
+          if parsed.tzinfo is None:
+              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          now = dt.datetime.now(dt.timezone.utc)
+          if parsed > now + dt.timedelta(minutes=5):
+              raise SystemExit('Approved at must not be materially in the future.')
+          PY
+          fi
+
+          grep -Fq 'does not itself prove that any restaurant agreed' "$file"
+          grep -Fq 'They do not prove a commercial agreement' "$file"
+
+      - name: Verify restaurant-partner checklist remains evidence-gated
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PARTNER-COMMERCIAL-DECISION.md'
+          checklist='RELEASE-CHECKLIST.md'
+          test -s "$checklist"
+          open_items=(
+            '- [ ] มีร้านพาร์ตเนอร์จริงชุดแรกและข้อมูลติดต่อที่ตรวจสอบได้'
+            '- [ ] ร้านยอมรับเงื่อนไขค่าคอมมิชชัน/แพ็กเกจเป็นลายลักษณ์อักษรหรือหลักฐานที่เก็บได้'
+            '- [ ] ตรวจ destination URL / menu keywords / active status ของแต่ละร้าน'
+            '- [ ] partner click tracking ไม่สร้าง click ซ้ำผิดปกติจากการกดติดกัน'
+            '- [ ] conversion/commission มีวิธี verify ก่อนจ่าย/เรียกเก็บเงินจริง'
+            '- [ ] pending / confirmed / cancelled flow ถูกทดสอบ'
+            '- [ ] มีขั้นตอน dispute / cancel / refund ที่ชัดเจน'
+          )
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            for item in "${open_items[@]}"; do
+              grep -Fq -- "$item" "$checklist" || { echo "Partner-commercial checklist gate must remain open: $item"; exit 1; }
+            done
+          fi
+
+      - name: Verify canonical release keeps real-partner evidence open
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='PARTNER-COMMERCIAL-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          test -s "$release"
+          grep -Fq 'real restaurant/affiliate partner agreements and verified commercial reconciliation for any enabled model' "$release" || {
+            echo 'CURRENT-RELEASE.md is missing the real partner agreement/reconciliation Commercial blocker.'
+            exit 1
+          }
+          grep -Fq 'No user-count, conversion, revenue, payment success, partner readiness, legal approval, full device-matrix PASS, full Public Beta PASS or Commercial GO is inferred from this document.' "$release" || {
+            echo 'CURRENT-RELEASE.md is missing the partner/commercial evidence boundary.'
+            exit 1
+          }
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$decision"; then
+            if grep -Eq 'restaurant/affiliate partner[^\n]*(APPROVED|READY|PASS)' "$release"; then
+              echo 'Canonical release summary appears to promote partner readiness while decision is NOT APPROVED.'
+              exit 1
+            fi
+          fi
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Partner commercial decision regression'
+            echo
+            echo '- NOT APPROVED requires policy-sensitive partner-commercial fields to remain UNSET and Restaurant Partners checklist gates to remain open.'
+            echo '- APPROVED only establishes a reviewed commercial decision record; partner-backed agreement and execution evidence remains separate.'
+            echo '- CURRENT-RELEASE.md must keep real partner agreements and verified reconciliation as a Commercial blocker until evidence exists.'
+            echo '- Static CI success is not a partner agreement, conversion, commission, reconciliation, payment, revenue, Public Beta PASS, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
