@@ -66,6 +66,7 @@ jobs:
           require_text "$tests" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
           require_text "$checklist" 'Feedback'
           require_text "$checklist" 'Partner'
+          require_text "$release" 'Public Beta is still **NOT COMPLETE**.'
 
           if [ "$status" = 'NOT VERIFIED' ]; then
             require_count "$evidence" 'Duplicate-submit protection observed: **NOT VERIFIED**' 2
@@ -101,5 +102,13 @@ jobs:
             echo 'PASS status cannot coexist with missing device/session/evidence trace metadata.'
             exit 1
           fi
+          if grep -Fq -- 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release"; then
+            echo 'Physical PASS cannot coexist with the stale release-summary marker that TC-11/TC-12 remain open.'
+            exit 1
+          fi
+          if grep -Fq -- 'real Feedback/Partner form interaction for the changed PR #201 paths' "$release"; then
+            echo 'Physical PASS cannot coexist with the stale release-summary blocker for PR #201 form interaction.'
+            exit 1
+          fi
 
-          echo 'Public form physical evidence PASS is internally complete, traceable, and remains separate from broader Beta/Commercial gates'
+          echo 'Public form physical evidence PASS is internally complete, traceable, synchronized with the release-summary boundary, and remains separate from broader Beta/Commercial gates'
