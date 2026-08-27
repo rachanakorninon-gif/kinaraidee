@@ -76,9 +76,18 @@ jobs:
             }
           fi
 
-          grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth"
-          grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth"
-          grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth"
+          grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth" || {
+            echo 'Auth evidence must retain the observed Free-plan baseline.'
+            exit 1
+          }
+          grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" || {
+            echo 'Auth evidence must retain leaked-password protection as NOT PASS.'
+            exit 1
+          }
+          grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth" || {
+            echo 'Auth evidence must not authorize a paid-plan upgrade.'
+            exit 1
+          }
           grep -Fq 'Supabase Auth leaked-password protection ถูกเปิดและ Security Advisor ถูกตรวจซ้ำ' "$security" || {
             echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
             exit 1
@@ -87,8 +96,14 @@ jobs:
             echo 'CURRENT-RELEASE.md must retain the leaked-password blocker in the canonical release summary.'
             exit 1
           }
-          grep -Fq 'APPROVED would authorize the plan/configuration change only; it would not by itself establish Security PASS.' "$decision"
-          grep -Fq 'No paid-plan purchase' "$decision"
+          grep -Fq '**APPROVED** would authorize the plan/configuration change only; it would not by itself establish Security PASS.' "$decision" || {
+            echo 'Decision record must preserve approval-vs-Security-PASS boundary.'
+            exit 1
+          }
+          grep -Fq 'No paid-plan purchase' "$decision" || {
+            echo 'Decision record must preserve the no-purchase evidence boundary.'
+            exit 1
+          }
 
       - name: Summary
         if: always()
