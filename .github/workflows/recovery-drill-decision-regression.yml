@@ -34,42 +34,75 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify recovery drill remains unapproved without real decisions
+      - name: Verify recovery decision approval ordering
         shell: bash
         run: |
           set -euo pipefail
           file='RECOVERY-DRILL-DECISION.md'
           test -s "$file"
-          grep -Fq 'Status: **NOT APPROVED**' "$file"
-          grep -Fq 'Approved RPO target: **UNSET**' "$file"
-          grep -Fq 'Approved RTO target: **UNSET**' "$file"
-          grep -Fq 'Decision owner: **UNSET**' "$file"
-          grep -Fq 'Operations approver: **UNSET**' "$file"
-          grep -Fq 'Approved backup cadence/schedule: **UNSET**' "$file"
-          grep -Fq 'Approved backup retention/history window: **UNSET**' "$file"
-          grep -Fq 'Backup-history verification method/evidence source: **UNSET**' "$file"
-          grep -Fq 'Restore-point selection criteria: **UNSET**' "$file"
+
+          status="$(sed -nE 's/^Status:[[:space:]]*\*\*(NOT APPROVED|APPROVED)\*\*.*/\1/p' "$file" | head -n1)"
+          if [ "$status" != 'NOT APPROVED' ] && [ "$status" != 'APPROVED' ]; then
+            echo 'Unsupported Recovery Drill Decision status. Expected NOT APPROVED or APPROVED.'
+            exit 1
+          fi
+
           grep -Fq 'does not execute a backup, restore or rollback' "$file"
           grep -Fq 'does not prove backup availability/history, retention compliance, restore integrity, measured RPO/RTO' "$file"
 
-          if grep -Eqi '^Status:[[:space:]]*\*\*APPROVED\*\*' "$file"; then
-            echo 'Recovery drill must not be marked APPROVED without reviewed decision evidence.'
-            exit 1
+          fields=(
+            'Decision owner'
+            'Operations approver'
+            'Security/Privacy reviewer'
+            'Production backup mechanism/provider'
+            'Approved backup cadence/schedule'
+            'Approved backup retention/history window'
+            'Backup-history verification method/evidence source'
+            'Restore-point selection criteria'
+            'Restore target/environment'
+            'Rollback scope'
+            'Data included/excluded'
+            'Approved RPO target'
+            'Approved RTO target'
+            'Maintenance/customer-impact plan'
+            'Escalation/contact path'
+            'Evidence storage/location'
+            'Approved at'
+          )
+
+          if [ "$status" = 'NOT APPROVED' ]; then
+            for field in "${fields[@]}"; do
+              grep -Fq -- "- $field: **UNSET**" "$file" || {
+                echo "Recovery decision field must remain UNSET before approval: $field"
+                exit 1
+              }
+            done
+
+            if grep -Eqi 'Approved RP[OT] target:[[:space:]]*\*\*[0-9]+' "$file"; then
+              echo 'Numeric RPO/RTO target detected while decision is NOT APPROVED.'
+              exit 1
+            fi
+          else
+            for field in "${fields[@]}"; do
+              line="$(grep -F -- "- $field:" "$file" | head -n1 || true)"
+              test -n "$line" || {
+                echo "Missing approved recovery decision field: $field"
+                exit 1
+              }
+              if grep -Fq '**UNSET**' <<<"$line"; then
+                echo "Recovery decision cannot be APPROVED while field is UNSET: $field"
+                exit 1
+              fi
+            done
+
+            approved_at="$(sed -nE 's/^- Approved at:[[:space:]]*\*\*(.*)\*\*$/\1/p' "$file" | head -n1)"
+            node -e "const d=new Date(process.argv[1]); if(!process.argv[1] || Number.isNaN(d.getTime()) || d.getTime()>Date.now()+300000) process.exit(1)" "$approved_at" || {
+              echo 'Approved at must be a valid non-future timestamp when recovery decision is APPROVED.'
+              exit 1
+            }
           fi
 
-          if grep -Eqi 'Approved RP[OT] target:[[:space:]]*\*\*[0-9]+' "$file"; then
-            echo 'Numeric RPO/RTO target detected while decision is NOT APPROVED.'
-            exit 1
-          fi
-
-          cadence_line="$(grep -F 'Approved backup cadence/schedule:' "$file" | head -n1)"
-          retention_line="$(grep -F 'Approved backup retention/history window:' "$file" | head -n1)"
-          if [ "$cadence_line" != '- Approved backup cadence/schedule: **UNSET**' ] || [ "$retention_line" != '- Approved backup retention/history window: **UNSET**' ]; then
-            echo 'Backup cadence or retention value detected while decision is NOT APPROVED.'
-            exit 1
-          fi
-
-      - name: Verify Commercial Release Checklist keeps recovery gates open
+      - name: Verify Commercial Release Checklist keeps execution evidence gates open
         shell: bash
         run: |
           set -euo pipefail
@@ -80,7 +113,7 @@ jobs:
           grep -Fq 'ไม่ถือว่า Production operations/rollback readiness ผ่าน' "$file"
 
           if grep -Fq -- '- [x] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ' "$file"; then
-            echo 'Commercial checklist must not mark backup/recovery readiness complete while the recovery decision is NOT APPROVED.'
+            echo 'Commercial checklist must not mark backup/recovery readiness complete from decision approval alone; separate observed operational evidence is required.'
             exit 1
           fi
 
@@ -166,10 +199,11 @@ jobs:
           {
             echo '## Recovery drill decision regression'
             echo
-            echo '- Guards recovery/rollback governance fields from fabricated approval, backup cadence/retention/history, or RPO/RTO values.'
-            echo '- Keeps Commercial Release Checklist recovery/drill gates open while the canonical decision is NOT APPROVED.'
+            echo '- Supports the intended decision order: NOT APPROVED -> reviewed APPROVED decision -> controlled execution -> observed drill evidence.'
+            echo '- Before approval, all policy-sensitive recovery fields remain UNSET and fabricated RPO/RTO values are rejected.'
+            echo '- Approval alone does not close Commercial backup/recovery or rollback execution checklist gates.'
             echo '- Derives current Group API deployment anchors from canonical evidence and requires the rollback runbook to match them.'
             echo '- Derives current Partner API source/deployment/live-rejection anchors and requires the rollback reference to match them.'
             echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
-            echo '- Static CI success is not backup availability/history, retention compliance, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
+            echo '- Static CI success or decision approval is not backup availability/history, retention compliance, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
