@@ -91,21 +91,21 @@ jobs:
               echo 'CURRENT-RELEASE.md appears to promote Distribution while decision is NOT APPROVED.'
               exit 1
             fi
-            store_lines=(
-              'Google Play developer account'
-              'Apple Developer account'
-              'Store listing / screenshots / icon / description'
-              'Privacy declarations ของ Store ตรงกับพฤติกรรมแอปจริง'
-              'Billing implementation สอดคล้องกับข้อกำหนด Store ที่ใช้'
-              'ผ่าน review ของแต่ละ Store'
-            )
-            for marker in "${store_lines[@]}"; do
-              grep -Fq -- "- [ ] $marker" "$checklist" || {
-                echo "Store-distribution checklist item must remain open while Distribution is NOT APPROVED: $marker"
-                exit 1
-              }
-            done
           fi
+          store_lines=(
+            'Google Play developer account'
+            'Apple Developer account'
+            'Store listing / screenshots / icon / description'
+            'Privacy declarations ของ Store ตรงกับพฤติกรรมแอปจริง'
+            'Billing implementation สอดคล้องกับข้อกำหนด Store ที่ใช้'
+            'ผ่าน review ของแต่ละ Store'
+          )
+          for marker in "${store_lines[@]}"; do
+            grep -Fq -- "- [ ] $marker" "$checklist" || {
+              echo "Store-distribution execution/evidence gate must remain open until separate store-backed evidence exists: $marker"
+              exit 1
+            }
+          done
 
       - name: Record evidence boundary
         if: always()
@@ -115,7 +115,8 @@ jobs:
             echo '## Distribution decision regression'
             echo
             echo '- NOT APPROVED requires all distribution/account/store-policy fields to remain UNSET.'
-            echo '- While NOT APPROVED, native-store enrollment/listing/privacy/billing/review checklist items must remain open.'
-            echo '- APPROVED only records a reviewed channel decision; store enrollment, policy approval, native testing and rollout evidence remain separate.'
+            echo '- APPROVED only records a reviewed channel decision; it does not itself prove native-store execution or approval.'
+            echo '- Native-store enrollment/listing/privacy/billing/review checklist gates remain open in both decision states until separate store-backed evidence exists.'
+            echo '- This does not require Kinaraidee to choose native stores; the Store Distribution checklist remains conditional on the approved channel strategy.'
             echo '- Static CI success is not App Store/Google Play approval, payment approval, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
