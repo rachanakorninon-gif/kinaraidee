@@ -1,0 +1,67 @@
+name: Public Form Physical Evidence Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+      - 'BETA-TEST-CASES.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/public-form-physical-evidence-regression.yml'
+  pull_request:
+    paths:
+      - 'PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+      - 'BETA-TEST-CASES.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/public-form-physical-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify TC-11/TC-12 physical evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+          tests='BETA-TEST-CASES.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          require_text(){
+            file="$1"
+            text="$2"
+            grep -Fq "$text" "$file" || { echo "Missing required text in $file: $text"; exit 1; }
+          }
+
+          require_text "$evidence" 'Status: **NOT VERIFIED**'
+          require_text "$evidence" 'TC-11 Feedback physical acceptance'
+          require_text "$evidence" 'TC-12 Partner application physical acceptance'
+          require_text "$evidence" 'Duplicate-submit protection observed: **NOT VERIFIED**'
+          require_text "$evidence" 'Reproducible network/SDK failure exercised: **NOT VERIFIED**'
+          require_text "$evidence" 'Submit control re-enabled after failure: **NOT VERIFIED**'
+          require_text "$evidence" '`aria-busy` cleared after failure: **NOT VERIFIED**'
+          require_text "$evidence" 'Partner test records used for Beta QA must not be counted as real commercial partner, conversion, commission, payment, or revenue evidence.'
+          require_text "$evidence" 'TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.'
+
+          require_text "$tests" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
+          require_text "$release" 'TC-11'
+          require_text "$release" 'TC-12'
+          require_text "$checklist" 'Feedback'
+          require_text "$checklist" 'Partner'
+
+          if grep -Eq '^Status: \*\*(PASS|VERIFIED)\*\*$' "$evidence"; then
+            echo 'Physical-form evidence cannot be promoted to PASS/VERIFIED by this static gate.'
+            exit 1
+          fi
+
+          echo 'Public form physical evidence remains explicitly unverified and separated from CI/deployment evidence'
