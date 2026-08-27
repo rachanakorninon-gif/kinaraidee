@@ -44,5 +44,6 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 - Static `Public Form Resilience Regression`, Pages, Live Smoke, source markers, CI, or repository documentation are implementation/deployment evidence only; they do **not** establish TC-11/TC-12 physical interaction PASS.
 - Partner test records used for Beta QA must not be counted as real commercial partner, conversion, commission, payment, or revenue evidence.
 - If exact device/OS/browser metadata was not captured, keep `NOT CAPTURED`; never guess.
+- A PASS requires the tested device/OS/browser-or-PWA context, tester/session reference, and evidence location to be captured for both TC-11 and TC-12; missing trace metadata must remain `NOT CAPTURED`, not inferred from CI or deployment records.
 - Change `Status` or a TC result to PASS only after the physical acceptance steps in `BETA-TEST-CASES.md` were actually executed and the supporting evidence is traceable.
 - TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.
