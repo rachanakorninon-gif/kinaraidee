@@ -45,8 +45,12 @@ jobs:
           grep -Fq 'Approved RTO target: **UNSET**' "$file"
           grep -Fq 'Decision owner: **UNSET**' "$file"
           grep -Fq 'Operations approver: **UNSET**' "$file"
+          grep -Fq 'Approved backup cadence/schedule: **UNSET**' "$file"
+          grep -Fq 'Approved backup retention/history window: **UNSET**' "$file"
+          grep -Fq 'Backup-history verification method/evidence source: **UNSET**' "$file"
+          grep -Fq 'Restore-point selection criteria: **UNSET**' "$file"
           grep -Fq 'does not execute a backup, restore or rollback' "$file"
-          grep -Fq 'does not prove backup availability, restore integrity, measured RPO/RTO' "$file"
+          grep -Fq 'does not prove backup availability/history, retention compliance, restore integrity, measured RPO/RTO' "$file"
 
           if grep -Eqi '^Status:[[:space:]]*\*\*APPROVED\*\*' "$file"; then
             echo 'Recovery drill must not be marked APPROVED without reviewed decision evidence.'
@@ -55,6 +59,11 @@ jobs:
 
           if grep -Eqi 'Approved RP[OT] target:[[:space:]]*\*\*[0-9]+' "$file"; then
             echo 'Numeric RPO/RTO target detected while decision is NOT APPROVED.'
+            exit 1
+          fi
+
+          if grep -Eqi 'Approved backup (cadence/schedule|retention/history window):[[:space:]]*\*\*(?!UNSET)' "$file"; then
+            echo 'Backup cadence or retention value detected while decision is NOT APPROVED.'
             exit 1
           fi
 
@@ -155,10 +164,10 @@ jobs:
           {
             echo '## Recovery drill decision regression'
             echo
-            echo '- Guards recovery/rollback governance fields from fabricated approval or RPO/RTO values.'
+            echo '- Guards recovery/rollback governance fields from fabricated approval, backup cadence/retention/history, or RPO/RTO values.'
             echo '- Keeps Commercial Release Checklist recovery/drill gates open while the canonical decision is NOT APPROVED.'
             echo '- Derives current Group API deployment anchors from canonical evidence and requires the rollback runbook to match them.'
             echo '- Derives current Partner API source/deployment/live-rejection anchors and requires the rollback reference to match them.'
             echo '- Re-checks the linked post-restore integrity SQL stays read-only.'
-            echo '- Static CI success is not backup availability, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
+            echo '- Static CI success is not backup availability/history, retention compliance, restore/rollback execution, measured RPO/RTO, operations drill PASS, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
