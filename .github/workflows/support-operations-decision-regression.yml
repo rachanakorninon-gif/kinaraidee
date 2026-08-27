@@ -114,11 +114,9 @@ jobs:
           grep -Fq 'This decision record is governance/planning evidence only.' "$decision"
           grep -Fq 'does not prove support-channel delivery, response SLA, on-call coverage' "$decision"
 
-          if [ "$status" = 'NOT APPROVED' ]; then
-            if grep -Eiq '^[-*] \[x\].*(support|on-call|customer service|incident handoff)' "$checklist"; then
-              echo 'Commercial checklist claims support/on-call PASS while support decision is NOT APPROVED'
-              exit 1
-            fi
+          if grep -Eiq '^[-*] \[x\].*(support|on-call|customer service|incident handoff)' "$checklist"; then
+            echo "Commercial checklist claims support/on-call execution PASS while support decision status is $status; decision approval does not prove execution"
+            exit 1
           fi
 
           echo "Support operations decision boundary verified: $status"
@@ -131,5 +129,6 @@ jobs:
             echo '### Support Operations Decision Regression'
             echo '- Static governance consistency only.'
             echo '- APPROVED requires traceable support evidence and a valid approval timestamp, but approval still does not prove execution.'
+            echo '- Support/on-call execution checklist gates stay open until separate observed delivery evidence exists, regardless of decision approval status.'
             echo '- Does not establish support delivery, SLA, on-call coverage, incident response, Privacy/Legal approval, Public Beta PASS or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
