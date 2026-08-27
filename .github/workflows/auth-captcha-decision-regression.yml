@@ -71,10 +71,10 @@ jobs:
               echo 'APPROVED Captcha decision still contains UNSET fields.'
               exit 1
             fi
-            grep -Eqi 'captchaToken|captcha_token|hcaptcha|turnstile|recaptcha' "$member" || {
-              echo 'APPROVED Captcha decision requires client Captcha wiring evidence in member.html.'
-              exit 1
-            }
+            # APPROVED authorizes implementation and controlled validation. It must not
+            # require client wiring to exist before approval, otherwise the approval gate
+            # would force implementation to precede authorization. Client wiring and
+            # real-device/auth-flow validation remain separate execution evidence gates.
           fi
 
           grep -Fq 'หากจะเปิด Auth Captcha ต้องมี reviewed client token wiring, failure/retry behavior และ real-device/accessibility evidence ก่อนเปิด server-side' "$security" || {
@@ -82,6 +82,8 @@ jobs:
             exit 1
           }
           grep -Fq 'Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence' "$security"
+          grep -Fq 'Approval only authorizes implementation and controlled validation.' "$file"
+          grep -Fq 'Before enabling Captcha in Production, implementation evidence must show that each applicable auth flow obtains and submits the provider token correctly' "$file"
           grep -Fq 'does not establish Public Beta completion or Commercial GO' "$file"
           grep -Fq 'Secrets must never be committed to the repository.' "$file"
 
@@ -93,6 +95,7 @@ jobs:
             echo '## Auth Captcha decision regression'
             echo
             echo '- NOT APPROVED keeps policy-sensitive fields UNSET and rejects unreviewed client Captcha wiring.'
-            echo '- APPROVED requires resolved decision fields plus client integration evidence; it still does not imply real-device PASS.'
-            echo '- Server-side enablement, provider selection, device results, Public Beta completion and Commercial GO remain separate evidence gates.'
+            echo '- APPROVED requires resolved decision fields and authorizes implementation/controlled validation; it does not require implementation to predate approval.'
+            echo '- Client wiring, server-side enablement, auth-flow regression and real-device/accessibility PASS remain separate execution evidence gates.'
+            echo '- Provider selection, device results, Public Beta completion and Commercial GO remain separate evidence gates.'
           } >> "$GITHUB_STEP_SUMMARY"
