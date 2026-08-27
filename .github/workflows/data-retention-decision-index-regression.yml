@@ -6,6 +6,7 @@ on:
       - 'DATA-RETENTION-DECISION-INDEX.md'
       - 'GROUP-API-RETENTION-DECISION.md'
       - 'PARTNER-RETENTION-DECISION.md'
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
       - 'DATA-GOVERNANCE-DRAFT.md'
       - '.github/workflows/data-retention-decision-index-regression.yml'
   push:
@@ -14,6 +15,7 @@ on:
       - 'DATA-RETENTION-DECISION-INDEX.md'
       - 'GROUP-API-RETENTION-DECISION.md'
       - 'PARTNER-RETENTION-DECISION.md'
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
       - 'DATA-GOVERNANCE-DRAFT.md'
       - '.github/workflows/data-retention-decision-index-regression.yml'
 
@@ -34,23 +36,27 @@ jobs:
           index='DATA-RETENTION-DECISION-INDEX.md'
           group='GROUP-API-RETENTION-DECISION.md'
           partner='PARTNER-RETENTION-DECISION.md'
+          logs='OPERATIONAL-LOG-RETENTION-DECISION.md'
           governance='DATA-GOVERNANCE-DRAFT.md'
 
-          for file in "$index" "$group" "$partner" "$governance"; do
+          for file in "$index" "$group" "$partner" "$logs" "$governance"; do
             test -s "$file" || { echo "Missing required file: $file"; exit 1; }
           done
 
           grep -q 'COMMERCIAL PRIVACY GATE NOT PASSED' "$index"
           grep -q 'GROUP-API-RETENTION-DECISION.md' "$index"
           grep -q 'PARTNER-RETENTION-DECISION.md' "$index"
+          grep -q 'OPERATIONAL-LOG-RETENTION-DECISION.md' "$index"
           grep -q 'DATA-GOVERNANCE-DRAFT.md' "$index"
           grep -q 'This index asserts no user count' "$index"
 
           group_status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$group" | head -n1)"
           partner_status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$partner" | head -n1)"
+          logs_status="$(sed -n 's/^Status: \*\*\(.*\)\*\*$/\1/p' "$logs" | head -n1)"
 
           test -n "$group_status" || { echo 'Unable to parse Group retention status'; exit 1; }
           test -n "$partner_status" || { echo 'Unable to parse Partner retention status'; exit 1; }
+          test -n "$logs_status" || { echo 'Unable to parse operational-log retention status'; exit 1; }
 
           if [ "$group_status" = 'NOT APPROVED' ]; then
             grep -q '| Group rooms / votes | .* | \*\*NOT APPROVED\*\* |' "$index"
@@ -72,9 +78,54 @@ jobs:
             ! grep -q '\*\*UNSET\*\*' "$partner" || { echo 'Approved Partner decision still contains UNSET fields'; exit 1; }
           fi
 
+          if [ "$logs_status" = 'NOT APPROVED' ]; then
+            grep -q '| Operational / platform logs | .* | \*\*NOT APPROVED\*\* |' "$index"
+            grep -q 'Platform request-log retention period: \*\*UNSET\*\*' "$logs"
+            grep -q 'Application structured-event retention period: \*\*UNSET\*\*' "$logs"
+            grep -q 'Privacy Policy / Terms reference: \*\*UNSET\*\*' "$logs"
+            grep -q 'Provider/configuration evidence location: \*\*UNSET\*\*' "$logs"
+            grep -q 'Approval timestamp: \*\*UNSET\*\*' "$logs"
+          else
+            [ "$logs_status" = 'APPROVED' ] || { echo "Unexpected operational-log status: $logs_status"; exit 1; }
+            ! grep -q '\*\*UNSET\*\*' "$logs" || { echo 'Approved operational-log decision still contains UNSET fields'; exit 1; }
+
+            evidence="$(sed -n 's/^- Provider\/configuration evidence location: \*\*\(.*\)\*\*$/\1/p' "$logs" | head -n1)"
+            approved_at="$(sed -n 's/^- Approval timestamp: \*\*\(.*\)\*\*$/\1/p' "$logs" | head -n1)"
+            test -n "$evidence" || { echo 'Unable to parse operational-log evidence location'; exit 1; }
+            test -n "$approved_at" || { echo 'Unable to parse operational-log approval timestamp'; exit 1; }
+
+            if [[ "$evidence" =~ ^https:// ]]; then
+              :
+            elif [[ "$evidence" =~ ^[A-Za-z0-9._/-]+\.md$ ]]; then
+              test -s "$evidence" || { echo "Operational-log evidence file does not exist: $evidence"; exit 1; }
+            else
+              echo 'Operational-log evidence location must be HTTPS or an existing Markdown file'
+              exit 1
+            fi
+
+            python3 - "$approved_at" <<'PY'
+import datetime as dt
+import sys
+
+value = sys.argv[1]
+try:
+    parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+except ValueError as exc:
+    raise SystemExit(f'Invalid operational-log approval timestamp: {exc}')
+if parsed.tzinfo is None:
+    raise SystemExit('Operational-log approval timestamp must include timezone')
+now = dt.datetime.now(dt.timezone.utc)
+if parsed.astimezone(dt.timezone.utc) > now + dt.timedelta(minutes=5):
+    raise SystemExit('Operational-log approval timestamp is in the future')
+PY
+          fi
+
+          grep -q 'Operational/platform logs | Reliability/security | Event date | TBD' "$governance"
+          grep -q 'Retention/access rights of log each layer\|Retention/access rights of log แต่ละชั้น' "$governance" || grep -q 'Retention/access rights ของ log แต่ละชั้น' "$governance"
           grep -q 'TBD.*ยังไม่ได้อนุมัติ' "$governance"
           grep -q 'Commercial legal/privacy gate ยัง \*\*NOT PASSED\*\*' "$governance"
 
           echo "Group retention status: $group_status"
           echo "Partner retention status: $partner_status"
+          echo "Operational-log retention status: $logs_status"
           echo 'Retention decision index boundaries are consistent.'
