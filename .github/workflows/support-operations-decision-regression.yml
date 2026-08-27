@@ -1,0 +1,101 @@
+name: Support Operations Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'SUPPORT-OPERATIONS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/support-operations-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'SUPPORT-OPERATIONS-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/support-operations-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  support-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard support decision and release evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='SUPPORT-OPERATIONS-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+
+          test -f "$decision"
+          test -f "$release"
+          test -f "$checklist"
+
+          status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$decision" | head -n1)"
+          case "$status" in
+            'NOT APPROVED'|'APPROVED') ;;
+            *) echo "Unsupported support decision status: $status"; exit 1 ;;
+          esac
+
+          fields=(
+            'Support owner'
+            'Primary user support/contact channel'
+            'Backup support channel'
+            'Production on-call / incident handoff path'
+            'Security/privacy escalation contact'
+            'Payment/partner escalation contact'
+            'Supported operating hours / coverage model'
+            'Initial response target'
+            'Critical-incident escalation target'
+            'User data-rights handoff path'
+            'Support evidence / runbook location'
+            'Operations/Commercial approver'
+            'Approved at'
+          )
+
+          for field in "${fields[@]}"; do
+            grep -Fq -- "- $field:" "$decision"
+          done
+
+          if [ "$status" = 'NOT APPROVED' ]; then
+            for field in "${fields[@]}"; do
+              grep -Fq -- "- $field: **UNSET**" "$decision" || {
+                echo "NOT APPROVED support decision must keep $field UNSET"
+                exit 1
+              }
+            done
+          else
+            if grep -Fq '**UNSET**' "$decision"; then
+              echo 'APPROVED support decision cannot contain UNSET fields'
+              exit 1
+            fi
+          fi
+
+          grep -Fq 'Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence' "$release"
+          grep -Fq 'This decision record is governance/planning evidence only.' "$decision"
+          grep -Fq 'does not prove support-channel delivery, response SLA, on-call coverage' "$decision"
+
+          if [ "$status" = 'NOT APPROVED' ]; then
+            if grep -Eiq '^[-*] \[x\].*(support|on-call|customer service|incident handoff)' "$checklist"; then
+              echo 'Commercial checklist claims support/on-call PASS while support decision is NOT APPROVED'
+              exit 1
+            fi
+          fi
+
+          echo "Support operations decision boundary verified: $status"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Support Operations Decision Regression'
+            echo '- Static governance consistency only.'
+            echo '- Does not establish support delivery, SLA, on-call coverage, incident response, Privacy/Legal approval, Public Beta PASS or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
