@@ -24,6 +24,8 @@ This document is the Commercial-readiness decision gate for payment and Premium 
 
 Do not change Status to **APPROVED** until every applicable field above contains a real reviewed value and the selected provider/account and policy dependencies are traceable. If a field is genuinely not applicable, record the reviewed rationale explicitly rather than inventing a value.
 
+When approved, `Approved at` must be a real timezone-qualified ISO-8601 timestamp (for example `2026-08-28T00:45:00+07:00` or a `Z`-suffixed UTC value) and must not be materially in the future. This timestamp records decision traceability only; it is not payment-execution evidence.
+
 Approval of this decision record does not itself prove subscribe/renew/cancel/payment-failure execution, webhook integrity, entitlement correctness, reconciliation, refund handling, Public Beta completion, or Commercial GO. Those require separate provider-backed sandbox/controlled evidence before accepting real money.
 
 ## Evidence boundary
