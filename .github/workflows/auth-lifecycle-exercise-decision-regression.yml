@@ -58,7 +58,8 @@ jobs:
               grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
             done
             grep -Fq 'remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence' "$release"
-            grep -Fq -- '- [ ] Remaining external authenticated API/JWT lifecycle / privileged-backend negative authorization evidence' "$checklist"
+            grep -Fq -- '- [ ] ทดสอบ auth / sign-out / password recovery / session expiry' "$checklist"
+            grep -Fq -- '- [ ] ทดสอบ owner/admin authorization และ negative cases' "$checklist"
           else
             if grep -q '\*\*UNSET\*\*' "$file"; then
               echo 'APPROVED auth lifecycle exercise still contains UNSET fields.'
@@ -92,6 +93,7 @@ jobs:
             echo '## Auth lifecycle exercise decision regression'
             echo
             echo '- NOT APPROVED requires all exercise fields to remain UNSET.'
+            echo '- While NOT APPROVED, existing auth lifecycle and owner/admin negative-case checklist gates must remain open.'
             echo '- APPROVED authorizes a controlled exercise only; observed allow/deny evidence remains a separate execution gate.'
             echo '- No token, refresh token, service-role credential, privileged secret or real-user fixture may be committed as evidence.'
             echo '- Static CI/RLS/grant evidence is not external session/JWT lifecycle or privileged-backend exercise PASS.'
