@@ -1,0 +1,103 @@
+name: Supabase Plan Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'SUPABASE-PLAN-DECISION.md'
+      - 'SUPABASE-AUTH-SECURITY-EVIDENCE.md'
+      - 'SECURITY.md'
+      - 'CURRENT-RELEASE.md'
+      - '.github/workflows/supabase-plan-decision-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'SUPABASE-PLAN-DECISION.md'
+      - 'SUPABASE-AUTH-SECURITY-EVIDENCE.md'
+      - 'SECURITY.md'
+      - 'CURRENT-RELEASE.md'
+      - '.github/workflows/supabase-plan-decision-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  supabase-plan-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Supabase plan decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='SUPABASE-PLAN-DECISION.md'
+          auth='SUPABASE-AUTH-SECURITY-EVIDENCE.md'
+          security='SECURITY.md'
+          release='CURRENT-RELEASE.md'
+
+          test -f "$decision"
+          test -f "$auth"
+          test -f "$security"
+          test -f "$release"
+
+          status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$decision")"
+          case "$status" in
+            'NOT APPROVED'|'APPROVED') ;;
+            *) echo "Unexpected Supabase plan decision status: $status"; exit 1 ;;
+          esac
+
+          fields=(
+            'Decision owner:'
+            'Security reviewer/approver:'
+            'Billing owner/approver:'
+            'Current plan evidence:'
+            'Target plan:'
+            'Approved monthly/annual cost boundary:'
+            'Required capability:'
+            'Upgrade execution owner:'
+            'Rollback/downgrade consideration:'
+            'Post-change verification plan:'
+            'Evidence location:'
+            'Approved at:'
+          )
+
+          if [ "$status" = 'NOT APPROVED' ]; then
+            for marker in "${fields[@]}"; do
+              grep -F "$marker" "$decision" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
+            done
+          else
+            if grep -q '\*\*UNSET\*\*' "$decision"; then
+              echo 'APPROVED Supabase plan decision still contains UNSET fields.'
+              exit 1
+            fi
+            grep -Fq 'leaked-password protection' "$decision" || {
+              echo 'APPROVED plan decision must identify leaked-password protection when it remains the stated blocker.'
+              exit 1
+            }
+          fi
+
+          grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth"
+          grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth"
+          grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth"
+          grep -Fq 'Supabase leaked-password protection' "$security" || {
+            echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
+            exit 1
+          }
+          grep -Fq 'Leaked Password Protection' "$release" || {
+            echo 'CURRENT-RELEASE.md must retain the leaked-password blocker in the canonical release summary.'
+            exit 1
+          }
+          grep -Fq 'APPROVED would authorize the plan/configuration change only; it would not by itself establish Security PASS.' "$decision"
+          grep -Fq 'No paid-plan purchase' "$decision"
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Supabase plan decision regression'
+            echo
+            echo '- NOT APPROVED keeps plan, billing, ownership and execution fields UNSET.'
+            echo '- APPROVED may authorize a plan/configuration change, but leaked-password Security PASS still requires enablement plus a fresh advisor result.'
+            echo '- The guard does not purchase a plan, mutate Supabase, create users, or establish Public Beta/Commercial PASS.'
+          } >> "$GITHUB_STEP_SUMMARY"
