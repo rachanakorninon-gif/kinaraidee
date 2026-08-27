@@ -54,19 +54,24 @@ jobs:
             approved_at=$(sed -n 's/^- Approved at: //p' "$file")
             python - "$approved_at" <<'PY'
           import datetime as dt
+          import re
           import sys
+
           value = sys.argv[1].strip().replace('**', '')
+          if not re.fullmatch(r'.*(Z|[+-]\d{2}:\d{2})', value):
+              raise SystemExit('Approved at must be timezone-qualified ISO-8601 (Z or explicit UTC offset).')
           try:
               parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
           except ValueError:
               raise SystemExit('Approved at must be a valid ISO-8601 timestamp.')
-          if parsed.tzinfo is None:
-              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          if parsed.tzinfo is None or parsed.utcoffset() is None:
+              raise SystemExit('Approved at must include timezone information.')
           now = dt.datetime.now(dt.timezone.utc)
-          if parsed > now + dt.timedelta(minutes=5):
+          if parsed.astimezone(dt.timezone.utc) > now + dt.timedelta(minutes=5):
               raise SystemExit('Approved at must not be materially in the future.')
           PY
           fi
+          grep -Fq 'timezone-qualified ISO-8601 timestamp' "$file"
           grep -Fq 'does not itself prove subscribe/renew/cancel/payment-failure execution' "$file"
           grep -Fq 'They do not prove a merchant account exists' "$file"
 
@@ -141,7 +146,7 @@ jobs:
             echo '- APPROVED may establish reviewed decision outputs such as price and Free/Premium entitlement, subject to the decision contract.'
             echo '- Merchant-account reality, subscription lifecycle execution, webhook/entitlement execution, transaction/reconciliation and refund/cancel execution gates remain open in both decision states until separate provider-backed evidence exists.'
             echo '- CURRENT-RELEASE.md must keep Payment/Premium as a Commercial blocker until provider-backed lifecycle evidence exists.'
-            echo '- APPROVED additionally requires Production Privacy/Legal approval and a valid approval timestamp.'
+            echo '- APPROVED additionally requires Production Privacy/Legal approval and a timezone-qualified, valid approval timestamp that is not materially in the future.'
             echo '- APPROVED only establishes a reviewed decision record; provider-backed transaction and entitlement evidence remains separate.'
             echo '- Static CI success is not merchant onboarding, payment execution, conversion, revenue, Public Beta PASS, or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
