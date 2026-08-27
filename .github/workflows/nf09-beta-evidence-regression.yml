@@ -1,0 +1,81 @@
+name: NF-09 Beta Evidence Regression
+
+on:
+  pull_request:
+    paths:
+      - 'CURRENT-RELEASE.md'
+      - 'BETA-CHECKLIST.md'
+      - '.github/workflows/nf09-beta-evidence-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'CURRENT-RELEASE.md'
+      - 'BETA-CHECKLIST.md'
+      - '.github/workflows/nf09-beta-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nf09-evidence-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify scoped NF-09 evidence remains consistent
+        shell: bash
+        run: |
+          set -euo pipefail
+          release='CURRENT-RELEASE.md'
+          beta='BETA-CHECKLIST.md'
+
+          test -s "$release"
+          test -s "$beta"
+
+          grep -Fq 'NF-09 / Issue #57 is **PASS and closed completed for the tested physical iPhone/VoiceOver session on deployed PR #201/v16**' "$release" || {
+            echo 'CURRENT-RELEASE missing canonical scoped iPhone/VoiceOver NF-09 PASS evidence.'
+            exit 1
+          }
+          grep -Fq 'prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT' "$release" || {
+            echo 'CURRENT-RELEASE must preserve Android TalkBack inconclusive boundary.'
+            exit 1
+          }
+
+          grep -Fq 'iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session' "$beta" || {
+            echo 'BETA-CHECKLIST missing scoped iPhone/VoiceOver NF-09 evidence.'
+            exit 1
+          }
+          grep -Fq 'NF-09 มี scoped physical iPhone/VoiceOver #1 PASS on deployed PR #201/v16' "$beta" || \
+          grep -Fq 'NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16' "$beta" || {
+            echo 'BETA-CHECKLIST NF-09 acceptance line is not aligned with canonical scoped PASS.'
+            exit 1
+          }
+          grep -Fq 'Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT**' "$beta" || {
+            echo 'BETA-CHECKLIST must preserve Android TalkBack inconclusive boundary.'
+            exit 1
+          }
+          grep -Fq 'second-device/full-matrix accessibility coverage ยังเปิด' "$beta" || {
+            echo 'BETA-CHECKLIST must keep second-device/full-matrix accessibility coverage open.'
+            exit 1
+          }
+
+          if grep -Fq 'NF-09 Surprise busy/ready accessibility ผ่านด้วย TalkBack/VoiceOver environment ที่ทำงานได้จริง; สถานะล่าสุดเป็น **INCONCLUSIVE / test-environment issue**' "$beta"; then
+            echo 'Stale pre-VoiceOver NF-09 status detected in BETA-CHECKLIST.'
+            exit 1
+          fi
+
+          echo 'Scoped NF-09 iPhone/VoiceOver evidence and remaining Android/second-device boundaries are consistent.'
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## NF-09 beta evidence regression'
+            echo
+            echo '- The tested physical iPhone/VoiceOver session is a scoped NF-09 PASS on deployed PR #201/v16.'
+            echo '- Android TalkBack remains INCONCLUSIVE / TEST ENVIRONMENT and is not promoted to PASS or app FAIL.'
+            echo '- This guard does not create second-device, full accessibility matrix, Public Beta completion or Commercial GO evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
