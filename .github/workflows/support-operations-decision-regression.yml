@@ -63,6 +63,11 @@ jobs:
             grep -Fq -- "- $field:" "$decision"
           done
 
+          field_value() {
+            local field="$1"
+            sed -n "s/^- ${field}: \*\*\(.*\)\*\*$/\1/p" "$decision" | head -n1
+          }
+
           if [ "$status" = 'NOT APPROVED' ]; then
             for field in "${fields[@]}"; do
               grep -Fq -- "- $field: **UNSET**" "$decision" || {
@@ -73,6 +78,34 @@ jobs:
           else
             if grep -Fq '**UNSET**' "$decision"; then
               echo 'APPROVED support decision cannot contain UNSET fields'
+              exit 1
+            fi
+
+            evidence_location="$(field_value 'Support evidence / runbook location')"
+            approved_at="$(field_value 'Approved at')"
+
+            case "$evidence_location" in
+              https://*) ;;
+              *.md)
+                test -f "$evidence_location" || {
+                  echo "Approved support evidence file does not exist: $evidence_location"
+                  exit 1
+                }
+                ;;
+              *)
+                echo 'APPROVED support decision requires a traceable HTTPS URL or existing Markdown evidence/runbook file'
+                exit 1
+                ;;
+            esac
+
+            approved_epoch="$(date -u -d "$approved_at" +%s 2>/dev/null || true)"
+            now_epoch="$(date -u +%s)"
+            if [ -z "$approved_epoch" ]; then
+              echo 'APPROVED support decision requires a parseable Approved at timestamp'
+              exit 1
+            fi
+            if [ "$approved_epoch" -gt "$((now_epoch + 300))" ]; then
+              echo 'APPROVED support decision timestamp cannot be materially in the future'
               exit 1
             fi
           fi
@@ -97,5 +130,6 @@ jobs:
           {
             echo '### Support Operations Decision Regression'
             echo '- Static governance consistency only.'
+            echo '- APPROVED requires traceable support evidence and a valid approval timestamp, but approval still does not prove execution.'
             echo '- Does not establish support delivery, SLA, on-call coverage, incident response, Privacy/Legal approval, Public Beta PASS or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
