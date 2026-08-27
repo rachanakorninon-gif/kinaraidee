@@ -58,8 +58,6 @@ jobs:
               grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
             done
             grep -Fq 'remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence' "$release"
-            grep -Fq -- '- [ ] ทดสอบ auth / sign-out / password recovery / session expiry' "$checklist"
-            grep -Fq -- '- [ ] ทดสอบ owner/admin authorization และ negative cases' "$checklist"
           else
             if grep -q '\*\*UNSET\*\*' "$file"; then
               echo 'APPROVED auth lifecycle exercise still contains UNSET fields.'
@@ -80,6 +78,14 @@ jobs:
               raise SystemExit('Approved at must not be materially in the future.')
           PY
           fi
+
+          # Approval authorizes the exercise only. Until a separate execution-evidence
+          # record is introduced and verified, the observed auth/authorization gates
+          # must remain open regardless of decision status.
+          grep -Fq -- '- [ ] ทดสอบ auth / sign-out / password recovery / session expiry' "$checklist"
+          grep -Fq -- '- [ ] ทดสอบ owner/admin authorization และ negative cases' "$checklist"
+          grep -Fq 'remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence' "$release"
+
           grep -Fq 'Approval only authorizes the controlled exercise' "$file"
           grep -Fq 'Sensitive values must not be committed to the repository' "$file"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
@@ -93,8 +99,9 @@ jobs:
             echo '## Auth lifecycle exercise decision regression'
             echo
             echo '- NOT APPROVED requires all exercise fields to remain UNSET.'
-            echo '- While NOT APPROVED, existing auth lifecycle and owner/admin negative-case checklist gates must remain open.'
-            echo '- APPROVED authorizes a controlled exercise only; observed allow/deny evidence remains a separate execution gate.'
+            echo '- APPROVED authorizes a controlled exercise only; it does not close auth/session or privileged-authorization execution gates.'
+            echo '- Auth/session and owner/admin negative-case checklist gates remain open until separate execution evidence exists and is verified.'
+            echo '- Observed allow/deny evidence remains a separate execution gate from decision approval.'
             echo '- No token, refresh token, service-role credential, privileged secret or real-user fixture may be committed as evidence.'
             echo '- Static CI/RLS/grant evidence is not external session/JWT lifecycle or privileged-backend exercise PASS.'
             echo '- This workflow does not enable leaked-password protection or establish Public Beta/Commercial GO.'
