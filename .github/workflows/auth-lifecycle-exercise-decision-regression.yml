@@ -1,0 +1,99 @@
+name: Auth Lifecycle Exercise Decision Regression
+
+on:
+  pull_request:
+    paths:
+      - 'AUTH-LIFECYCLE-EXERCISE-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/auth-lifecycle-exercise-decision-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'AUTH-LIFECYCLE-EXERCISE-DECISION.md'
+      - 'CURRENT-RELEASE.md'
+      - 'RELEASE-CHECKLIST.md'
+      - '.github/workflows/auth-lifecycle-exercise-decision-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  decision-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate authenticated lifecycle exercise decision state
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='AUTH-LIFECYCLE-EXERCISE-DECISION.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
+          test -s "$file"
+          test -s "$release"
+          test -s "$checklist"
+          grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
+          fields=(
+            'Exercise owner:'
+            'Security reviewer/approver:'
+            'Approved environment:'
+            'Test-account/fixture source:'
+            'Session lifecycle scenarios:'
+            'JWT expiry/refresh/revocation scenarios:'
+            'Cross-user authorization scenarios:'
+            'Privileged-backend negative authorization scenarios:'
+            'Recovery/cleanup method for exercise artifacts:'
+            'Evidence location:'
+            'Approved at:'
+          )
+          for marker in "${fields[@]}"; do
+            grep -Fq -- "$marker" "$file" || { echo "Missing auth lifecycle field: $marker"; exit 1; }
+          done
+          if grep -q '^Status: \*\*NOT APPROVED\*\*$' "$file"; then
+            for marker in "${fields[@]}"; do
+              grep -F "$marker" "$file" | grep -Fq '**UNSET**' || { echo "NOT APPROVED field must remain UNSET: $marker"; exit 1; }
+            done
+            grep -Fq 'remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence' "$release"
+            grep -Fq -- '- [ ] Remaining external authenticated API/JWT lifecycle / privileged-backend negative authorization evidence' "$checklist" || true
+          else
+            if grep -q '\*\*UNSET\*\*' "$file"; then
+              echo 'APPROVED auth lifecycle exercise still contains UNSET fields.'
+              exit 1
+            fi
+            approved_at=$(sed -n 's/^- Approved at: //p' "$file")
+            python - "$approved_at" <<'PY'
+          import datetime as dt
+          import sys
+          value = sys.argv[1].strip().replace('**', '')
+          try:
+              parsed = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
+          except ValueError:
+              raise SystemExit('Approved at must be a valid ISO-8601 timestamp.')
+          if parsed.tzinfo is None:
+              parsed = parsed.replace(tzinfo=dt.timezone.utc)
+          if parsed > dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=5):
+              raise SystemExit('Approved at must not be materially in the future.')
+          PY
+          fi
+          grep -Fq 'Approval only authorizes the controlled exercise' "$file"
+          grep -Fq 'Sensitive values must not be committed to the repository' "$file"
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+          grep -Fq 'ห้ามผ่านจากการคาดเดา' "$checklist"
+
+      - name: Record evidence boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Auth lifecycle exercise decision regression'
+            echo
+            echo '- NOT APPROVED requires all exercise fields to remain UNSET.'
+            echo '- APPROVED authorizes a controlled exercise only; observed allow/deny evidence remains a separate execution gate.'
+            echo '- No token, refresh token, service-role credential, privileged secret or real-user fixture may be committed as evidence.'
+            echo '- Static CI/RLS/grant evidence is not external session/JWT lifecycle or privileged-backend exercise PASS.'
+            echo '- This workflow does not enable leaked-password protection or establish Public Beta/Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
