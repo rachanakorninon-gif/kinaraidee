@@ -79,7 +79,7 @@ jobs:
           grep -Fq 'Organization plan observed in the Supabase dashboard: `Free`' "$auth"
           grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth"
           grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth"
-          grep -Fq 'Supabase leaked-password protection' "$security" || {
+          grep -Fq 'Supabase Auth leaked-password protection ถูกเปิดและ Security Advisor ถูกตรวจซ้ำ' "$security" || {
             echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
             exit 1
           }
