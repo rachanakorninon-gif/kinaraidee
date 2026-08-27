@@ -71,6 +71,21 @@ jobs:
               echo 'APPROVED Group monitoring decision still contains UNSET fields.'
               exit 1
             fi
+            approved_at="$(sed -n 's/^- Approved at: \*\*\(.*\)\*\*$/\1/p' "$file")"
+            APPROVED_AT="$approved_at" node <<'NODE'
+          const value = process.env.APPROVED_AT || '';
+          const parsed = Date.parse(value);
+          if (!value || Number.isNaN(parsed)) {
+            console.error('APPROVED Group monitoring decision must contain a valid ISO-8601 Approved at timestamp.');
+            process.exit(1);
+          }
+          if (parsed > Date.now() + 5 * 60 * 1000) {
+            console.error('APPROVED Group monitoring decision has a future Approved at timestamp.');
+            process.exit(1);
+          }
+          NODE
+            grep -Fq 'must be a real ISO-8601 date-time' "$file"
+            grep -Fq 'This approval timestamp records the decision only; it is not execution evidence.' "$file"
             grep -Fq 'After approval, monitoring still requires separate execution evidence' "$file"
           fi
 
