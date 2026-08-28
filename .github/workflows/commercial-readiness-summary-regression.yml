@@ -94,6 +94,9 @@ jobs:
               sys.exit('Commercial summary cannot advance beyond NO-GO while execution evidence is NOT VERIFIED')
 
           if execution_status == 'VERIFIED':
+              if public_beta_status != 'COMPLETE':
+                  sys.exit('Commercial execution cannot be VERIFIED while canonical Public Beta status is not COMPLETE')
+
               required_trace_fields = [
                   'Commercial scope / revenue model',
                   'Release candidate commit',
@@ -111,6 +114,16 @@ jobs:
               for field in required_trace_fields:
                   if re.search(rf'^- {re.escape(field)}:\s+\*\*NOT CAPTURED\*\*', execution, re.M):
                       sys.exit(f'Commercial execution VERIFIED requires trace field or reviewed out-of-scope disposition: {field}')
+
+              public_beta_trace = re.search(
+                  r'^- Public Beta completion evidence:\s+\*\*(.+?)\*\*\s*$',
+                  execution,
+                  re.M,
+              )
+              if not public_beta_trace:
+                  sys.exit('Commercial execution VERIFIED requires a machine-readable Public Beta completion evidence trace')
+              if public_beta_trace.group(1).startswith('OUT OF SCOPE'):
+                  sys.exit('Public Beta completion evidence cannot be marked OUT OF SCOPE for Commercial execution VERIFIED')
 
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
               sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
