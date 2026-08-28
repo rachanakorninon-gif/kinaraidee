@@ -5,6 +5,7 @@ on:
     paths:
       - 'PRODUCTION-READINESS.md'
       - 'CURRENT-RELEASE.md'
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
       - 'PAYMENT-PREMIUM-DECISION.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'PARTNER-COMMERCIAL-DECISION.md'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'PRODUCTION-READINESS.md'
       - 'CURRENT-RELEASE.md'
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
       - 'PAYMENT-PREMIUM-DECISION.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'PARTNER-COMMERCIAL-DECISION.md'
@@ -38,6 +40,7 @@ jobs:
 
           board = Path('PRODUCTION-READINESS.md').read_text(encoding='utf-8')
           release = Path('CURRENT-RELEASE.md').read_text(encoding='utf-8')
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
           decision_files = [
               'PAYMENT-PREMIUM-DECISION.md',
               'PRODUCTION-PRIVACY-LEGAL-DECISION.md',
@@ -64,6 +67,11 @@ jobs:
               sys.exit('CURRENT-RELEASE.md contains conflicting Public Beta completion states')
           public_beta_status = next(iter(public_beta_states))
 
+          execution_match = re.search(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if not execution_match:
+              sys.exit('COMMERCIAL-EXECUTION-EVIDENCE.md must declare Status as NOT VERIFIED or VERIFIED')
+          execution_status = execution_match.group(1)
+
           statuses = {}
           for path in decision_files:
               text = Path(path).read_text(encoding='utf-8')
@@ -82,12 +90,35 @@ jobs:
           if public_beta_status == 'NOT COMPLETE' and board_status != 'NO-GO':
               sys.exit('Commercial summary cannot advance beyond NO-GO while Public Beta is NOT COMPLETE')
 
+          if execution_status == 'NOT VERIFIED' and board_status != 'NO-GO':
+              sys.exit('Commercial summary cannot advance beyond NO-GO while execution evidence is NOT VERIFIED')
+
+          if execution_status == 'VERIFIED':
+              required_trace_fields = [
+                  'Commercial scope / revenue model',
+                  'Release candidate commit',
+                  'Production deployment/runtime reference',
+                  'Public Beta completion evidence',
+                  'Payment/Premium execution evidence',
+                  'Privacy/Legal publication evidence',
+                  'Partner-commercial execution evidence',
+                  'Production access/monitoring/recovery evidence',
+                  'Reviewed scope exclusions',
+                  'Reviewer/approver reference',
+                  'Evidence location(s)',
+                  'Verified at',
+              ]
+              for field in required_trace_fields:
+                  if re.search(rf'^- {re.escape(field)}:\s+\*\*NOT CAPTURED\*\*', execution, re.M):
+                      sys.exit(f'Commercial execution VERIFIED requires trace field or reviewed out-of-scope disposition: {field}')
+
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
               sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
 
           print('Commercial readiness summary boundary is consistent.')
           print('Board status:', board_status)
           print('Public Beta status:', public_beta_status)
+          print('Commercial execution evidence:', execution_status)
           for path, status in statuses.items():
               print(f'{path}: {status}')
           print('This regression validates governance consistency only; it does not create Public Beta completion, Commercial GO or execution evidence.')
