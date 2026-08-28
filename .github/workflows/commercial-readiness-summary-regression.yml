@@ -94,6 +94,12 @@ jobs:
               sys.exit('Commercial summary cannot advance beyond NO-GO while execution evidence is NOT VERIFIED')
 
           if execution_status == 'VERIFIED':
+              if blockers:
+                  sys.exit(
+                      'Commercial execution cannot be VERIFIED while required decision records are NOT APPROVED: '
+                      + ', '.join(blockers)
+                  )
+
               if public_beta_status != 'COMPLETE':
                   sys.exit('Commercial execution cannot be VERIFIED while canonical Public Beta status is not COMPLETE')
 
