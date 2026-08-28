@@ -1,0 +1,68 @@
+name: Commercial Trace Placeholder Regression
+
+on:
+  pull_request:
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-trace-placeholder-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-trace-placeholder-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-commercial-trace-placeholders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject case-variant NOT CAPTURED in VERIFIED evidence
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
+          status_match = re.search(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if not status_match:
+              sys.exit('COMMERCIAL-EXECUTION-EVIDENCE.md must declare Status as NOT VERIFIED or VERIFIED')
+
+          if status_match.group(1) != 'VERIFIED':
+              print('Commercial execution is not VERIFIED; no execution trace evidence is inferred.')
+              sys.exit(0)
+
+          required_trace_fields = [
+              'Commercial scope / revenue model',
+              'Release candidate commit',
+              'Production deployment/runtime reference',
+              'Public Beta completion evidence',
+              'Payment/Premium execution evidence',
+              'Privacy/Legal publication evidence',
+              'Partner-commercial execution evidence',
+              'Production access/monitoring/recovery evidence',
+              'Reviewed scope exclusions',
+              'Reviewer/approver reference',
+              'Evidence location(s)',
+              'Verified at',
+          ]
+
+          for field in required_trace_fields:
+              match = re.search(
+                  rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$',
+                  execution,
+                  re.M,
+              )
+              if not match:
+                  sys.exit(f'Commercial execution VERIFIED requires machine-readable trace field: {field}')
+              value = match.group(1).strip()
+              if value.upper() == 'NOT CAPTURED':
+                  sys.exit(
+                      f'Commercial execution VERIFIED cannot use NOT CAPTURED in any casing for {field}'
+                  )
+
+          print('Commercial VERIFIED trace placeholders are case-safe.')
+          print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
