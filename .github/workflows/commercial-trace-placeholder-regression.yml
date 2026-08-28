@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reject empty, case-variant, or decorated placeholders in VERIFIED evidence
+      - name: Reject ambiguous, empty, case-variant, or decorated placeholders in VERIFIED evidence
         shell: python
         run: |
           from pathlib import Path
@@ -27,11 +27,13 @@ jobs:
           import sys
 
           execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
-          status_match = re.search(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
-          if not status_match:
-              sys.exit('COMMERCIAL-EXECUTION-EVIDENCE.md must declare Status as NOT VERIFIED or VERIFIED')
+          status_matches = re.findall(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if len(status_matches) != 1:
+              sys.exit(
+                  'COMMERCIAL-EXECUTION-EVIDENCE.md must declare exactly one machine-readable Status as NOT VERIFIED or VERIFIED'
+              )
 
-          if status_match.group(1) != 'VERIFIED':
+          if status_matches[0] != 'VERIFIED':
               print('Commercial execution is not VERIFIED; no execution trace evidence is inferred.')
               sys.exit(0)
 
@@ -57,14 +59,16 @@ jobs:
           )
 
           for field in required_trace_fields:
-              match = re.search(
+              matches = re.findall(
                   rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$',
                   execution,
                   re.M,
               )
-              if not match:
-                  sys.exit(f'Commercial execution VERIFIED requires machine-readable trace field: {field}')
-              value = match.group(1).strip()
+              if len(matches) != 1:
+                  sys.exit(
+                      f'Commercial execution VERIFIED requires exactly one machine-readable trace field: {field}'
+                  )
+              value = matches[0].strip()
               if not value:
                   sys.exit(
                       f'Commercial execution VERIFIED cannot use an empty or whitespace-only trace for {field}'
@@ -75,5 +79,5 @@ jobs:
                       f'Commercial execution VERIFIED cannot use a placeholder or decorated placeholder trace for {field}: {value}'
                   )
 
-          print('Commercial VERIFIED trace placeholders are non-empty, case-safe, and reject decorated placeholder markers across punctuation variants.')
+          print('Commercial VERIFIED trace fields are unique, non-empty, case-safe, and reject decorated placeholder markers across punctuation variants.')
           print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
