@@ -36,10 +36,15 @@ jobs:
 
           grep -Fq 'Keyboard focus result:' "$evidence"
           grep -Fq 'Reduced-motion result:' "$evidence"
-          grep -Fq 'Device / model:' "$evidence"
-          grep -Fq 'Tester / session reference:' "$evidence"
-          grep -Fq 'Evidence location:' "$evidence"
-          grep -Fq 'Verified deployed runtime / release marker:' "$evidence"
+          grep -Fq 'Keyboard device / model:' "$evidence"
+          grep -Fq 'Keyboard tester / session reference:' "$evidence"
+          grep -Fq 'Keyboard evidence location:' "$evidence"
+          grep -Fq 'Keyboard verified deployed runtime / release marker:' "$evidence"
+          grep -Fq 'Reduced-motion device / model:' "$evidence"
+          grep -Fq 'Reduced-motion tester / session reference:' "$evidence"
+          grep -Fq 'Reduced-motion evidence location:' "$evidence"
+          grep -Fq 'Reduced-motion verified deployed runtime / release marker:' "$evidence"
+          grep -Fq 'Each result therefore keeps its own trace metadata' "$evidence"
           grep -Fq 'real hardware keyboard or equivalent platform keyboard navigation path' "$evidence"
           grep -Fq 'Platform/browser reduced-motion preference was enabled' "$evidence"
           grep -Fq 'Static CSS inspection or automated focus-style regression does not establish this result.' "$evidence"
@@ -57,15 +62,22 @@ jobs:
             exit 1
           fi
 
-          require_trace_metadata() {
-            if grep -Eq '^(Device / model|OS / version|Browser or installed-PWA context / version|Tester / session reference|Evidence location|Test date/time|Verified deployed runtime / release marker): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
-              echo 'PASS is not traceable: required shared physical-platform metadata is missing' >&2
+          require_keyboard_trace_metadata() {
+            if grep -Eq '^Keyboard (device / model|OS / version|browser or installed-PWA context / version|tester / session reference|evidence location|test date/time|verified deployed runtime / release marker): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
+              echo 'Keyboard PASS is not traceable: required keyboard physical-platform metadata is missing' >&2
+              exit 1
+            fi
+          }
+
+          require_motion_trace_metadata() {
+            if grep -Eq '^Reduced-motion (device / model|OS / version|browser or installed-PWA context / version|tester / session reference|evidence location|test date/time|verified deployed runtime / release marker): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
+              echo 'Reduced-motion PASS is not traceable: required reduced-motion physical-platform metadata is missing' >&2
               exit 1
             fi
           }
 
           if [ "$keyboard" = 'PASS' ]; then
-            require_trace_metadata
+            require_keyboard_trace_metadata
             if grep -Eq '^(Keyboard navigation was performed with a real hardware keyboard or equivalent platform keyboard navigation path|Interactive controls can be reached in a logical sequence without pointer/touch-only interaction|A visible focus indicator is present on focused actionable controls|Focus is not visually lost during the tested core flow|Activation with keyboard controls works for the tested actionable elements): NOT VERIFIED$' "$evidence"; then
               echo 'Keyboard focus PASS conflicts with unverified required physical interaction checks' >&2
               exit 1
@@ -73,7 +85,7 @@ jobs:
           fi
 
           if [ "$motion" = 'PASS' ]; then
-            require_trace_metadata
+            require_motion_trace_metadata
             if grep -Eq '^(Platform/browser reduced-motion preference was enabled before the tested interaction|The active page/session was confirmed to receive the reduced-motion preference|The tested core interaction remains usable with reduced motion enabled|Non-essential animation/motion covered by the current implementation is reduced or removed as intended|No new blocking, unreadable, or timing-dependent behavior appears under reduced motion): NOT VERIFIED$' "$evidence"; then
               echo 'Reduced-motion PASS conflicts with unverified required real-platform checks' >&2
               exit 1
@@ -82,5 +94,5 @@ jobs:
 
       - name: Explain evidence boundary
         run: |
-          echo 'Keyboard/reduced-motion evidence contract is internally consistent.'
+          echo 'Keyboard/reduced-motion evidence contract is internally consistent with independent trace metadata.'
           echo 'This static guard does not create a physical-platform result, full accessibility PASS, Public Beta completion, or Commercial GO.'
