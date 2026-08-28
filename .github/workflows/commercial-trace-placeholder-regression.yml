@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reject case-variant NOT CAPTURED in VERIFIED evidence
+      - name: Reject case-variant or decorated NOT CAPTURED in VERIFIED evidence
         shell: python
         run: |
           from pathlib import Path
@@ -59,10 +59,11 @@ jobs:
               if not match:
                   sys.exit(f'Commercial execution VERIFIED requires machine-readable trace field: {field}')
               value = match.group(1).strip()
-              if value.upper() == 'NOT CAPTURED':
+              normalized = re.sub(r'\s+', ' ', value).strip().upper()
+              if normalized.startswith('NOT CAPTURED'):
                   sys.exit(
-                      f'Commercial execution VERIFIED cannot use NOT CAPTURED in any casing for {field}'
+                      f'Commercial execution VERIFIED cannot use NOT CAPTURED or a decorated NOT CAPTURED marker for {field}'
                   )
 
-          print('Commercial VERIFIED trace placeholders are case-safe.')
+          print('Commercial VERIFIED trace placeholders are case-safe and reject decorated NOT CAPTURED markers.')
           print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
