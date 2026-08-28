@@ -4,6 +4,12 @@
 
 > สถานะต้องอิงหลักฐานจริง ห้ามเปลี่ยนเป็น READY จากการคาดเดา
 
+## Current Commercial status
+
+**NO-GO**
+
+สถานะนี้เป็น summary gate เท่านั้น และต้องคงเป็น **NO-GO** ตราบใดที่ Commercial decision records ที่จำเป็นยัง `NOT APPROVED`, Public Beta ยังไม่ complete หรือ execution evidence ที่จำเป็นยังไม่ครบ การเปลี่ยน decision record เป็น `APPROVED` เป็นเพียง governance approval และไม่ใช่หลักฐานว่ามี payment, conversion, partner, legal execution หรือ revenue เกิดขึ้นจริง
+
 ## สถานะที่ใช้
 - **READY** — มีหลักฐานจริงและ gate ที่เกี่ยวข้องผ่าน
 - **VALIDATE** — ระบบ/เอกสารมีแล้ว แต่ยังต้องพิสูจน์กับอุปกรณ์ ผู้ใช้ ร้าน หรือ environment จริง

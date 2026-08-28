@@ -1,0 +1,75 @@
+name: Commercial Readiness Summary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCTION-READINESS.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - '.github/workflows/commercial-readiness-summary-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PRODUCTION-READINESS.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - '.github/workflows/commercial-readiness-summary-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-commercial-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Commercial summary evidence boundary
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          board = Path('PRODUCTION-READINESS.md').read_text(encoding='utf-8')
+          decision_files = [
+              'PAYMENT-PREMIUM-DECISION.md',
+              'PRODUCTION-PRIVACY-LEGAL-DECISION.md',
+              'PARTNER-COMMERCIAL-DECISION.md',
+              'PRODUCTION-ACCESS-DECISION.md',
+          ]
+
+          board_match = re.search(
+              r'## Current Commercial status\s+\*\*(NO-GO|LIMITED GO|GO)\*\*',
+              board,
+          )
+          if not board_match:
+              sys.exit('PRODUCTION-READINESS.md must contain a machine-readable Current Commercial status')
+          board_status = board_match.group(1)
+
+          statuses = {}
+          for path in decision_files:
+              text = Path(path).read_text(encoding='utf-8')
+              match = re.search(r'^Status:\s+\*\*(NOT APPROVED|APPROVED)\*\*', text, re.M)
+              if not match:
+                  sys.exit(f'{path} must declare Status as NOT APPROVED or APPROVED')
+              statuses[path] = match.group(1)
+
+          blockers = [path for path, status in statuses.items() if status == 'NOT APPROVED']
+          if blockers and board_status != 'NO-GO':
+              sys.exit(
+                  'Commercial summary cannot advance beyond NO-GO while required decision records are NOT APPROVED: '
+                  + ', '.join(blockers)
+              )
+
+          if board_status == 'NO-GO' and '**NO-GO**' not in board:
+              sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
+
+          print('Commercial readiness summary boundary is consistent.')
+          print('Board status:', board_status)
+          for path, status in statuses.items():
+              print(f'{path}: {status}')
+          print('This regression validates governance consistency only; it does not create Commercial GO or execution evidence.')
