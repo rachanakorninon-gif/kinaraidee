@@ -1,0 +1,66 @@
+name: Commercial Verified At Regression
+
+on:
+  pull_request:
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-verified-at-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-verified-at-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-commercial-verified-at:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Commercial VERIFIED audit timestamp
+        shell: python
+        run: |
+          from datetime import datetime
+          from pathlib import Path
+          import re
+          import sys
+
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
+          status_match = re.search(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if not status_match:
+              sys.exit('COMMERCIAL-EXECUTION-EVIDENCE.md must declare Status as NOT VERIFIED or VERIFIED')
+
+          if status_match.group(1) != 'VERIFIED':
+              print('Commercial execution is not VERIFIED; Verified at timestamp is not asserted.')
+              sys.exit(0)
+
+          verified_at_match = re.search(
+              r'^- Verified at:\s+\*\*(.+?)\*\*\s*$',
+              execution,
+              re.M,
+          )
+          if not verified_at_match:
+              sys.exit('Commercial execution VERIFIED requires machine-readable Verified at trace field')
+
+          verified_at = verified_at_match.group(1).strip()
+          if not re.fullmatch(
+              r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})',
+              verified_at,
+          ):
+              sys.exit(
+                  'Commercial execution VERIFIED requires Verified at as an ISO 8601 timestamp with timezone, '
+                  'for example 2026-08-28T12:00:00Z'
+              )
+
+          try:
+              parsed = datetime.fromisoformat(verified_at.replace('Z', '+00:00'))
+          except ValueError as exc:
+              sys.exit(f'Commercial execution VERIFIED has invalid Verified at timestamp: {exc}')
+
+          if parsed.utcoffset() is None:
+              sys.exit('Commercial execution VERIFIED requires timezone-aware Verified at timestamp')
+
+          print('Commercial VERIFIED audit timestamp is machine-readable:', verified_at)
+          print('This regression validates trace format only; it does not create Commercial execution, deployment, user, partner, conversion, payment or revenue evidence.')
