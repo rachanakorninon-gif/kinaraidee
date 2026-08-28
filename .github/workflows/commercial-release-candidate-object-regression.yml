@@ -1,0 +1,63 @@
+name: Commercial Release Candidate Object Regression
+
+on:
+  pull_request:
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-release-candidate-object-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-release-candidate-object-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-release-candidate-object:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate Commercial release candidate resolves to a repository commit
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import subprocess
+          import sys
+
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
+          status_match = re.search(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if not status_match:
+              sys.exit('COMMERCIAL-EXECUTION-EVIDENCE.md must declare Status as NOT VERIFIED or VERIFIED')
+
+          if status_match.group(1) != 'VERIFIED':
+              print('Commercial execution is not VERIFIED; release-candidate object resolution is not asserted.')
+              sys.exit(0)
+
+          candidate_match = re.search(
+              r'^- Release candidate commit:\s+\*\*([0-9a-fA-F]{40})\*\*\s*$',
+              execution,
+              re.M,
+          )
+          if not candidate_match:
+              sys.exit('Commercial execution VERIFIED requires an exact 40-character Release candidate commit SHA')
+
+          candidate = candidate_match.group(1)
+          result = subprocess.run(
+              ['git', 'cat-file', '-e', f'{candidate}^{{commit}}'],
+              stdout=subprocess.DEVNULL,
+              stderr=subprocess.DEVNULL,
+              check=False,
+          )
+          if result.returncode != 0:
+              sys.exit(
+                  'Commercial execution VERIFIED requires Release candidate commit to resolve to an actual commit in repository history: '
+                  + candidate
+              )
+
+          print('Commercial release candidate resolves to an actual repository commit:', candidate)
+          print('This regression validates repository lineage only; it does not create deployment, Beta, payment, partner, conversion, revenue, legal, or production-operation evidence.')
