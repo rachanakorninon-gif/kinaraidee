@@ -33,7 +33,7 @@
 - [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
 - [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
-- [x] TC-12 Partner application มี Android same-device evidence หลังเพิ่ม privacy acknowledgement fields และ backend fields ถูกยืนยัน; ยังไม่แทน cross-platform/full-matrix evidence
+- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
 - [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง
 - [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; #177 ผ่านเฉพาะ tested Android session

@@ -76,6 +76,11 @@ jobs:
             require_count "$evidence" '- Result: **NOT VERIFIED**' 2
             require_text "$release" 'Real Feedback and Partner application submission behavior for PR #201 remains open'
             require_text "$release" 'real Feedback/Partner form interaction for the changed PR #201 paths'
+            require_text "$checklist" '- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS'
+            if grep -Fq -- '- [x] TC-12 Partner application' "$checklist"; then
+              echo 'TC-12 cannot be checked complete while canonical physical evidence remains NOT VERIFIED.'
+              exit 1
+            fi
             echo 'Public form physical evidence remains explicitly unverified and separated from CI/deployment evidence'
             exit 0
           fi
@@ -110,5 +115,9 @@ jobs:
             echo 'Physical PASS cannot coexist with the stale release-summary blocker for PR #201 form interaction.'
             exit 1
           fi
+          if grep -Fq -- 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED**' "$checklist"; then
+            echo 'Physical PASS cannot coexist with a stale TC-12 NOT VERIFIED checklist marker.'
+            exit 1
+          fi
 
-          echo 'Public form physical evidence PASS is internally complete, traceable, synchronized with the release-summary boundary, and remains separate from broader Beta/Commercial gates'
+          echo 'Public form physical evidence PASS is internally complete, traceable, synchronized with release-summary/checklist boundaries, and remains separate from broader Beta/Commercial gates'
