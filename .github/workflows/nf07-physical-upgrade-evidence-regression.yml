@@ -6,12 +6,16 @@ on:
     paths:
       - "NF07-PHYSICAL-UPGRADE-EVIDENCE.md"
       - "BETA-NEW-FLOW-TESTS.md"
+      - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
       - ".github/workflows/pwa-cache-upgrade-regression.yml"
       - ".github/workflows/nf07-physical-upgrade-evidence-regression.yml"
   pull_request:
     paths:
       - "NF07-PHYSICAL-UPGRADE-EVIDENCE.md"
       - "BETA-NEW-FLOW-TESTS.md"
+      - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
       - ".github/workflows/pwa-cache-upgrade-regression.yml"
       - ".github/workflows/nf07-physical-upgrade-evidence-regression.yml"
   workflow_dispatch:
@@ -32,10 +36,14 @@ jobs:
           set -euo pipefail
           evidence='NF07-PHYSICAL-UPGRADE-EVIDENCE.md'
           tests='BETA-NEW-FLOW-TESTS.md'
+          release='CURRENT-RELEASE.md'
+          beta='BETA-CHECKLIST.md'
           synthetic='.github/workflows/pwa-cache-upgrade-regression.yml'
 
           test -f "$evidence"
           test -f "$tests"
+          test -f "$release"
+          test -f "$beta"
           test -f "$synthetic"
 
           grep -Fq 'NF-07 result:' "$evidence"
@@ -52,12 +60,21 @@ jobs:
           grep -Fq 'Synthetic/cache regression CI เป็นหลักฐาน implementation เท่านั้น ไม่ใช่ NF-07 real-device PASS' "$tests"
 
           grep -Fq 'This guards cache cleanup logic but does not constitute NF-07 real-device upgrade PASS.' "$synthetic"
+          grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
 
           result=$(sed -n 's/^NF-07 result: \*\*\(.*\)\*\*$/\1/p' "$evidence" | head -n1)
           if [ -z "$result" ]; then
             echo 'Could not parse NF-07 result' >&2
             exit 1
           fi
+
+          case "$result" in
+            'NOT VERIFIED'|'INCONCLUSIVE / BASELINE NOT VERIFIED'|'PASS') ;;
+            *) echo "Unsupported NF-07 result: $result" >&2; exit 1 ;;
+          esac
+
+          release_open='NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.'
+          beta_open='- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด'
 
           if [ "$result" = 'PASS' ]; then
             if grep -Eq '^(Device / model|OS / version|Browser or installed-PWA context / version|Tester / session reference|Evidence location|Test date/time): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
@@ -72,9 +89,20 @@ jobs:
               echo 'NF-07 PASS lacks a verifiable pre-v16 baseline' >&2
               exit 1
             fi
+            if grep -Fq "$release_open" "$release"; then
+              echo 'NF-07 PASS conflicts with stale CURRENT-RELEASE open-gate wording' >&2
+              exit 1
+            fi
+            if grep -Fq -- "$beta_open" "$beta"; then
+              echo 'NF-07 PASS conflicts with stale BETA-CHECKLIST open gate' >&2
+              exit 1
+            fi
+          else
+            grep -Fq "$release_open" "$release"
+            grep -Fq -- "$beta_open" "$beta"
           fi
 
       - name: Explain evidence boundary
         run: |
-          echo 'NF-07 evidence contract is internally consistent.'
+          echo 'NF-07 evidence contract is internally consistent with release/checklist state.'
           echo 'This static guard does not create a physical-device NF-07 result or Public Beta PASS.'
