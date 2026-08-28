@@ -99,6 +99,10 @@ jobs:
                   'Release candidate commit',
                   'Production deployment/runtime reference',
                   'Public Beta completion evidence',
+                  'Payment/Premium execution evidence',
+                  'Privacy/Legal publication evidence',
+                  'Partner-commercial execution evidence',
+                  'Production access/monitoring/recovery evidence',
                   'Reviewed scope exclusions',
                   'Reviewer/approver reference',
                   'Evidence location(s)',
@@ -106,7 +110,7 @@ jobs:
               ]
               for field in required_trace_fields:
                   if re.search(rf'^- {re.escape(field)}:\s+\*\*NOT CAPTURED\*\*', execution, re.M):
-                      sys.exit(f'Commercial execution VERIFIED requires trace field: {field}')
+                      sys.exit(f'Commercial execution VERIFIED requires trace field or reviewed out-of-scope disposition: {field}')
 
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
               sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
