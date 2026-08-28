@@ -1,0 +1,79 @@
+name: Commercial Status Uniqueness Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCTION-READINESS.md'
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - '.github/workflows/commercial-status-uniqueness-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PRODUCTION-READINESS.md'
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - 'PARTNER-COMMERCIAL-DECISION.md'
+      - 'PRODUCTION-ACCESS-DECISION.md'
+      - '.github/workflows/commercial-status-uniqueness-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-commercial-status-uniqueness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject ambiguous Commercial machine-readable statuses
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          board = Path('PRODUCTION-READINESS.md').read_text(encoding='utf-8')
+          board_matches = re.findall(
+              r'## Current Commercial status\s+\*\*(NO-GO|LIMITED GO|GO)\*\*',
+              board,
+          )
+          if len(board_matches) != 1:
+              sys.exit(
+                  'PRODUCTION-READINESS.md must declare exactly one machine-readable Current Commercial status'
+              )
+
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
+          execution_matches = re.findall(
+              r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*',
+              execution,
+              re.M,
+          )
+          if len(execution_matches) != 1:
+              sys.exit(
+                  'COMMERCIAL-EXECUTION-EVIDENCE.md must declare exactly one machine-readable Status'
+              )
+
+          decision_files = [
+              'PAYMENT-PREMIUM-DECISION.md',
+              'PRODUCTION-PRIVACY-LEGAL-DECISION.md',
+              'PARTNER-COMMERCIAL-DECISION.md',
+              'PRODUCTION-ACCESS-DECISION.md',
+          ]
+          for path in decision_files:
+              text = Path(path).read_text(encoding='utf-8')
+              matches = re.findall(
+                  r'^Status:\s+\*\*(NOT APPROVED|APPROVED)\*\*',
+                  text,
+                  re.M,
+              )
+              if len(matches) != 1:
+                  sys.exit(
+                      f'{path} must declare exactly one machine-readable Status as NOT APPROVED or APPROVED'
+                  )
+
+          print('Commercial board, execution, and decision statuses are unambiguous and unique.')
+          print('This regression validates governance formatting only; it does not create approval, execution evidence, Public Beta completion, or Commercial GO.')
