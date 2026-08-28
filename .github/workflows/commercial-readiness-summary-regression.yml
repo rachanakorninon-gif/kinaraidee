@@ -156,7 +156,7 @@ jobs:
                   'Evidence location(s)',
               ]
               for field in core_trace_fields:
-                  if trace_values[field].startswith('OUT OF SCOPE'):
+                  if trace_values[field].strip().upper().startswith('OUT OF SCOPE'):
                       sys.exit(
                           f'Commercial execution VERIFIED cannot mark required core trace OUT OF SCOPE: {field}'
                       )
@@ -169,7 +169,7 @@ jobs:
               ]
               out_of_scope_fields = [
                   field for field in scope_category_fields
-                  if trace_values[field].startswith('OUT OF SCOPE')
+                  if trace_values[field].strip().upper().startswith('OUT OF SCOPE')
               ]
               for field in out_of_scope_fields:
                   if trace_values[field] != 'OUT OF SCOPE — see Reviewed scope exclusions':
@@ -181,7 +181,7 @@ jobs:
               if out_of_scope_fields:
                   exclusions = trace_values['Reviewed scope exclusions'].strip()
                   normalized_exclusions = exclusions.upper()
-                  if exclusions.startswith('OUT OF SCOPE') or normalized_exclusions in {
+                  if normalized_exclusions.startswith('OUT OF SCOPE') or normalized_exclusions in {
                       'NONE', 'N/A', 'NA', 'NOT APPLICABLE', 'NO EXCLUSIONS'
                   }:
                       sys.exit(
