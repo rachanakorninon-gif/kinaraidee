@@ -22,7 +22,7 @@ jobs:
       - name: Validate Commercial VERIFIED audit timestamp
         shell: python
         run: |
-          from datetime import datetime
+          from datetime import datetime, timezone
           from pathlib import Path
           import re
           import sys
@@ -62,5 +62,11 @@ jobs:
           if parsed.utcoffset() is None:
               sys.exit('Commercial execution VERIFIED requires timezone-aware Verified at timestamp')
 
-          print('Commercial VERIFIED audit timestamp is machine-readable:', verified_at)
-          print('This regression validates trace format only; it does not create Commercial execution, deployment, user, partner, conversion, payment or revenue evidence.')
+          now = datetime.now(timezone.utc)
+          if parsed.astimezone(timezone.utc) > now:
+              sys.exit(
+                  'Commercial execution VERIFIED requires Verified at not to be in the future relative to CI validation time'
+              )
+
+          print('Commercial VERIFIED audit timestamp is machine-readable and not in the future:', verified_at)
+          print('This regression validates trace format/chronology only; it does not create Commercial execution, deployment, user, partner, conversion, payment or revenue evidence.')
