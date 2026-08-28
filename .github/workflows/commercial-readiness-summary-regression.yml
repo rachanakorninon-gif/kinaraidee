@@ -117,18 +117,21 @@ jobs:
                   'Evidence location(s)',
                   'Verified at',
               ]
+              trace_values = {}
               for field in required_trace_fields:
-                  if re.search(rf'^- {re.escape(field)}:\s+\*\*NOT CAPTURED\*\*', execution, re.M):
+                  match = re.search(
+                      rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$',
+                      execution,
+                      re.M,
+                  )
+                  if not match:
+                      sys.exit(f'Commercial execution VERIFIED requires machine-readable trace field: {field}')
+                  value = match.group(1).strip()
+                  if value == 'NOT CAPTURED':
                       sys.exit(f'Commercial execution VERIFIED requires trace field or reviewed out-of-scope disposition: {field}')
+                  trace_values[field] = value
 
-              public_beta_trace = re.search(
-                  r'^- Public Beta completion evidence:\s+\*\*(.+?)\*\*\s*$',
-                  execution,
-                  re.M,
-              )
-              if not public_beta_trace:
-                  sys.exit('Commercial execution VERIFIED requires a machine-readable Public Beta completion evidence trace')
-              if public_beta_trace.group(1).startswith('OUT OF SCOPE'):
+              if trace_values['Public Beta completion evidence'].startswith('OUT OF SCOPE'):
                   sys.exit('Public Beta completion evidence cannot be marked OUT OF SCOPE for Commercial execution VERIFIED')
 
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
