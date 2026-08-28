@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'PRODUCTION-READINESS.md'
+      - 'CURRENT-RELEASE.md'
       - 'PAYMENT-PREMIUM-DECISION.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'PARTNER-COMMERCIAL-DECISION.md'
@@ -13,6 +14,7 @@ on:
     branches: [main]
     paths:
       - 'PRODUCTION-READINESS.md'
+      - 'CURRENT-RELEASE.md'
       - 'PAYMENT-PREMIUM-DECISION.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'PARTNER-COMMERCIAL-DECISION.md'
@@ -35,6 +37,7 @@ jobs:
           import sys
 
           board = Path('PRODUCTION-READINESS.md').read_text(encoding='utf-8')
+          release = Path('CURRENT-RELEASE.md').read_text(encoding='utf-8')
           decision_files = [
               'PAYMENT-PREMIUM-DECISION.md',
               'PRODUCTION-PRIVACY-LEGAL-DECISION.md',
@@ -49,6 +52,17 @@ jobs:
           if not board_match:
               sys.exit('PRODUCTION-READINESS.md must contain a machine-readable Current Commercial status')
           board_status = board_match.group(1)
+
+          public_beta_matches = re.findall(
+              r'Public Beta (?:remains|is still) \*\*(NOT COMPLETE|COMPLETE)\*\*',
+              release,
+          )
+          public_beta_states = set(public_beta_matches)
+          if not public_beta_states:
+              sys.exit('CURRENT-RELEASE.md must declare Public Beta as NOT COMPLETE or COMPLETE')
+          if len(public_beta_states) != 1:
+              sys.exit('CURRENT-RELEASE.md contains conflicting Public Beta completion states')
+          public_beta_status = next(iter(public_beta_states))
 
           statuses = {}
           for path in decision_files:
@@ -65,11 +79,15 @@ jobs:
                   + ', '.join(blockers)
               )
 
+          if public_beta_status == 'NOT COMPLETE' and board_status != 'NO-GO':
+              sys.exit('Commercial summary cannot advance beyond NO-GO while Public Beta is NOT COMPLETE')
+
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
               sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
 
           print('Commercial readiness summary boundary is consistent.')
           print('Board status:', board_status)
+          print('Public Beta status:', public_beta_status)
           for path, status in statuses.items():
               print(f'{path}: {status}')
-          print('This regression validates governance consistency only; it does not create Commercial GO or execution evidence.')
+          print('This regression validates governance consistency only; it does not create Public Beta completion, Commercial GO or execution evidence.')
