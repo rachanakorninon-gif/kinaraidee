@@ -51,7 +51,7 @@ jobs:
           ]
 
           decorated_placeholder_pattern = re.compile(
-              r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|N/A|NA|NOT APPLICABLE)'
+              r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|TEST|N/A|NA|NOT APPLICABLE)'
               r'(?=$|[\s\W_])',
               re.I,
           )
