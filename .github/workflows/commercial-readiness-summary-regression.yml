@@ -131,6 +131,23 @@ jobs:
                       sys.exit(f'Commercial execution VERIFIED requires trace field or reviewed out-of-scope disposition: {field}')
                   trace_values[field] = value
 
+              placeholder_values = {
+                  'TBD', 'TODO', 'TBC', 'PENDING', 'UNKNOWN', 'PLACEHOLDER',
+                  'EXAMPLE', 'SAMPLE', 'MOCK', 'TEST', 'N/A', 'NA', 'NOT APPLICABLE',
+              }
+              for field, value in trace_values.items():
+                  normalized_value = value.strip().upper()
+                  if field == 'Reviewed scope exclusions' and normalized_value in {'NONE', 'NO EXCLUSIONS'}:
+                      continue
+                  if normalized_value in placeholder_values or normalized_value == 'NONE':
+                      sys.exit(
+                          f'Commercial execution VERIFIED cannot use placeholder trace value for {field}: {value}'
+                      )
+
+              release_candidate = trace_values['Release candidate commit']
+              if not re.fullmatch(r'[0-9a-fA-F]{40}', release_candidate):
+                  sys.exit('Commercial execution VERIFIED requires Release candidate commit to be an exact 40-character Git commit SHA')
+
               if trace_values['Public Beta completion evidence'].startswith('OUT OF SCOPE'):
                   sys.exit('Public Beta completion evidence cannot be marked OUT OF SCOPE for Commercial execution VERIFIED')
 
