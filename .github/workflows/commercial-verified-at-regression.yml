@@ -19,12 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Validate Commercial VERIFIED audit timestamp
         shell: python
         run: |
           from datetime import datetime, timezone
           from pathlib import Path
           import re
+          import subprocess
           import sys
 
           execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
@@ -63,10 +66,41 @@ jobs:
               sys.exit('Commercial execution VERIFIED requires timezone-aware Verified at timestamp')
 
           now = datetime.now(timezone.utc)
-          if parsed.astimezone(timezone.utc) > now:
+          verified_utc = parsed.astimezone(timezone.utc)
+          if verified_utc > now:
               sys.exit(
                   'Commercial execution VERIFIED requires Verified at not to be in the future relative to CI validation time'
               )
 
-          print('Commercial VERIFIED audit timestamp is machine-readable and not in the future:', verified_at)
+          candidate_match = re.search(
+              r'^- Release candidate commit:\s+\*\*([0-9a-fA-F]{40})\*\*\s*$',
+              execution,
+              re.M,
+          )
+          if not candidate_match:
+              sys.exit('Commercial execution VERIFIED requires an exact 40-character Release candidate commit SHA')
+
+          candidate = candidate_match.group(1)
+          try:
+              candidate_committed_at = subprocess.check_output(
+                  ['git', 'show', '-s', '--format=%cI', candidate],
+                  text=True,
+                  stderr=subprocess.STDOUT,
+              ).strip()
+              candidate_time = datetime.fromisoformat(candidate_committed_at.replace('Z', '+00:00'))
+          except (subprocess.CalledProcessError, ValueError) as exc:
+              sys.exit(
+                  'Commercial execution VERIFIED requires Release candidate commit chronology to resolve in repository history: '
+                  + candidate
+                  + f' ({exc})'
+              )
+
+          if verified_utc < candidate_time.astimezone(timezone.utc):
+              sys.exit(
+                  'Commercial execution VERIFIED requires Verified at not to predate the Release candidate commit time: '
+                  + candidate_committed_at
+              )
+
+          print('Commercial VERIFIED audit timestamp is machine-readable and chronologically valid:', verified_at)
+          print('Release candidate commit time:', candidate_committed_at)
           print('This regression validates trace format/chronology only; it does not create Commercial execution, deployment, user, partner, conversion, payment or revenue evidence.')
