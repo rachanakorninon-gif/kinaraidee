@@ -68,6 +68,9 @@ jobs:
           require_text "$checklist" 'Partner'
           require_text "$release" 'Public Beta is still **NOT COMPLETE**.'
 
+          tc11_checklist='- [ ] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission'
+          tc12_checklist='- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS'
+
           if [ "$status" = 'NOT VERIFIED' ]; then
             require_count "$evidence" 'Duplicate-submit protection observed: **NOT VERIFIED**' 2
             require_count "$evidence" 'Reproducible network/SDK failure exercised: **NOT VERIFIED**' 2
@@ -76,7 +79,12 @@ jobs:
             require_count "$evidence" '- Result: **NOT VERIFIED**' 2
             require_text "$release" 'Real Feedback and Partner application submission behavior for PR #201 remains open'
             require_text "$release" 'real Feedback/Partner form interaction for the changed PR #201 paths'
-            require_text "$checklist" '- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS'
+            require_text "$checklist" "$tc11_checklist"
+            require_text "$checklist" "$tc12_checklist"
+            if grep -Fq -- '- [x] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด' "$checklist"; then
+              echo 'TC-11 Feedback cannot be checked complete while canonical physical evidence remains NOT VERIFIED.'
+              exit 1
+            fi
             if grep -Fq -- '- [x] TC-12 Partner application' "$checklist"; then
               echo 'TC-12 cannot be checked complete while canonical physical evidence remains NOT VERIFIED.'
               exit 1
@@ -113,6 +121,10 @@ jobs:
           fi
           if grep -Fq -- 'real Feedback/Partner form interaction for the changed PR #201 paths' "$release"; then
             echo 'Physical PASS cannot coexist with the stale release-summary blocker for PR #201 form interaction.'
+            exit 1
+          fi
+          if grep -Fq -- "$tc11_checklist" "$checklist"; then
+            echo 'Physical PASS cannot coexist with a stale unchecked TC-11 Feedback checklist marker.'
             exit 1
           fi
           if grep -Fq -- 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED**' "$checklist"; then
