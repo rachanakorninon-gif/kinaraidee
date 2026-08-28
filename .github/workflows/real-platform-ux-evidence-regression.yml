@@ -6,11 +6,13 @@ on:
     paths:
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
       - ".github/workflows/real-platform-ux-evidence-regression.yml"
   pull_request:
     paths:
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
       - ".github/workflows/real-platform-ux-evidence-regression.yml"
   workflow_dispatch:
 
@@ -30,9 +32,11 @@ jobs:
           set -euo pipefail
           evidence='REAL-PLATFORM-UX-EVIDENCE.md'
           release='CURRENT-RELEASE.md'
+          beta='BETA-CHECKLIST.md'
 
           test -f "$evidence"
           test -f "$release"
+          test -f "$beta"
 
           grep -Fq 'Keyboard focus result:' "$evidence"
           grep -Fq 'Reduced-motion result:' "$evidence"
@@ -51,9 +55,6 @@ jobs:
           grep -Fq 'browser emulation, or CI do not establish this result.' "$evidence"
           grep -Fq 'A PASS for keyboard focus does not imply reduced-motion PASS' "$evidence"
 
-          grep -Fq 'visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.' "$release"
-          grep -Fq 'reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.' "$release"
-
           keyboard=$(sed -n 's/^Keyboard focus result: \*\*\(.*\)\*\*$/\1/p' "$evidence" | head -n1)
           motion=$(sed -n 's/^Reduced-motion result: \*\*\(.*\)\*\*$/\1/p' "$evidence" | head -n1)
 
@@ -61,6 +62,16 @@ jobs:
             echo 'Could not parse keyboard/reduced-motion results' >&2
             exit 1
           fi
+
+          case "$keyboard" in
+            'NOT VERIFIED'|'PASS') ;;
+            *) echo "Unsupported keyboard focus result: $keyboard" >&2; exit 1 ;;
+          esac
+
+          case "$motion" in
+            'NOT VERIFIED'|'PASS') ;;
+            *) echo "Unsupported reduced-motion result: $motion" >&2; exit 1 ;;
+          esac
 
           require_keyboard_trace_metadata() {
             if grep -Eq '^Keyboard (device / model|OS / version|browser or installed-PWA context / version|tester / session reference|evidence location|test date/time|verified deployed runtime / release marker): (NOT CAPTURED|NOT VERIFIED|UNSET)$' "$evidence"; then
@@ -76,12 +87,28 @@ jobs:
             fi
           }
 
+          keyboard_release_open='visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.'
+          motion_release_open='reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.'
+          keyboard_beta_open='- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed PR #201/v16'
+          motion_beta_open='- [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference'
+
           if [ "$keyboard" = 'PASS' ]; then
             require_keyboard_trace_metadata
             if grep -Eq '^(Keyboard navigation was performed with a real hardware keyboard or equivalent platform keyboard navigation path|Interactive controls can be reached in a logical sequence without pointer/touch-only interaction|A visible focus indicator is present on focused actionable controls|Focus is not visually lost during the tested core flow|Activation with keyboard controls works for the tested actionable elements): NOT VERIFIED$' "$evidence"; then
               echo 'Keyboard focus PASS conflicts with unverified required physical interaction checks' >&2
               exit 1
             fi
+            if grep -Fq "$keyboard_release_open" "$release"; then
+              echo 'Keyboard focus PASS conflicts with stale CURRENT-RELEASE open-gate wording' >&2
+              exit 1
+            fi
+            if grep -Fq -- "$keyboard_beta_open" "$beta"; then
+              echo 'Keyboard focus PASS conflicts with stale BETA-CHECKLIST open gate' >&2
+              exit 1
+            fi
+          else
+            grep -Fq "$keyboard_release_open" "$release"
+            grep -Fq -- "$keyboard_beta_open" "$beta"
           fi
 
           if [ "$motion" = 'PASS' ]; then
@@ -90,9 +117,20 @@ jobs:
               echo 'Reduced-motion PASS conflicts with unverified required real-platform checks' >&2
               exit 1
             fi
+            if grep -Fq "$motion_release_open" "$release"; then
+              echo 'Reduced-motion PASS conflicts with stale CURRENT-RELEASE open-gate wording' >&2
+              exit 1
+            fi
+            if grep -Fq -- "$motion_beta_open" "$beta"; then
+              echo 'Reduced-motion PASS conflicts with stale BETA-CHECKLIST open gate' >&2
+              exit 1
+            fi
+          else
+            grep -Fq "$motion_release_open" "$release"
+            grep -Fq -- "$motion_beta_open" "$beta"
           fi
 
       - name: Explain evidence boundary
         run: |
-          echo 'Keyboard/reduced-motion evidence contract is internally consistent with independent trace metadata.'
+          echo 'Keyboard/reduced-motion evidence contract is internally consistent with independent trace metadata and release/checklist state.'
           echo 'This static guard does not create a physical-platform result, full accessibility PASS, Public Beta completion, or Commercial GO.'
