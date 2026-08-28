@@ -6,19 +6,21 @@ Purpose: canonical physical-platform evidence record for the remaining Public Be
 
 This document must not be converted to PASS from source review, CI, screenshots without interaction trace, Pages, Live Smoke, browser emulation, or CSS/media-query inspection alone.
 
-## Shared trace metadata
-
-- Device / model: NOT CAPTURED
-- OS / version: NOT CAPTURED
-- Browser or installed-PWA context / version: NOT CAPTURED
-- Tester / session reference: NOT CAPTURED
-- Evidence location: NOT CAPTURED
-- Test date/time: NOT CAPTURED
-- Verified deployed runtime / release marker: NOT CAPTURED
+The two acceptance results are independent and may be exercised on different devices, operating systems, browsers/PWA contexts, testers, dates, or sessions. Each result therefore keeps its own trace metadata; do not reuse or overwrite one result's metadata to imply evidence for the other.
 
 ## Keyboard focus acceptance
 
 Keyboard focus result: **NOT VERIFIED**
+
+### Keyboard trace metadata
+
+- Keyboard device / model: NOT CAPTURED
+- Keyboard OS / version: NOT CAPTURED
+- Keyboard browser or installed-PWA context / version: NOT CAPTURED
+- Keyboard tester / session reference: NOT CAPTURED
+- Keyboard evidence location: NOT CAPTURED
+- Keyboard test date/time: NOT CAPTURED
+- Keyboard verified deployed runtime / release marker: NOT CAPTURED
 
 Required physical interaction evidence:
 
@@ -29,11 +31,21 @@ Required physical interaction evidence:
 - Activation with keyboard controls works for the tested actionable elements: NOT VERIFIED
 - Any unreachable, trapped, hidden, or ambiguous focus state is recorded: NOT CAPTURED
 
-PASS requires one traceable physical-platform session with complete shared metadata and all required keyboard interaction checks verified. Static CSS inspection or automated focus-style regression does not establish this result.
+PASS requires one traceable physical-platform keyboard session with complete keyboard metadata and all required keyboard interaction checks verified. Static CSS inspection or automated focus-style regression does not establish this result.
 
 ## Reduced-motion acceptance
 
 Reduced-motion result: **NOT VERIFIED**
+
+### Reduced-motion trace metadata
+
+- Reduced-motion device / model: NOT CAPTURED
+- Reduced-motion OS / version: NOT CAPTURED
+- Reduced-motion browser or installed-PWA context / version: NOT CAPTURED
+- Reduced-motion tester / session reference: NOT CAPTURED
+- Reduced-motion evidence location: NOT CAPTURED
+- Reduced-motion test date/time: NOT CAPTURED
+- Reduced-motion verified deployed runtime / release marker: NOT CAPTURED
 
 Required physical interaction evidence:
 
@@ -44,7 +56,7 @@ Required physical interaction evidence:
 - No new blocking, unreadable, or timing-dependent behavior appears under reduced motion: NOT VERIFIED
 - Any remaining motion that appears necessary or unexpected is recorded: NOT CAPTURED
 
-PASS requires one traceable real-platform session with complete shared metadata and all required reduced-motion checks verified. Source markers, `prefers-reduced-motion` CSS inspection, browser emulation, or CI do not establish this result.
+PASS requires one traceable real-platform reduced-motion session with complete reduced-motion metadata and all required reduced-motion checks verified. Source markers, `prefers-reduced-motion` CSS inspection, browser emulation, or CI do not establish this result.
 
 ## Result boundary
 
