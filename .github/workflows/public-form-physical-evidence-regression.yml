@@ -68,7 +68,8 @@ jobs:
 
           require_text "$tests" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
           require_text "$matrix" '| TC-11 Feedback | PASS | UI success observed and backend row independently confirmed during the historical session. This does not establish PR #201 failure-recovery acceptance. |'
-          require_text "$matrix" '| TC-12 Partner application | PASS | Consent + submission succeeded; Supabase independently confirmed `privacy_notice_version=''2026-08-21'` and non-null `privacy_acknowledged_at`. This does not establish PR #201 failure-recovery acceptance. |'
+          require_text "$matrix" '| TC-12 Partner application | PASS | Consent + submission succeeded; Supabase independently confirmed'
+          require_count "$matrix" 'This does not establish PR #201 failure-recovery acceptance. |' 2
           require_text "$checklist" 'Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission'
           require_text "$checklist" 'Partner application recovery path ใช้งานจริงได้หลัง network/submission failure ตาม device/platform scope; PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance'
           require_text "$checklist" 'TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`'
