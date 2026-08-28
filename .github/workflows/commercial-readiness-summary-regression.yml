@@ -134,6 +134,24 @@ jobs:
               if trace_values['Public Beta completion evidence'].startswith('OUT OF SCOPE'):
                   sys.exit('Public Beta completion evidence cannot be marked OUT OF SCOPE for Commercial execution VERIFIED')
 
+              scope_category_fields = [
+                  'Payment/Premium execution evidence',
+                  'Privacy/Legal publication evidence',
+                  'Partner-commercial execution evidence',
+                  'Production access/monitoring/recovery evidence',
+              ]
+              out_of_scope_fields = [
+                  field for field in scope_category_fields
+                  if trace_values[field].startswith('OUT OF SCOPE')
+              ]
+              if board_status == 'GO' and out_of_scope_fields:
+                  sys.exit(
+                      'Commercial GO cannot exclude required execution categories; use LIMITED GO for reviewed exclusions: '
+                      + ', '.join(out_of_scope_fields)
+                  )
+              if board_status == 'LIMITED GO' and not out_of_scope_fields:
+                  sys.exit('Commercial LIMITED GO requires at least one reviewed OUT OF SCOPE execution category')
+
           if board_status == 'NO-GO' and '**NO-GO**' not in board:
               sys.exit('Commercial NO-GO marker must remain explicit in PRODUCTION-READINESS.md')
 
