@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reject ambiguous, empty, case-variant, or decorated placeholders in VERIFIED evidence
+      - name: Reject ambiguous, empty, case-variant, decorated, or fabricated placeholders in VERIFIED evidence
         shell: python
         run: |
           from pathlib import Path
@@ -53,7 +53,8 @@ jobs:
           ]
 
           decorated_placeholder_pattern = re.compile(
-              r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|TEST|N/A|NA|NOT APPLICABLE)'
+              r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|TEST|'
+              r'SYNTHETIC|FABRICATED|ASSUMED|PROJECTED|N/A|NA|NOT APPLICABLE)'
               r'(?=$|[\s\W_])',
               re.I,
           )
@@ -76,8 +77,8 @@ jobs:
               normalized = re.sub(r'\s+', ' ', value).strip()
               if decorated_placeholder_pattern.match(normalized):
                   sys.exit(
-                      f'Commercial execution VERIFIED cannot use a placeholder or decorated placeholder trace for {field}: {value}'
+                      f'Commercial execution VERIFIED cannot use a placeholder, decorated placeholder, or fabricated trace for {field}: {value}'
                   )
 
-          print('Commercial VERIFIED trace fields are unique, non-empty, case-safe, and reject decorated placeholder markers across punctuation variants.')
+          print('Commercial VERIFIED trace fields are unique, non-empty, case-safe, and reject decorated or fabricated markers across punctuation variants.')
           print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
