@@ -1,0 +1,66 @@
+name: Commercial Non-Execution Marker Regression
+
+on:
+  pull_request:
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-nonexecution-marker-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'COMMERCIAL-EXECUTION-EVIDENCE.md'
+      - '.github/workflows/commercial-nonexecution-marker-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-commercial-nonexecution-markers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject canonical non-execution markers in VERIFIED traces
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          execution = Path('COMMERCIAL-EXECUTION-EVIDENCE.md').read_text(encoding='utf-8')
+          statuses = re.findall(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
+          if len(statuses) != 1:
+              sys.exit('Commercial evidence must declare exactly one machine-readable status')
+          if statuses[0] != 'VERIFIED':
+              print('Commercial execution is not VERIFIED; no execution evidence is inferred.')
+              sys.exit(0)
+
+          fields = [
+              'Commercial scope / revenue model',
+              'Release candidate commit',
+              'Production deployment/runtime reference',
+              'Public Beta completion evidence',
+              'Payment/Premium execution evidence',
+              'Privacy/Legal publication evidence',
+              'Partner-commercial execution evidence',
+              'Production access/monitoring/recovery evidence',
+              'Reviewed scope exclusions',
+              'Reviewer/approver reference',
+              'Evidence location(s)',
+              'Verified at',
+          ]
+          nonexecution = re.compile(
+              r'^(?:REPOSITORY CODE|STATIC CI|DECISION APPROVALS?|DRAFT AGREEMENTS?|UI SCREENS?|HEALTHY DEPLOYMENT)'
+              r'(?=$|[\s\W_])',
+              re.I,
+          )
+
+          for field in fields:
+              matches = re.findall(rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$', execution, re.M)
+              if len(matches) != 1:
+                  sys.exit(f'Commercial execution VERIFIED requires exactly one trace field: {field}')
+              value = re.sub(r'\s+', ' ', matches[0]).strip()
+              if nonexecution.match(value):
+                  sys.exit(f'Commercial execution VERIFIED cannot use a canonical non-execution marker for {field}: {value}')
+
+          print('Commercial VERIFIED traces reject canonical non-execution markers from the evidence boundary.')
+          print('This regression does not create execution evidence or Commercial GO.')
