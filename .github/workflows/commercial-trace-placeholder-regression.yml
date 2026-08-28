@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Reject empty, case-variant, or decorated NOT CAPTURED in VERIFIED evidence
+      - name: Reject empty, case-variant, or decorated placeholders in VERIFIED evidence
         shell: python
         run: |
           from pathlib import Path
@@ -50,6 +50,12 @@ jobs:
               'Verified at',
           ]
 
+          decorated_placeholder_pattern = re.compile(
+              r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|N/A|NA|NOT APPLICABLE)'
+              r'(?:$|\s|[-—–:;,(\[])',
+              re.I,
+          )
+
           for field in required_trace_fields:
               match = re.search(
                   rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$',
@@ -63,11 +69,11 @@ jobs:
                   sys.exit(
                       f'Commercial execution VERIFIED cannot use an empty or whitespace-only trace for {field}'
                   )
-              normalized = re.sub(r'\s+', ' ', value).strip().upper()
-              if normalized.startswith('NOT CAPTURED'):
+              normalized = re.sub(r'\s+', ' ', value).strip()
+              if decorated_placeholder_pattern.match(normalized):
                   sys.exit(
-                      f'Commercial execution VERIFIED cannot use NOT CAPTURED or a decorated NOT CAPTURED marker for {field}'
+                      f'Commercial execution VERIFIED cannot use a placeholder or decorated placeholder trace for {field}: {value}'
                   )
 
-          print('Commercial VERIFIED trace placeholders are non-empty, case-safe, and reject decorated NOT CAPTURED markers.')
+          print('Commercial VERIFIED trace placeholders are non-empty, case-safe, and reject decorated placeholder markers.')
           print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
