@@ -15,7 +15,7 @@ Do not change Status to **VERIFIED** until the applicable commercial scope has t
 - Production access/operations: approved production environment access, monitoring/alert delivery, rollback/recovery procedure, and controlled rehearsal evidence are traceable for the release candidate.
 - Release candidate: exact commit/deployment/runtime lineage and evidence locations are recorded below.
 
-If a category is genuinely out of scope for a `LIMITED GO`, record the reviewed scope exclusion explicitly; do not mark the category verified by assumption.
+If a category is genuinely out of scope for a `LIMITED GO`, do not leave its trace field as `NOT CAPTURED`. Record `OUT OF SCOPE — see Reviewed scope exclusions` in that category field and record the reviewed exclusion, reviewer/approver reference, and evidence location below. This prevents absence of evidence from being mistaken for a reviewed scope decision.
 
 ## Trace fields
 
