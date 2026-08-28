@@ -52,7 +52,7 @@ jobs:
 
           decorated_placeholder_pattern = re.compile(
               r'^(?:NOT CAPTURED|TBD|TODO|TBC|PENDING|UNKNOWN|PLACEHOLDER|EXAMPLE|SAMPLE|MOCK|N/A|NA|NOT APPLICABLE)'
-              r'(?:$|\s|[-—–:;,(\[])',
+              r'(?=$|[\s\W_])',
               re.I,
           )
 
@@ -75,5 +75,5 @@ jobs:
                       f'Commercial execution VERIFIED cannot use a placeholder or decorated placeholder trace for {field}: {value}'
                   )
 
-          print('Commercial VERIFIED trace placeholders are non-empty, case-safe, and reject decorated placeholder markers.')
+          print('Commercial VERIFIED trace placeholders are non-empty, case-safe, and reject decorated placeholder markers across punctuation variants.')
           print('This regression validates evidence formatting only; it does not create execution evidence or Commercial GO.')
