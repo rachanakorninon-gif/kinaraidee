@@ -70,10 +70,11 @@ jobs:
               echo 'While the plan decision is NOT APPROVED, Auth evidence must retain the observed Free-plan baseline.'
               exit 1
             }
-            grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" || {
-              echo 'While the plan decision is NOT APPROVED, Auth evidence must retain leaked-password protection as NOT PASS.'
+            if ! grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" && \
+               ! grep -Fq 'Current leaked-password status: **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**.' "$auth"; then
+              echo 'While the plan decision is NOT APPROVED, Auth evidence must retain leaked-password protection as NOT PASS under the current Free-plan/configuration boundary.'
               exit 1
-            }
+            fi
             grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth" || {
               echo 'While the plan decision is NOT APPROVED, Auth evidence must not authorize a paid-plan upgrade.'
               exit 1
