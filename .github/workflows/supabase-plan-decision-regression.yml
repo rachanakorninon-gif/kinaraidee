@@ -70,11 +70,10 @@ jobs:
               echo 'While the plan decision is NOT APPROVED, Auth evidence must retain the observed Free-plan baseline.'
               exit 1
             }
-            if ! grep -Fq 'Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.' "$auth" && \
-               ! grep -Fq 'Current leaked-password status: **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**.' "$auth"; then
-              echo 'While the plan decision is NOT APPROVED, Auth evidence must retain leaked-password protection as NOT PASS under the current Free-plan/configuration boundary.'
+            grep -Fq 'Current leaked-password status: **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**.' "$auth" || {
+              echo 'While the plan decision is NOT APPROVED, Auth evidence must use the canonical verified Free-plan/configuration NOT PASS boundary.'
               exit 1
-            fi
+            }
             grep -Fq 'This document does not authorize a paid-plan upgrade.' "$auth" || {
               echo 'While the plan decision is NOT APPROVED, Auth evidence must not authorize a paid-plan upgrade.'
               exit 1
@@ -122,7 +121,7 @@ jobs:
           {
             echo '## Supabase plan decision regression'
             echo
-            echo '- NOT APPROVED keeps plan, billing, ownership and execution fields UNSET and preserves the current Free/NOT-PASS observation.'
+            echo '- NOT APPROVED keeps plan, billing, ownership and execution fields UNSET and preserves the current verified Free-plan/NOT-PASS observation.'
             echo '- APPROVED may authorize a later plan/configuration change; it does not require stale pre-upgrade evidence to remain unchanged.'
             echo '- Leaked-password Security PASS still requires actual enablement plus a fresh Security Advisor result.'
             echo '- The guard does not purchase a plan, mutate Supabase, create users, or establish Public Beta/Commercial PASS.'
