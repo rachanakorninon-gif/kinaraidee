@@ -54,6 +54,32 @@ jobs:
               re.I,
           )
 
+          canonical_nonexecution_examples = [
+              'Repository code',
+              'STATIC CI — all checks passed',
+              'decision approval',
+              'Decision approvals: records approved',
+              'draft agreement',
+              'Draft agreements / partner terms',
+              'UI screen',
+              'UI screens only',
+              'healthy deployment',
+              'Healthy deployment — runtime responds 200',
+          ]
+          for example in canonical_nonexecution_examples:
+              if not nonexecution.match(example):
+                  sys.exit(f'Commercial non-execution guard self-test failed to reject canonical marker: {example}')
+
+          execution_trace_examples = [
+              'https://example.invalid/evidence/run-123',
+              '0123456789abcdef0123456789abcdef01234567',
+              'Production alert delivery drill 2026-08-29T00:00:00Z',
+              'Reviewed partner execution record #42',
+          ]
+          for example in execution_trace_examples:
+              if nonexecution.match(example):
+                  sys.exit(f'Commercial non-execution guard self-test overmatched plausible trace: {example}')
+
           for field in fields:
               matches = re.findall(rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$', execution, re.M)
               if len(matches) != 1:
@@ -63,4 +89,5 @@ jobs:
                   sys.exit(f'Commercial execution VERIFIED cannot use a canonical non-execution marker for {field}: {value}')
 
           print('Commercial VERIFIED traces reject canonical non-execution markers from the evidence boundary.')
+          print('Commercial non-execution marker detector self-test passed.')
           print('This regression does not create execution evidence or Commercial GO.')
