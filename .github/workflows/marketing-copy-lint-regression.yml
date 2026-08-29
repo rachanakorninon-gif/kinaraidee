@@ -1,0 +1,77 @@
+name: Marketing Copy Lint Regression
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  marketing-copy-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate approved core-product copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/marketing-copy-lint.mjs marketing/core-product-copy-th.json
+
+      - name: Verify fail-closed copy rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp --suffix=.json)"
+
+          expect_reject() {
+            label="$1"
+            needle="$2"
+            node - "$needle" "$tmp" <<'NODE'
+          const fs = require('fs');
+          const source = JSON.parse(fs.readFileSync('marketing/core-product-copy-th.json', 'utf8'));
+          source.captions[0].text += ` ${process.argv[2]}`;
+          fs.writeFileSync(process.argv[3], JSON.stringify(source, null, 2));
+          NODE
+            if node tools/marketing-copy-lint.mjs "$tmp" >/tmp/copy-lint.out 2>/tmp/copy-lint.err; then
+              echo "Expected rejection for $label but lint passed"
+              cat /tmp/copy-lint.out
+              exit 1
+            fi
+          }
+
+          expect_reject store_badge 'Google Play'
+          expect_reject download_claim 'ดาวน์โหลดเลย'
+          expect_reject premium_claim 'Premium'
+          expect_reject prize_claim 'ลุ้นรางวัล'
+          expect_reject prize_count '3,000'
+          expect_reject room_context 'groupInvite'
+
+      - name: Verify canonical destination is URL-builder compatible
+        shell: bash
+        run: |
+          set -euo pipefail
+          destination="$(node -e "const d=require('./marketing/core-product-copy-th.json'); process.stdout.write(d.destination)")"
+          test "$destination" = 'https://rachanakorninon-gif.github.io/kinaraidee/' || {
+            echo "Unexpected approved-copy destination: $destination"; exit 1;
+          }
+          node tools/marketing-url-builder.mjs \
+            --source tiktok \
+            --medium paid_social \
+            --campaign th_acq_surprise_202609 \
+            --content v15_todayeat_a >/dev/null
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Marketing approved-copy lint'
+            echo
+            echo '- Validates machine-readable Thai core-product copy and canonical destination.'
+            echo '- Negative tests reject Store/download/Premium/prize/group-room claims.'
+            echo '- Does not publish content, authorize spend, verify Store distribution, activate Premium or create prize eligibility.'
+          } >> "$GITHUB_STEP_SUMMARY"

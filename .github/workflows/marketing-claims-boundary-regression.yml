@@ -28,8 +28,11 @@ jobs:
           testplan='MARKETING-FIRST-PAID-TEST-PLAN.md'
           social='SOCIAL-CHANNEL-LAUNCH-PACK-TH.md'
           calendar='SOCIAL-ORGANIC-CONTENT-CALENDAR-14D.md'
+          community='SOCIAL-COMMUNITY-REPLY-MACROS-TH.md'
+          tracker='SOCIAL-PUBLISHING-EVIDENCE-TRACKER.md'
+          approvedcopy='marketing/core-product-copy-th.json'
 
-          for f in "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar"; do
+          for f in "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar" "$community" "$tracker" "$approvedcopy"; do
             test -s "$f" || { echo "Missing marketing readiness file: $f"; exit 1; }
           done
 
@@ -54,12 +57,24 @@ jobs:
           grep -Fq 'Status: **CONTENT PREP / NOT PUBLISHED**' "$calendar" || {
             echo 'Organic content calendar must remain not-published preparation'; exit 1;
           }
+          grep -Fq 'Status: **PREPARED / NOT PUBLISHED**' "$community" || {
+            echo 'Community reply macros must remain not-published preparation'; exit 1;
+          }
+          grep -Fq 'Status: **TEMPLATE / NO CHANNEL OR POST EVIDENCE RECORDED**' "$tracker" || {
+            echo 'Publishing tracker must not imply channel/post evidence exists'; exit 1;
+          }
+          grep -Fq '"status": "PRE_LAUNCH_CORE_ONLY"' "$approvedcopy" || {
+            echo 'Machine-readable approved copy must remain PRE_LAUNCH_CORE_ONLY'; exit 1;
+          }
 
           grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$attribution" || {
             echo 'Missing canonical public root acquisition destination'; exit 1;
           }
           grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$social" || {
             echo 'Social launch pack must preserve canonical root destination'; exit 1;
+          }
+          grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$approvedcopy" || {
+            echo 'Approved-copy source must preserve canonical root destination'; exit 1;
           }
 
           grep -Fq '**NO APP STORE BADGES. NO GOOGLE PLAY BADGES. NO LIVE PRIZE CLAIMS.**' "$creative" || {
@@ -89,8 +104,17 @@ jobs:
           grep -Fq 'No prize-entry wording while campaign status remains PRE-LAUNCH.' "$calendar" || {
             echo 'Organic calendar prize pre-launch boundary is missing'; exit 1;
           }
+          grep -Fq 'Do not reply “แก้แล้ว” until the exact fix/deployment is verified.' "$community" || {
+            echo 'Community reply verification boundary is missing'; exit 1;
+          }
+          grep -Fq '`0` means a real query/read showed zero.' "$tracker" || {
+            echo 'Publishing tracker zero-vs-unmeasured boundary is missing'; exit 1;
+          }
+          grep -Fq '`NOT MEASURED` means unavailable/not collected.' "$tracker" || {
+            echo 'Publishing tracker NOT MEASURED boundary is missing'; exit 1;
+          }
 
-          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar"; then
+          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar" "$community" "$tracker"; then
             echo 'Marketing preparation docs must not self-promote to LIVE'; exit 1;
           fi
 
@@ -102,9 +126,10 @@ jobs:
           {
             echo '## Marketing claims boundary'
             echo
-            echo '- Confirms readiness, attribution, scripts, test design and social-channel content remain pre-launch/prepared only.'
+            echo '- Confirms readiness, attribution, scripts, test design, social content, community replies and publishing evidence remain pre-launch/prepared only.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
             echo '- Requires social channel creation/publishing to remain unverified until real platform evidence exists.'
+            echo '- Requires observed zero to remain distinct from NOT MEASURED in social evidence.'
             echo '- Requires paid-test budget to remain UNSET and paid acquisition NOT LAUNCHED.'
             echo '- Does not authorize ad spend, billing, analytics collection, social publishing, Premium sales, prize entries or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
