@@ -1,0 +1,53 @@
+name: Premium Research Preview Live Smoke
+
+on:
+  workflow_run:
+    workflows: ["Deploy Kinaraidee to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview-live-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Pages propagation
+        run: sleep 20
+      - name: Verify public research preview boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://rachanakorninon-gif.github.io/kinaraidee/premium-research-preview.html'
+          html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url")"
+          grep -Fq '<title>Premium Research Preview | กินอะไรดี</title>' <<<"$html"
+          grep -Fq 'content="noindex,nofollow,noarchive"' <<<"$html"
+          grep -Fq 'RESEARCH PROTOTYPE' <<<"$html"
+          grep -Fq 'ไม่มีการสมัคร Premium' <<<"$html"
+          grep -Fq 'ไม่มีการชำระเงิน' <<<"$html"
+          grep -Fq 'ไม่เก็บคำตอบ' <<<"$html"
+          grep -Fq 'Smart Taste Profile' <<<"$html"
+          grep -Fq 'Smart No-Repeat' <<<"$html"
+          grep -Fq '3-/7-day Meal Planner' <<<"$html"
+          grep -Fq 'id="campaignBox" class="campaign" aria-hidden="true"' <<<"$html"
+          grep -Fq '0 / 3,000 · ยังไม่เริ่มนับสิทธิ์' <<<"$html"
+          if grep -Eqi '<form|fetch\(|XMLHttpRequest|localStorage|sessionStorage' <<<"$html"; then
+            echo 'Research preview unexpectedly contains collection/storage behavior.'
+            exit 1
+          fi
+          echo 'Premium research preview live smoke passed.'
+      - name: Record scoped evidence
+        shell: bash
+        run: |
+          {
+            echo '## Premium research preview live smoke'
+            echo
+            echo '- Public research URL: https://rachanakorninon-gif.github.io/kinaraidee/premium-research-preview.html'
+            echo '- noindex/noarchive: checked'
+            echo '- no form/network response collection/local storage: checked'
+            echo '- campaign starts hidden and remains PRE-LAUNCH: checked'
+            echo
+            echo '> This proves only that the static research prototype is reachable and preserves the no-payment/no-entry/no-data-collection boundary. It does not prove user demand, willingness to pay, conversion, Premium entitlement, or campaign readiness.'
+          } >> "$GITHUB_STEP_SUMMARY"
