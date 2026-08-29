@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const BASE = 'https://rachanakorninon-gif.github.io/kinaraidee/';
-const allowedSources = new Set(['facebook', 'instagram', 'tiktok', 'youtube', 'organic_social', 'qr', 'direct_partner']);
-const allowedMediums = new Set(['paid_social', 'organic_social', 'video', 'creator', 'qr', 'referral']);
+const allowedSources = new Set(['facebook', 'instagram', 'tiktok', 'youtube', 'organic_social', 'qr']);
+const allowedMediums = new Set(['paid_social', 'organic_social', 'video', 'qr', 'referral']);
 const slugPattern = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 
 function fail(message) {
@@ -40,11 +40,11 @@ const campaign = cleanSlug('campaign', args.campaign);
 const content = cleanSlug('content', args.content);
 const term = cleanSlug('term', args.term, { required: false });
 
-if (!allowedSources.has(source)) fail(`unsupported source: ${source}`);
-if (!allowedMediums.has(medium)) fail(`unsupported medium: ${medium}`);
-if (source === 'direct_partner' && medium !== 'referral') fail('direct_partner must use referral medium');
-if (medium === 'creator' && !['facebook', 'instagram', 'tiktok', 'youtube'].includes(source)) {
-  fail('creator medium requires a supported social/video platform source');
+if (!allowedSources.has(source)) fail(`unsupported or not-yet-approved source: ${source}`);
+if (!allowedMediums.has(medium)) fail(`unsupported or not-yet-approved medium: ${medium}`);
+if (medium === 'referral' && source !== 'qr') fail('referral medium is reserved until a real reviewed referral/partner channel exists');
+if (campaign.includes('prize') || campaign.includes('premium_3000')) {
+  fail('prize/Premium-3000 campaign links remain blocked while the campaign is PRE-LAUNCH');
 }
 
 const url = new URL(BASE);
