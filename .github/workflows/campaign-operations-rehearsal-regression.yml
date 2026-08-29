@@ -1,0 +1,336 @@
+name: Campaign Operations Rehearsal Regression
+
+on:
+  pull_request:
+    paths:
+      - 'CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md'
+      - 'CAMPAIGN-3000-SYNTHETIC-REHEARSAL.md'
+      - 'PREMIUM-CAMPAIGN-ELIGIBILITY-CONTRACT.md'
+      - '.github/workflows/campaign-operations-rehearsal-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md'
+      - 'CAMPAIGN-3000-SYNTHETIC-REHEARSAL.md'
+      - 'PREMIUM-CAMPAIGN-ELIGIBILITY-CONTRACT.md'
+      - '.github/workflows/campaign-operations-rehearsal-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-operations-rehearsal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Exercise synthetic campaign operations lifecycle
+        shell: python
+        run: |
+          from dataclasses import dataclass
+          from datetime import datetime, timedelta, timezone
+          import hashlib
+          import json
+
+          @dataclass
+          class UserState:
+              active: bool = False
+              internal_or_test: bool = False
+              refunded: bool = False
+              disputed: bool = False
+              revoked: bool = False
+
+          class CampaignRehearsal:
+              def __init__(self):
+                  self.status = 'PRE_LAUNCH'
+                  self.entries_open = False
+                  self.kill_switch = False
+                  self.users = {}
+                  self.audit = []
+                  self.sequence = 0
+                  self.frozen_population = None
+                  self.frozen_digest = None
+                  self.base_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+              def user(self, user_id):
+                  return self.users.setdefault(user_id, UserState())
+
+              def record(self, action, actor, reason, **details):
+                  self.sequence += 1
+                  event = {
+                      'seq': self.sequence,
+                      'timestamp': (self.base_time + timedelta(seconds=self.sequence)).isoformat(),
+                      'action': action,
+                      'actor': actor,
+                      'reason': reason,
+                      **details,
+                  }
+                  self.audit.append(event)
+                  return event
+
+              def transition(self, new_status, actor, reason):
+                  allowed = {
+                      'PRE_LAUNCH': {'LIVE'},
+                      'LIVE': {'PAUSED', 'CLOSED_PENDING_SELECTION'},
+                      'PAUSED': {'LIVE', 'CLOSED_PENDING_SELECTION'},
+                      'CLOSED_PENDING_SELECTION': {'SELECTION_IN_PROGRESS'},
+                      'SELECTION_IN_PROGRESS': {'PROVISIONAL_WINNER_REVIEW'},
+                      'PROVISIONAL_WINNER_REVIEW': set(),
+                  }
+                  assert new_status in allowed[self.status], (self.status, new_status)
+                  if new_status == 'LIVE':
+                      assert not self.kill_switch
+                  previous = self.status
+                  self.status = new_status
+                  self.entries_open = new_status == 'LIVE' and not self.kill_switch
+                  self.record(
+                      'state_transition', actor, reason,
+                      previous_state=previous,
+                      new_state=new_status,
+                      entries_open=self.entries_open,
+                  )
+
+              def activate_kill_switch(self, actor, reason):
+                  assert self.status == 'LIVE'
+                  previous = self.status
+                  self.kill_switch = True
+                  self.status = 'PAUSED'
+                  self.entries_open = False
+                  self.record(
+                      'kill_switch_on', actor, reason,
+                      previous_state=previous,
+                      new_state='PAUSED',
+                      entries_open=False,
+                  )
+
+              def clear_kill_switch(self, actor, reason):
+                  assert self.status == 'PAUSED'
+                  assert self.kill_switch
+                  self.kill_switch = False
+                  self.record(
+                      'kill_switch_off', actor, reason,
+                      previous_state='PAUSED',
+                      new_state='PAUSED',
+                      entries_open=False,
+                  )
+
+              def technical_eligible(self):
+                  eligible = set()
+                  for user_id, current in self.users.items():
+                      if not current.active:
+                          continue
+                      if current.internal_or_test:
+                          continue
+                      if current.refunded or current.disputed or current.revoked:
+                          continue
+                      eligible.add(user_id)
+                  return eligible
+
+              def public_eligible(self):
+                  if self.status != 'LIVE' or not self.entries_open or self.kill_switch:
+                      return set()
+                  return self.technical_eligible()
+
+              @staticmethod
+              def digest(population):
+                  canonical = '\n'.join(sorted(population)).encode('utf-8')
+                  return hashlib.sha256(canonical).hexdigest()
+
+              def close_and_freeze(self, actor, reason):
+                  assert self.status == 'LIVE'
+                  population = tuple(sorted(self.technical_eligible()))
+                  digest = self.digest(population)
+                  self.transition('CLOSED_PENDING_SELECTION', actor, reason)
+                  self.frozen_population = population
+                  self.frozen_digest = digest
+                  self.record(
+                      'population_freeze', actor, 'synthetic cutoff freeze',
+                      population_count=len(population),
+                      population_digest=digest,
+                      rules_version='REHEARSAL_ONLY',
+                  )
+                  return population, digest
+
+              def rehearsal_ranking(self):
+                  assert self.frozen_population is not None
+                  assert self.frozen_digest is not None
+                  return sorted(
+                      self.frozen_population,
+                      key=lambda user_id: hashlib.sha256(
+                          f'REHEARSAL_ONLY|{self.frozen_digest}|{user_id}'.encode('utf-8')
+                      ).hexdigest(),
+                  )
+
+              def record_selection(self, candidate, actor, reason, selection_kind):
+                  assert candidate in self.frozen_population
+                  self.record(
+                      'rehearsal_selection', actor, reason,
+                      candidate=candidate,
+                      selection_kind=selection_kind,
+                      method='REHEARSAL_ONLY_DETERMINISTIC_HASH_RANK',
+                      population_digest=self.frozen_digest,
+                  )
+
+          c = CampaignRehearsal()
+
+          # 1) PRE_LAUNCH always fails closed.
+          assert c.status == 'PRE_LAUNCH'
+          assert c.entries_open is False
+          assert c.public_eligible() == set()
+
+          # Synthetic backend truth: three valid identities plus excluded cases.
+          c.user('syn-user-001').active = True
+          c.user('syn-user-002').active = True
+          c.user('syn-user-003').active = True
+
+          c.user('syn-user-test').active = True
+          c.user('syn-user-test').internal_or_test = True
+
+          c.user('syn-user-refund').active = True
+          c.user('syn-user-refund').refunded = True
+
+          c.user('syn-user-dispute').active = True
+          c.user('syn-user-dispute').disputed = True
+
+          c.user('syn-user-revoked').active = True
+          c.user('syn-user-revoked').revoked = True
+
+          assert c.technical_eligible() == {'syn-user-001', 'syn-user-002', 'syn-user-003'}
+          assert c.public_eligible() == set()
+
+          # 2) Mock LIVE transition is audited and only valid synthetic identities count.
+          c.transition('LIVE', 'synthetic-campaign-owner', 'non-production rehearsal start')
+          assert c.public_eligible() == {'syn-user-001', 'syn-user-002', 'syn-user-003'}
+
+          # 3) Kill switch wins and pause is audited.
+          c.activate_kill_switch('synthetic-technical-owner', 'rehearsal incident')
+          assert c.status == 'PAUSED'
+          assert c.entries_open is False
+          assert c.public_eligible() == set()
+
+          # A new synthetic active identity during PAUSED cannot become public eligibility.
+          c.user('syn-user-during-pause').active = True
+          assert c.public_eligible() == set()
+
+          # 4) Resume requires separate kill-switch clear + audited state transition.
+          c.clear_kill_switch('synthetic-technical-owner', 'rehearsal incident resolved')
+          assert c.status == 'PAUSED'
+          assert c.entries_open is False
+          c.transition('LIVE', 'synthetic-campaign-owner', 'approved rehearsal resume')
+          assert c.public_eligible() == {
+              'syn-user-001', 'syn-user-002', 'syn-user-003', 'syn-user-during-pause'
+          }
+
+          # 5) Close/cutoff freezes the current technical population and stops public eligibility.
+          frozen_population, frozen_digest = c.close_and_freeze(
+              'synthetic-campaign-owner', 'rehearsal cutoff reached'
+          )
+          assert c.status == 'CLOSED_PENDING_SELECTION'
+          assert c.entries_open is False
+          assert c.public_eligible() == set()
+          assert frozen_population == (
+              'syn-user-001', 'syn-user-002', 'syn-user-003', 'syn-user-during-pause'
+          )
+          assert CampaignRehearsal.digest(frozen_population) == frozen_digest
+
+          # 6) Post-cutoff working-state changes cannot mutate the frozen population/digest.
+          c.user('syn-user-late').active = True
+          c.user('syn-user-001').refunded = True
+          assert c.technical_eligible() != set(frozen_population)
+          assert c.frozen_population == frozen_population
+          assert c.frozen_digest == frozen_digest
+          assert CampaignRehearsal.digest(c.frozen_population) == frozen_digest
+
+          # 7) Mock selection runs only against the frozen synthetic population.
+          c.transition(
+              'SELECTION_IN_PROGRESS',
+              'synthetic-selection-operator',
+              'begin rehearsal-only selection',
+          )
+          ranking = c.rehearsal_ranking()
+          assert set(ranking) == set(frozen_population)
+          first = ranking[0]
+          c.record_selection(
+              first,
+              'synthetic-selection-operator',
+              'first rehearsal candidate',
+              'PROVISIONAL',
+          )
+          c.transition(
+              'PROVISIONAL_WINNER_REVIEW',
+              'synthetic-selection-operator',
+              'rehearsal candidate pending validation',
+          )
+
+          # 8) No silent reselection: invalidation reason is audited before alternate selection.
+          invalidation = c.record(
+              'provisional_candidate_invalidated',
+              'synthetic-reviewer',
+              'synthetic identity fails rehearsal-only validation',
+              candidate=first,
+          )
+          assert invalidation['candidate'] == first
+          alternate = ranking[1]
+          c.record_selection(
+              alternate,
+              'synthetic-selection-operator',
+              'alternate after audited rehearsal invalidation',
+              'ALTERNATE',
+          )
+          invalidation_seq = next(
+              row['seq'] for row in c.audit
+              if row['action'] == 'provisional_candidate_invalidated'
+          )
+          alternate_seq = next(
+              row['seq'] for row in c.audit
+              if row['action'] == 'rehearsal_selection'
+              and row['selection_kind'] == 'ALTERNATE'
+          )
+          assert invalidation_seq < alternate_seq
+
+          # 9) Synthetic support dispute resolves from backend truth, not a client screenshot.
+          c.record(
+              'eligibility_dispute_resolved',
+              'synthetic-support-owner',
+              'test/internal identity excluded by synthetic backend truth',
+              subject='syn-user-test',
+              resolution='NOT_ELIGIBLE_INTERNAL_TEST',
+              authority='SYNTHETIC_BACKEND_TRUTH',
+          )
+
+          # 10) Material operations have an ordered, serializable audit export.
+          exported = json.dumps(c.audit, ensure_ascii=False, sort_keys=True)
+          loaded = json.loads(exported)
+          assert [row['seq'] for row in loaded] == list(range(1, len(loaded) + 1))
+          actions = [row['action'] for row in loaded]
+          for required in (
+              'state_transition',
+              'kill_switch_on',
+              'kill_switch_off',
+              'population_freeze',
+              'rehearsal_selection',
+              'provisional_candidate_invalidated',
+              'eligibility_dispute_resolved',
+          ):
+              assert required in actions
+
+          print('Campaign operations synthetic rehearsal passed.')
+          print(f'Frozen synthetic population count: {len(frozen_population)}')
+          print(f'Frozen synthetic population SHA-256: {frozen_digest}')
+          print('Verified: PRE_LAUNCH fail-closed, test/internal/refund/dispute/revoke exclusion,')
+          print('audited LIVE/pause/resume/close, kill switch, reproducible freeze digest,')
+          print('post-cutoff freeze immutability, rehearsal-only provisional/alternate flow,')
+          print('synthetic dispute resolution and ordered audit export.')
+          print('NO REAL PAYMENT, PREMIUM ENTITLEMENT, PRIZE ENTRY, ELIGIBLE COUNT, WINNER OR COMMERCIAL GO IS CREATED.')
+
+      - name: Guard rehearsal evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Status: **SYNTHETIC CI ONLY / PRE-LAUNCH / NO REAL PRIZE ENTRIES**' CAMPAIGN-3000-SYNTHETIC-REHEARSAL.md
+          grep -Fq '**It is not the approved production winner-selection mechanic.**' CAMPAIGN-3000-SYNTHETIC-REHEARSAL.md
+          grep -Fq 'status = PRE_LAUNCH' CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md
+          grep -Fq 'entries_open = false' CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md
+          grep -Fq 'eligible_count = 0' CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md
+          grep -Fq 'A successful rehearsal is not legal/payment authorization and does not create real entries.' CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md
+          echo 'Synthetic rehearsal boundary preserved.'
