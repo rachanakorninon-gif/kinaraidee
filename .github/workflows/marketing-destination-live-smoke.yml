@@ -1,0 +1,82 @@
+name: Marketing Destination Live Smoke
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/marketing-url-builder.mjs"
+      - ".github/workflows/marketing-url-builder-regression.yml"
+      - ".github/workflows/marketing-destination-live-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  destination-live-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build canonical test URL
+        id: link
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$(node tools/marketing-url-builder.mjs \
+            --source tiktok \
+            --medium paid_social \
+            --campaign th_acq_surprise_202609 \
+            --content v15_todayeat_a)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Verify root and UTM destination live
+        shell: bash
+        env:
+          ROOT_URL: https://rachanakorninon-gif.github.io/kinaraidee/
+          UTM_URL: ${{ steps.link.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          fetch_check() {
+            label="$1"
+            url="$2"
+            body="$(mktemp)"
+            headers="$(mktemp)"
+            final="$(curl --fail --location --silent --show-error \
+              --connect-timeout 10 --max-time 30 \
+              --retry 2 --retry-delay 2 --retry-connrefused \
+              --dump-header "$headers" --output "$body" \
+              --write-out '%{url_effective}' "$url")"
+
+            case "$final" in
+              https://rachanakorninon-gif.github.io/kinaraidee/*) ;;
+              *) echo "$label escaped canonical Pages destination: $final"; exit 1;;
+            esac
+
+            grep -Fq 'กินอะไรดี' "$body" || {
+              echo "$label did not contain the Kinaraidee page marker"; exit 1;
+            }
+
+            if printf '%s\n' "$final" | grep -Eqi 'groupInvite=|[?&]room='; then
+              echo "$label resolved into a group invitation context: $final"; exit 1;
+            fi
+
+            echo "$label OK: $final"
+          }
+
+          fetch_check root "$ROOT_URL"
+          fetch_check utm "$UTM_URL"
+
+      - name: Record scoped evidence
+        shell: bash
+        run: |
+          {
+            echo '## Marketing destination live smoke'
+            echo
+            echo "- Repository SHA: \`${GITHUB_SHA}\`"
+            echo '- Scope: public root + safe UTM landing availability only.'
+            echo '- Requires the live response to contain the Kinaraidee marker and remain outside group-invite context.'
+            echo '- Does not prove analytics attribution, ad-platform delivery, paid traffic, conversion, Premium or campaign eligibility.'
+          } >> "$GITHUB_STEP_SUMMARY"
