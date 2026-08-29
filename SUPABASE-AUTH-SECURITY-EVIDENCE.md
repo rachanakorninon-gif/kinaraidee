@@ -23,6 +23,8 @@ The connected Supabase organization/project was re-checked without changing bill
 
 This re-verification confirms that the leaked-password production gate remains blocked by the current plan. It does not authorize a paid-plan upgrade and does not create an Auth test result or security PASS.
 
+Canonical downstream wording should therefore describe this gate as **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**, rather than the older generic `blocked by plan/configuration` wording. This is a documentation-alignment rule only; it does not change the gate outcome.
+
 ## Fresh Security Advisor result — 2026-08-24
 
 A fresh Supabase Security Advisor check on project ref `cuspfvfzprlgtvtdyilh` reports:
