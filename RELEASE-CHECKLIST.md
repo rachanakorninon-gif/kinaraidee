@@ -5,16 +5,16 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` (PR #201 public-form resilience runtime)
-- Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged)
+- Current browser/PWA runtime candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` (PR #373 Auth password-security UX readiness)
+- Current runtime deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Current Group API source candidate: `fefc29322ac13f7066038a663bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
 - Expected Service Worker cache: `kinaraidee-beta-v16`
-- PR #201 hardens Feedback and Partner application submission recovery with duplicate-submit guards and `try/catch/finally`, restoring disabled/`aria-busy` state after submission failures. It does not create a new Service Worker cache generation.
-- Verified browser/PWA deployment evidence: Pages run `32802440796` = success and Live Smoke run `32802473505` = success for deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`; Public Form Resilience Regression run `32802440775` = success on the exact merged-main SHA.
-- Live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
-- Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support, while the current browser/PWA deployment trace is PR #201.
+- PR #373 prepares browser-side Auth UX to handle Supabase weak-password rejection safely in signup/sign-in/reset flows. It does not enable leaked-password protection, change Supabase Auth configuration, or create a new Service Worker cache generation.
+- Historical verified browser/PWA deployment evidence remains PR #201: Pages run `32802440796` = success and Live Smoke run `32802473505` = success for deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`; Public Form Resilience Regression run `32802440775` = success on that exact merged-main SHA.
+- Historical live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`; this evidence does not prove the current PR #373 Auth runtime is deployed.
+- Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
-- Surprise busy-state accessibility now has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; the prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT and second-device/full-matrix accessibility coverage is still open.
+- Surprise busy-state accessibility has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; that historical result does not establish PR #373 Auth interaction acceptance. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT and second-device/full-matrix accessibility coverage is still open.
 - Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
 
 ## Beta Exit Evidence
@@ -41,14 +41,16 @@
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
-- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current PR #201 runtime candidate / deployed commit SHA และ matching deployment evidence
-- [x] GitHub Pages deployment ของ `00bdcb7f432d542b732cf355336e9f08798e4320` สำเร็จและ trace กลับไปยัง commit ได้ — run `32802440796`
-- [x] Public `release-meta.json` ถูกตรวจและมี deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` กับ live Service Worker marker `kinaraidee-beta-v16`
-- [x] Corresponding Live Smoke ของ runtime SHA เดียวกันสำเร็จ — run `32802473505`
-- [x] Public Form Resilience Regression run `32802440775` ยืนยัน source recovery-state contracts บน exact merged-main SHA โดยไม่ submit form จริง
-- [x] Public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
+- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current PR #373 runtime candidate และสถานะ **PENDING FOR CURRENT RUNTIME DEPLOYMENT** สอดคล้องกัน
+- [ ] Current PR #373 Auth runtime มี canonical descendant Pages deployment + corresponding live-check evidence ตาม release contract
+- [x] Historical PR #201 GitHub Pages deployment ของ `00bdcb7f432d542b732cf355336e9f08798e4320` สำเร็จและ trace กลับไปยัง commit ได้ — run `32802440796`
+- [x] Historical PR #201 public `release-meta.json` ถูกตรวจและมี deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` กับ live Service Worker marker `kinaraidee-beta-v16`
+- [x] Historical PR #201 corresponding Live Smoke สำเร็จ — run `32802473505`
+- [x] Public Form Resilience Regression run `32802440775` ยืนยัน source recovery-state contracts บน exact PR #201 merged-main SHA โดยไม่ submit form จริง
+- [x] Historical PR #201 public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
 - [ ] real Feedback/Partner form submission acceptance ยังต้องใช้หลักฐานจริง; static regression และ deployment trace ห้ามใช้แทน backend insert/device interaction PASS
+- [ ] current PR #373 Auth interaction acceptance ยังต้องใช้หลักฐานจริงตาม scope; source/CI/historical deployment evidence ห้ามใช้แทน weak/leaked-password rejection หรือ account-flow PASS
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
 
 ## Product
@@ -104,7 +106,7 @@
 
 ## Security
 - [ ] ตรวจ Supabase RLS ทุกตาราง Production ด้วย role ที่เกี่ยวข้อง
-- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11 — fresh advisor evidence ยังรายงาน WARN และ gate นี้ถูกบันทึกเป็น blocked by plan/configuration
+- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
 - [ ] ไม่มี service-role/secret/private key อยู่ใน browser, repository หรือ public build
 - [ ] rotate secret ที่เคยใช้ใน test หากจำเป็น
 - [ ] ทดสอบ auth / sign-out / password recovery / session expiry
