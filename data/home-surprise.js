@@ -39,47 +39,6 @@
     `;
     document.head.appendChild(style);
   }
-  function ensureCampaignStyles(){
-    if(document.getElementById('kinaraideeCampaignStyles'))return;
-    const style=document.createElement('style');
-    style.id='kinaraideeCampaignStyles';
-    style.textContent=`
-      .campaign3000{margin:14px 0 2px;background:#111;color:#fff;border-radius:24px;padding:17px;text-align:left;box-shadow:0 12px 30px rgba(0,0,0,.10)}
-      .campaign3000Top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-      .campaign3000Eyebrow{color:#ffd341;font-size:12px;font-weight:950;letter-spacing:.02em}
-      .campaign3000Title{font-size:21px;line-height:1.25;font-weight:950;margin-top:4px}
-      .campaign3000Prize{color:#ff7298;font-weight:950;margin-top:5px}
-      .campaign3000Phone{font-size:42px;line-height:1}
-      .campaign3000Status{margin-top:12px;background:#292929;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.45;color:#eee}
-      .campaign3000Cta{display:block;margin-top:11px;background:#ff4f7f;color:#fff;text-decoration:none;text-align:center;border-radius:14px;padding:12px;font-weight:950}
-      .campaign3000Fine{margin-top:8px;color:#cfcfcf;font-size:11px;line-height:1.45}
-    `;
-    document.head.appendChild(style);
-  }
-  function installCampaignBanner(){
-    if(document.getElementById('campaign3000Banner'))return;
-    const hero=document.querySelector('#home .homeHero');
-    if(!hero||!hero.parentNode)return;
-    ensureCampaignStyles();
-    const card=document.createElement('section');
-    card.id='campaign3000Banner';
-    card.className='campaign3000';
-    card.setAttribute('aria-label','แคมเปญ 3,000 Premium เตรียมเปิด');
-    card.innerHTML=`
-      <div class="campaign3000Top">
-        <div>
-          <div class="campaign3000Eyebrow">🎉 แคมเปญเตรียมเปิด</div>
-          <div class="campaign3000Title">3,000 Premium ลุ้นรางวัลใหญ่</div>
-          <div class="campaign3000Prize">iPhone 17 Pro Max 256GB • 1 เครื่อง</div>
-        </div>
-        <div class="campaign3000Phone" aria-hidden="true">📱</div>
-      </div>
-      <div class="campaign3000Status"><b>0 / 3,000</b> • ยังไม่เริ่มนับสิทธิ์<br>Premium แบบชำระเงินจริงและกติกากิจกรรมยังอยู่ในช่วงเตรียมเปิด</div>
-      <a class="campaign3000Cta" href="campaign-3000-premium.html">ดูรายละเอียดแคมเปญ ›</a>
-      <div class="campaign3000Fine">การสมัครบัญชีทั่วไปตอนนี้ยังไม่ถือเป็นสิทธิ์ลุ้นรางวัล</div>
-    `;
-    hero.parentNode.insertBefore(card,hero.nextSibling);
-  }
   function announceBusy(status){
     if(!status)return;
     if(statusWriteTimer)clearTimeout(statusWriteTimer);
@@ -146,9 +105,10 @@
   }
   function install(){
     ensureAccessibilityStyles();
+    // index.html loads this helper directly. Start member sync before the user can
+    // create a favorite, then bridge the PWA install helper as before.
     ensureMemberSync();
     ensurePwaInstallHelper();
-    installCampaignBanner();
     const home=document.querySelector('#home .homeHero');
     if(!home||document.getElementById('homeSurpriseBtn'))return;
     const b=document.createElement('button');
@@ -168,6 +128,8 @@
     status.setAttribute('aria-live','assertive');
     status.setAttribute('aria-atomic','true');
     status.style.cssText='position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0;';
+    // Keep the live region outside #home because show('loading') hides every inactive .screen.
+    // A live region inside #home disappears from the accessibility tree before TalkBack can announce it.
     document.body.appendChild(status);
 
     const group=[...home.querySelectorAll('button')].find(x=>x.textContent.includes('เลือกพร้อมกัน'));
