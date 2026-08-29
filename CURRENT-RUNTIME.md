@@ -2,11 +2,11 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `b1685a5962e64da19f7c84c42642ed8213b391e1`
+- Current browser/PWA runtime candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Auth password-security UX readiness. `member.html` now recognizes Supabase weak-password rejections during signup/sign-in, preserves generic login failure wording to avoid account enumeration, routes affected users to the existing password-reset flow, and switches password autocomplete correctly between signup and login. `reset-password.html` now gives clear weak-password guidance when a replacement password is rejected. Leaked-password protection itself is **not enabled by this runtime change**; Supabase Auth configuration remains separately gated in Issue #372. The Service Worker/app-shell generation remains `kinaraidee-beta-v16` because this change does not alter `sw.js`.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
-- Current runtime deployment evidence is pending. PR #373 has source/regression evidence only until the exact merged-main descendant is deployed by GitHub Pages and the corresponding live checks succeed; no deployed PASS is claimed for the new Auth password-security UX yet.
+- Current runtime deployment evidence is pending. PR #373 merged as `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; GitHub Pages run `33229416059` was correctly blocked before deployment because the pre-merge branch candidate was not an ancestor after squash merge. This post-merge lineage update points the candidate at the exact merged-main runtime object. No deployed PASS is claimed until a descendant Pages run and corresponding live checks succeed.
 - Historical prior runtime source candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; historical merged/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Historical GitHub Pages run: `32802440796`.
 - Historical GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
