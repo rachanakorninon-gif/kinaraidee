@@ -1,0 +1,148 @@
+name: Premium Campaign Model Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PREMIUM-CAMPAIGN-ELIGIBILITY-CONTRACT.md'
+      - 'PREMIUM-BACKEND-IMPLEMENTATION-BLUEPRINT.md'
+      - 'CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md'
+      - '.github/workflows/premium-campaign-model-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PREMIUM-CAMPAIGN-ELIGIBILITY-CONTRACT.md'
+      - 'PREMIUM-BACKEND-IMPLEMENTATION-BLUEPRINT.md'
+      - 'CAMPAIGN-3000-OPERATIONS-BLUEPRINT.md'
+      - '.github/workflows/premium-campaign-model-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  model-fail-closed-invariants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise synthetic Premium/campaign invariants
+        shell: python
+        run: |
+          from dataclasses import dataclass
+
+          @dataclass
+          class UserState:
+              entitlement: str = 'none'
+              internal_or_test: bool = False
+              refunded: bool = False
+              disputed: bool = False
+              revoked: bool = False
+              last_sequence: int = -1
+
+          users = {}
+          seen_events = set()
+
+          def state(user_id):
+              return users.setdefault(user_id, UserState())
+
+          def apply_verified_event(event_id, user_id, sequence, event_type, verified=True):
+              """Synthetic model only. Browser/client flags are intentionally absent."""
+              if not verified:
+                  return 'rejected'
+              if event_id in seen_events:
+                  return 'duplicate'
+              seen_events.add(event_id)
+
+              current = state(user_id)
+              if sequence <= current.last_sequence:
+                  return 'out_of_order_ignored'
+              current.last_sequence = sequence
+
+              if event_type == 'subscription_active':
+                  current.entitlement = 'active'
+                  current.refunded = False
+                  current.disputed = False
+                  current.revoked = False
+              elif event_type == 'refund':
+                  current.entitlement = 'revoked'
+                  current.refunded = True
+              elif event_type == 'dispute':
+                  current.entitlement = 'revoked'
+                  current.disputed = True
+              elif event_type == 'revoke':
+                  current.entitlement = 'revoked'
+                  current.revoked = True
+              else:
+                  raise AssertionError(f'Unknown synthetic event: {event_type}')
+              return 'applied'
+
+          def trusted_eligible_users(campaign_status, entries_open, kill_switch):
+              # Fail closed until the real provider/business/legal policy is approved.
+              if campaign_status != 'LIVE' or not entries_open or kill_switch:
+                  return set()
+
+              eligible = set()
+              for user_id, current in users.items():
+                  if current.entitlement != 'active':
+                      continue
+                  if current.internal_or_test:
+                      continue
+                  if current.refunded or current.disputed or current.revoked:
+                      continue
+                  eligible.add(user_id)
+              return eligible
+
+          # 1) A verified active entitlement cannot create a PRE-LAUNCH public count.
+          assert apply_verified_event('evt-1', 'user-a', 1, 'subscription_active') == 'applied'
+          assert trusted_eligible_users('PRE_LAUNCH', False, False) == set()
+
+          # 2) Duplicate provider delivery is idempotent.
+          assert apply_verified_event('evt-1', 'user-a', 1, 'subscription_active') == 'duplicate'
+
+          # 3) Only unique active users count when LIVE + entries_open + kill switch off.
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+
+          # A second synthetic subscription activation for the same person still counts once.
+          assert apply_verified_event('evt-2', 'user-a', 2, 'subscription_active') == 'applied'
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+
+          # 4) Test/internal identities are excluded.
+          state('user-test').internal_or_test = True
+          assert apply_verified_event('evt-test', 'user-test', 1, 'subscription_active') == 'applied'
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+
+          # 5) Unverified events never mutate entitlement.
+          assert apply_verified_event('evt-bad', 'user-b', 1, 'subscription_active', verified=False) == 'rejected'
+          assert state('user-b').entitlement == 'none'
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+
+          # 6) Client/browser claims are intentionally irrelevant to authority.
+          client_claims_premium = {'user-client-only': True}
+          assert client_claims_premium['user-client-only'] is True
+          assert state('user-client-only').entitlement == 'none'
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+
+          # 7) Refund/revoke removes technical eligibility in the conservative model.
+          assert apply_verified_event('evt-3', 'user-a', 3, 'refund') == 'applied'
+          assert trusted_eligible_users('LIVE', True, False) == set()
+
+          # 8) Older out-of-order activation cannot resurrect a newer revoked state.
+          assert apply_verified_event('evt-old', 'user-a', 2, 'subscription_active') == 'out_of_order_ignored'
+          assert state('user-a').entitlement == 'revoked'
+          assert trusted_eligible_users('LIVE', True, False) == set()
+
+          # 9) A later verified activation may restore entitlement, but operational gates still apply.
+          assert apply_verified_event('evt-4', 'user-a', 4, 'subscription_active') == 'applied'
+          assert trusted_eligible_users('LIVE', True, False) == {'user-a'}
+          assert trusted_eligible_users('LIVE', False, False) == set()
+          assert trusted_eligible_users('PAUSED', True, False) == set()
+
+          # 10) Kill switch always wins over otherwise valid technical eligibility.
+          assert trusted_eligible_users('LIVE', True, True) == set()
+
+          # 11) Dispute is fail-closed in this model.
+          assert apply_verified_event('evt-5', 'user-a', 5, 'dispute') == 'applied'
+          assert trusted_eligible_users('LIVE', True, False) == set()
+
+          print('Premium campaign synthetic fail-closed invariants passed.')
+          print('Verified: PRE_LAUNCH=0, client claims ignored, unique-user counting, idempotency,')
+          print('out-of-order protection, internal/test exclusion, refund/dispute exclusion and kill switch.')
+          print('This synthetic regression creates no payment, entitlement, prize entry, eligible_count evidence or Commercial GO.')
