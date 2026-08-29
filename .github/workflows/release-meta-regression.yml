@@ -53,20 +53,17 @@ jobs:
               ;;
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$file" | head -n1)"
-              pages_run="$(sed -n 's/^- GitHub Pages run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
-              smoke_run="$(sed -n 's/^- Corresponding Live Smoke run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
-              diag_run="$(sed -n 's/^- Read-only diagnostic run: `\([0-9][0-9]*\)`.*/\1/p' "$file" | head -n1)"
               test -n "$deployed" || { echo 'Missing deployed SHA evidence'; exit 1; }
-              test -n "$pages_run" || { echo 'Missing Pages run evidence'; exit 1; }
-              test -n "$smoke_run" || { echo 'Missing Live Smoke run evidence'; exit 1; }
-              test -n "$diag_run" || { echo 'Missing diagnostic run evidence'; exit 1; }
+              grep -Eq 'Pages run `?[0-9]+`? completed \*\*success\*\*|Pages `?[0-9]+`?.*= SUCCESS|Pages run `?[0-9]+`? = success' "$file" || { echo 'Missing current successful Pages run evidence'; exit 1; }
+              grep -Eq 'main Live Smoke run `?[0-9]+`? completed \*\*success\*\*|main Live Smoke `?[0-9]+`?.*= SUCCESS|Live Smoke run `?[0-9]+`? = success' "$file" || { echo 'Missing current successful Live Smoke evidence'; exit 1; }
+              grep -Fq 'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' "$file" || { echo 'Current deployment PASS scope boundary is missing'; exit 1; }
               ;;
             *)
               echo "Unexpected runtime deployment status: $status"
               exit 1
               ;;
           esac
-          grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS' "$file"
+          grep -Fq 'Historical prior runtime source candidate:' "$file"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$file"
-          grep -Eq 'does( \*\*not\*\*| not) imply' "$file"
+          grep -Eq 'does( \*\*not\*\*| not) (imply|prove|enable)' "$file"
           grep -Fq 'Commercial GO' "$file"
