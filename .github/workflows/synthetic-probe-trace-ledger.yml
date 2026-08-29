@@ -1,0 +1,148 @@
+name: Synthetic Probe Trace Ledger
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/synthetic-probe-trace-ledger.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/synthetic-probe-trace-ledger.yml'
+  schedule:
+    - cron: '55 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate fail-closed evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='.github/workflows/synthetic-probe-trace-ledger.yml'
+          test -s "$file"
+          grep -Fq 'event=schedule&branch=main&per_page=1' "$file"
+          grep -Fq 'Supabase request-log correlation: **NOT RECORDED BY THIS LEDGER**' "$file"
+          grep -Fq 'Production traffic: **NOT VERIFIED**' "$file"
+          grep -Fq 'Structured application events: **NOT VERIFIED**' "$file"
+          grep -Fq 'This ledger is synthetic rejection-probe metadata only.' "$file"
+          grep -Fq 'group-api-live-observability-probe.yml' "$file"
+          grep -Fq 'partner-api-live-probe.yml' "$file"
+          echo 'Synthetic probe trace ledger boundary is fail-closed.'
+
+      - name: Verify latest scheduled run metadata is readable
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for workflow in group-api-live-observability-probe.yml partner-api-live-probe.yml; do
+            data="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow}/runs?event=schedule&branch=main&per_page=1")"
+            count="$(jq -r '.workflow_runs | length' <<<"$data")"
+            test "$count" -eq 1 || { echo "Expected one latest scheduled run for $workflow, got $count"; exit 1; }
+            jq -e '.workflow_runs[0] | .id and .html_url and .head_sha and .event and .status and .created_at and .updated_at' <<<"$data" >/dev/null
+            test "$(jq -r '.workflow_runs[0].event' <<<"$data")" = 'schedule'
+            test "$(jq -r '.workflow_runs[0].head_branch' <<<"$data")" = 'main'
+          done
+          echo 'Latest scheduled run metadata is readable for both synthetic probes.'
+
+  refresh-ledgers:
+    if: github.event_name != 'pull_request'
+    needs: validate-boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh latest scheduled synthetic probe ledgers
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          refresh(){
+            workflow_file="$1"
+            workflow_name="$2"
+            ledger_title="$3"
+            contract="$4"
+
+            data="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs?event=schedule&branch=main&per_page=1")"
+            count="$(jq -r '.workflow_runs | length' <<<"$data")"
+            test "$count" -eq 1 || { echo "No scheduled run available for $workflow_file"; exit 1; }
+
+            run_id="$(jq -r '.workflow_runs[0].id' <<<"$data")"
+            run_url="$(jq -r '.workflow_runs[0].html_url' <<<"$data")"
+            run_number="$(jq -r '.workflow_runs[0].run_number' <<<"$data")"
+            run_attempt="$(jq -r '.workflow_runs[0].run_attempt' <<<"$data")"
+            head_sha="$(jq -r '.workflow_runs[0].head_sha' <<<"$data")"
+            head_branch="$(jq -r '.workflow_runs[0].head_branch' <<<"$data")"
+            trigger="$(jq -r '.workflow_runs[0].event' <<<"$data")"
+            status="$(jq -r '.workflow_runs[0].status' <<<"$data")"
+            conclusion="$(jq -r '.workflow_runs[0].conclusion // "NOT COMPLETE"' <<<"$data")"
+            created_at="$(jq -r '.workflow_runs[0].created_at' <<<"$data")"
+            updated_at="$(jq -r '.workflow_runs[0].updated_at' <<<"$data")"
+            refreshed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            ledger_run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+            test "$trigger" = 'schedule'
+            test "$head_branch" = 'main'
+
+            body=$(cat <<EOF
+          ## Latest scheduled synthetic probe trace
+
+          This ledger is synthetic rejection-probe metadata only.
+
+          - Source workflow: **${workflow_name}** (`${workflow_file}`)
+          - Source run: ${run_url}
+          - Source run ID: `${run_id}`
+          - Run number / attempt: `${run_number}` / `${run_attempt}`
+          - Repository SHA: `${head_sha}`
+          - Branch: `${head_branch}`
+          - Trigger: `${trigger}`
+          - Status / conclusion: `${status}` / `${conclusion}`
+          - GitHub created / updated: `${created_at}` / `${updated_at}`
+          - Expected rejection contract: ${contract}
+          - Ledger refreshed at (UTC): `${refreshed_at}`
+          - Ledger refresh run: ${ledger_run_url}
+
+          ## Evidence boundary
+
+          - Supabase request-log correlation: **NOT RECORDED BY THIS LEDGER**
+          - Production traffic: **NOT VERIFIED**
+          - Structured application events: **NOT VERIFIED**
+          - Monitoring owner / alert channel / escalation / SLA: **NOT APPROVED BY THIS LEDGER**
+          - Retention / abuse-control / device / privacy / Commercial GO: **NOT ESTABLISHED BY THIS LEDGER**
+
+          A successful synthetic rejection probe proves only the checked rejection contract for that run. It must not be promoted to successful product-action traffic, production traffic baseline, application-event ingestion, alert-delivery PASS, monitoring SLA, retention approval, abuse-control completeness, real-device acceptance, Public Beta completion or Commercial GO.
+          EOF
+          )
+
+            export LEDGER_TITLE="$ledger_title"
+            existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 200 --json number,title --jq '.[] | select(.title == env.LEDGER_TITLE) | .number' | head -n1)"
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" --repo "$GITHUB_REPOSITORY" --body "$body" >/dev/null
+              echo "Refreshed $ledger_title (#$existing) from source run $run_id"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$ledger_title" --body "$body" >/dev/null
+              echo "Created $ledger_title from source run $run_id"
+            fi
+          }
+
+          refresh \
+            'group-api-live-observability-probe.yml' \
+            'Group API Live Observability Probe' \
+            'Trace ledger: Group API scheduled synthetic probe' \
+            '`GET 405`, then POST rejection sequence `400,400,403,403,400,413`; no successful room/vote mutation'
+
+          refresh \
+            'partner-api-live-probe.yml' \
+            'Partner API Live Rejection Probe' \
+            'Trace ledger: Partner API scheduled synthetic probe' \
+            '`GET 405`, malformed JSON `POST 400`, oversized body `POST 413`; no click/search/conversion creation'
