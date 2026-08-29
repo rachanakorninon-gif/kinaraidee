@@ -93,8 +93,9 @@ LIVE (อนาคต):
 
 ## Current implementation
 
-- `campaign-3000-premium.html`: หน้า PRE-LAUNCH ที่ไม่รับสิทธิ์รางวัล
-- `data/home-surprise.js`: inject banner บนหน้า Home
-- `sw.js`: cache campaign page สำหรับ PWA shell
+- `campaign-3000-premium.html`: มีหน้า standalone แบบ PRE-LAUNCH ที่ไม่รับสิทธิ์รางวัล
+- หน้า Home ปัจจุบัน **ยังไม่ได้** inject banner หรือ CTA ของแคมเปญ
+- Service Worker v16 ปัจจุบัน **ยังไม่ได้** pre-cache `campaign-3000-premium.html` ใน PWA shell
+- ยังไม่มี trusted backend campaign counter, Premium payment entitlement, prize-entry ingestion หรือ campaign analytics ที่เปิดใช้งานจริง
 
-การมีหน้า/แบนเนอร์นี้ **ไม่ถือว่าแคมเปญ LIVE** และ **ไม่ถือว่า Premium/payment gate ผ่าน**
+ดังนั้นการมีหน้า standalone นี้ **ไม่ถือว่าแคมเปญ LIVE**, **ไม่ถือว่า Premium/payment gate ผ่าน**, และ **ไม่ถือว่ามีผู้สมัคร สิทธิ์รางวัล conversion หรือรายได้เกิดขึ้นแล้ว** การ integrate เข้าหน้า Home/PWA ต้องเป็น runtime change แยกต่างหากพร้อม QA/deployment evidence ตามขอบเขตของการเปลี่ยนแปลงนั้น
