@@ -36,7 +36,10 @@ jobs:
           grep -Fq 'This ledger is synthetic rejection-probe metadata only.' "$file"
           grep -Fq 'group-api-live-observability-probe.yml' "$file"
           grep -Fq 'partner-api-live-probe.yml' "$file"
-          echo 'Synthetic probe trace ledger boundary is fail-closed.'
+          grep -Fq 'Source run ID: **${run_id}**' "$file"
+          grep -Fq 'Repository SHA: **${head_sha}**' "$file"
+          grep -Fq 'Trigger: **${trigger}**' "$file"
+          echo 'Synthetic probe trace ledger boundary and dynamic metadata formatting are fail-closed.'
 
       - name: Verify latest scheduled run metadata is readable
         shell: bash
@@ -91,6 +94,9 @@ jobs:
             refreshed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             ledger_run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
+            for required in "$workflow_file" "$workflow_name" "$run_id" "$run_url" "$run_number" "$run_attempt" "$head_sha" "$head_branch" "$trigger" "$status" "$created_at" "$updated_at" "$refreshed_at" "$ledger_run_url"; do
+              test -n "$required" && test "$required" != 'null' || { echo 'Required synthetic probe trace metadata is empty/null.'; exit 1; }
+            done
             test "$trigger" = 'schedule'
             test "$head_branch" = 'main'
 
@@ -99,17 +105,17 @@ jobs:
 
           This ledger is synthetic rejection-probe metadata only.
 
-          - Source workflow: **${workflow_name}** (`${workflow_file}`)
+          - Source workflow: **${workflow_name}** (${workflow_file})
           - Source run: ${run_url}
-          - Source run ID: `${run_id}`
-          - Run number / attempt: `${run_number}` / `${run_attempt}`
-          - Repository SHA: `${head_sha}`
-          - Branch: `${head_branch}`
-          - Trigger: `${trigger}`
-          - Status / conclusion: `${status}` / `${conclusion}`
-          - GitHub created / updated: `${created_at}` / `${updated_at}`
+          - Source run ID: **${run_id}**
+          - Run number / attempt: **${run_number} / ${run_attempt}**
+          - Repository SHA: **${head_sha}**
+          - Branch: **${head_branch}**
+          - Trigger: **${trigger}**
+          - Status / conclusion: **${status} / ${conclusion}**
+          - GitHub created / updated: **${created_at} / ${updated_at}**
           - Expected rejection contract: ${contract}
-          - Ledger refreshed at (UTC): `${refreshed_at}`
+          - Ledger refreshed at (UTC): **${refreshed_at}**
           - Ledger refresh run: ${ledger_run_url}
 
           ## Evidence boundary
@@ -123,6 +129,11 @@ jobs:
           A successful synthetic rejection probe proves only the checked rejection contract for that run. It must not be promoted to successful product-action traffic, production traffic baseline, application-event ingestion, alert-delivery PASS, monitoring SLA, retention approval, abuse-control completeness, real-device acceptance, Public Beta completion or Commercial GO.
           EOF
           )
+
+            grep -Fq "Source run ID: **${run_id}**" <<<"$body"
+            grep -Fq "Repository SHA: **${head_sha}**" <<<"$body"
+            grep -Fq "Trigger: **${trigger}**" <<<"$body"
+            grep -Fq "GitHub created / updated: **${created_at} / ${updated_at}**" <<<"$body"
 
             export LEDGER_TITLE="$ledger_title"
             existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 200 --json number,title --jq '.[] | select(.title == env.LEDGER_TITLE) | .number' | head -n1)"
