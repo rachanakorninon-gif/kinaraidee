@@ -1,0 +1,70 @@
+name: Marketing URL Builder Regression
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  marketing-url-builder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate safe acquisition URL generation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          url="$(node tools/marketing-url-builder.mjs \
+            --source tiktok \
+            --medium paid_social \
+            --campaign th_acq_surprise_202609 \
+            --content v15_todayeat_a)"
+
+          expected='https://rachanakorninon-gif.github.io/kinaraidee/?utm_source=tiktok&utm_medium=paid_social&utm_campaign=th_acq_surprise_202609&utm_content=v15_todayeat_a'
+          test "$url" = "$expected" || {
+            echo "Unexpected generated URL: $url"; exit 1;
+          }
+
+          printf '%s\n' "$url" | grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/?' || {
+            echo 'Generated URL escaped canonical public root'; exit 1;
+          }
+          if printf '%s\n' "$url" | grep -Eqi 'groupInvite=|[?&]room='; then
+            echo 'Generated public acquisition URL contains group invitation parameters'; exit 1;
+          fi
+
+      - name: Reject non-approved or unsafe campaign labels
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          expect_reject() {
+            if node tools/marketing-url-builder.mjs "$@" >/tmp/marketing-url.out 2>/tmp/marketing-url.err; then
+              echo "Expected URL builder rejection but command succeeded: $*"
+              cat /tmp/marketing-url.out
+              exit 1
+            fi
+          }
+
+          expect_reject --source direct_partner --medium referral --campaign th_acq_partner_202609 --content v15_partner_a
+          expect_reject --source tiktok --medium creator --campaign th_acq_creator_202609 --content v15_creator_a
+          expect_reject --source tiktok --medium paid_social --campaign th_premium_3000_prize_202609 --content v15_prize_a
+          expect_reject --source tiktok --medium paid_social --campaign 'person@example.com' --content v15_todayeat_a
+          expect_reject --source tiktok --medium paid_social --campaign th_acq_surprise_202609 --content groupinvite_room
+
+      - name: Record boundary
+        shell: bash
+        run: |
+          {
+            echo '## Marketing URL builder boundary'
+            echo
+            echo '- Generates only the canonical public root PWA destination with reviewed UTM slugs.'
+            echo '- Rejects group-room terms, unapproved creator/partner channels and PRE-LAUNCH prize/Premium-3000 campaign labels.'
+            echo '- Does not launch media, collect analytics, authorize spend, grant Premium or open prize entries.'
+          } >> "$GITHUB_STEP_SUMMARY"
