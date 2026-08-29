@@ -23,20 +23,25 @@
 - [x] `BETA-NEW-FLOW-TESTS.md` NF-01–NF-10
 - [x] `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 
-## Pending browser/PWA runtime candidate
-- [ ] Auth password-security UX candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; deployment evidence ยัง pending และห้ามนับเป็น deployed PASS ก่อน exact descendant Pages + Live Smoke สำเร็จ
-- [ ] Supabase leaked-password protection ยังไม่ได้เปิด; runtime candidate นี้เตรียมเฉพาะ WeakPasswordError UX และ account-enumeration-safe messaging เท่านั้น — Issue #372
+## Current browser/PWA runtime deployment evidence
+- [x] Auth password-security UX runtime candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`
+- [x] Runtime merge/deployed descendant SHA = `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` (PR #374 docs-only lineage descendant; no browser/PWA files changed after candidate)
+- [x] GitHub Pages run `33229525995` = SUCCESS; predeploy lineage/runtime guard passed
+- [x] Kinaraidee Live Smoke `33229548190` = SUCCESS after Pages deployment
+- [x] Auth Password Security Live Smoke `33229548182` = SUCCESS against deployed `member.html` / `reset-password.html` static UX markers
+- [ ] Supabase leaked-password protection ยังไม่ได้เปิด และ Auth live smoke ไม่ใช่หลักฐานว่าการตั้งค่านี้เปิดแล้ว — Issue #372
+- [ ] weak/leaked-password rejection + recovery แบบ interaction จริงยังต้องทดสอบหลังเปิด Auth setting ที่อนุมัติ; static live smoke ไม่แทน interaction evidence
 
-## Verified browser/PWA deployment evidence — historical/current verified scope before PR #373
+## Verified browser/PWA deployment evidence — prior historical scope
 - [x] Prior verified browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
-- [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
-- [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
-- [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
+- [x] Historical runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
+- [x] Historical Pages run `32802440796` = SUCCESS for exact merged-main SHA
+- [x] Historical corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
 - [x] Public Form Resilience Regression `32802440775` = SUCCESS for source recovery-state contracts; it does not submit a form
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
-- [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate
+- [x] Historical evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without proving current Auth behavior
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐาน real Feedback/Partner submission หลัง PR #201 หรือ weak-password behavior ของ PR #373
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานว่า Supabase leaked-password protection เปิดแล้ว
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
@@ -53,9 +58,9 @@
 - [x] Android installed-PWA v16 session: fresh favorite persisted after fully closing from Recent Apps and reopening without clearing data; Issue #177 closed completed for that tested session only
 - [x] iPhone/Safari #1 v16: TC-08 Location allow path passed for the tested session; Issue #171 closed completed
 - [x] iPhone/Safari #1 v16: NF-05 install guidance / Add to Home Screen / standalone launch / suppression after “เข้าใจแล้ว” passed for the tested session only
-- [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
+- [x] iPhone/VoiceOver #1 on deployed earlier v16 runtime: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
 
-ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior, pending PR #373 Auth behavior หรือ full device matrix
+ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current Auth interaction หรือ full device matrix
 
 ## ต้องตรวจบนอุปกรณ์จริงก่อน Beta acceptance / เพิ่ม traffic ตาม gate
 - [ ] Android Chrome อย่างน้อย 3 device models — ปัจจุบันยังไม่ครบจำนวนรุ่นและ exact model ของ historical Android session ไม่ถูกบันทึก
@@ -67,12 +72,12 @@
 - [ ] NF-04 Android PWA update-specific path มีหลักฐานจริงถ้ากำหนดเป็น gate
 - [x] NF-05 iPhone install guidance + “เข้าใจแล้ว” suppression มี scoped physical iPhone/Safari #1 PASS บน v16; iPadOS/second-iPhone coverage ยังเปิด
 - [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด
-- [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
-- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed PR #201/v16
+- [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed earlier v16 runtime; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
+- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed current runtime
 - [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference
-- [ ] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
-- [ ] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ; ห้ามนับ test record เป็น partner-commercial evidence
-- [ ] Auth weak-password/recovery UX ของ PR #373 ผ่าน deployed browser interaction หลัง Pages/Live Smoke; การทดสอบนี้ยังไม่เท่ากับ leaked-password protection PASS
+- [ ] real Feedback submission/failure-recovery interaction สำหรับ changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
+- [ ] real Partner application submission/failure-recovery interaction สำหรับ changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ; ห้ามนับ test record เป็น partner-commercial evidence
+- [ ] Auth weak-password/recovery UX ผ่าน real deployed browser interaction; Pages/Live Smoke/Auth static smoke ผ่านแล้ว แต่การทดสอบ interaction จริงยังเปิด และไม่เท่ากับ leaked-password protection PASS
 - [ ] ติดตั้ง PWA และเปิดจากไอคอนบนทุกแพลตฟอร์มที่ใช้เป็น acceptance target
 - [ ] geolocation allow/deny ครบตาม matrix
 - [ ] Google Maps fallback ครบตาม matrix
