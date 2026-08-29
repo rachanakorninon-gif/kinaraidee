@@ -7,33 +7,38 @@
 ## Current source/runtime state
 
 - Canonical reviewed `main` baseline: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace). This baseline is intentionally allowed to remain an ancestor of newer QA/workflow/documentation-only descendants; `Kinaraidee Release Baseline Regression` blocks guarded browser/API/schema drift after it, so a docs-only merge does not require baseline churn.
-- Current browser/PWA runtime candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` (PR #201 public-form resilience runtime lineage).
-- Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged).
+- Current browser/PWA runtime candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` (PR #373 Auth password-security UX readiness).
+- Current runtime deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**.
 - PWA cache marker: `kinaraidee-beta-v16`.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
-PR #201 hardens the public Feedback and Partner application submission paths with duplicate-submit guards plus `try/catch/finally`, restoring disabled/`aria-busy` state after network/SDK failures and preserving generic user-facing error hygiene. This source change does not create a new Service Worker generation; the cache marker remains v16.
+PR #373 prepares browser-side Auth password-security UX for Supabase weak-password rejection handling in `member.html` and `reset-password.html`, while preserving generic login failure wording and the existing `kinaraidee-beta-v16` Service Worker generation. This runtime change does not enable leaked-password protection, change Supabase Auth configuration, or create a successful/rejected account result.
 
-The prior PR #179 v16 member-history durability runtime remains historical/scoped evidence for the member-history fixes and physical-device retests already recorded. It is superseded as the current browser/PWA runtime candidate by PR #201, but those prior physical results are not rewritten or generalized.
+The prior PR #201 public-form resilience runtime remains historical/scoped deployment and device evidence for the exact behaviors already verified. It is superseded as the current browser/PWA runtime candidate by PR #373, but those prior physical results are not rewritten or generalized.
 
 ## Browser/PWA deployment evidence
 
-Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
+Status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 
-Verified current evidence:
+Current runtime evidence boundary:
+
+- PR #373 merged as `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`.
+- `CURRENT-RUNTIME.md` records the current Auth runtime candidate and keeps deployment status pending under the existing release-state contract.
+- No current-runtime deployment PASS is claimed here until canonical descendant Pages deployment evidence and corresponding live checks are intentionally promoted under the existing release contract.
+
+Historical verified deployment evidence remains valid for its original scope:
 
 - PR #201 merged as `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
-- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16`.
-- Live Smoke verifies public `feedback.html`, `partner.html`, `release-meta.json` and `sw.js`, requires the public release-meta SHA to equal the successful Pages head SHA, and requires the live Service Worker/release metadata cache marker to match `kinaraidee-beta-v16`.
+- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
 
-Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`. It is not reused as the current deployment trace after PR #201.
+Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
-This current deployment PASS is scoped to Pages/public metadata/assets/automated Live Smoke and the static Public Form Resilience contract. It does **not** establish successful real Feedback or Partner form submission, backend insert acceptance, or device interaction for the changed submission paths.
+Historical deployment PASS is scoped to the exact runtime lineage and checks identified above. It does **not** establish that the current PR #373 Auth runtime is deployed, that a weak/leaked password was rejected, that Supabase leaked-password protection is enabled, or that current Auth interaction acceptance passed on a real device.
 
 ## Supabase security evidence
 
@@ -42,7 +47,7 @@ Existing live evidence remains valid unless superseded by a later schema/configu
 - least-privilege browser-facing grants and anonymous Data API SELECT-denial evidence are recorded in `SUPABASE-GRANT-HARDENING-EVIDENCE.md`;
 - authenticated RLS read-isolation and cross-user negative mutation evidence are recorded in `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md` and `SUPABASE-RLS-NEGATIVE-EVIDENCE.md`;
 - the private admin-owner RLS helper remediation removed the prior public `SECURITY DEFINER` warning;
-- Supabase Auth leaked-password protection remains **BLOCKED BY PLAN/CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment evidence.
+- Supabase Auth leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment evidence.
 
 This scoped evidence does not prove every authenticated per-user JWT/RLS path, every mutation shape, external authenticated-session lifecycle, privileged-backend authorization path, Production Security PASS, Public Beta completion or Commercial GO.
 
@@ -64,8 +69,9 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; current iPhone evidence covers only iPhone #1.
 - Remaining TC-01–TC-15 / NF-01–NF-10 results must be scored only from actual device evidence.
 - Real Feedback and Partner application submission behavior for PR #201 remains open; deployment/static regression evidence does not establish successful or failure-recovery interaction on a physical device or backend insert acceptance.
+- Current PR #373 Auth signup/sign-in/reset interaction remains separately unverified on real devices; historical PR #201 device evidence must not be promoted to Auth password-security acceptance.
 
-Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to full-matrix PASS.
+Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to the current Auth runtime or full-matrix PASS.
 
 ## Group API / operations evidence
 
@@ -95,15 +101,16 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #201 browser/PWA deployment trace is verified; Issue #177's focused Android restart persistence acceptance, Issue #171's focused iPhone/Safari Location acceptance, NF-05 on iPhone/Safari #1 and NF-09 / Issue #57 on iPhone/VoiceOver #1 are complete for the tested sessions. Minimum open evidence still includes real Feedback/Partner form interaction for the changed PR #201 paths, additional Android/iPhone device-count coverage, real keyboard/reduced-motion checks, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #373 is the browser/PWA runtime candidate, but its canonical deployment state remains pending. Historical PR #201 deployment/device evidence remains valid only for the exact scoped behaviors already recorded. Minimum open evidence still includes current Auth interaction/deployment acceptance as applicable, real Feedback/Partner form interaction for the PR #201 changed paths, additional Android/iPhone device-count coverage, real keyboard/reduced-motion checks, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance on the current v16 runtime beyond the scoped iPhone VoiceOver PASS;
+- Public Beta technical/device/accessibility acceptance beyond the scoped historical device evidence;
+- current browser/PWA runtime deployment/interaction acceptance appropriate to the PR #373 Auth changes;
 - real Feedback/Partner submission acceptance for the PR #201 changed paths where required by the Beta/Product scope;
-- Supabase leaked-password protection gate (#11), currently blocked by plan/configuration;
+- Supabase leaked-password protection gate (#11), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
@@ -117,12 +124,12 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #201 runtime lineage `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; deployed merge SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- Current browser/PWA runtime candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; deployment status = **PENDING FOR CURRENT RUNTIME DEPLOYMENT**.
 - Current PWA cache marker = `kinaraidee-beta-v16`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
-- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` supersedes PR #179 as the current browser/PWA deployment trace while retaining the same v16 Service Worker generation.
-- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #201 form-submission acceptance.
+- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not prove the current PR #373 Auth runtime is deployed.
+- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #201 form-submission acceptance or PR #373 Auth acceptance.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, real form-submission acceptance, keyboard/reduced-motion checks or the remaining full-device-matrix gates.
+- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, real form-submission acceptance, current Auth interaction acceptance, keyboard/reduced-motion checks or the remaining full-device-matrix gates.
