@@ -30,9 +30,6 @@ jobs:
           statuses = re.findall(r'^Status:\s+\*\*(NOT VERIFIED|VERIFIED)\*\*', execution, re.M)
           if len(statuses) != 1:
               sys.exit('Commercial evidence must declare exactly one machine-readable status')
-          if statuses[0] != 'VERIFIED':
-              print('Commercial execution is not VERIFIED; no execution evidence is inferred.')
-              sys.exit(0)
 
           fields = [
               'Commercial scope / revenue model',
@@ -79,6 +76,11 @@ jobs:
           for example in execution_trace_examples:
               if nonexecution.match(example):
                   sys.exit(f'Commercial non-execution guard self-test overmatched plausible trace: {example}')
+
+          if statuses[0] != 'VERIFIED':
+              print('Commercial non-execution marker detector self-test passed.')
+              print('Commercial execution is not VERIFIED; no execution evidence is inferred.')
+              sys.exit(0)
 
           for field in fields:
               matches = re.findall(rf'^- {re.escape(field)}:\s+\*\*(.+?)\*\*\s*$', execution, re.M)
