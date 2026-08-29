@@ -20,6 +20,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Latest verified evidence-only deployed descendant for the current Auth runtime trace: `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` with Pages `33229525995`, Live Smoke `33229548190` and Auth Password Security Live Smoke `33229548182` all successful.
 - Read-only diagnostic run: `32752782165`.
 - Read-only diagnostic run `32752782165` is historical PR #179 diagnostic evidence retained for the release-metadata evidence contract; it does not prove Auth password behavior.
+- Issue #177 is closed **completed** and remains historical/scoped PASS for the tested physical Android installed-PWA session: after creating a fresh v16 favorite, the app was fully closed from Recent Apps and reopened without clearing data, and that favorite remained. This evidence is retained only for the member-history durability behavior and is not reused as Auth acceptance or full-device-matrix PASS.
 - Physical Android post-v16 Favorite/History restart evidence remains scoped PASS for the tested installed-PWA session only.
 - Physical iPhone/Safari Location #171 and NF-05 evidence remain scoped PASS for the tested iPhone session family only.
 - Physical iPhone/VoiceOver NF-09 acceptance on 2026-08-26 remains **PASS for the tested session** on the earlier deployed v16 runtime. That historical evidence is not reused as Auth password-security interaction acceptance.
