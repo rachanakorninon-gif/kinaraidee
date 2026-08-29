@@ -7,7 +7,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Runtime change: Auth password-security UX readiness. `member.html` now recognizes Supabase weak-password rejections during signup/sign-in, preserves generic login failure wording to avoid account enumeration, routes affected users to the existing password-reset flow, and switches password autocomplete correctly between signup and login. `reset-password.html` now gives clear weak-password guidance when a replacement password is rejected. Leaked-password protection itself is **not enabled by this runtime change**; Supabase Auth configuration remains separately gated in Issue #372. The Service Worker/app-shell generation remains `kinaraidee-beta-v16` because this change does not alter `sw.js`.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Current runtime deployment evidence is pending. PR #373 has source/regression evidence only until the exact merged-main descendant is deployed by GitHub Pages and the corresponding live checks succeed; no deployed PASS is claimed for the new Auth password-security UX yet.
-- Historical runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (PR #201 merged).
+- Runtime merge/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320` (**historical prior runtime only; not the pending candidate**).
 - Historical GitHub Pages run: `32802440796`.
 - Historical GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Historical corresponding Live Smoke run: `32802473505`.
