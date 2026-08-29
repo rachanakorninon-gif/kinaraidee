@@ -1,0 +1,72 @@
+{
+  "status": "PRE_LAUNCH_CORE_ONLY",
+  "locale": "th-TH",
+  "product": "กินอะไรดี",
+  "destination": "https://rachanakorninon-gif.github.io/kinaraidee/",
+  "allowed_ctas": [
+    "ลองใช้เลย",
+    "เปิดกินอะไรดี"
+  ],
+  "headlines": [
+    {
+      "id": "h001",
+      "text": "วันนี้กินอะไรดี?"
+    },
+    {
+      "id": "h002",
+      "text": "คิดไม่ออก? ให้เราช่วยเลือก"
+    },
+    {
+      "id": "h003",
+      "text": "กด “ไม่รู้เลย”"
+    },
+    {
+      "id": "h004",
+      "text": "ไม่ต้องคิด ให้เราช่วยเลือก"
+    }
+  ],
+  "captions": [
+    {
+      "id": "c001",
+      "text": "วันนี้กินอะไรดี? คิดไม่ออก กด “ไม่รู้เลย — เลือกให้ฉัน” แล้วให้กินอะไรดีช่วยตัดสินใจมื้อนี้ให้"
+    },
+    {
+      "id": "c002",
+      "text": "“กินอะไร?” “อะไรก็ได้...” ถ้ายังเลือกไม่ได้ ลองเปิดกินอะไรดี แล้วให้เราช่วยเลือกเมนูให้มื้อนี้"
+    },
+    {
+      "id": "c003",
+      "text": "เลือกมื้อ จำนวนคน และงบประมาณ แล้วถ้ายังคิดไม่ออก กด “ไม่รู้เลย” ให้กินอะไรดีช่วยเลือก"
+    },
+    {
+      "id": "c004",
+      "text": "พักเที่ยงแล้ว แต่ยังไม่รู้จะกินอะไร? เปิดกินอะไรดี แล้วให้เราช่วยเริ่มคำตอบให้มื้อนี้"
+    },
+    {
+      "id": "c005",
+      "text": "เย็นนี้กินอะไรดี? ถ้าไม่อยากคิดนาน ลองเปิดกินอะไรดีแล้วให้เราช่วยเลือก"
+    }
+  ],
+  "short_overlays": [
+    "คิดไม่ออก?",
+    "กด “ไม่รู้เลย”",
+    "ได้เมนูแล้ว",
+    "ไม่ต้องคิด ให้เราช่วยเลือก"
+  ],
+  "forbidden_terms": [
+    "ดาวน์โหลด",
+    "โหลดเลย",
+    "App Store",
+    "Google Play",
+    "Premium",
+    "iPhone",
+    "ลุ้น",
+    "รางวัล",
+    "3,000",
+    "สมัครสมาชิก",
+    "ฟรี",
+    "groupInvite",
+    "room="
+  ],
+  "evidence_boundary": "This file is an approved core-product copy source only. It does not publish content, launch ads, authorize spend, verify store distribution, activate Premium, open prize entries, or create performance evidence."
+}
