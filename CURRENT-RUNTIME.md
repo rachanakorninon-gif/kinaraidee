@@ -9,9 +9,9 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Current runtime deployment evidence is recorded in `AUTH-PASSWORD-SECURITY-DEPLOYMENT-EVIDENCE.md`: PR #373 merged as `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` changed no guarded browser/PWA runtime files, GitHub Pages run `33229525995` completed **success**, Auth Password Security Live Smoke run `33229548182` completed **success**, and main Live Smoke run `33229548190` completed **success**. This proves the deployed static Auth UX only; it does not prove leaked-password protection is enabled or that a real weak/leaked password was rejected.
 - Historical prior runtime source candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; historical merged/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Historical GitHub Pages run: `32802440796`.
-- Historical GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`.
+- Historical GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Historical corresponding Live Smoke run: `32802473505`.
-- Historical corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment. It remains historical evidence for the prior browser/PWA runtime and does not prove the pending Auth password-security UX is deployed.
+- Historical corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment. It remains historical evidence for the prior browser/PWA runtime and is not reused as current Auth password-security evidence.
 - Latest verified evidence-only deployed descendant before this Auth UX deployment: `5489cbbdc9ff618f1d32fa438ef91476dd350768` (PR #215 merge). Pages run `32843512340` completed **success** for that SHA and corresponding Live Smoke run `32843553479` completed **success**. That evidence remains historical and is not reused as Auth password-security evidence.
 - Read-only diagnostic run: `32752782165`.
 - Read-only diagnostic run `32752782165` is historical PR #179 diagnostic evidence only; no new diagnostic result is invented for this runtime.
