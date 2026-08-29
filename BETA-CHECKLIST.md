@@ -24,7 +24,7 @@
 - [x] `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 
 ## Pending browser/PWA runtime candidate
-- [ ] Auth password-security UX candidate = PR #373 source candidate `b1685a5962e64da19f7c84c42642ed8213b391e1`; deployment evidence ยัง pending และห้ามนับเป็น deployed PASS ก่อน exact merged-main Pages + Live Smoke สำเร็จ
+- [ ] Auth password-security UX candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; deployment evidence ยัง pending และห้ามนับเป็น deployed PASS ก่อน exact descendant Pages + Live Smoke สำเร็จ
 - [ ] Supabase leaked-password protection ยังไม่ได้เปิด; runtime candidate นี้เตรียมเฉพาะ WeakPasswordError UX และ account-enumeration-safe messaging เท่านั้น — Issue #372
 
 ## Verified browser/PWA deployment evidence — historical/current verified scope before PR #373
