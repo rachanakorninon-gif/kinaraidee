@@ -8,10 +8,14 @@ This runbook prepares a controlled production configuration change. It does **no
 
 ## Current verified state — 2026-08-29
 
-- Supabase Security Advisor reports `auth_leaked_password_protection` = **WARN / disabled**.
+- Connected organization read-back confirms the current Supabase organization plan is **Free**.
+- Supabase documentation states leaked-password protection is available on **Pro Plan and above**.
+- Therefore activation is currently **BLOCKED BY VERIFIED FREE PLAN / NOT PASS** until a paid-plan change is explicitly approved and completed through an authorized billing path.
+- Supabase Security Advisor re-check on 2026-08-29 reports `auth_leaked_password_protection` = **WARN / disabled**.
 - Current deployed browser Auth UX understands `weak_password` / WeakPasswordError-style failures and keeps login failure wording generic.
-- Deployment evidence is recorded separately in `AUTH-PASSWORD-SECURITY-DEPLOYMENT-EVIDENCE.md` once that evidence PR is merged.
+- Deployment evidence is recorded separately in `AUTH-PASSWORD-SECURITY-DEPLOYMENT-EVIDENCE.md` through the merged PR #376 lineage.
 - Existing server-side RLS/no-policy INFO notices are not a reason to add permissive client policies.
+- No plan upgrade, Auth configuration mutation, password submission or test-user creation is performed by this runbook.
 
 ## Current Supabase behavior to account for
 
@@ -24,31 +28,36 @@ Supabase documentation states:
 - `weak_password` / AuthWeakPasswordError is the error family clients should handle;
 - password-reset email APIs intentionally avoid revealing whether an account exists.
 
-These are platform expectations, not proof of the Kinaraidee project configuration.
+These are platform expectations, not proof that the Kinaraidee project setting is enabled.
 
 ## Hard preconditions
 
-Do not enable the setting until all checked:
+Do not enable the setting until all required items are satisfied:
 
-- [ ] confirm the Kinaraidee project plan exposes leaked-password protection
-- [ ] capture the current Auth password policy/configuration screen or equivalent trace
-- [ ] confirm an owner is available to roll back the setting if login impact is unexpectedly high
+- [x] confirm the current Kinaraidee organization/project plan status — **Free plan verified; feature is not available on the current plan**
+- [ ] obtain explicit approval for the paid-plan/billing change required to expose leaked-password protection
+- [ ] upgrade through an authorized billing path and verify the new plan is active
+- [ ] capture the current Auth password policy/configuration screen or equivalent trace immediately before changing Auth configuration
+- [ ] confirm an owner is available to roll back the Auth setting if login impact is unexpectedly high
 - [x] deployed signup/login/reset UX handles weak-password rejection without raw Supabase error leakage
 - [x] generic login/reset wording avoids account-enumeration messages in the browser source regression
 - [ ] choose non-production test identities; never use a real user's password
 - [ ] define the exact test window and incident owner
 
-## Activation procedure
+The current Free-plan verification closes only the **plan-discovery** question. It does not authorize an upgrade and does not make the security gate pass.
+
+## Activation procedure — only after the plan preconditions are approved
 
 The actual configuration mutation must be performed through an approved Supabase Auth configuration surface that exposes the current setting. The connected toolset in this ChatGPT session does not expose an Auth-configuration mutation action, so this runbook does not invent an API call or SQL command.
 
-1. Open the Kinaraidee project Auth password-security settings.
-2. Confirm current password minimum/required-character settings before changing anything.
-3. Enable **Leaked Password Protection** only.
-4. Do not change unrelated Auth controls in the same change window unless separately reviewed.
-5. Record who changed it, UTC timestamp, previous state and resulting state.
-6. Re-run Supabase Security Advisor immediately.
-7. If the warning remains, stop and investigate rather than assuming propagation.
+1. Verify the approved paid plan is active and the leaked-password setting is available.
+2. Open the Kinaraidee project Auth password-security settings.
+3. Capture the current password minimum/required-character settings and current leaked-password state before changing anything.
+4. Enable **Leaked Password Protection** only.
+5. Do not change unrelated Auth controls in the same change window unless separately reviewed.
+6. Record who changed it, UTC timestamp, previous state and resulting state.
+7. Re-run Supabase Security Advisor immediately.
+8. If the warning remains, stop and investigate rather than assuming propagation.
 
 ## Controlled interaction tests
 
@@ -135,12 +144,18 @@ Consider rollback if any of the following occurs and cannot be explained/fixed q
 5. Re-run Security Advisor and record that the warning is expected to return if the feature was disabled.
 6. Open/attach a defect with sanitized evidence before attempting activation again.
 
+A plan downgrade/upgrade is a separate billing/operations decision and must not be used as an improvised Auth rollback step unless explicitly approved and reviewed.
+
 ## Evidence template
 
-```
+```text
 Change owner: <TBD>
 Project: Kinaraidee / cuspfvfzprlgtvtdyilh
-Changed at UTC: <TBD>
+Plan before change: Free (verified 2026-08-29)
+Approved target plan: <TBD>
+Plan-change approval/evidence: <TBD>
+Auth changed at UTC: <TBD>
+Password-policy baseline captured: <TBD>
 Previous leaked-password state: disabled
 New state: <TBD>
 Security Advisor before: WARN auth_leaked_password_protection
@@ -157,4 +172,4 @@ Reviewer: <TBD>
 
 ## Completion rule
 
-Issue #372 may be marked completed only when the actual project setting is verified, controlled interaction tests are recorded, and Security Advisor is re-run. Source code, this runbook, CI, or deployed static UX alone can never mark leaked-password protection PASS.
+Issue #372 may be marked completed only when the actual supported project plan is active, the actual leaked-password setting is verified, controlled interaction tests are recorded, and Security Advisor is re-run. Source code, this runbook, CI, deployed static UX, or the fact that a paid plan exists can never mark leaked-password protection PASS by themselves.
