@@ -54,8 +54,8 @@ Browser/localStorage/query string ห้ามเป็น authority ของ�
 
 ## Product UX
 
-### Home
-แสดง card สั้น:
+### Home (planned, not implemented in current runtime)
+เมื่อพร้อมสำหรับการเชื่อมเข้า Home ให้แสดง card สั้น:
 - “3,000 Premium ลุ้นรางวัลใหญ่”
 - ชื่อรางวัล
 - สถานะ PRE-LAUNCH หรือยอดจริงเมื่อ LIVE
@@ -93,8 +93,9 @@ LIVE (อนาคต):
 
 ## Current implementation
 
-- `campaign-3000-premium.html`: หน้า PRE-LAUNCH ที่ไม่รับสิทธิ์รางวัล
-- `data/home-surprise.js`: inject banner บนหน้า Home
-- `sw.js`: cache campaign page สำหรับ PWA shell
+- `campaign-3000-premium.html`: หน้า standalone PRE-LAUNCH ที่ไม่รับสิทธิ์รางวัล
+- ยัง **ไม่ได้** inject campaign banner เข้า `data/home-surprise.js`
+- ยัง **ไม่ได้** เพิ่ม campaign page เข้า `sw.js` หรือเปลี่ยน Service Worker/runtime cache contract
+- Home/PWA runtime ที่ผ่านการตรวจเดิมจึงยังไม่ถูกเปลี่ยนโดย implementation นี้
 
-การมีหน้า/แบนเนอร์นี้ **ไม่ถือว่าแคมเปญ LIVE** และ **ไม่ถือว่า Premium/payment gate ผ่าน**
+การมีหน้า standalone นี้ **ไม่ถือว่าแคมเปญ LIVE** และ **ไม่ถือว่า Premium/payment gate ผ่าน**
