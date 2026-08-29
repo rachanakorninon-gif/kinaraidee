@@ -1,0 +1,20 @@
+-- Kinaraidee Premium backend rollback DRAFT
+-- STATUS: DESIGN ONLY / DO NOT APPLY TO PRODUCTION
+-- Must be reviewed together with 001_premium_schema.sql.example before any real migration exists.
+
+begin;
+
+-- Revoke/Drop helper first.
+drop function if exists private.premium_campaign_eligible_count(text);
+
+-- Drop dependent campaign tables before entitlement/subscription roots.
+drop table if exists public.premium_campaign_audit_log;
+drop table if exists public.premium_campaign_eligibility;
+drop table if exists public.premium_campaign_state;
+drop table if exists public.premium_entitlements;
+drop table if exists public.premium_webhook_events;
+drop table if exists public.premium_subscriptions;
+drop table if exists public.premium_provider_customers;
+
+-- DESIGN FILE ONLY: always roll back local scratch execution.
+rollback;

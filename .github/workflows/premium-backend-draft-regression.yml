@@ -1,0 +1,103 @@
+name: Premium Backend Draft Regression
+
+on:
+  pull_request:
+    paths:
+      - 'design/premium/**'
+      - '.github/workflows/premium-backend-draft-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'design/premium/**'
+      - '.github/workflows/premium-backend-draft-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-design-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Premium draft remains fail-closed and non-executable
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          schema_path = Path('design/premium/001_premium_schema.sql.example')
+          rollback_path = Path('design/premium/001_premium_schema_rollback.sql.example')
+          api_path = Path('design/premium/PREMIUM-API-CONTRACT.md')
+          adapter_path = Path('design/premium/PROVIDER-ADAPTER-CONTRACT.md')
+
+          for p in (schema_path, rollback_path, api_path, adapter_path):
+              if not p.exists():
+                  sys.exit(f'Missing Premium design artifact: {p}')
+
+          schema = schema_path.read_text(encoding='utf-8')
+          rollback = rollback_path.read_text(encoding='utf-8')
+          api = api_path.read_text(encoding='utf-8')
+          adapter = adapter_path.read_text(encoding='utf-8')
+
+          if 'DESIGN ONLY / DO NOT APPLY TO PRODUCTION' not in schema:
+              sys.exit('Schema draft lost explicit non-production marker')
+          if 'rollback;' not in schema.lower():
+              sys.exit('Schema scratch draft must end in rollback boundary')
+          if 'rollback;' not in rollback.lower():
+              sys.exit('Rollback scratch draft must remain non-applying')
+
+          required_tables = [
+              'premium_provider_customers', 'premium_subscriptions',
+              'premium_webhook_events', 'premium_entitlements',
+              'premium_campaign_state', 'premium_campaign_eligibility',
+              'premium_campaign_audit_log'
+          ]
+          for table in required_tables:
+              if f'alter table public.{table} enable row level security' not in schema.lower():
+                  sys.exit(f'RLS enable statement missing for {table}')
+              revoke = f'revoke all on public.{table} from anon, authenticated'
+              if revoke not in schema.lower():
+                  sys.exit(f'Least-privilege revoke missing for {table}')
+
+          forbidden_grants = re.findall(
+              r'grant\s+(?:all|insert|update|delete)\b[^;]*\bto\s+(?:anon|authenticated)\b',
+              schema,
+              flags=re.I | re.S,
+          )
+          if forbidden_grants:
+              sys.exit(f'Premium server-authority tables must not grant client write authority: {forbidden_grants[0]}')
+
+          default_seed = "values ('premium_3000_iphone','PRE_LAUNCH',false,true,3000)"
+          if default_seed.lower() not in schema.lower():
+              sys.exit('Campaign seed must remain PRE_LAUNCH, entries closed, kill switch on, target 3000')
+
+          if "lifecycle_status = 'LIVE'" not in schema or 's.entries_open = true' not in schema or 's.kill_switch = false' not in schema:
+              sys.exit('Eligible-count helper lost LIVE + entries-open + kill-switch-off gate')
+          if 'then 0::bigint' not in schema:
+              sys.exit('Eligible-count helper must fail closed to zero')
+          if 'pe.is_test = false' not in schema:
+              sys.exit('Eligible-count helper must exclude test entitlements')
+
+          api_required = [
+              'Browser state never grants Premium.',
+              'PRE_LAUNCH → `entries_open=false`, `eligible_count=0`',
+              'checkout response **never grants Premium**',
+              'Technical eligibility is not winner selection'
+          ]
+          for marker in api_required:
+              if marker not in api:
+                  sys.exit(f'API boundary marker missing: {marker}')
+
+          adapter_required = [
+              'Test events/accounts must never:',
+              'grant production Premium',
+              'contribute to `eligible_count`',
+              'Secrets belong only in approved server-side secret storage.'
+          ]
+          for marker in adapter_required:
+              if marker not in adapter:
+                  sys.exit(f'Adapter boundary marker missing: {marker}')
+
+          print('Premium backend design artifacts remain non-executable and fail-closed.')
+          print('This check creates no payment, entitlement, prize entry, or production authority.')
