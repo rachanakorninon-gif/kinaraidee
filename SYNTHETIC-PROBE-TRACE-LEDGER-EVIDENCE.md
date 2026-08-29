@@ -9,12 +9,14 @@ The run metadata below is an **immutable verified snapshot captured by PR #401**
 - Ledger workflow: `.github/workflows/synthetic-probe-trace-ledger.yml`
 - Metadata-preservation fix: PR #400
 - PR #400 merge SHA: `48df5d885801182997a522108cd11bd519f6d5f0`
-- Post-merge ledger refresh run verified by PR #401: `33255741766`
-- Ledger refresh event: `push`
-- Ledger refresh status/conclusion: `completed / success`
-- Ledger refresh head SHA: `48df5d885801182997a522108cd11bd519f6d5f0`
+- Scheduled-probe refresh integration: PR #403
+- PR #403 merge SHA: `f1651d98f08d3caa57248594b1fd972b54b2f429`
+- Current refresh triggers include the existing repository refresh paths plus `workflow_run` completion from the scheduled Group API and Partner API rejection probes; the workflow-run path is constrained to source runs whose trigger is `schedule`.
+- Post-PR #403 Partner scheduled source run verified in rolling Issue #398: `33269265156`, `completed / success`, exact repository SHA `f1651d98f08d3caa57248594b1fd972b54b2f429`.
+- Post-PR #403 ledger refresh run recorded by rolling Issues #397/#398: `33269833183`.
+- The PR #401 snapshot below remains immutable and continues to identify the earlier post-PR #400 `push` refresh run `33255741766`.
 
-The post-merge run is the evidence that the repaired ledger renderer executed successfully on `main`. The workflow fix prevents dynamic run metadata from being lost during Markdown rendering and validates required rendered fields before issue updates are written.
+PR #400 is the evidence that the repaired ledger renderer preserves dynamic run metadata and validates required rendered fields before issue updates are written. PR #403 improves freshness by allowing a completed scheduled Group/Partner source probe to trigger the rolling-ledger refresh directly. This implementation change does not alter the evidence boundary: a successful synthetic rejection probe or ledger refresh is not production traffic, a successful product action, application-event ingestion, alert-delivery PASS, monitoring SLA, Public Beta completion, or Commercial GO.
 
 ## Group API scheduled-probe ledger
 
@@ -56,7 +58,7 @@ Do not interpret this fixed snapshot as the newest run forever. Read Issue #398 
 
 ## Evidence boundary
 
-The trace ledgers prove only that concrete scheduled synthetic rejection runs can be traced to their GitHub Actions metadata and that the current ledger renderer preserved that metadata after PR #400.
+The trace ledgers prove only that concrete scheduled synthetic rejection runs can be traced to their GitHub Actions metadata and that the current ledger renderer preserves that metadata. The rolling issues may be refreshed from later scheduled source-run completion events without rewriting this immutable snapshot.
 
 They do **not** prove:
 
