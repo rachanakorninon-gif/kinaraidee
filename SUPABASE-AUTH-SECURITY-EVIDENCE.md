@@ -1,6 +1,6 @@
 # Supabase Auth Security Evidence
 
-Evidence date: 2026-08-24
+Evidence date: 2026-08-24; read-only plan/advisor re-verification: 2026-08-29
 
 Purpose: record the current, externally verified state of Supabase Auth security configuration without treating plan-limited settings, screenshots, documentation, or configuration intent as a broader security PASS.
 
@@ -10,6 +10,18 @@ Purpose: record the current, externally verified state of Supabase Auth security
 - Project ref: `cuspfvfzprlgtvtdyilh`
 - Previously observed project status through the connected Supabase management surface: `ACTIVE_HEALTHY`
 - Organization plan observed in the Supabase dashboard: `Free`
+
+## Read-only re-verification — 2026-08-29
+
+The connected Supabase organization/project was re-checked without changing billing, plan, Auth settings, users, credentials, or production data.
+
+- Organization plan read-back: `Free`.
+- Project status read-back: `ACTIVE_HEALTHY`.
+- Security Advisor re-check at `2026-08-29T02:49Z` still reported `Leaked Password Protection Disabled` at `WARN` level.
+- The remaining INFO-level RLS/no-policy notices are tracked as deny-by-default/service-role-only tables and must not be silenced by adding permissive policies without an approved use case.
+- Current focused follow-up: Issue #372. Historical security tracker: Issue #11.
+
+This re-verification confirms that the leaked-password production gate remains blocked by the current plan. It does not authorize a paid-plan upgrade and does not create an Auth test result or security PASS.
 
 ## Fresh Security Advisor result — 2026-08-24
 
@@ -93,7 +105,7 @@ Required evidence before closing that gate:
 2. Enable leaked-password protection through an authorized Supabase management surface.
 3. Re-run Supabase Security Advisor after the configuration change.
 4. Record evidence that the `auth_leaked_password_protection` WARN is no longer present.
-5. Keep Issue #11 open until steps 1–4 have verifiable evidence.
+5. Keep the tracked Auth leaked-password issues open until steps 1–4 have verifiable evidence.
 
 ## Captcha enablement boundary
 
@@ -101,8 +113,8 @@ Captcha should remain OFF until all applicable Auth entry points have an approve
 
 ## Evidence boundary
 
-- Current leaked-password status: **BLOCKED BY PLAN/CONFIGURATION — NOT PASS**.
-- The dashboard audit verifies observed configuration only; it is not a penetration test, real-device PASS, abuse-control completeness claim, or Commercial GO.
+- Current leaked-password status: **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**.
+- The dashboard audit and read-only re-verification verify observed configuration only; they are not a penetration test, real-device PASS, abuse-control completeness claim, or Commercial GO.
 - This document does not authorize a paid-plan upgrade.
 - It does not authorize enabling captcha without client integration and regression evidence.
 - CI, GitHub Pages deployment, Edge Function parity, browser/PWA tests, static security checks, rate-limit defaults, MFA availability, or token settings do not replace the remaining Auth configuration evidence.
