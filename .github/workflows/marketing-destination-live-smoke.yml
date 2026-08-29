@@ -1,6 +1,12 @@
 name: Marketing Destination Live Smoke
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/marketing-url-builder.mjs"
+      - ".github/workflows/marketing-url-builder-regression.yml"
+      - ".github/workflows/marketing-destination-live-smoke.yml"
   workflow_dispatch:
 
 permissions:
