@@ -11,6 +11,7 @@ on:
       - 'partner.html'
       - 'member.html'
       - 'reset-password.html'
+      - 'campaign-3000-premium.html'
       - 'deployment-check.html'
       - 'manifest.webmanifest'
       - 'icon.svg'
@@ -43,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -76,6 +77,19 @@ jobs:
           fi
           if grep -q "location.href='admin.html'" reset-password.html; then
             echo 'Member password reset must not redirect to the private owner dashboard.'
+            exit 1
+          fi
+      - name: Verify campaign prelaunch boundary before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'PRE-LAUNCH' campaign-3000-premium.html
+          grep -Fq '0 / 3,000' campaign-3000-premium.html
+          grep -Fq 'ยังไม่เริ่มนับสิทธิ์' campaign-3000-premium.html
+          grep -Fq 'ยังไม่ถือเป็นสิทธิ์ลุ้นรางวัล' campaign-3000-premium.html
+          grep -Fq 'ไม่ได้รับการสนับสนุน รับรอง หรือดำเนินการโดย Apple Inc.' campaign-3000-premium.html
+          if grep -Eq '([1-9][0-9]*) / 3,000' campaign-3000-premium.html; then
+            echo 'Prelaunch campaign must not publish a non-zero eligible-member count.'
             exit 1
           fi
       - name: Verify completed live-group result bridge before deploy
@@ -185,7 +199,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html deployment-check.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html deployment-check.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
@@ -194,6 +208,7 @@ jobs:
           find _site -maxdepth 2 -type f | sort
           test -s _site/member.html
           test -s _site/reset-password.html
+          test -s _site/campaign-3000-premium.html
           test -s _site/deployment-check.html
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
