@@ -23,8 +23,12 @@
 - [x] `BETA-NEW-FLOW-TESTS.md` NF-01–NF-10
 - [x] `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 
-## Verified browser/PWA deployment evidence
-- [x] Current browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
+## Pending browser/PWA runtime candidate
+- [ ] Auth password-security UX candidate = PR #373 source candidate `b1685a5962e64da19f7c84c42642ed8213b391e1`; deployment evidence ยัง pending และห้ามนับเป็น deployed PASS ก่อน exact merged-main Pages + Live Smoke สำเร็จ
+- [ ] Supabase leaked-password protection ยังไม่ได้เปิด; runtime candidate นี้เตรียมเฉพาะ WeakPasswordError UX และ account-enumeration-safe messaging เท่านั้น — Issue #372
+
+## Verified browser/PWA deployment evidence — historical/current verified scope before PR #373
+- [x] Prior verified browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
 - [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
 - [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
 - [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
@@ -32,7 +36,7 @@
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
 - [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐาน real Feedback/Partner submission หลัง PR #201
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐาน real Feedback/Partner submission หลัง PR #201 หรือ weak-password behavior ของ PR #373
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
@@ -51,7 +55,7 @@
 - [x] iPhone/Safari #1 v16: NF-05 install guidance / Add to Home Screen / standalone launch / suppression after “เข้าใจแล้ว” passed for the tested session only
 - [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
 
-ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior หรือ full device matrix
+ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior, pending PR #373 Auth behavior หรือ full device matrix
 
 ## ต้องตรวจบนอุปกรณ์จริงก่อน Beta acceptance / เพิ่ม traffic ตาม gate
 - [ ] Android Chrome อย่างน้อย 3 device models — ปัจจุบันยังไม่ครบจำนวนรุ่นและ exact model ของ historical Android session ไม่ถูกบันทึก
@@ -68,6 +72,7 @@
 - [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference
 - [ ] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
 - [ ] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ; ห้ามนับ test record เป็น partner-commercial evidence
+- [ ] Auth weak-password/recovery UX ของ PR #373 ผ่าน deployed browser interaction หลัง Pages/Live Smoke; การทดสอบนี้ยังไม่เท่ากับ leaked-password protection PASS
 - [ ] ติดตั้ง PWA และเปิดจากไอคอนบนทุกแพลตฟอร์มที่ใช้เป็น acceptance target
 - [ ] geolocation allow/deny ครบตาม matrix
 - [ ] Google Maps fallback ครบตาม matrix
@@ -90,7 +95,7 @@
 - [ ] Partner API actual end-to-end alert delivery verification — controlled self-test mechanism/evidence guard มีแล้ว แต่ยังต้อง exact run + resulting issue/comment จริง
 - [ ] อนุมัติ Partner API retention สำหรับ click/search/session/conversion data + cleanup/anonymization verification — Issue #123
 - [ ] Complete anonymous Partner API rate/quota/abuse-control strategy — Issue #123
-- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor — Issue #11; สถานะปัจจุบัน blocked by plan/configuration, ไม่ใช่ PASS
+- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor — Issue #372; สถานะปัจจุบันยังไม่เปิดและไม่ใช่ PASS
 - [ ] Rollback/restore/recovery drill จริงพร้อม evidence
 
 ## ก่อนเปิดรับเงินจริง
