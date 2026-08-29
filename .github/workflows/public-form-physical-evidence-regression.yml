@@ -82,7 +82,7 @@ jobs:
             require_count "$evidence" '`aria-busy` cleared after failure: **NOT VERIFIED**' 2
             require_count "$evidence" '- Result: **NOT VERIFIED**' 2
             require_text "$release" 'Real Feedback and Partner application submission behavior for PR #201 remains open'
-            require_text "$release" 'real Feedback/Partner form interaction for the changed PR #201 paths'
+            require_text "$release" 'real Feedback/Partner form interaction for the PR #201 changed paths'
             require_text "$checklist" '- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS'
             if grep -Fq -- '- [x] TC-12 Partner application' "$checklist"; then
               echo 'TC-12 cannot be checked complete while canonical physical evidence remains NOT VERIFIED.'
@@ -122,7 +122,7 @@ jobs:
             echo 'Physical PASS cannot coexist with the stale release-summary marker that TC-11/TC-12 remain open.'
             exit 1
           fi
-          if grep -Fq -- 'real Feedback/Partner form interaction for the changed PR #201 paths' "$release"; then
+          if grep -Fq -- 'real Feedback/Partner form interaction for the PR #201 changed paths' "$release"; then
             echo 'Physical PASS cannot coexist with the stale release-summary blocker for PR #201 form interaction.'
             exit 1
           fi

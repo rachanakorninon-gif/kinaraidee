@@ -81,7 +81,7 @@ jobs:
           grep -q 'Public Beta is still \*\*NOT COMPLETE\*\*' "$release" || {
             echo 'Operational-log decision must not promote Public Beta completion'; exit 1;
           }
-          grep -q 'Supabase Auth leaked-password protection remains \*\*BLOCKED BY PLAN/CONFIGURATION — NOT PASS\*\*' "$release" || {
+          grep -q 'Supabase Auth leaked-password protection remains \*\*BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS\*\*' "$release" || {
             echo 'Operational-log evidence must not erase independent Security gates'; exit 1;
           }
 
