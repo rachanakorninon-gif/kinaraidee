@@ -26,8 +26,10 @@ jobs:
           creative='MARKETING-CREATIVE-PRODUCTION-MATRIX.md'
           scripts='MARKETING-CREATIVE-SCRIPTS-TH.md'
           testplan='MARKETING-FIRST-PAID-TEST-PLAN.md'
+          social='SOCIAL-CHANNEL-LAUNCH-PACK-TH.md'
+          calendar='SOCIAL-ORGANIC-CONTENT-CALENDAR-14D.md'
 
-          for f in "$readiness" "$attribution" "$creative" "$scripts" "$testplan"; do
+          for f in "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar"; do
             test -s "$f" || { echo "Missing marketing readiness file: $f"; exit 1; }
           done
 
@@ -46,9 +48,18 @@ jobs:
           grep -Fq 'Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**' "$testplan" || {
             echo 'Paid-test plan must keep budget/spend authorization unset'; exit 1;
           }
+          grep -Fq 'Status: **PREPARED / CHANNEL CREATION & PUBLISHING NOT VERIFIED**' "$social" || {
+            echo 'Social launch pack must not imply channels were created/published'; exit 1;
+          }
+          grep -Fq 'Status: **CONTENT PREP / NOT PUBLISHED**' "$calendar" || {
+            echo 'Organic content calendar must remain not-published preparation'; exit 1;
+          }
 
           grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$attribution" || {
             echo 'Missing canonical public root acquisition destination'; exit 1;
+          }
+          grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$social" || {
+            echo 'Social launch pack must preserve canonical root destination'; exit 1;
           }
 
           grep -Fq '**NO APP STORE BADGES. NO GOOGLE PLAY BADGES. NO LIVE PRIZE CLAIMS.**' "$creative" || {
@@ -72,8 +83,14 @@ jobs:
           grep -Fq 'Do not use `ดาวน์โหลดเลย` as the default current CTA' "$scripts" || {
             echo 'Script CTA truth boundary is missing'; exit 1;
           }
+          grep -Fq 'Do not claim App Store or Google Play availability until actual listings are verified.' "$social" || {
+            echo 'Social channel store-availability boundary is missing'; exit 1;
+          }
+          grep -Fq 'No prize-entry wording while campaign status remains PRE-LAUNCH.' "$calendar" || {
+            echo 'Organic calendar prize pre-launch boundary is missing'; exit 1;
+          }
 
-          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative" "$scripts" "$testplan"; then
+          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative" "$scripts" "$testplan" "$social" "$calendar"; then
             echo 'Marketing preparation docs must not self-promote to LIVE'; exit 1;
           fi
 
@@ -85,8 +102,9 @@ jobs:
           {
             echo '## Marketing claims boundary'
             echo
-            echo '- Confirms readiness, attribution, scripts and test design remain pre-launch/design-only.'
+            echo '- Confirms readiness, attribution, scripts, test design and social-channel content remain pre-launch/prepared only.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
+            echo '- Requires social channel creation/publishing to remain unverified until real platform evidence exists.'
             echo '- Requires paid-test budget to remain UNSET and paid acquisition NOT LAUNCHED.'
-            echo '- Does not authorize ad spend, billing, analytics collection, Premium sales, prize entries or Commercial GO.'
+            echo '- Does not authorize ad spend, billing, analytics collection, social publishing, Premium sales, prize entries or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
