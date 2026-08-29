@@ -24,8 +24,10 @@ jobs:
           readiness='MARKETING-ACQUISITION-READINESS.md'
           attribution='MARKETING-ATTRIBUTION-CONTRACT.md'
           creative='MARKETING-CREATIVE-PRODUCTION-MATRIX.md'
+          scripts='MARKETING-CREATIVE-SCRIPTS-TH.md'
+          testplan='MARKETING-FIRST-PAID-TEST-PLAN.md'
 
-          for f in "$readiness" "$attribution" "$creative"; do
+          for f in "$readiness" "$attribution" "$creative" "$scripts" "$testplan"; do
             test -s "$f" || { echo "Missing marketing readiness file: $f"; exit 1; }
           done
 
@@ -37,6 +39,12 @@ jobs:
           }
           grep -Fq 'Status: **PRE-LAUNCH / PRODUCTION PREP ONLY**' "$creative" || {
             echo 'Creative matrix must remain pre-launch preparation'; exit 1;
+          }
+          grep -Fq 'Status: **PRODUCTION SCRIPT PREP / NOT TRAFFICKED**' "$scripts" || {
+            echo 'Creative scripts must remain not-trafficked preparation'; exit 1;
+          }
+          grep -Fq 'Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**' "$testplan" || {
+            echo 'Paid-test plan must keep budget/spend authorization unset'; exit 1;
           }
 
           grep -Fq 'https://rachanakorninon-gif.github.io/kinaraidee/' "$attribution" || {
@@ -55,8 +63,17 @@ jobs:
           grep -Fq 'Prize entries are not open and public eligible count remains 0.' "$readiness" || {
             echo 'Prize-entry pre-launch boundary is missing'; exit 1;
           }
+          grep -Fq 'Budget: **UNSET**' "$testplan" || {
+            echo 'Marketing test budget must remain UNSET until separately approved'; exit 1;
+          }
+          grep -Fq 'Paid acquisition status: **NOT LAUNCHED**' "$testplan" || {
+            echo 'Paid acquisition test must remain NOT LAUNCHED'; exit 1;
+          }
+          grep -Fq 'Do not use `ดาวน์โหลดเลย` as the default current CTA' "$scripts" || {
+            echo 'Script CTA truth boundary is missing'; exit 1;
+          }
 
-          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative"; then
+          if grep -Eq '^Status: \*\*LIVE' "$readiness" "$attribution" "$creative" "$scripts" "$testplan"; then
             echo 'Marketing preparation docs must not self-promote to LIVE'; exit 1;
           fi
 
@@ -68,7 +85,8 @@ jobs:
           {
             echo '## Marketing claims boundary'
             echo
-            echo '- Confirms preparation docs remain pre-launch/design-only.'
+            echo '- Confirms readiness, attribution, scripts and test design remain pre-launch/design-only.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
+            echo '- Requires paid-test budget to remain UNSET and paid acquisition NOT LAUNCHED.'
             echo '- Does not authorize ad spend, billing, analytics collection, Premium sales, prize entries or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
