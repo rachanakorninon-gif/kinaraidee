@@ -1,0 +1,59 @@
+name: Campaign 3000 Premium Live Smoke
+
+on:
+  workflow_run:
+    workflows: ["Deploy Kinaraidee to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  campaign-live-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Pages propagation
+        run: sleep 20
+
+      - name: Verify public prelaunch campaign page
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://rachanakorninon-gif.github.io/kinaraidee/campaign-3000-premium.html'
+          html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url")"
+
+          grep -Fq '<title>3,000 Premium | กินอะไรดี</title>' <<<"$html"
+          grep -Fq 'PRE-LAUNCH' <<<"$html"
+          grep -Fq '0 / 3,000' <<<"$html"
+          grep -Fq 'ยังไม่เริ่มนับสิทธิ์' <<<"$html"
+          grep -Fq 'ยังไม่ถือเป็นสิทธิ์ลุ้นรางวัล' <<<"$html"
+          grep -Fq 'Premium แบบชำระเงินจริง' <<<"$html"
+          grep -Fq 'ไม่ได้รับการสนับสนุน รับรอง หรือดำเนินการโดย Apple Inc.' <<<"$html"
+
+          if grep -Eq '([1-9][0-9]*) / 3,000' <<<"$html"; then
+            echo 'Unexpected non-zero eligible-member count on PRE-LAUNCH page.'
+            exit 1
+          fi
+
+          if grep -Eqi '(payment success|ชำระเงินสำเร็จ|สิทธิ์ลุ้น.*ยืนยันแล้ว|ผู้โชคดี)' <<<"$html"; then
+            echo 'Campaign page contains wording that could overstate live payment/eligibility/winner status.'
+            exit 1
+          fi
+
+          echo 'Campaign PRE-LAUNCH live smoke passed.'
+
+      - name: Record scoped evidence
+        shell: bash
+        run: |
+          {
+            echo '## Campaign 3,000 Premium live smoke'
+            echo
+            echo '- Public page: https://rachanakorninon-gif.github.io/kinaraidee/campaign-3000-premium.html'
+            echo '- Expected state: PRE-LAUNCH / 0 of 3,000 / no prize entries accepted'
+            echo '- Apple non-sponsorship disclaimer: checked'
+            echo '- Non-zero eligible-member count: rejected'
+            echo
+            echo '> This check proves only that the public landing page is reachable and preserves the PRE-LAUNCH truth boundary. It does not prove Premium payment, entitlement, prize eligibility, campaign legal approval, conversion, revenue, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
