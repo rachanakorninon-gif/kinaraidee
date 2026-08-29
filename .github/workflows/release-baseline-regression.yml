@@ -60,30 +60,43 @@ jobs:
           fi
 
           status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
-          if [ "$status" != 'PENDING FOR CURRENT RUNTIME DEPLOYMENT' ]; then
-            echo 'Browser/PWA runtime changed after the reviewed baseline without a pending declared runtime candidate:'
-            printf '%s\n' "$browser_changed"
-            exit 1
-          fi
-
           candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
-          test -n "$candidate" || { echo 'Unable to parse pending browser runtime candidate'; exit 1; }
-          git cat-file -e "$candidate^{commit}" || { echo "Pending runtime candidate is not present in repository history: $candidate"; exit 1; }
-          git merge-base --is-ancestor "$baseline" "$candidate" || { echo 'Pending runtime candidate is not a descendant of the reviewed baseline'; exit 1; }
-          git merge-base --is-ancestor "$candidate" HEAD || { echo 'Pending runtime candidate is not an ancestor of HEAD'; exit 1; }
+          test -n "$candidate" || { echo 'Unable to parse browser runtime candidate'; exit 1; }
+          git cat-file -e "$candidate^{commit}" || { echo "Runtime candidate is not present in repository history: $candidate"; exit 1; }
+          git merge-base --is-ancestor "$baseline" "$candidate" || { echo 'Runtime candidate is not a descendant of the reviewed baseline'; exit 1; }
+          git merge-base --is-ancestor "$candidate" HEAD || { echo 'Runtime candidate is not an ancestor of HEAD'; exit 1; }
 
           declared_changes="$(git diff --name-only "$baseline".."$candidate" -- "${browser_paths[@]}" || true)"
-          test -n "$declared_changes" || { echo 'Pending runtime candidate declares no browser/PWA change'; exit 1; }
+          test -n "$declared_changes" || { echo 'Runtime candidate declares no browser/PWA change'; exit 1; }
 
           undeclared_after_candidate="$(git diff --name-only "$candidate"..HEAD -- "${browser_paths[@]}" || true)"
           if [ -n "$undeclared_after_candidate" ]; then
-            echo 'Browser/PWA runtime files changed after the declared pending candidate:'
+            echo 'Browser/PWA runtime files changed after the declared candidate:'
             printf '%s\n' "$undeclared_after_candidate"
             exit 1
           fi
 
-          grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary is missing'; exit 1; }
-          echo "Declared pending browser runtime $candidate contains all runtime drift after reviewed baseline $baseline; API/schema paths remain clean."
+          case "$status" in
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
+              grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary is missing'; exit 1; }
+              echo "Declared pending browser runtime $candidate contains all runtime drift after reviewed baseline $baseline; API/schema paths remain clean."
+              ;;
+            'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
+              deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+              test -n "$deployed" || { echo 'Verified runtime PASS must declare deployed SHA'; exit 1; }
+              git cat-file -e "$deployed^{commit}" || { echo "Deployed runtime SHA is not present in repository history: $deployed"; exit 1; }
+              git merge-base --is-ancestor "$candidate" "$deployed" || { echo 'Deployed runtime SHA is not a descendant of candidate'; exit 1; }
+              git merge-base --is-ancestor "$deployed" HEAD || { echo 'Deployed runtime SHA is not an ancestor of HEAD'; exit 1; }
+              changed_to_deployed="$(git diff --name-only "$candidate".."$deployed" -- "${browser_paths[@]}" || true)"
+              test -z "$changed_to_deployed" || { echo 'Guarded browser/PWA files changed between candidate and deployed descendant'; printf '%s\n' "$changed_to_deployed"; exit 1; }
+              grep -Fq 'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' CURRENT-RUNTIME.md || { echo 'Verified runtime PASS scope boundary is missing'; exit 1; }
+              echo "Declared verified browser runtime $candidate is represented by deployed descendant $deployed with no guarded runtime drift; API/schema paths remain clean."
+              ;;
+            *)
+              echo "Unexpected runtime deployment status: $status"
+              exit 1
+              ;;
+          esac
 
       - name: Preserve readiness boundaries
         shell: bash

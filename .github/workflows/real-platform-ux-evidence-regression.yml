@@ -89,7 +89,7 @@ jobs:
 
           keyboard_release_open='visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.'
           motion_release_open='reduced-motion behavior must be verified on a real platform with reduced-motion preference enabled.'
-          keyboard_beta_open='- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed PR #201/v16'
+          keyboard_beta_open='- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages'
           motion_beta_open='- [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference'
 
           if [ "$keyboard" = 'PASS' ]; then
