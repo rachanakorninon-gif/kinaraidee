@@ -49,7 +49,7 @@ jobs:
               'Verified at',
           ]
           nonexecution = re.compile(
-              r'^(?:REPOSITORY CODE|STATIC CI|DECISION APPROVALS?|DRAFT AGREEMENTS?|UI SCREENS?|HEALTHY DEPLOYMENT)'
+              r'^(?:REPOSITORY CODE|STATIC CI|DECISION APPROVALS?|DRAFT AGREEMENTS?|UI SCREENS?|(?:A\s+)?HEALTHY DEPLOYMENT)'
               r'(?=$|[\s\W_])',
               re.I,
           )
