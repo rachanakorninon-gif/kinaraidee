@@ -46,7 +46,7 @@ jobs:
               'Verified at',
           ]
           nonexecution = re.compile(
-              r'^(?:REPOSITORY CODE|STATIC CI|DECISION APPROVALS?|DRAFT AGREEMENTS?|UI SCREENS?|HEALTHY DEPLOYMENT)'
+              r'^(?:REPOSITORY CODE|STATIC CI|DECISION APPROVALS?|DRAFT AGREEMENTS?|UI SCREENS?|(?:A\s+)?HEALTHY DEPLOYMENT)'
               r'(?=$|[\s\W_])',
               re.I,
           )
@@ -61,6 +61,7 @@ jobs:
               'UI screen',
               'UI screens only',
               'healthy deployment',
+              'A healthy deployment alone',
               'Healthy deployment — runtime responds 200',
           ]
           for example in canonical_nonexecution_examples:
