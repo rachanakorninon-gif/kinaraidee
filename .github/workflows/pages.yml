@@ -12,6 +12,7 @@ on:
       - 'member.html'
       - 'reset-password.html'
       - 'campaign-3000-premium.html'
+      - 'premium-research-preview.html'
       - 'deployment-check.html'
       - 'manifest.webmanifest'
       - 'icon.svg'
@@ -44,7 +45,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -90,6 +91,23 @@ jobs:
           grep -Fq 'ไม่ได้รับการสนับสนุน รับรอง หรือดำเนินการโดย Apple Inc.' campaign-3000-premium.html
           if grep -Eq '([1-9][0-9]*) / 3,000' campaign-3000-premium.html; then
             echo 'Prelaunch campaign must not publish a non-zero eligible-member count.'
+            exit 1
+          fi
+      - name: Verify Premium research preview boundary before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'content="noindex,nofollow,noarchive"' premium-research-preview.html
+          grep -Fq 'RESEARCH PROTOTYPE' premium-research-preview.html
+          grep -Fq 'ไม่มีการสมัคร Premium' premium-research-preview.html
+          grep -Fq 'ไม่มีการชำระเงิน' premium-research-preview.html
+          grep -Fq 'ไม่เก็บคำตอบ' premium-research-preview.html
+          grep -Fq 'id="revealCampaign"' premium-research-preview.html
+          grep -Fq 'id="campaignBox" class="campaign" aria-hidden="true"' premium-research-preview.html
+          grep -Fq '0 / 3,000 · ยังไม่เริ่มนับสิทธิ์' premium-research-preview.html
+          grep -Fq 'ไม่ได้รับการสนับสนุน รับรอง หรือดำเนินการโดย Apple Inc.' premium-research-preview.html
+          if grep -Eqi '<form|fetch\(|XMLHttpRequest|localStorage|sessionStorage' premium-research-preview.html; then
+            echo 'Premium research preview must remain no-submit/no-storage and must not collect participant responses.'
             exit 1
           fi
       - name: Verify completed live-group result bridge before deploy
@@ -199,7 +217,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html deployment-check.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
@@ -209,6 +227,7 @@ jobs:
           test -s _site/member.html
           test -s _site/reset-password.html
           test -s _site/campaign-3000-premium.html
+          test -s _site/premium-research-preview.html
           test -s _site/deployment-check.html
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
