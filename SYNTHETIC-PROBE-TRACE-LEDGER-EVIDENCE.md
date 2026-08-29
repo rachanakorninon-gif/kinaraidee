@@ -2,12 +2,14 @@
 
 This document records the verified trace-ledger mechanism for the scheduled Group API and Partner API synthetic rejection probes. It is an evidence-index document only; it does not upgrade Public Beta or Commercial readiness by itself.
 
+The run metadata below is an **immutable verified snapshot captured by PR #401**. Issues #397 and #398 are the canonical rolling ledgers for the newest scheduled probe metadata and may advance after this repository snapshot without making the historical evidence below invalid.
+
 ## Current ledger implementation
 
 - Ledger workflow: `.github/workflows/synthetic-probe-trace-ledger.yml`
 - Metadata-preservation fix: PR #400
 - PR #400 merge SHA: `48df5d885801182997a522108cd11bd519f6d5f0`
-- Post-merge ledger refresh run: `33255741766`
+- Post-merge ledger refresh run verified by PR #401: `33255741766`
 - Ledger refresh event: `push`
 - Ledger refresh status/conclusion: `completed / success`
 - Ledger refresh head SHA: `48df5d885801182997a522108cd11bd519f6d5f0`
@@ -16,9 +18,9 @@ The post-merge run is the evidence that the repaired ledger renderer executed su
 
 ## Group API scheduled-probe ledger
 
-Canonical issue ledger: #397 — `Trace ledger: Group API scheduled synthetic probe`
+Canonical rolling issue ledger: #397 — `Trace ledger: Group API scheduled synthetic probe`
 
-Latest recorded scheduled source run in the ledger:
+Verified PR #401 snapshot from the ledger:
 
 - Source workflow: `Group API Live Observability Probe`
 - Source run ID: `33252433049`
@@ -31,11 +33,13 @@ Latest recorded scheduled source run in the ledger:
 - Expected rejection contract: GET 405 followed by POST rejection sequence 400,400,403,403,400,413; no successful room/vote mutation
 - Ledger refreshed by run `33255741766`
 
+Do not interpret this fixed snapshot as the newest run forever. Read Issue #397 for the current rolling ledger state.
+
 ## Partner API scheduled-probe ledger
 
-Canonical issue ledger: #398 — `Trace ledger: Partner API scheduled synthetic probe`
+Canonical rolling issue ledger: #398 — `Trace ledger: Partner API scheduled synthetic probe`
 
-Latest recorded scheduled source run in the ledger:
+Verified PR #401 snapshot from the ledger:
 
 - Source workflow: `Partner API Live Rejection Probe`
 - Source run ID: `33253452104`
@@ -47,6 +51,8 @@ Latest recorded scheduled source run in the ledger:
 - GitHub created / updated: `2026-08-29T12:48:59Z / 2026-08-29T12:51:34Z`
 - Expected rejection contract: GET 405, malformed JSON POST 400, oversized-body POST 413; no click/search/conversion creation
 - Ledger refreshed by run `33255741766`
+
+Do not interpret this fixed snapshot as the newest run forever. Read Issue #398 for the current rolling ledger state.
 
 ## Evidence boundary
 
@@ -67,4 +73,4 @@ No user count, conversion, payment, subscription, partner-readiness, revenue, or
 
 ## Current release impact
 
-This evidence strengthens traceability for the existing synthetic monitoring mechanism and supports Operations/Commercial readiness documentation. It does not close the remaining monitoring gate: actual alert-delivery evidence, production owner/on-call, application-event observability where required, real traffic/error/latency baseline, approved retention/cleanup, and complete abuse controls remain separate open requirements.
+This evidence strengthens traceability for the existing synthetic monitoring mechanism and supports Operations/Commercial readiness documentation. The repository snapshot is historical evidence; Issues #397/#398 remain the rolling source for newer scheduled-run metadata. Neither the snapshot nor later ledger refreshes close the remaining monitoring gate: actual alert-delivery evidence, production owner/on-call, application-event observability where required, real traffic/error/latency baseline, approved retention/cleanup, and complete abuse controls remain separate open requirements.
