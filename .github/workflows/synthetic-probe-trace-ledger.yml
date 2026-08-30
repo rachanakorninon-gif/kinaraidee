@@ -12,6 +12,7 @@ on:
     workflows:
       - 'Group API Live Observability Probe'
       - 'Partner API Live Rejection Probe'
+      - 'Supabase Anonymous Data API Access Probe'
     types: [completed]
     branches: [main]
   schedule:
@@ -42,9 +43,10 @@ jobs:
           grep -Fq 'Supabase request-log correlation: **NOT RECORDED BY THIS LEDGER**' "$file"
           grep -Fq 'Production traffic: **NOT VERIFIED**' "$file"
           grep -Fq 'Structured application events: **NOT VERIFIED**' "$file"
-          grep -Fq 'This ledger is synthetic rejection-probe metadata only.' "$file"
+          grep -Fq 'This ledger is synthetic rejection/negative-probe metadata only.' "$file"
           grep -Fq 'group-api-live-observability-probe.yml' "$file"
           grep -Fq 'partner-api-live-probe.yml' "$file"
+          grep -Fq 'supabase-anon-access-probe.yml' "$file"
           grep -Fq 'Source run ID: **${run_id}**' "$file"
           grep -Fq 'Repository SHA: **${head_sha}**' "$file"
           grep -Fq 'Trigger: **${trigger}**' "$file"
@@ -56,7 +58,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          for workflow in group-api-live-observability-probe.yml partner-api-live-probe.yml; do
+          for workflow in group-api-live-observability-probe.yml partner-api-live-probe.yml supabase-anon-access-probe.yml; do
             data="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow}/runs?event=schedule&branch=main&per_page=1")"
             count="$(jq -r '.workflow_runs | length' <<<"$data")"
             test "$count" -eq 1 || { echo "Expected one latest scheduled run for $workflow, got $count"; exit 1; }
@@ -64,7 +66,7 @@ jobs:
             test "$(jq -r '.workflow_runs[0].event' <<<"$data")" = 'schedule'
             test "$(jq -r '.workflow_runs[0].head_branch' <<<"$data")" = 'main'
           done
-          echo 'Latest scheduled run metadata is readable for both synthetic probes.'
+          echo 'Latest scheduled run metadata is readable for all synthetic probes.'
 
   refresh-ledgers:
     if: github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.event == 'schedule')
@@ -112,7 +114,7 @@ jobs:
             body=$(cat <<EOF
           ## Latest scheduled synthetic probe trace
 
-          This ledger is synthetic rejection-probe metadata only.
+          This ledger is synthetic rejection/negative-probe metadata only.
 
           - Source workflow: **${workflow_name}** (${workflow_file})
           - Source run: ${run_url}
@@ -123,7 +125,7 @@ jobs:
           - Trigger: **${trigger}**
           - Status / conclusion: **${status} / ${conclusion}**
           - GitHub created / updated: **${created_at} / ${updated_at}**
-          - Expected rejection contract: ${contract}
+          - Expected rejection/negative contract: ${contract}
           - Ledger refreshed at (UTC): **${refreshed_at}**
           - Ledger refresh run: ${ledger_run_url}
 
@@ -133,9 +135,10 @@ jobs:
           - Production traffic: **NOT VERIFIED**
           - Structured application events: **NOT VERIFIED**
           - Monitoring owner / alert channel / escalation / SLA: **NOT APPROVED BY THIS LEDGER**
-          - Retention / abuse-control / device / privacy / Commercial GO: **NOT ESTABLISHED BY THIS LEDGER**
+          - Auth leaked-password protection / authenticated RLS / device acceptance: **NOT ESTABLISHED BY THIS LEDGER**
+          - Retention / abuse-control / privacy / Public Beta / Commercial GO: **NOT ESTABLISHED BY THIS LEDGER**
 
-          A successful synthetic rejection probe proves only the checked rejection contract for that run. It must not be promoted to successful product-action traffic, production traffic baseline, application-event ingestion, alert-delivery PASS, monitoring SLA, retention approval, abuse-control completeness, real-device acceptance, Public Beta completion or Commercial GO.
+          A successful synthetic rejection/negative probe proves only the checked contract for that run. It must not be promoted to successful product-action traffic, production traffic baseline, application-event ingestion, alert-delivery PASS, monitoring SLA, Auth leaked-password protection, authenticated RLS acceptance, retention approval, abuse-control completeness, real-device acceptance, Public Beta completion or Commercial GO.
           EOF
           )
 
@@ -166,3 +169,9 @@ jobs:
             'Partner API Live Rejection Probe' \
             'Trace ledger: Partner API scheduled synthetic probe' \
             '`GET 405`, malformed JSON `POST 400`, oversized body `POST 413`; no click/search/conversion creation'
+
+          refresh \
+            'supabase-anon-access-probe.yml' \
+            'Supabase Anonymous Data API Access Probe' \
+            'Trace ledger: Supabase anonymous Data API scheduled negative probe' \
+            'GET-only connectivity control plus anonymous SELECT denial (`401/403`) across 16 public relations; no table/view mutation and no response-body emission'
