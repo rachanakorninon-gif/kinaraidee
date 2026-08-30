@@ -14,6 +14,7 @@
 - Issue #408 — rolling Supabase anonymous Data API scheduled negative-probe trace ledger
 - Issue #45 — Group API operations/privacy/abuse-control tracker
 - Issue #123 — Partner API operations/privacy/abuse-control tracker
+- Issue #31 — Data governance readiness tracker for retention, data-rights procedure and approval boundaries
 - Issue #30 — Operations readiness tracker
 - Issue #2 — Commercial launch gate
 
@@ -42,7 +43,7 @@ A currently inspected scheduled example on `main` is run `33283941056`, event `s
 2. Supabase anonymous Data API negative-probe security meaning belongs to the Supabase security/grant evidence class (`SUPABASE-GRANT-HARDENING-EVIDENCE.md`); rolling run metadata may be mirrored in dedicated Issue #408 for traceability, but must not be routed into Group/Partner ledgers or promoted to Production monitoring PASS.
 3. `workflow_dispatch` controlled alert self-test evidence belongs in `ALERT-DELIVERY-SELF-TEST-EVIDENCE.md` only after the exact run and resulting issue/comment are both inspected.
 4. Platform request logs must not be promoted to application structured-event ingestion unless the application event itself is observable and inspected.
-5. Real production baseline, alert threshold, owner/on-call, channel, escalation and retention/access policy require separate approved/observed evidence.
+5. Real production baseline, alert threshold, owner/on-call, channel and escalation require separate approved/observed evidence; retention/access-policy decisions and data-rights procedure approval belong in the data-governance evidence path and Issue #31 rather than being inferred from monitoring or synthetic probes.
 6. Real-device QA, Auth interaction, Feedback/Partner form acceptance, payment, partner agreement, conversion and revenue remain separate evidence classes.
 
 ## Current monitoring gate
