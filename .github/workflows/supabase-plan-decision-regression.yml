@@ -101,8 +101,12 @@ jobs:
             echo 'SECURITY.md must retain leaked-password protection as a Production Security gate.'
             exit 1
           }
-          grep -Fq 'Supabase leaked-password protection gate (#11)' "$release" || {
-            echo 'CURRENT-RELEASE.md must retain the leaked-password blocker until separate post-change security evidence advances it.'
+          grep -Fq 'Current focused follow-up: Issue #372. Historical security tracker: Issue #11.' "$auth" || {
+            echo 'SUPABASE-AUTH-SECURITY-EVIDENCE.md must retain the canonical focused/historical issue routing.'
+            exit 1
+          }
+          grep -Fq 'Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**)' "$release" || {
+            echo 'CURRENT-RELEASE.md must retain the leaked-password blocker and canonical issue routing until separate post-change security evidence advances it.'
             exit 1
           }
           grep -Fq '**APPROVED** would authorize the plan/configuration change only; it would not by itself establish Security PASS.' "$decision" || {

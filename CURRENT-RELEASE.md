@@ -114,7 +114,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Public Beta technical/device/accessibility acceptance beyond the scoped historical device evidence;
 - current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes; the static deployment trace itself is verified;
 - real Feedback/Partner submission acceptance for the PR #201 changed paths where required by the Beta/Product scope;
-- Supabase leaked-password protection gate (#11), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
+- Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
 - Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
