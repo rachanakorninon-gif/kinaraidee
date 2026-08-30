@@ -68,7 +68,7 @@ jobs:
 
           # Keep the canonical release summary aligned with the same open boundaries.
           grep -Fq 'does not prove every authenticated per-user JWT/RLS path' "$release"
-          grep -Fq 'Supabase leaked-password protection gate (#11)' "$release"
+          grep -Fq 'Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**)' "$release"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
@@ -103,7 +103,7 @@ jobs:
             echo '## Supabase authenticated RLS negative evidence'
             echo
             echo '- Guards authenticated cross-user read isolation plus selected INSERT/UPDATE/DELETE negative paths.'
-            echo '- Keeps CURRENT-RELEASE.md aligned with the scoped RLS/Auth evidence boundary and open security gates.'
+            echo '- Keeps CURRENT-RELEASE.md aligned with the scoped RLS/Auth evidence boundary and canonical focused/historical issue routing.'
             echo '- Keeps beta_feedback evidence tied to the current private admin-helper contract.'
             echo '- This workflow validates documentation/source consistency only. It does not re-run live SQL probes, prove every mutation/JWT/session/service-role path, enable leaked-password protection, or establish Public Beta/Commercial PASS.'
           } >> "$GITHUB_STEP_SUMMARY"
