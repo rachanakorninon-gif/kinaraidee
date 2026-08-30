@@ -45,6 +45,7 @@ A currently inspected scheduled example on `main` is run `33283941056`, event `s
 4. Platform request logs must not be promoted to application structured-event ingestion unless the application event itself is observable and inspected.
 5. Real production baseline, alert threshold, owner/on-call, channel and escalation require separate approved/observed evidence; retention/access-policy decisions and data-rights procedure approval belong in the data-governance evidence path and Issue #31 rather than being inferred from monitoring or synthetic probes.
 6. Real-device QA, Auth interaction, Feedback/Partner form acceptance, payment, partner agreement, conversion and revenue remain separate evidence classes.
+7. Hard-coded workflow run IDs in release narratives or committed evidence documents are historical/scoped snapshots unless explicitly marked otherwise; current scheduled-probe freshness must be taken from rolling Issues #397/#398/#408. A newer rolling run does not rewrite or broaden the scope of older verified evidence.
 
 ## Current monitoring gate
 
