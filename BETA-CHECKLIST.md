@@ -54,6 +54,7 @@
 - [x] iPhone/Safari #1 v16: TC-08 Location allow path passed for the tested session; Issue #171 closed completed
 - [x] iPhone/Safari #1 v16: NF-05 install guidance / Add to Home Screen / standalone launch / suppression after “เข้าใจแล้ว” passed for the tested session only
 - [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
+- [x] iPhone device/session #1 on deployed v16 lineage: Reduced Motion passed for the tested Surprise flow with Reduce Motion enabled on 2026-08-31; exact model/iOS/Safari-or-PWA versions were not captured and are not guessed. This does not create Android, second-iPhone, keyboard-focus or full-matrix PASS.
 
 ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior, current PR #373 Auth interaction behavior หรือ full device matrix
 
@@ -69,7 +70,7 @@
 - [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด
 - [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
 - [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages
-- [ ] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference
+- [x] Reduced Motion มี scoped physical iPhone device/session #1 PASS สำหรับ Surprise flow บน deployed v16 lineage เมื่อเปิด Reduce Motion (2026-08-31); Android/second-iPhone/full-matrix reduced-motion coverage ยังเปิด
 - [ ] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
 - [ ] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ; ห้ามนับ test record เป็น partner-commercial evidence
 - [ ] Auth weak-password/recovery UX ของ PR #373 ผ่าน real deployed browser/device interaction; current Pages/Live Smoke deployment trace ไม่เท่ากับ leaked-password protection หรือ account-flow PASS
