@@ -58,6 +58,12 @@ Required physical interaction evidence:
 
 PASS requires one traceable real-platform reduced-motion session with complete reduced-motion metadata and all required reduced-motion checks verified. Source markers, `prefers-reduced-motion` CSS inspection, browser emulation, or CI do not establish this result.
 
+### Supporting physical observation — 2026-08-31 (non-canonical)
+
+Issue #133 records a scoped physical iPhone observation in which Reduce Motion was shown OFF and then ON in Settings, Kinaraidee rendered with the preference enabled, and the tested Surprise flow remained understandable through busy and completed-result states. The submitted observation also showed no prolonged/non-essential visible transition during that tested flow.
+
+This is useful supporting evidence only. Exact iPhone model, iOS version, Safari-versus-installed-PWA context/version, and the complete canonical trace metadata were not captured and must not be guessed. Therefore this observation does **not** populate the canonical metadata/check fields above, does **not** change `Reduced-motion result: NOT VERIFIED`, and does not establish keyboard focus, NF-07, full device-matrix, Public Beta, or Commercial PASS.
+
 ## Result boundary
 
 These two results are independent. A PASS for keyboard focus does not imply reduced-motion PASS, and a reduced-motion PASS does not imply keyboard-focus PASS, NF-07 PASS, full accessibility/device-matrix PASS, Public Beta completion, or Commercial GO.
