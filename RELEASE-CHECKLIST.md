@@ -32,7 +32,7 @@
 - [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
 - [x] NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session และ Issue #57 ปิด completed; Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT และข้อนี้ไม่แทน second-device/full-matrix accessibility PASS
 - [ ] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages
-- [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
+- [x] Reduced Motion / Issue #133 มี scoped physical iPhone device/session #1 PASS บน deployed v16 lineage สำหรับ Surprise flow เมื่อเปิด Reduce Motion (2026-08-31); exact model/iOS/Safari-or-PWA version ไม่ได้ถูกบันทึกและไม่เดาเพิ่ม ข้อนี้ไม่แทน Android/second-iPhone/full-matrix accessibility PASS
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
 - [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
 - [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS
@@ -58,7 +58,7 @@
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix บน current v16 scope ที่เกี่ยวข้อง
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่
-- [ ] visible keyboard focus และ reduced-motion behavior ผ่าน real-platform acceptance ตาม scope ที่กำหนด
+- [ ] visible keyboard focus ผ่าน real-platform acceptance ตาม scope ที่กำหนด; Reduced Motion มี scoped iPhone #1 Surprise-flow PASS แล้ว แต่ Android/second-iPhone/full-matrix reduced-motion coverage ยังเปิดอยู่
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v6 ยังไม่มี fresh multi-device regression จาก automated probe
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [x] iPhone/Safari #1 Location allow + Maps fallback มี scoped v16 PASS ตาม Issue #171; ยังไม่แทน device matrix ทั้งหมด
@@ -108,7 +108,7 @@
 
 ## Security
 - [ ] ตรวจ Supabase RLS ทุกตาราง Production ด้วย role ที่เกี่ยวข้อง
-- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
+- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; focused follow-up = Issue #372, historical security tracker = Issue #11 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
 - [ ] ไม่มี service-role/secret/private key อยู่ใน browser, repository หรือ public build
 - [ ] rotate secret ที่เคยใช้ใน test หากจำเป็น
 - [ ] ทดสอบ auth / sign-out / password recovery / session expiry
