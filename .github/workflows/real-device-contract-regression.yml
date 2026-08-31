@@ -50,14 +50,15 @@ jobs:
           require_text "$nf" 'INCONCLUSIVE / TEST ENVIRONMENT'
           require_text "$nf" 'Source/static/synthetic accessibility checks'
 
-          # The commercial release checklist may record the verified iPhone/VoiceOver session,
-          # but it must preserve the narrower evidence boundary and the unresolved Android/full-matrix scope.
+          # The commercial release checklist may record verified scoped physical sessions,
+          # but it must preserve narrower evidence boundaries and unresolved matrix scope.
           require_text "$release" 'NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session'
           require_text "$release" 'Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT'
           require_text "$release" 'ข้อนี้ไม่แทน second-device/full-matrix accessibility PASS'
           require_text "$release" 'NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่'
           require_text "$release" 'Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages'
-          require_text "$release" 'Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference'
+          require_text "$release" 'Reduced Motion / Issue #133 มี scoped physical iPhone device/session #1 PASS บน deployed v16 lineage สำหรับ Surprise flow เมื่อเปิด Reduce Motion (2026-08-31)'
+          require_text "$release" 'Android/second-iPhone/full-matrix reduced-motion coverage ยังเปิดอยู่'
           require_text "$release" 'NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`'
 
           # Global anti-fabrication boundaries must remain explicit.
