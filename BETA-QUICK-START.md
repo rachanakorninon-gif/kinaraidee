@@ -1,6 +1,8 @@
 # กินอะไรดี — Beta Quick Start
 
-คู่มือสั้นสำหรับส่งให้ผู้ทดสอบรอบแรก
+คู่มือสั้นสำหรับส่งให้ผู้ทดสอบรอบแรก **หลัง recruitment gate เปิดแล้วเท่านั้น**
+
+> **Recruitment gate:** ระหว่างที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` เอกสารนี้เป็นเพียงคู่มือเตรียมพร้อม ห้ามส่งให้ tester cohort หรือใช้เป็นหลักฐานว่า Public Beta เปิดแล้ว
 
 ## เริ่มทดสอบ
 1. เปิด https://rachanakorninon-gif.github.io/kinaraidee/
