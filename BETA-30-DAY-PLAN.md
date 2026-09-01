@@ -2,6 +2,8 @@
 
 แผนนี้ใช้สำหรับเดิน Public Beta ด้วยข้อมูลผู้ใช้จริง ห้ามกรอกผล PASS, metrics, conversion หรือรายได้จากการคาดเดา
 
+> **Recruitment gate:** แผน Day 4 เป็นต้นไปเป็นลำดับงานหลัง readiness/recruitment gate เปิดเท่านั้น ระหว่างที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` ห้ามเชิญ tester cohort หรือเพิ่ม traffic จากเอกสารนี้
+
 ## เป้าหมาย 30 วัน
 - ยืนยันว่า core flow “ไม่รู้จะกินอะไร → ได้คำแนะนำ → ตัดสินใจ/หาร้านต่อ” มีคุณค่ากับผู้ใช้จริง
 - ปิด Blocker/Critical จากอุปกรณ์จริง
@@ -19,15 +21,15 @@
 
 ## วัน 1–3 — Readiness Gate
 - ตรวจ `BETA-CHECKLIST.md`
-- เตรียม tester ด้วย `BETA-TESTER-RECRUITMENT.md`
-- ส่ง `BETA-QUICK-START.md` / `BETA-TESTER-GUIDE.md`
+- เตรียม tester ด้วย `BETA-TESTER-RECRUITMENT.md` **เป็น draft เท่านั้นจนกว่า Issue #3 recruitment gate จะเปิด**
+- เตรียม `BETA-QUICK-START.md` / `BETA-TESTER-GUIDE.md` แต่ยังไม่ส่งให้ cohort ก่อน gate เปิด
 - ทดสอบ TC-01–TC-15 และ NF-01–NF-10 บนอุปกรณ์จริงที่หาได้
 - บันทึกทุกผลใน `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 - บันทึกภาพรวมประจำวันใน `BETA-DAILY-LOG.md`
 - Blocker/Critical ต้องถูกเปิดเป็น defect และแก้ก่อนเพิ่ม traffic
 
-## วัน 4–7 — Small Beta Cohort
-- เริ่มผู้ทดสอบกลุ่มเล็กก่อน
+## วัน 4–7 — Small Beta Cohort (เฉพาะหลัง recruitment gate เปิด)
+- เริ่มผู้ทดสอบกลุ่มเล็ก **เมื่อ Issue #3 และ Beta acceptance gate ที่อ้างอิงอนุญาตแล้วเท่านั้น**
 - เก็บ Feedback ด้วย `BETA-FEEDBACK-TEMPLATE.md`
 - บันทึก traffic/tester/feedback/QA signal ประจำวันใน `BETA-DAILY-LOG.md`
 - เน้นปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และดูว่าผู้ใช้เข้าใจโดยไม่ต้องสอนหรือไม่
