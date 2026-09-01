@@ -1,6 +1,8 @@
 # กินอะไรดี — Beta Feedback Template
 
-ใช้แบบฟอร์มนี้บันทึก Feedback จากผู้ทดสอบจริง เพื่อให้ทีมแยกปัญหา UX, Bug และ Product insight ได้ง่าย
+ใช้แบบฟอร์มนี้บันทึก Feedback จากผู้ทดสอบจริง **หลัง recruitment gate ใน Issue #3 เปิดแล้วเท่านั้น** ระหว่างที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` ให้ถือไฟล์นี้เป็น template เตรียมพร้อม ไม่ใช่หลักฐานว่ามี tester traffic, feedback หรือ Public Beta เริ่มแล้ว
+
+กรอกเฉพาะข้อมูลที่เกิดขึ้นจริงจาก session ที่ได้รับอนุญาตหลัง gate เปิด ห้ามสร้าง tester identity, คะแนน, feedback, conversion, partner outcome หรือข้อมูล usage เพื่อเติมช่องว่าง
 
 ## ข้อมูลการทดสอบ
 - วันที่/เวลา:
