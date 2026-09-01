@@ -28,12 +28,16 @@
 ## Gate ที่ยังต้องผ่านก่อนถือว่า Public Beta complete
 
 - Android Chrome ให้ครบอย่างน้อย 3 device models ตามเกณฑ์ปัจจุบัน
-- iPhone Safari ให้ครบอย่างน้อย 2 device models ตามเกณฑ์ปัจจุบัน
-- NF-05 real iPhone/iPad Safari install-hint evidence
+- iPhone Safari ให้ครบอย่างน้อย 2 device models ตามเกณฑ์ปัจจุบัน; NF-05 มี PASS แบบ scoped แล้วเฉพาะ iPhone/Safari #1 และห้ามขยายผลเป็น iPadOS หรือ second-iPhone coverage
 - NF-07 old-cache → current-cache upgrade บนอุปกรณ์จริง
-- NF-09 assistive-technology acceptance บน TalkBack/VoiceOver environment ที่ทำงานปกติ
-- TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง
+- visible keyboard focus บน deployed pages ด้วย real keyboard/focus navigation
+- Reduced Motion บน real platform ที่เปิด reduced-motion preference พร้อม device/OS/browser-or-PWA trace metadata ครบ
+- current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง
+- real Feedback/Partner submission interaction สำหรับ changed paths ที่ยังเปิดอยู่
+- TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง โดยคง scoped PASS เดิมไว้เฉพาะ session ที่มีหลักฐานจริง
 - Blocker/Critical ต้องเป็น 0 ตาม acceptance scope
+
+NF-09 มี **PASS แบบ scoped สำหรับ tested physical iPhone/VoiceOver session** ตาม `CURRENT-RELEASE.md`; Android TalkBack follow-up เดิมยังเป็น INCONCLUSIVE / TEST ENVIRONMENT และไม่ถูกสร้างเป็น Android PASS จากหลักฐาน iPhone
 
 ห้ามกรอก PASS จาก CI, static review, source contract หรือผลจากอุปกรณ์คนละเครื่องแทนหลักฐานจริง
 
