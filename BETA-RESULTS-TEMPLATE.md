@@ -97,4 +97,4 @@
 ## Go / No-Go Notes
 สรุปเหตุผลโดยอ้างอิง `BETA-METRICS.md`, `BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-FEEDBACK-TEMPLATE.md` และ `RELEASE-CHECKLIST.md`
 
-ก่อนเปิดรับเงินจริงต้องไม่มี Blocker/Critical และห้ามถือว่า real-device gate ผ่านจาก static review หรือข้อมูลสมมติ
+ก่อนเปิดรับเงินจริง ต้องมี release-scoped defect evidence ยืนยัน `Blocker = 0` และ `Critical = 0`; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ไม่เพียงพอให้ถือว่า gate นี้ผ่าน และห้ามถือว่า real-device gate ผ่านจาก static review หรือข้อมูลสมมติ
