@@ -2,6 +2,8 @@
 
 ชุดกรณีทดสอบสำหรับผู้ทดสอบจริง ใช้บันทึกผล Pass/Fail ตามสิ่งที่เกิดขึ้นจริงเท่านั้น
 
+> **Evidence boundary:** test case ชุดนี้ใช้ได้สำหรับ readiness verification ก่อนเปิด recruitment gate แต่ผลจากการทดสอบดังกล่าวต้องคงขอบเขตตาม session/device ที่เกิดขึ้นจริง และ **ห้ามนับเป็น recruited Beta cohort evidence หรือหลักฐานว่า Public Beta เปิดแล้ว** จนกว่า Issue #3 จะไม่อยู่สถานะ `RECRUITMENT GATE NOT OPEN YET`
+
 ## TC-01 เปิดแอป
 1. เปิด Beta URL บน browser จริง
 2. ตรวจว่าหน้าหลักโหลดครบและอ่านข้อความได้
