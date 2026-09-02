@@ -60,7 +60,7 @@ https://rachanakorninon-gif.github.io/kinaraidee/
 ## เกณฑ์รอบแรก
 เกณฑ์ต่อไปนี้เป็น **exit criteria ของ cohort** ไม่ใช่ผลที่ผ่านแล้ว:
 - ได้ feedback จากผู้ใช้จริงอย่างน้อย 20 คน
-- ไม่มี Blocker/Critical ค้างอยู่
+- มี release-scoped defect evidence ยืนยัน `Blocker = 0` และ `Critical = 0`; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่ถือเป็นค่าศูนย์
 - flow หลักผ่านทั้ง Android Chrome และ iPhone Safari ตาม Gate ที่กำหนด
 - มีหลักฐานว่าผู้ใช้บางส่วนกลับมาใช้ซ้ำหรือระบุว่าจะใช้ซ้ำ
 - รู้ว่า feature ใดมีศักยภาพเป็น Premium และเมนู/พื้นที่ใดมี demand สูงจากข้อมูลจริง
