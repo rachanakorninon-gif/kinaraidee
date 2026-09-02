@@ -37,7 +37,7 @@
 - Minor: รายละเอียด UI/ข้อความ/ความลื่นไหล
 
 ## เกณฑ์ผ่าน Beta รอบแรก
-- ไม่มี Blocker/Critical
+- release-scoped defect evidence ยืนยัน `Blocker = 0` และ `Critical = 0`; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่ถือเป็นค่าศูนย์
 - flow เลือกเมนูและปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” ใช้งานได้บน Android Chrome และ iPhone Safari จริง
 - ร้านใกล้คุณ/Google Maps ทำงานได้จริง
 - PWA ติดตั้ง/เปิดจากไอคอนได้บนแพลตฟอร์มที่รองรับ
