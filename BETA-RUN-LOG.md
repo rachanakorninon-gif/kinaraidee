@@ -3,13 +3,11 @@
 ใช้ไฟล์นี้บันทึกรอบทดสอบจริงทีละอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md`, `BETA-NEW-FLOW-TESTS.md` และ `BETA-DEVICE-MATRIX.md`
 
 ## Release trace ที่ต้องบันทึกทุก run
-- Current browser/PWA runtime candidate: `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` (PR #79; deployed and trace-verified).
-- Expected Service Worker cache: `kinaraidee-beta-v13`.
-- Verified browser/PWA deployment evidence: Pages `32621529715` = SUCCESS, Public Pages Trace Check `32621547307` = SUCCESS, corresponding Live Smoke `32621549478` = SUCCESS for runtime SHA `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`.
-- Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only live probe `32632951668` = SUCCESS.
-- Group API v6 automated/deployment evidence is not a substitute for a new real-device Group run.
-- Historical Partner privacy runtime: `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28); Android #1 TC-12 evidence independently confirms privacy acknowledgement fields on the backend.
-- `CURRENT-RELEASE.md` is the canonical release-state reference when historical run notes conflict with current repository/deployment state.
+- `CURRENT-RELEASE.md` และ `CURRENT-RUNTIME.md` เป็น canonical source สำหรับ browser/PWA runtime, deployed descendant และ Service Worker/cache marker ปัจจุบัน; ห้ามใช้ค่าจาก historical run ด้านล่างแทนสถานะปัจจุบัน
+- ทุก run ใหม่ต้องบันทึก exact runtime/deployment trace ที่ตรวจได้ในเวลาทดสอบจริง โดยไม่คัดลอก SHA/cache จาก run เก่ามาเป็นผลของ run ใหม่
+- Historical Android run ด้านล่างผูกกับ beta lineage เดิมซึ่งรวม PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` และ `kinaraidee-beta-v13`; ข้อมูลนี้เป็นหลักฐานย้อนหลัง ไม่ใช่ current runtime declaration
+- Current Group API source candidate และ Partner API deployment/security evidence ให้ยึดเอกสาร canonical ที่เกี่ยวข้อง; automated/deployment evidence ไม่แทน real-device Group/Partner interaction PASS
+- Historical Partner privacy runtime `0624d7e4928e75d617137db0dba22825e7ba9f5a` (PR #28) และ Android #1 TC-12 evidence คงไว้เฉพาะขอบเขตที่บันทึกไว้เดิม
 
 ## วิธีใช้
 1. สร้างหัวข้อใหม่ต่อหนึ่งอุปกรณ์/Browser
@@ -25,11 +23,11 @@
 
 ### Release / deployment evidence
 - Historical Android evidence below was collected across the same physical device/session family while the browser/PWA runtime evolved through the documented beta lineage.
-- Current browser/PWA candidate for further retest is PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b`, and its Pages/public-metadata/Live-Smoke trace is independently verified.
+- The PR #79 / `35fe4b7fbf201882ea2ebad8ffca2b8da668999b` and `kinaraidee-beta-v13` references below describe the historical candidate/context used for this run family; they are not the current runtime/cache declaration.
 - Do **not** retroactively label every historical Android PASS as a PR #79 device PASS if that exact behavior was not re-exercised after PR #79.
-- Current Group API v6 deployment/rejection evidence likewise does not retroactively create a post-v6 Group device PASS.
+- Group API deployment/rejection evidence likewise does not retroactively create a post-deployment Group device PASS.
 - Public URL: `https://rachanakorninon-gif.github.io/kinaraidee/`
-- Expected current SW/cache: `kinaraidee-beta-v13`
+- Historical expected SW/cache for this run family: `kinaraidee-beta-v13`
 
 ### Device
 - วันที่/เวลา: 2026-08-22 to 2026-08-23 ICT
@@ -38,7 +36,7 @@
 - OS / version: Android; exact version not captured
 - Browser / version: Chrome; exact version not captured
 - Installed PWA: Yes
-- Service Worker / cache generation ที่สังเกตได้: v13 expected by source/current deployment; offline shell behavior observed. Exact cache-storage inspection on device was not captured.
+- Service Worker / cache generation ที่สังเกตได้: v13 expected by source/deployment lineage for this historical run; offline shell behavior observed. Exact cache-storage inspection on device was not captured.
 - Network: Mobile/online + airplane-mode/offline + recovery back online
 - Screenshot / video evidence: screenshots supplied in chat; consolidated observations recorded in GitHub Issue #5
 
@@ -70,40 +68,39 @@
 | NF-04 Android PWA update |  | Normal current-version use/install observed, but no isolated update-from-prior-build evidence. |
 | NF-05 iPhone/iPad install guidance | N/A | Android run. |
 | NF-06 Offline after update | PASS | Offline shell + offline recommendation worked after prior online use; does not substitute for NF-07 old-cache upgrade. |
-| NF-07 Upgrade from older cache |  | Still unverified; requires actual pre-v13 cache/device path. Synthetic CI coverage does not count as device PASS. |
+| NF-07 Upgrade from older cache |  | Still unverified for this historical run; requires an actual older-cache/device path. Synthetic CI coverage does not count as device PASS. |
 | NF-08 Recovery after interruption | PASS | Result state survived background/resume + lock/unlock; same result remained visible. |
-| NF-09 Accessibility state | INCONCLUSIVE | Earlier valid TalkBack evidence confirmed accessible name + button role. Historical pre-fix busy announcement was not heard and was tracked in Issue #57. Persistent live-region fix is now deployed in the current runtime, but the latest full retest cannot be scored because the available TalkBack activation environment became unreliable outside Kinaraidee as well. Keep Issue #57 open; do not mark current implementation PASS or new FAIL from that attempt. |
+| NF-09 Accessibility state | INCONCLUSIVE | Earlier valid TalkBack evidence confirmed accessible name + button role. Historical pre-fix busy announcement was not heard and was tracked in Issue #57. Persistent live-region fix was deployed after this run, but the latest full Android TalkBack retest could not be scored because the available TalkBack activation environment became unreliable outside Kinaraidee as well. Preserve this historical Android result; later scoped iPhone/VoiceOver evidence is tracked canonically elsewhere and does not rewrite this Android run. |
 | NF-10 Online recovery | PASS | After airplane mode was disabled, nearby online flow resumed without app restart. |
 
 ### Live-group focused regression
 - Earlier Android session reached 2/2 votes but tapping `🎉 ดูผลโหวตกลุ่ม` returned home; this was the PR #42 defect.
 - Later evidence on the same Android device/session records **group 2/2 final result + repeated reroll + handoff to normal result** working.
 - The successful historical interaction remains a narrow Android #1 Group regression PASS for that tested session.
-- Current Group API v6 has source/deployment parity plus scoped rejection-only live evidence; these automated checks do **not** establish a new post-v6 Group device PASS.
+- Group API automated deployment/rejection evidence does **not** establish a newer Group device PASS.
 
 ### Defects / retest history
 - Issue #38 `Invalid Date` after cloud sync: fixed and same-device retest recorded PASS.
 - Issue #40 favorite loss after lock/resume: fixed and same-device retest recorded PASS.
 - Pre-fix live-group final-result failure: fixed by PR #42 and later same-device final-result interaction observed working.
-- Issue #57 Surprise busy announcement: historical pre-fix FAIL exists; persistent fix is implemented/deployed, but latest full assistive-tech acceptance remains INCONCLUSIVE because of test-environment activation reliability. Issue stays open.
+- Issue #57 Surprise busy announcement: preserve the historical Android INCONCLUSIVE result recorded above; later platform-specific evidence is tracked separately and must not be backfilled into this run.
 - No device PASS is inferred from static/source/deployment checks alone.
 
 ### Final status for this device
-- Core flow: **PARTIAL PASS** — substantial real-device coverage exists, but TC-08 exact allow-location evidence remains unverified and the full device gate is not closed.
-- New flow: **PARTIAL / INCONCLUSIVE** — NF-07 old-cache upgrade remains unverified; NF-09 full assistive-tech acceptance is inconclusive; NF-04 update-specific evidence is incomplete.
-- Device-matrix contribution: evidence exists for **one Android device/session only**. Exact model/version was not captured. iPhone remains **0/2**.
+- Core flow: **PARTIAL PASS** — substantial real-device coverage exists, but TC-08 exact allow-location evidence was unverified in this historical Android run and the full device gate was not closed by this run alone.
+- New flow: **PARTIAL / INCONCLUSIVE** — NF-07 old-cache upgrade was unverified; Android NF-09 remained inconclusive; NF-04 update-specific evidence was incomplete.
+- Device-matrix contribution: this run contributes evidence for **one Android device/session only**. Exact model/version was not captured. Do not use the historical iPhone coverage state from the time of this Android run as the current matrix; use `BETA-DEVICE-MATRIX.md` / `CURRENT-RELEASE.md` for current iPhone evidence.
 
 ---
 
 ## Gate สำหรับปิด Real-device Beta Round
-- Android Chrome อย่างน้อย 3 device models ผ่าน core flow — ปัจจุบันมีหลักฐานเพียงหนึ่ง Android device/session และ exact model/version ไม่ถูกบันทึก
-- iPhone Safari อย่างน้อย 2 device models ผ่าน core flow — ปัจจุบันยังไม่มีหลักฐาน
-- ไม่มี Blocker/Critical ที่ยังเปิดอยู่ตาม Beta acceptance gate
-- Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ต้องผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง; TC-08 exact allow-location evidence ยังต้องเก็บให้ชัด
-- TC-11 Feedback และ TC-12 Partner application มี Android #1 evidence แล้ว แต่ห้าม generalize ไปยัง platform/device อื่น
-- New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องมี Android #1 evidence แล้วในขอบเขตที่ระบุ
-- NF-07 ต้องครอบคลุม update จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v13` บนอุปกรณ์จริง
-- NF-09 ต้องผ่านด้วย TalkBack/VoiceOver environment ที่ทำงานได้จริง; accessible-name partial evidence และ deployed source contract ยังไม่เพียงพอสำหรับ full PASS
+- Android Chrome ต้องมีอย่างน้อย 3 qualifying device models และ iPhone Safari ต้องมีอย่างน้อย 2 qualifying device models ตาม canonical Beta/device-matrix policy; current coverage ให้ดู `BETA-DEVICE-MATRIX.md` / `CURRENT-RELEASE.md` แทนการ hard-code point-in-time count ใน historical run log
+- `Blocker = 0` และ `Critical = 0` จะถือว่าผ่านได้เมื่อมี release-scoped defect evidence รองรับเท่านั้น; การไม่มี defect report หรือ CI/static/synthetic-only evidence ไม่ถือเป็นค่าศูนย์
+- Core flow TC-01, TC-02, TC-03, TC-08/09 และ TC-10 ต้องผ่านบนอุปกรณ์จริงที่เกี่ยวข้อง; historical Android TC-08 ใน run นี้ไม่ใช่ current-platform PASS
+- TC-11 Feedback และ TC-12 Partner application ใน run นี้เป็น historical Android #1 evidence เท่านั้น และห้าม generalize ไปยัง current runtime/platform/device อื่น
+- New flow NF-01, NF-02, NF-03 และ recovery ที่เกี่ยวข้องใน run นี้เป็น evidence ตามขอบเขตที่บันทึกไว้ ไม่ใช่ blanket current-runtime PASS
+- NF-07 ต้องครอบคลุมการ upgrade จาก cache รุ่นก่อนหน้าไปยัง **current canonical cache marker** ที่ระบุใน `CURRENT-RELEASE.md` บนอุปกรณ์จริง; historical `kinaraidee-beta-v13` ไม่ใช่ target ปัจจุบัน
+- NF-09 ต้องตัดสินจาก qualifying assistive-tech evidence ของ platform/session ที่เกี่ยวข้อง; ผล historical Android ใน run นี้ไม่ถูก rewrite ด้วยผลจาก platform อื่น
 - PWA/Offline/Install guidance ให้ตัดสินตาม platform support และบันทึก N/A เมื่อไม่รองรับจริง
-- Browser/PWA deployment trace สำหรับ PR #79 ผ่านแล้ว แต่ไม่แทน device/assistive-tech evidence
+- Browser/PWA deployment trace, PR CI, synthetic monitoring หรือ backend rejection probe ใช้เป็น deployment/security evidence ตามขอบเขตเท่านั้น และไม่แทน device/assistive-tech/form/Auth interaction evidence
 - ห้ามปิดรอบจาก static review, PR CI, synthetic monitoring หรือ backend rejection probe เพียงอย่างเดียว
