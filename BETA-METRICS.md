@@ -2,6 +2,8 @@
 
 เอกสารนี้กำหนดตัวชี้วัดสำหรับตัดสินว่า Public Beta พร้อมขยับไปสู่ Commercial Launch หรือยัง โดยไม่ใช้ตัวเลขสมมติแทนข้อมูลผู้ใช้จริง
 
+> **Measurement gate:** ขณะที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` รายการด้านล่างเป็น metric definitions / instrumentation-readiness เท่านั้น ไม่ใช่ผล Beta ที่วัดแล้ว ห้ามกรอก `0`, เปอร์เซ็นต์, user/session count, conversion หรือค่าอื่นเพื่อแทน “ยังไม่มีข้อมูล” การเริ่มรายงาน cohort metrics ต้องเกิดหลัง recruitment gate เปิดและมี trusted measurement source จริง
+
 ## North-star behavior
 ผู้ใช้เข้ามาเพราะ “ไม่รู้จะกินอะไร” → กด **“ไม่รู้เลย — เลือกให้ฉันทันที”** หรือเลือกเงื่อนไขเอง → ได้คำแนะนำ → ตัดสินใจกิน/หาร้านต่อได้
 
@@ -46,7 +48,7 @@
 - partner click-through เมื่อมีร้านตรงกับเมนู
 
 ## Quality
-- Blocker/Critical bugs = ต้องเป็น 0 ก่อน commercial go-live
+- Blocker/Critical bugs = ต้องเป็น 0 ก่อน commercial go-live โดย `0` ต้องมาจาก release-scoped defect evidence จริง ไม่ใช่ค่าเริ่มต้นหรือ placeholder เมื่อยังไม่ได้ประเมิน
 - Major bugs: ต้องมี owner/แผนแก้และไม่กระทบ core flow อย่างรุนแรง
 - อัตรา flow สำเร็จจากเริ่มเลือกจนถึง recommendation เมื่อมี instrumentation ที่เชื่อถือได้
 - TC-01–TC-15 และ NF-01–NF-10 ต้องมีผลจากอุปกรณ์จริงตาม Gate ที่กำหนด
@@ -70,4 +72,4 @@
 7. feature ใดควรอยู่ Free หรือ Premium
 
 ## Go / No-Go
-Commercial launch ควรเกิดเมื่อ core flow และ Surprise flow เสถียร, ไม่มี Blocker/Critical, real-device QA ผ่านตาม Gate, privacy/security/payment ที่เกี่ยวข้องพร้อม และมีหลักฐานจาก Beta ว่าผู้ใช้ได้รับคุณค่าจากการช่วยตัดสินใจเรื่องอาหารจริง
+Commercial launch ควรเกิดเมื่อ core flow และ Surprise flow เสถียร, ไม่มี Blocker/Critical จากหลักฐาน release-scoped ที่ตรวจสอบได้, real-device QA ผ่านตาม Gate, privacy/security/payment ที่เกี่ยวข้องพร้อม และมีหลักฐานจาก Beta ว่าผู้ใช้ได้รับคุณค่าจากการช่วยตัดสินใจเรื่องอาหารจริง
