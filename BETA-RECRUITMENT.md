@@ -2,7 +2,7 @@
 
 > **สถานะการใช้งาน:** เอกสารนี้เป็น recruitment template สำหรับใช้ **หลัง Issue #3 เปิด recruitment gate เท่านั้น** ระหว่างที่สถานะยังเป็น `RECRUITMENT GATE NOT OPEN YET` ห้ามส่งข้อความชวนด้านล่างเพื่อเริ่ม tester traffic และห้ามตีความ template นี้เป็นหลักฐานว่า Public Beta เปิดรับผู้ทดสอบแล้ว
 
-เอกสารนี้เตรียมไว้สำหรับชวนผู้ทดสอบจริงเข้าร่วม Public Betaและช่วยให้เก็บ feedback ได้เร็วขึ้นเมื่อ recruitment gate เปิดแล้ว
+เอกสารนี้เตรียมไว้สำหรับชวนผู้ทดสอบจริงเข้าร่วม Public Beta และช่วยให้เก็บ feedback ได้เร็วขึ้นเมื่อ recruitment gate เปิดแล้ว
 
 ## เป้าหมายรอบแรก
 - ผู้ทดสอบอย่างน้อย 20 คน
@@ -61,7 +61,7 @@ https://rachanakorninon-gif.github.io/kinaraidee/
 เกณฑ์ต่อไปนี้เป็น **exit criteria ของ cohort** ไม่ใช่ผลที่ผ่านแล้ว:
 - ได้ feedback จากผู้ใช้จริงอย่างน้อย 20 คน
 - ไม่มี Blocker/Critical ค้างอยู่
-- flow หลักผ่านทั้ง Android Chrome และ iPhone Safariตาม Gate ที่กำหนด
+- flow หลักผ่านทั้ง Android Chrome และ iPhone Safari ตาม Gate ที่กำหนด
 - มีหลักฐานว่าผู้ใช้บางส่วนกลับมาใช้ซ้ำหรือระบุว่าจะใช้ซ้ำ
 - รู้ว่า feature ใดมีศักยภาพเป็น Premium และเมนู/พื้นที่ใดมี demand สูงจากข้อมูลจริง
 
