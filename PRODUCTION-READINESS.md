@@ -39,8 +39,9 @@
 - [ ] Android Chrome เครื่องจริงอย่างน้อย 3 รุ่น
 - [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่น
 - [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล trace ได้
-- [ ] Blocker = 0
-- [ ] Critical = 0
+- [ ] Blocker = 0 จาก release-scoped defect evidence
+- [ ] Critical = 0 จาก release-scoped defect evidence
+- [ ] การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความเป็น Blocker/Critical = 0
 - [ ] PWA update/recovery ผ่านจริง
 - [ ] Location/Maps fallback ผ่านจริง
 - [ ] Feedback/Partner application ส่งจริงได้
