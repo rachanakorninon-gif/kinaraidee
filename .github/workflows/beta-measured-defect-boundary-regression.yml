@@ -23,3 +23,16 @@ jobs:
             test -s "$file" || exit 1
             grep -Fq 'release-scoped defect evidence' "$file" || exit 1
           done
+
+      - name: Guard all Markdown zero-defect claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            if grep -Eq 'Blocker[[:space:]]*=[[:space:]]*0|Critical[[:space:]]*=[[:space:]]*0' "$file"; then
+              if ! grep -Fq 'release-scoped defect evidence' "$file"; then
+                echo "Zero-defect claim without measured evidence boundary: $file" >&2
+                exit 1
+              fi
+            fi
+          done < <(find . -type f -name '*.md' -not -path './.git/*' -print)
