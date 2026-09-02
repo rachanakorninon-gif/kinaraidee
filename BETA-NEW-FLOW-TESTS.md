@@ -2,6 +2,8 @@
 
 ใช้ทดสอบฟีเจอร์ที่เพิ่มล่าสุดบนอุปกรณ์จริงเท่านั้น
 
+> **Evidence boundary:** test ชุดนี้ใช้ได้สำหรับ readiness verification ก่อนเปิด recruitment gate แต่ผลต้องคงขอบเขตตาม session/device จริง และ **ห้ามนับเป็น recruited Beta cohort evidence หรือหลักฐานว่า Public Beta เปิดแล้ว** จนกว่า Issue #3 จะไม่อยู่สถานะ `RECRUITMENT GATE NOT OPEN YET`
+
 ## NF-01 ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที”
 1. เปิดหน้าแรก
 2. กดปุ่ม “🎲 ไม่รู้เลย — เลือกให้ฉันทันที”
