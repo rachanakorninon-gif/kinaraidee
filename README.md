@@ -114,7 +114,7 @@ Beta: https://rachanakorninon-gif.github.io/kinaraidee/
 - NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device accessibility coverage ยังไม่ครบ
 - ตรวจ visible keyboard focus และ reduced-motion behavior บนอุปกรณ์/แพลตฟอร์มจริงก่อนถือว่า accessibility acceptance ผ่าน
 - ทุก FAIL มี defect ที่ตามแก้ได้
-- Blocker = 0 และ Critical = 0
+- Blocker = 0 และ Critical = 0 ต้องมาจาก release-scoped defect evidence จริง; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความว่าเป็น zero-defect PASS
 
 ## Commercial Readiness — ยังต้องพิสูจน์ด้วยข้อมูลจริง
 
