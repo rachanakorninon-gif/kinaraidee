@@ -49,6 +49,7 @@
 
 ## Quality
 - Blocker/Critical bugs = ต้องเป็น 0 ก่อน commercial go-live โดย `0` ต้องมาจาก release-scoped defect evidence จริง ไม่ใช่ค่าเริ่มต้นหรือ placeholder เมื่อยังไม่ได้ประเมิน
+- รายการ `Blocker = 0` และ `Critical = 0` ใน `BETA-CHECKLIST.md` ต้องคงเป็น unchecked จนกว่าจะมี release-scoped defect evidence ที่รองรับค่าศูนย์จริง; ห้ามเปลี่ยนสถานะจากการไม่มีรายงานหรือจาก CI/synthetic-only evidence
 - Major bugs: ต้องมี owner/แผนแก้และไม่กระทบ core flow อย่างรุนแรง
 - อัตรา flow สำเร็จจากเริ่มเลือกจนถึง recommendation เมื่อมี instrumentation ที่เชื่อถือได้
 - TC-01–TC-15 และ NF-01–NF-10 ต้องมีผลจากอุปกรณ์จริงตาม Gate ที่กำหนด
