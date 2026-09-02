@@ -35,7 +35,7 @@
 - current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง
 - real Feedback/Partner submission interaction สำหรับ changed paths ที่ยังเปิดอยู่
 - TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง โดยคง scoped PASS เดิมไว้เฉพาะ session ที่มีหลักฐานจริง
-- Blocker/Critical ต้องเป็น 0 ตาม acceptance scope
+- Blocker/Critical ต้องเป็น 0 ตาม acceptance scope โดยค่าศูนย์ต้องมี release-scoped defect evidence รองรับจริง; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่เพียงพอให้ถือเป็น 0
 
 NF-09 มี **PASS แบบ scoped สำหรับ tested physical iPhone/VoiceOver session** ตาม `CURRENT-RELEASE.md`; Android TalkBack follow-up เดิมยังเป็น INCONCLUSIVE / TEST ENVIRONMENT และไม่ถูกสร้างเป็น Android PASS จากหลักฐาน iPhone
 
