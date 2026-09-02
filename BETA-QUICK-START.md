@@ -1,8 +1,10 @@
 # กินอะไรดี — Beta Quick Start
 
-คู่มือสั้นสำหรับส่งให้ผู้ทดสอบรอบแรก **หลัง recruitment gate เปิดแล้วเท่านั้น**
+คู่มือสั้นสำหรับส่งให้ผู้ทดสอบ Beta cohort รอบแรก **หลัง recruitment gate เปิดแล้วเท่านั้น**
 
-> **Recruitment gate:** ระหว่างที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` เอกสารนี้เป็นเพียงคู่มือเตรียมพร้อม ห้ามส่งให้ tester cohort หรือใช้เป็นหลักฐานว่า Public Beta เปิดแล้ว
+> **Recruitment gate:** ระหว่างที่ Issue #3 ยังระบุ `RECRUITMENT GATE NOT OPEN YET` เอกสารนี้เป็นเพียงคู่มือเตรียมพร้อม ห้ามส่งให้ recruited Beta cohort หรือใช้เป็นหลักฐานว่า Public Beta เปิดแล้ว
+>
+> **Pre-recruitment readiness QA:** QA ที่ได้รับอนุญาตอาจรัน readiness verification บนอุปกรณ์จริงก่อน recruitment gate เปิดได้ตาม `BETA-TEST-CASES.md` / `BETA-NEW-FLOW-TESTS.md` และบันทึกหลักฐานจริงตาม canonical QA docs แต่ผลดังกล่าวเป็น readiness evidence เท่านั้น ห้ามนับเป็น recruited tester/session/cohort evidence หรือใช้สรุปว่า Public Beta เปิด/accepted แล้ว
 
 ## เริ่มทดสอบ
 1. เปิด https://rachanakorninon-gif.github.io/kinaraidee/
@@ -41,5 +43,7 @@
 
 ## สำหรับผู้ทดสอบ QA
 ใช้ `BETA-TEST-CASES.md` (TC-01–TC-15) และ `BETA-NEW-FLOW-TESTS.md` (NF-01–NF-10) แล้วบันทึกผลจริงใน `BETA-DEVICE-MATRIX.md` / `BETA-RUN-LOG.md`
+
+ก่อน recruitment gate เปิด ผล QA ที่ได้จาก readiness verification ต้องติดป้าย/ตีความเป็น **pre-recruitment readiness evidence** เท่านั้น ไม่ใช่ Beta cohort evidence และห้ามใช้สร้าง tester/session count หรือสรุปว่า recruitment/Public Beta เปิดแล้ว
 
 ห้ามกรอก PASS จากการคาดเดา ต้องทดสอบบนอุปกรณ์จริงเท่านั้น
