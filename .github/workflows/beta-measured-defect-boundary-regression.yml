@@ -28,8 +28,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          zero_defect_pattern='\b(Blocker|Blockers|Critical|Criticals)[[:space:]]*[:=][[:space:]]*0\b'
           while IFS= read -r file; do
-            if grep -Eq 'Blocker[[:space:]]*=[[:space:]]*0|Critical[[:space:]]*=[[:space:]]*0' "$file"; then
+            if grep -Eiq "$zero_defect_pattern" "$file"; then
               if ! grep -Fq 'release-scoped defect evidence' "$file"; then
                 echo "Zero-defect claim without measured evidence boundary: $file" >&2
                 exit 1
