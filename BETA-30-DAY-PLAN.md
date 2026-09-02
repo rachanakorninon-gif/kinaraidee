@@ -50,10 +50,12 @@
 
 ## วัน 15–21 — Controlled Expansion
 ขยายผู้ทดสอบเมื่อ:
-- Blocker = 0
-- Critical = 0
+- มี release-scoped defect evidence ที่ยืนยัน `Blocker = 0`
+- มี release-scoped defect evidence ที่ยืนยัน `Critical = 0`
 - core flow ผ่านบน Android Chrome และ iPhone Safari จริง
 - FAIL ที่เหลือมี owner/แผนแก้
+
+> การไม่มี defect report ใหม่, CI/synthetic-only evidence หรือช่องว่างที่ยังไม่ได้วัด ห้ามตีความเป็น `Blocker = 0` / `Critical = 0`
 
 จากนั้น:
 - เพิ่มความหลากหลายของรุ่นมือถือ/Browser
@@ -83,7 +85,7 @@
 
 ## Gate สำหรับ Commercial Next Step
 ก่อนเดินหน้าเชิงพาณิชย์:
-- Blocker = 0 และ Critical = 0
+- มี release-scoped defect evidence ที่ยืนยัน `Blocker = 0` และ `Critical = 0`; ห้ามอนุมานค่าศูนย์จากการไม่มีรายงานหรือ CI/synthetic-only evidence
 - real-device core flow ผ่านตาม `RELEASE-CHECKLIST.md`
 - privacy/security/RLS/secret handling ผ่านการตรวจอีกครั้ง
 - มี merchant/payment provider จริงถ้าจะรับค่าสมาชิก
