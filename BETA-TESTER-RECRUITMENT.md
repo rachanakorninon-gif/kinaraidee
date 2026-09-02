@@ -60,7 +60,7 @@
 - ห้ามเริ่ม recruitment จากเอกสารนี้ก่อน Issue #3 recruitment gate เปิด
 - ห้ามกรอก PASS แทนผู้ทดสอบโดยไม่ได้ทดสอบจริง
 - ห้ามสร้างจำนวนผู้ใช้, conversion หรือรายได้สมมติ
-- Blocker/Critical ต้องถูกแก้ก่อนเพิ่ม traffic
+- ก่อนเพิ่ม tester traffic ต้องมี release-scoped defect evidence ที่ยืนยัน `Blocker = 0` และ `Critical = 0`; ห้ามอนุมานค่าศูนย์จากการไม่มี defect report หรือ CI/synthetic-only evidence
 - บันทึกผลจริงลง `BETA-RUN-LOG.md`, `BETA-DEVICE-MATRIX.md` และสรุปใน `BETA-RESULTS-TEMPLATE.md`
 
 ## เอกสารที่ส่งต่อให้ผู้ทดสอบ
