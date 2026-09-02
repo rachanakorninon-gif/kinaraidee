@@ -60,7 +60,7 @@ Severity:
 - `BETA-QUICK-START.md`
 - `BETA-TESTER-GUIDE.md` เมื่อผู้ทดสอบต้องการรายละเอียด
 
-เริ่มกลุ่มเล็กก่อน และอย่าเพิ่ม traffic ถ้ายังมี Blocker/Critical
+เริ่มกลุ่มเล็กก่อน และเพิ่ม traffic ได้ต่อเมื่อ release-scoped defect evidence ยืนยัน `Blocker = 0` และ `Critical = 0` สำหรับขอบเขตที่ใช้ตัดสินใจจริง การไม่มี defect report หรือ CI/synthetic-only evidence ห้ามถูกตีความเป็นค่าศูนย์
 
 ## 6. สิ่งที่ต้องเก็บจากผู้ทดสอบ
 ใช้ `BETA-FEEDBACK-TEMPLATE.md` และข้อมูลจริงในระบบ โดยเน้น:
