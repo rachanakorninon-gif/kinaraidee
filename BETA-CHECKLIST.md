@@ -78,8 +78,8 @@
 - [ ] Google Maps fallback ครบตาม matrix
 - [ ] เก็บ feedback จากผู้ใช้จริงตาม Beta target ที่อนุมัติ; ห้ามกรอกจำนวนสมมติ
 - [ ] ทุก FAIL มี defect ที่ตามแก้ได้
-- [ ] Blocker = 0
-- [ ] Critical = 0
+- [ ] Blocker = 0 จาก release-scoped defect evidence จริง; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่ถือเป็นค่าศูนย์
+- [ ] Critical = 0 จาก release-scoped defect evidence จริง; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่ถือเป็นค่าศูนย์
 
 ## Backend / Security / Operations gates ที่ยังเปิด
 - [x] Group API source candidate PR #93 deploy เป็น Supabase ACTIVE version 6 และตรวจ source/deployment parity แล้ว
@@ -111,7 +111,7 @@
 - [ ] Backup/recovery และ rollback drill ผ่านตาม scope Production
 
 ## เกณฑ์ Go / No-Go
-**Beta acceptance / เพิ่ม traffic:** ทำได้เมื่อ core flow ผ่านบน device matrix ที่กำหนด, PWA/update/accessibility/form-interaction flow ที่เกี่ยวข้องผ่าน และ Blocker/Critical ตาม gate เป็น 0
+**Beta acceptance / เพิ่ม traffic:** ทำได้เมื่อ core flow ผ่านบน device matrix ที่กำหนด, PWA/update/accessibility/form-interaction flow ที่เกี่ยวข้องผ่าน และ Blocker/Critical = 0 มี release-scoped defect evidence รองรับจริง; การไม่มีรายงานหรือ CI/synthetic-only evidence ไม่เพียงพอให้เปิด gate
 
 **Production เชิงพาณิชย์:** สถานะปัจจุบันยัง **NO-GO** จนกว่า Payment, Privacy/Legal, Security, Group/Partner API operational hardening, Production monitoring/rollback และ business/partner requirements ที่เปิดใช้จริงจะมีหลักฐานครบ Repository governance ปัจจุบันถูก enforce แล้วแต่ไม่แทน gate เหล่านี้
 
