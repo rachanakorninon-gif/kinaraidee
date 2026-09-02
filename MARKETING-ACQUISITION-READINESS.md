@@ -15,7 +15,7 @@ Prepare a truthful acquisition funnel for “กินอะไรดี” that
 - Safe current CTA: **“ลองใช้เลย”**, **“เปิดกินอะไรดี”**, or, where the PWA install guidance is relevant, **“เพิ่มไว้ที่หน้าจอโฮม”**.
 - Public campaign page is PRE-LAUNCH only.
 - Paid Premium is not approved/active.
-- Prize entries are not open and public eligible count remains 0.
+- Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.
 - Ordinary account signup is not a prize entry.
 
 ## Funnel stages

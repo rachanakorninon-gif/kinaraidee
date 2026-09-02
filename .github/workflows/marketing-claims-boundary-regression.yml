@@ -86,8 +86,8 @@ jobs:
           grep -Fq 'Paid Premium is not approved/active.' "$readiness" || {
             echo 'Premium pre-launch boundary is missing'; exit 1;
           }
-          grep -Fq 'Prize entries are not open and public eligible count remains 0.' "$readiness" || {
-            echo 'Prize-entry pre-launch boundary is missing'; exit 1;
+          grep -Fq 'Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.' "$readiness" || {
+            echo 'Prize-entry and eligible-count evidence boundary is missing'; exit 1;
           }
           grep -Fq 'Budget: **UNSET**' "$testplan" || {
             echo 'Marketing test budget must remain UNSET until separately approved'; exit 1;
@@ -128,6 +128,7 @@ jobs:
             echo
             echo '- Confirms readiness, attribution, scripts, test design, social content, community replies and publishing evidence remain pre-launch/prepared only.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
+            echo '- Requires prize eligible-user counts to remain unreported until backed by a trusted aggregate and campaign-gate approval.'
             echo '- Requires social channel creation/publishing to remain unverified until real platform evidence exists.'
             echo '- Requires observed zero to remain distinct from NOT MEASURED in social evidence.'
             echo '- Requires paid-test budget to remain UNSET and paid acquisition NOT LAUNCHED.'
