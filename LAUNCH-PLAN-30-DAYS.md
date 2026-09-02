@@ -5,7 +5,7 @@
 ## Week 1 — Real-device validation
 - ทดสอบ Android Chrome อย่างน้อย 3 รุ่น
 - ทดสอบ iPhone Safari อย่างน้อย 2 รุ่น
-- ปิด Blocker/Critical ทั้งหมด
+- ปิด Blocker/Critical ทั้งหมด โดยต้องมี release-scoped defect evidence รองรับค่าศูนย์จริง; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความว่าเป็น 0
 - ยืนยัน PWA install / update flow
 - ยืนยัน geolocation + Maps fallback
 - ทดสอบ Feedback / Partner application จริง
@@ -31,7 +31,7 @@
 
 ## Decision gates
 ### Gate A — Public Beta stable
-ผ่านเมื่อไม่มี Blocker/Critical และ core flow ผ่านอุปกรณ์จริง
+ผ่านเมื่อ core flow ผ่านอุปกรณ์จริง และ Blocker = 0 / Critical = 0 มี release-scoped defect evidence รองรับจริง; การไม่มีรายงาน defect หรือ CI/static/synthetic-only evidence ไม่เพียงพอให้เปิด gate
 
 ### Gate B — Product value validated
 ผ่านเมื่อมีหลักฐานว่าผู้ใช้กลับมาใช้และ core flow ช่วยให้ตัดสินใจอาหารได้จริง
@@ -43,4 +43,4 @@
 - ไม่ควรเปิดโฆษณาหนักก่อน retention ดี
 - ไม่ควรตั้งราคา Premium จากการเดาอย่างเดียว
 - ไม่ควรรับเงินจริงจากร้านก่อนมีวิธี verify click/conversion
-- ไม่ควร scale traffic ก่อนปิด Blocker/Critical
+- ไม่ควร scale traffic จนกว่า Blocker = 0 / Critical = 0 จะมี release-scoped defect evidence รองรับจริง
