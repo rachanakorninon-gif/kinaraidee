@@ -50,7 +50,7 @@ jobs:
           grep -Fq 'Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence' "$security"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
-          grep -Fq -- '- [x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope;' "$checklist"
+          grep -Fq -- '- [x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope' "$checklist"
           grep -Fq -- '- [ ] Weak/leaked-password rejection ผ่านบน production Auth service;' "$checklist"
           grep -Fq -- '- [ ] Blocker = 0 และ Critical = 0' "$checklist"
 
