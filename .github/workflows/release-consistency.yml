@@ -57,6 +57,13 @@ jobs:
             'PENDING FOR CURRENT RUNTIME DEPLOYMENT'|'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE') ;;
             *) echo "Unexpected runtime deployment status: $status"; exit 1;;
           esac
+          if [ "$status" = 'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE' ]; then
+            deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+            test -n "$deployed" || { echo 'Unable to parse deployed runtime SHA from CURRENT-RUNTIME.md'; exit 1; }
+            git cat-file -e "$deployed^{commit}" || { echo "Deployed runtime SHA is not present in repository history: $deployed"; exit 1; }
+            git merge-base --is-ancestor "$candidate" "$deployed" || { echo "Deployed runtime SHA $deployed is not a descendant of candidate $candidate"; exit 1; }
+            git merge-base --is-ancestor "$deployed" HEAD || { echo "Deployed runtime SHA is not an ancestor of HEAD: $deployed"; exit 1; }
+          fi
           echo "Declared runtime candidate $candidate is clean; deployment status is $status"
 
       - name: Validate current release/runtime declaration sync
