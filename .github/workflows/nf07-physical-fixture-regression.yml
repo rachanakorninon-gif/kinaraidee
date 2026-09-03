@@ -1,0 +1,59 @@
+name: NF-07 Physical Fixture Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nf07-fixture-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify v15 fixture is exact historical Service Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s qa-sw-v15.js
+          git cat-file -e 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf^{commit}
+          git show 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf:sw.js > /tmp/historical-sw-v15.js
+          cmp -s /tmp/historical-sw-v15.js qa-sw-v15.js || {
+            echo 'qa-sw-v15.js must remain byte-for-byte identical to historical sw.js at commit 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf'
+            diff -u /tmp/historical-sw-v15.js qa-sw-v15.js || true
+            exit 1
+          }
+          grep -Fq "const CACHE='kinaraidee-beta-v15';" qa-sw-v15.js
+          printf 'fixture sha256: '
+          sha256sum qa-sw-v15.js
+          test "$(sha256sum qa-sw-v15.js | awk '{print $1}')" = 'c5d174d461600ca7caf2da974b54ac1ca6353f39ca379480b6a177a3f10a8a1f'
+
+      - name: Verify QA probe and evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s qa-nf07-old-cache.html
+          test -s PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          grep -Fq "const LEGACY_CACHE='kinaraidee-beta-v15';" qa-nf07-old-cache.html
+          grep -Fq "const CURRENT_CACHE='kinaraidee-beta-v16';" qa-nf07-old-cache.html
+          grep -Fq "navigator.serviceWorker.register(FIXTURE_SW,{scope:'./',updateViaCache:'none'})" qa-nf07-old-cache.html
+          grep -Fq "navigator.serviceWorker.register(CURRENT_SW,{scope:'./',updateViaCache:'none'})" qa-nf07-old-cache.html
+          grep -Fq "kinaraidee_nf07_persistence_marker_v1" qa-nf07-old-cache.html
+          grep -Fq "PASS (state verifier)" qa-nf07-old-cache.html
+          grep -Fq 'ยังไม่ใช่ NF-07 PASS' qa-nf07-old-cache.html
+          grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          grep -Fq 'Programmatically registering the v15 fixture is test setup' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          grep -Fq 'A fresh v16 install is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          grep -Fq 'A synthetic Cache Storage object or VM simulation is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          if grep -Eq '^Status: \*\*PASS' PWA-UPGRADE-PHYSICAL-EVIDENCE.md; then
+            echo 'NF-07 physical evidence must not become PASS from fixture/CI setup alone.'
+            exit 1
+          fi
+          echo 'NF-07 historical fixture provenance and physical-evidence boundary preserved.'
