@@ -73,7 +73,7 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.
 - Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; current iPhone evidence covers only iPhone #1.
 - Remaining TC-01–TC-15 / NF-01–NF-10 results must be scored only from actual device evidence.
-- Real Feedback and Partner application submission behavior for PR #201 remains open; deployment/static regression evidence does not establish successful or failure-recovery interaction on a physical device or backend insert acceptance.
+- TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session** recorded in `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network success and backend/privacy evidence. This does not satisfy the remaining Android/iPhone device-matrix minimum.
 - Current PR #373 Auth signup/sign-in/reset interaction remains separately unverified on real devices; the current deployment-trace PASS and historical PR #201 device evidence must not be promoted to Auth password-security interaction acceptance.
 
 Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to the current Auth runtime or full-matrix PASS.
@@ -106,7 +106,7 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`. That deployment PASS does not satisfy current Auth interaction acceptance. Historical PR #201 deployment/device evidence remains valid only for the exact scoped behaviors already recorded. Minimum open evidence still includes current Auth interaction acceptance as applicable, real Feedback/Partner form interaction for the PR #201 changed paths, additional Android/iPhone device-count coverage, real keyboard-focus verification, a fully traceable qualifying Reduced Motion session, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`. That deployment PASS does not satisfy current Auth interaction acceptance. Historical PR #201 deployment/device evidence remains valid only for the exact scoped behaviors already recorded. TC-11/TC-12 public-form interaction acceptance is now complete for the documented Android Chrome device/session, but the minimum open evidence still includes current Auth interaction acceptance as applicable, additional Android/iPhone device-count coverage, real keyboard-focus verification, a fully traceable qualifying Reduced Motion session, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
@@ -114,7 +114,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 
 - Public Beta technical/device/accessibility acceptance beyond the scoped historical device evidence;
 - current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes; the static deployment trace itself is verified;
-- real Feedback/Partner submission acceptance for the PR #201 changed paths where required by the Beta/Product scope;
+- broader Feedback/Partner device-matrix coverage beyond the scoped Android Chrome TC-11/TC-12 PASS where required by the Product/Beta scope;
 - Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
@@ -134,7 +134,7 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #373 Auth deployment evidence or prove current Auth interaction acceptance.
-- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #201 form-submission acceptance or PR #373 Auth interaction acceptance.
+- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #373 Auth interaction acceptance or as evidence for devices that were not actually tested.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, real form-submission acceptance, current Auth interaction acceptance, keyboard/reduced-motion checks or the remaining full-device-matrix gates.
+- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, additional public-form device coverage, current Auth interaction acceptance, keyboard/reduced-motion checks or the remaining full-device-matrix gates.
