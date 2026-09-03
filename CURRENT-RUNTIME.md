@@ -23,4 +23,4 @@ The current source candidate `f401ad758e40914a10245cfab08497f7cdb99f7d` contains
 
 The last verified deployed browser/PWA descendant remains `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` for the prior Auth password-security runtime. No current Referral deployment PASS is inferred from that historical trace.
 
-The referral schema/RPC SQL is staged in source and intentionally not counted as live backend evidence until an explicit Supabase deployment and post-deployment verification are executed. This runtime declaration does not create a user, referral, campaign entry, payment, Premium state, conversion or revenue result, and it does not change the existing Privacy/Legal or Commercial NO-GO gates.
+The referral schema/RPC SQL is staged in source and intentionally not counted as live backend evidence until an explicit Supabase deployment and post-deployment verification are executed. This runtime declaration does not create a user, referral, campaign entry, payment, Premium state, conversion or revenue result, and it does not imply Commercial GO or change the existing Privacy/Legal and Commercial NO-GO gates.
