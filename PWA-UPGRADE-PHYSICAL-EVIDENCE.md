@@ -17,7 +17,7 @@ The QA fixture `qa-sw-v15.js` is intentionally guarded as a byte-for-byte copy o
 - Historical commit: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf`
 - Historical commit message: `Fix real-device Location and Favorite History UX; advance PWA to v15`
 - Historical cache marker: `kinaraidee-beta-v15`
-- Expected SHA-256 of the fixture file: `c5d174d461600ca7caf2da974b54ac1ca6353f39ca379480b6a177a3f10a8a1f`
+- Historical Git blob ID for `sw.js`: `175198a177fc1025a9c431ee90ebfc5b07d4d620`
 
 `qa-nf07-old-cache.html` can temporarily register this historical Service Worker on the normal Kinaraidee scope and record a local persistence marker. This is test setup only. It does not itself establish that a normal user reopening path upgraded successfully.
 
