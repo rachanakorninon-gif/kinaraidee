@@ -56,7 +56,7 @@ Required physical interaction evidence:
 - No new blocking, unreadable, or timing-dependent behavior appears under reduced motion: VERIFIED — probe reported PASS and the Surprise flow completed back to ready after the rendered result.
 - Any remaining motion that appears necessary or unexpected is recorded: NONE OBSERVED THAT BLOCKED OR OBSCURED THE TESTED SURPRISE FLOW IN THIS SESSION.
 
-PASS is scoped to this traceable real-platform reduced-motion session only. It does not establish keyboard-focus PASS, NF-07 PASS, full accessibility/device-matrix PASS, Public Beta completion, or Commercial GO.
+Source markers, `prefers-reduced-motion` CSS inspection, browser emulation, or CI do not establish this result. PASS is scoped to this traceable real-platform reduced-motion session only. It does not establish keyboard-focus PASS, NF-07 PASS, full accessibility/device-matrix PASS, Public Beta completion, or Commercial GO.
 
 ### Supporting physical observation — 2026-08-31 (non-canonical historical support)
 
