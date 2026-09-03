@@ -25,8 +25,8 @@
 | Surprise / recovery / accessibility | VALIDATE | NF-01–NF-10 | ผลจริงบนอุปกรณ์ที่เกี่ยวข้อง |
 | PWA / iPhone / iPad | VALIDATE | `BETA-NEW-FLOW-TESTS.md` | install/update/recovery ผ่านจริง |
 | Location / restaurant fallback | VALIDATE | TC + Beta run | allow/deny/Maps ผ่านจริง |
-| Feedback / Beta operations | VALIDATE | Beta docs | มี submission/feedback จริง |
-| Supabase auth / RLS | VALIDATE | `SECURITY.md` | production negative tests ผ่าน |
+| Feedback / Beta operations | VALIDATE | Beta docs | scoped submission/recovery evidence + required Beta scope ผ่าน |
+| Supabase auth / RLS | VALIDATE | `SECURITY.md`, Auth physical evidence | production negative/security gates ผ่าน |
 | Partner tracking / conversion | VALIDATE | backend + `MONETIZATION-PLAN.md` | verified click/conversion/reconciliation |
 | Restaurant partners | EXTERNAL | partner applications/agreements | มีร้านจริงและข้อตกลงจริง |
 | Premium payment | EXTERNAL | payment provider | merchant + sandbox/production gate ผ่าน |
@@ -36,15 +36,19 @@
 
 ## Immediate Beta Exit Gate
 ก่อนขยับจาก Public Beta ไป commercial preparation:
-- [ ] Android Chrome เครื่องจริงอย่างน้อย 3 รุ่น
-- [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่น
-- [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล trace ได้
+- [ ] Android Chrome เครื่องจริงอย่างน้อย 3 **distinct models** พร้อม traceable metadata/core-flow evidence
+- [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 **distinct models** พร้อม traceable metadata/core-flow evidence
+- [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล trace ได้ตาม release scope
 - [ ] Blocker = 0 จาก release-scoped defect evidence
 - [ ] Critical = 0 จาก release-scoped defect evidence
 - [ ] การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความเป็น Blocker/Critical = 0
-- [ ] PWA update/recovery ผ่านจริง
-- [ ] Location/Maps fallback ผ่านจริง
-- [ ] Feedback/Partner application ส่งจริงได้
+- [ ] PWA update/recovery ผ่านจริง รวม NF-07 ที่ยังต้องมี physical older-cache → current-cache evidence
+- [ ] Visible/logical Keyboard Focus ผ่าน real hardware/equivalent keyboard navigation
+- [ ] Location/Maps fallback ผ่านจริงตาม required scope
+- [x] Feedback/Partner application scoped OPPO interaction/recovery evidence มีแล้ว; broader scope ยัง governed by Issue #5
+- [x] Canonical Reduced Motion scoped OPPO physical PASS มี trace metadata แล้ว
+- [x] Scoped OPPO Auth recovery/password-update/sign-in/new-signup/email-confirmation account-flow PASS มี backend corroboration แล้ว
+- [ ] Weak/leaked-password rejection/server-side protection และ broader security/account-lifecycle scope ที่ยังเกี่ยวข้องผ่าน
 - [ ] `BETA-RESULTS-TEMPLATE.md` มี Go/Extend/Fix decision จากข้อมูลจริง
 
 ## Commercial Dependency Gate
@@ -93,6 +97,12 @@
 - ผู้อนุมัติ:
 - หลักฐานที่อ้างอิง:
 
+## Execution aids
+
+- `BORROWED-DEVICE-QUICK-RUN.md` — time-bounded physical QA runbook สำหรับเครื่อง Android/iPhone ที่ยืมมา; บังคับเก็บ model/OS/browser metadata ก่อนเริ่มและไม่ลด physical evidence boundary.
+- `OWNER-DECISIONS-QUEUE.md` — รวมเฉพาะ owner/external decisions ที่ห้ามเดาแทน เช่น paid-plan authorization, distribution, controller/contact, retention, payment/Premium, monitoring ownership, partner model และ campaign approval.
+- QA probes/fixtures เช่น Keyboard Focus และ NF-07 เป็น **evidence aids/setup only**; ไม่สร้าง physical PASS ด้วยตนเอง.
+
 ## Source of truth
 ใช้เอกสารนี้เป็น dashboard แต่รายละเอียด gate ต้องอ้างอิง:
-`BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-DAILY-LOG.md`, `BETA-RESULTS-TEMPLATE.md`, `MONETIZATION-PLAN.md`, `SECURITY.md`, `RELEASE-CHECKLIST.md`, `COMMERCIAL-EXECUTION-EVIDENCE.md`
+`CURRENT-RELEASE.md`, `CURRENT-RUNTIME.md`, `BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-DAILY-LOG.md`, `BETA-RESULTS-TEMPLATE.md`, `BORROWED-DEVICE-QUICK-RUN.md`, `OWNER-DECISIONS-QUEUE.md`, `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`, `REAL-PLATFORM-UX-EVIDENCE.md`, `PWA-UPGRADE-PHYSICAL-EVIDENCE.md`, `PAYMENT-PREMIUM-DECISION.md`, `PRODUCTION-PRIVACY-LEGAL-DECISION.md`, `MONETIZATION-PLAN.md`, `SECURITY.md`, `RELEASE-CHECKLIST.md`, `COMMERCIAL-EXECUTION-EVIDENCE.md`.
