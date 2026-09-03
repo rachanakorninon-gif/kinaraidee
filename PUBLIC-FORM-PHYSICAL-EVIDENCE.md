@@ -41,7 +41,7 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## 2026-09-03 Android scoped supporting observations
 
-These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while direct `aria-busy` verification and a restored-network success for the focused Chrome-tab offline-recovery marker remain incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
+These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while direct `aria-busy` verification remains incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
 
 ### TC-11 supporting observations
 
@@ -53,8 +53,10 @@ These observations came from a user-assisted physical Android session and materi
 - Focused duplicate-guard retest used marker `TC-11 Android Chrome duplicate guard retest 2026-09-03` in an explicitly visible Chrome tab. The tester was instructed to press submit 3 times in rapid succession; the UI then showed the normal success state and cleared the submitted form fields.
 - Supabase independently confirmed exactly one matching `beta_feedback` row for that focused duplicate retest at `2026-09-03 16:15:57.958743+00`. This supports a scoped TC-11 duplicate-submit guard PASS for this Chrome-tab retest, while the canonical result remains unchanged until all required acceptance fields can move together.
 - Focused Chrome-tab offline-recovery retest then used marker `TC-11 Android Chrome offline recovery retest 2026-09-03`. A screenshot captured the Chrome address bar together with airplane-mode status, an understandable `ส่งความคิดเห็นไม่สำเร็จ กรุณาลองใหม่อีกครั้ง` error, the normal `ส่งความคิดเห็น` control visibly restored, and the original five-star rating/message retained for retry.
-- This focused retest resolves the earlier browser-vs-installed-PWA ambiguity for the visible failure-recovery behavior on this device. A restored-network success for this exact marker is still pending.
-- The visible button recovery does not directly prove the DOM `aria-busy` value.
+- After network restoration in that same visible Chrome tab, a separate retry succeeded; the UI showed `ขอบคุณครับ เราได้รับความคิดเห็นของคุณแล้ว ✅` and cleared the submitted form state.
+- Supabase independently confirmed exactly one matching `beta_feedback` row for the focused Chrome-tab offline-recovery marker at `2026-09-03 16:21:22.645204+00`.
+- This focused retest resolves the earlier browser-vs-installed-PWA ambiguity for the visible TC-11 failure-recovery and restored-network success behavior on this device.
+- The visible button recovery does not directly prove the DOM `aria-busy` value, so direct `aria-busy` acceptance remains open.
 
 ### TC-12 supporting observations
 
@@ -73,7 +75,7 @@ These observations came from a user-assisted physical Android session and materi
 - OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.
 - Software/build evidence: `CPH2689_16.0.5.1000(EX01B100P01)` and Android build shown in About Chrome as `CPH2689 Build/BP2A.250605.015`.
 - Browser application version captured on the same device: Chrome `152.0.7977.64`.
-- Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; the later TC-11 duplicate-submit and offline-recovery retests were explicitly captured in a Chrome tab.
+- Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; the later TC-11 duplicate-submit and offline-recovery/retry retests were explicitly captured in a Chrome tab.
 - Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchors are Issue #5 comments `5527228686` and `5527422702`.
 - Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.
 
