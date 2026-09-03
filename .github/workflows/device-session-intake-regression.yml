@@ -40,14 +40,11 @@ jobs:
           grep -Fq "window.caches.keys()" "$probe"
           grep -Fq 'METADATA READY:' "$probe"
           grep -Fq 'ไม่ใช่ TC/NF PASS' "$probe"
+          grep -Fq 'ไม่สร้าง device PASS' "$probe"
           grep -Fq 'exact iPhone model ต้องดูจาก Settings' "$probe"
 
           if grep -Eqi '<form|localStorage|sessionStorage|XMLHttpRequest|sendBeacon|supabase|functions/v1|rest/v1' "$probe"; then
             echo 'Device intake probe must remain no-submit/no-storage/no-backend.'
-            exit 1
-          fi
-          if grep -Eqi 'device (matrix )?PASS|Public Beta.*(GO|PASS)|Commercial.*GO' "$probe"; then
-            echo 'Metadata helper must not promote a physical/Beta/Commercial result.'
             exit 1
           fi
 
@@ -64,6 +61,8 @@ jobs:
               raise SystemExit(f'Only same-origin release-meta.json fetch is allowed, found: {fetches}')
           if re.search(r'\.setItem\s*\(|\.removeItem\s*\(|\.clear\s*\(',script):
               raise SystemExit('Probe must not write browser storage.')
+          if re.search(r'device (?:matrix )?PASS|Public Beta.*(?:GO|PASS)|Commercial.*GO',script,flags=re.I):
+              raise SystemExit('QA intake script must not promote a physical/Beta/Commercial result.')
           Path('/tmp/qa-device-session-intake-inline.js').write_text(script,encoding='utf-8')
           PY
           node --check /tmp/qa-device-session-intake-inline.js
