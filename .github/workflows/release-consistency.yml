@@ -92,6 +92,19 @@ jobs:
           test "$runtime_status" = "$release_status" || { echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"; exit 1; }
           echo "CURRENT-RUNTIME.md and CURRENT-RELEASE.md agree on candidate, deployed SHA, cache marker, and deployment status"
 
+      - name: Validate Beta readiness summary boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s BETA-READY.md || { echo 'Missing BETA-READY.md'; exit 1; }
+          grep -Fq 'สถานะปัจจุบัน: **TECHNICAL BETA BUILD AVAILABLE / PUBLIC BETA NOT COMPLETE**' BETA-READY.md || { echo 'BETA-READY.md must preserve the incomplete Public Beta status'; exit 1; }
+          grep -Fq 'Public Beta remains **NOT COMPLETE**.' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve the incomplete Public Beta gate'; exit 1; }
+          grep -Fq 'Commercial launch remains **NO-GO**' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md must preserve Commercial NO-GO until evidence advances'; exit 1; }
+          grep -Fq 'Repository governance (`main` protection + required checks enforcement) มีหลักฐาน **ENFORCED** แล้ว' BETA-READY.md || { echo 'BETA-READY.md governance summary drifted from canonical release evidence'; exit 1; }
+          grep -Fq 'Status: **ENFORCED FOR `main` THROUGH THE `Protect main` RULESET**.' CURRENT-RELEASE.md || { echo 'CURRENT-RELEASE.md governance status is missing or changed'; exit 1; }
+          grep -Fq 'ห้ามกรอก PASS จาก CI, static review, source contract หรือผลจากอุปกรณ์คนละเครื่องแทนหลักฐานจริง' BETA-READY.md || { echo 'BETA-READY.md real-evidence boundary is missing'; exit 1; }
+          echo 'Beta readiness summary preserves canonical Public Beta, Commercial, governance, and evidence boundaries'
+
       - name: Validate declared Group API source candidate lineage
         shell: bash
         run: |
