@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#ff8a00">
+  <title>QA Reduced Motion State Probe • กินอะไรดี</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}
+    main{max-width:980px;margin:auto;padding:18px 14px 48px}
+    h1{margin:0 0 8px;font-size:clamp(24px,5vw,38px)}
+    p{line-height:1.6}.muted{color:#6b5b4e}
+    .panel{background:#fff;border:1px solid #eadfce;border-radius:18px;padding:14px;margin-top:12px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .metric{border:1px solid #eadfce;border-radius:14px;padding:10px;background:#fffdf8;min-height:82px}
+    .metric b{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}.value{font-size:19px;font-weight:900;overflow-wrap:anywhere}
+    .pass{background:#eaf9f7;border-color:#b6e7e1;color:#087d77}.pending{background:#fff8dd;border-color:#f3df96;color:#725700}.fail{background:#fff0ee;border-color:#f4c4bd;color:#a33126}
+    button{width:100%;border:0;border-radius:14px;padding:13px 12px;background:#ff8500;color:#fff;font:inherit;font-weight:850}
+    .log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;max-height:280px;overflow:auto;background:#1f1f1f;color:#f6f6f6;border-radius:12px;padding:10px;margin-top:10px}
+    iframe{width:100%;height:1200px;border:1px solid #dfd2c2;border-radius:18px;background:#fff;margin-top:12px}
+    @media(max-width:620px){.grid{grid-template-columns:1fr}iframe{height:1180px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>🧪 QA Reduced Motion State Probe</h1>
+  <p class="muted">หน้านี้ใช้เฉพาะ QA เพื่อยืนยัน preference จากระบบจริงและตรวจว่า reduced-motion rule ที่ <code>data/home-surprise.js</code> ใส่ลงหน้าแอปจริงถูกใช้งาน โดยไม่เปลี่ยน production flow และไม่ได้เชื่อมจาก UI ปกติของแอป</p>
+
+  <section class="panel">
+    <div class="grid">
+      <div class="metric"><b>prefers-reduced-motion</b><div id="mediaValue" class="value">กำลังตรวจ…</div></div>
+      <div class="metric"><b>shipped accessibility style</b><div id="styleValue" class="value">กำลังตรวจ…</div></div>
+      <div class="metric"><b>computed transition duration</b><div id="durationValue" class="value">กำลังตรวจ…</div></div>
+      <div class="metric"><b>Surprise flow</b><div id="flowValue" class="value">ยังไม่เริ่ม</div></div>
+    </div>
+    <div id="verdict" class="metric pending" style="margin-top:10px">
+      <b>ผลตรวจ Reduced Motion</b>
+      <div id="verdictText" class="value">รอ preference=reduce + shipped rule active + Surprise จบรอบและกลับพร้อมใช้งาน</div>
+    </div>
+    <p class="muted">เมื่อด้านบนขึ้นว่า preference = <b>reduce</b> ให้เลื่อนลงและกดปุ่ม <b>“🎲 ไม่รู้เลย — เลือกให้ฉันทันที”</b> ในหน้าแอปจริงด้านล่าง 1 ครั้ง จากนั้นกลับมาดูผลตรวจด้านบน</p>
+    <button id="reloadFrame" type="button">โหลดหน้าแอปจริงใหม่</button>
+    <div id="eventLog" class="log" aria-live="polite">[probe] waiting for app frame…</div>
+  </section>
+
+  <iframe id="appFrame" title="Kinaraidee app under reduced-motion physical QA"></iframe>
+</main>
+<script>
+(() => {
+  const frame=document.getElementById('appFrame');
+  const mediaValue=document.getElementById('mediaValue');
+  const styleValue=document.getElementById('styleValue');
+  const durationValue=document.getElementById('durationValue');
+  const flowValue=document.getElementById('flowValue');
+  const verdict=document.getElementById('verdict');
+  const verdictText=document.getElementById('verdictText');
+  const eventLog=document.getElementById('eventLog');
+  const mql=matchMedia('(prefers-reduced-motion: reduce)');
+  let observer=null,resultObserver=null,busySeen=false,resultSeen=false,readySeen=false,styleReady=false,durationReduced=false;
+  let lines=[];
+
+  function now(){return new Date().toLocaleTimeString('th-TH',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+  function log(s){lines.push(`[${now()}] ${s}`);if(lines.length>45)lines=lines.slice(-45);eventLog.textContent=lines.join('\n');eventLog.scrollTop=eventLog.scrollHeight}
+  function resetFlow(){busySeen=false;resultSeen=false;readySeen=false;flowValue.textContent='ยังไม่เริ่ม'}
+  function durationSeconds(text){
+    const first=String(text||'').split(',')[0].trim();
+    if(first.endsWith('ms'))return parseFloat(first)/1000;
+    if(first.endsWith('s'))return parseFloat(first);
+    return Number.POSITIVE_INFINITY;
+  }
+  function updateVerdict(){
+    const reduce=mql.matches;
+    if(reduce&&styleReady&&durationReduced&&busySeen&&resultSeen&&readySeen){
+      verdict.className='metric pass';
+      verdictText.textContent='PASS: browser รับ prefers-reduced-motion=reduce, shipped rule ลด transition จริง และ Surprise flow จบพร้อมกลับ ready';
+    }else{
+      verdict.className='metric pending';
+      verdictText.textContent=reduce?'รอ Surprise flow: ต้องเห็น busy → result → ready':'รอเปิด Reduce/Remove animations ในระบบให้ browser รายงาน prefers-reduced-motion=reduce';
+    }
+  }
+  function readPreference(){
+    mediaValue.textContent=mql.matches?'reduce ✅':'no-preference';
+    log(`matchMedia prefers-reduced-motion: ${mql.matches?'reduce':'no-preference'}`);
+    inspectApp();
+    updateVerdict();
+  }
+  function inspectApp(){
+    try{
+      const doc=frame.contentDocument;if(!doc)return;
+      const style=doc.getElementById('kinaraideeAccessibilityStyles');
+      styleReady=!!style&&/prefers-reduced-motion:\s*reduce/.test(style.textContent||'');
+      styleValue.textContent=styleReady?'loaded ✅':'not found';
+      let probe=doc.getElementById('qaReducedMotionComputedProbe');
+      if(!probe){probe=doc.createElement('div');probe.id='qaReducedMotionComputedProbe';probe.hidden=true;probe.style.transition='opacity 2s linear';doc.body.appendChild(probe)}
+      const duration=frame.contentWindow.getComputedStyle(probe).transitionDuration;
+      durationValue.textContent=duration||'<empty>';
+      durationReduced=durationSeconds(duration)<=0.001;
+      if(durationReduced)durationValue.textContent=`${duration} ✅`;
+      log(`shipped-style=${styleReady} computed-transition=${duration}`);
+      attachFlowProbe();
+      updateVerdict();
+    }catch(e){log('inspect error: '+e.message)}
+  }
+  function attachFlowProbe(){
+    try{
+      const doc=frame.contentDocument;
+      const btn=doc?.getElementById('homeSurpriseBtn');
+      const result=doc?.getElementById('result');
+      if(!btn||!result){setTimeout(inspectApp,250);return}
+      if(observer)observer.disconnect();if(resultObserver)resultObserver.disconnect();
+      observer=new MutationObserver(()=>{
+        const busy=btn.getAttribute('aria-busy');
+        const disabled=!!btn.disabled;
+        if(busy==='true'&&disabled)busySeen=true;
+        if(busySeen&&busy==='false'&&!disabled)readySeen=true;
+        flowValue.textContent=`busy=${busy} disabled=${disabled}; resultSeen=${resultSeen}`;
+        log(`Surprise: aria-busy=${busy} disabled=${disabled} text=${(btn.textContent||'').trim()}`);
+        updateVerdict();
+      });
+      observer.observe(btn,{attributes:true,attributeFilter:['aria-busy','disabled'],childList:true,subtree:true});
+      resultObserver=new MutationObserver(()=>{
+        if(result.classList.contains('active')){resultSeen=true;log('result screen became active');updateVerdict()}
+      });
+      resultObserver.observe(result,{attributes:true,attributeFilter:['class']});
+      const busy=btn.getAttribute('aria-busy');
+      flowValue.textContent=`ready; aria-busy=${busy}`;
+      log('flow probe armed on real homeSurpriseBtn');
+    }catch(e){log('flow probe error: '+e.message)}
+  }
+  function load(){
+    resetFlow();styleReady=false;durationReduced=false;lines=[];
+    eventLog.textContent='[probe] loading app frame…';
+    frame.src=`index.html?qa_reduced_motion=1&v=${Date.now()}`;
+  }
+  frame.addEventListener('load',()=>{log('app iframe loaded');setTimeout(()=>{readPreference();inspectApp()},250)});
+  mql.addEventListener?.('change',()=>{log('reduced-motion media query changed');readPreference()});
+  document.getElementById('reloadFrame').addEventListener('click',load);
+  readPreference();load();
+})();
+</script>
+</body>
+</html>
