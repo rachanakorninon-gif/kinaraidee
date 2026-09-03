@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#ff8a00">
+  <title>QA Auth State Probe • กินอะไรดี</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}
+    main{max-width:980px;margin:auto;padding:18px 14px 48px}
+    h1{margin:0 0 8px;font-size:clamp(24px,5vw,38px)}
+    p{line-height:1.6}.muted{color:#6b5b4e}
+    .panel{background:#fff;border:1px solid #eadfce;border-radius:18px;padding:14px;margin-top:12px}
+    .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    button{border:0;border-radius:14px;padding:13px 10px;font:inherit;font-weight:850;cursor:pointer}
+    .primary{background:#ff8500;color:#fff}.secondary{background:#fff;border:1px solid #dfd2c2;color:#4f3c2e}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    .metric{border:1px solid #eadfce;border-radius:14px;padding:10px;background:#fffdf8;min-height:82px}
+    .metric b{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}.value{font-size:18px;font-weight:900;overflow-wrap:anywhere}
+    .pass{background:#eaf9f7;border-color:#b6e7e1;color:#087d77}.pending{background:#fff8dd;border-color:#f3df96;color:#725700}.fail{background:#fff0ee;border-color:#f4c4bd;color:#a33126}
+    .log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;max-height:260px;overflow:auto;background:#1f1f1f;color:#f6f6f6;border-radius:12px;padding:10px;margin-top:10px}
+    iframe{width:100%;height:860px;border:1px solid #dfd2c2;border-radius:18px;background:#fff;margin-top:12px}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#fff1dc;font-weight:800;font-size:12px}
+    @media(max-width:620px){.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr 1fr}iframe{height:800px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>🧪 QA Auth State Probe</h1>
+  <p class="muted">หน้านี้ใช้เฉพาะ QA เพื่อสังเกตสถานะ DOM ของ <code>member.html</code> แบบ same-origin โดยไม่อ่านหรือบันทึกค่าอีเมล รหัสผ่าน หรือ reset token และไม่ได้เชื่อมจาก UI ปกติของแอป</p>
+
+  <section class="panel">
+    <div class="controls">
+      <button id="signupMode" class="primary" type="button">Signup</button>
+      <button id="loginMode" class="secondary" type="button">Login</button>
+      <button id="resetMode" class="secondary" type="button">Reset email</button>
+    </div>
+    <p><span class="badge" id="modeBadge">signup</span> กรอกข้อมูลในหน้า Member ด้านล่างด้วยตนเอง แล้วกดปุ่มจริง ระบบ probe จะอ่านเฉพาะสถานะปุ่ม, ข้อความผลลัพธ์ และ signed-in/signed-out state</p>
+
+    <div class="grid">
+      <div class="metric"><b>ปุ่มที่ติดตาม</b><div id="buttonText" class="value">รอโหลด…</div></div>
+      <div class="metric"><b>disabled</b><div id="disabledValue" class="value">—</div></div>
+      <div class="metric"><b>สถานะบัญชี UI</b><div id="accountState" class="value">—</div></div>
+      <div class="metric"><b>ข้อความสถานะ</b><div id="messageValue" class="value">—</div></div>
+    </div>
+
+    <div id="verdict" class="metric pending" style="margin-top:10px">
+      <b>ผลตรวจ interaction</b>
+      <div id="verdictText" class="value">รอ interaction จริง</div>
+    </div>
+
+    <div class="log" id="eventLog" aria-live="polite">[probe] waiting for iframe…</div>
+  </section>
+
+  <iframe id="authFrame" title="Member Auth page under physical QA"></iframe>
+</main>
+<script>
+(() => {
+  const frame=document.getElementById('authFrame');
+  const modeBadge=document.getElementById('modeBadge');
+  const buttonText=document.getElementById('buttonText');
+  const disabledValue=document.getElementById('disabledValue');
+  const accountState=document.getElementById('accountState');
+  const messageValue=document.getElementById('messageValue');
+  const verdict=document.getElementById('verdict');
+  const verdictText=document.getElementById('verdictText');
+  const eventLog=document.getElementById('eventLog');
+  let mode='signup', observers=[], disabledSeen=false, logLines=[];
+
+  const successPatterns={
+    signup:/สมัครแล้วครับ|สำเร็จครับ/,
+    login:/สำเร็จครับ/,
+    reset:/ส่งอีเมลแล้วครับ/
+  };
+
+  function now(){return new Date().toLocaleTimeString('th-TH',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+  function log(text){logLines.push(`[${now()}] ${text}`);if(logLines.length>45)logLines=logLines.slice(-45);eventLog.textContent=logLines.join('\n');eventLog.scrollTop=eventLog.scrollHeight;}
+  function clearObservers(){for(const o of observers)o.disconnect();observers=[];}
+  function resetEvidence(){disabledSeen=false;logLines=[];verdict.className='metric pending';verdictText.textContent='รอ interaction จริง';}
+  function selectedButton(doc){return mode==='reset'?doc.getElementById('forgotBtn'):doc.getElementById('submit');}
+
+  function readState(source='read'){
+    try{
+      const doc=frame.contentDocument,w=frame.contentWindow;if(!doc||!w)return;
+      const btn=selectedButton(doc),msg=doc.getElementById('msg'),signedIn=doc.getElementById('signedIn'),signedOut=doc.getElementById('signedOut');
+      if(!btn||!msg||!signedIn||!signedOut)return;
+      const disabled=!!btn.disabled,msgText=(msg.textContent||'').trim();
+      const isSignedIn=w.getComputedStyle(signedIn).display!=='none';
+      const state=isSignedIn?'signed-in':'signed-out';
+      buttonText.textContent=(btn.textContent||'').trim()||'—';disabledValue.textContent=String(disabled);accountState.textContent=state;messageValue.textContent=msgText||'<empty>';
+      if(disabled)disabledSeen=true;
+
+      let pass=false,note='รอผลลัพธ์';
+      if(mode==='login'&&isSignedIn&&successPatterns.login.test(msgText)){pass=true;note='PASS: login สำเร็จและ UI เข้าสู่ signed-in state';}
+      else if(mode==='signup'&&successPatterns.signup.test(msgText)){
+        pass=true;
+        note=isSignedIn?'PASS: signup interaction จบและ session signed-in':'PASS (UI interaction): signup request จบที่ confirmation-required/success state; account creation/email confirmation ต้องมีหลักฐานแยก';
+      }else if(mode==='reset'&&successPatterns.reset.test(msgText)){pass=true;note='PASS (request interaction): reset-email request จบที่ success message; การได้รับอีเมลจริงต้องยืนยันแยก';}
+      else if(/ไม่สำเร็จ|ไม่ถูกต้อง|กรุณา/.test(msgText)&&disabledSeen){verdict.className='metric fail';verdictText.textContent='Interaction จบด้วยข้อความ error; บันทึกเป็นผลตามที่เห็นจริง';return{disabled,msgText,state,source};}
+
+      if(pass){verdict.className='metric pass';verdictText.textContent=note;}else{verdict.className='metric pending';verdictText.textContent=note;}
+      return{disabled,msgText,state,source};
+    }catch(error){verdict.className='metric fail';verdictText.textContent='อ่าน iframe ไม่ได้: '+error.message;}
+  }
+
+  function attachProbe(){
+    clearObservers();resetEvidence();
+    try{
+      const doc=frame.contentDocument;if(!doc)return setTimeout(attachProbe,250);
+      const btn=selectedButton(doc),msg=doc.getElementById('msg'),signedIn=doc.getElementById('signedIn'),signedOut=doc.getElementById('signedOut');
+      if(!btn||!msg||!signedIn||!signedOut){log('elements not ready; waiting…');return setTimeout(attachProbe,250);}
+      const obs=new MutationObserver(()=>{const s=readState('mutation');if(s)log(`state: mode=${mode} disabled=${s.disabled} account=${s.state} msg=${s.msgText||'<empty>'}`);});
+      obs.observe(btn,{attributes:true,attributeFilter:['disabled'],childList:true,subtree:true});
+      obs.observe(msg,{attributes:true,childList:true,subtree:true,characterData:true});
+      obs.observe(signedIn,{attributes:true,attributeFilter:['style']});
+      obs.observe(signedOut,{attributes:true,attributeFilter:['style']});
+      observers.push(obs);
+      const initial=readState('initial');log(`probe armed: ${mode}; button=${(btn.textContent||'').trim()}; account=${initial?.state}`);
+    }catch(error){verdict.className='metric fail';verdictText.textContent='Probe attach failed: '+error.message;log('attach failed: '+error.message);}
+  }
+
+  function applyMode(next){
+    mode=next;modeBadge.textContent=mode;
+    document.getElementById('signupMode').className=mode==='signup'?'primary':'secondary';
+    document.getElementById('loginMode').className=mode==='login'?'primary':'secondary';
+    document.getElementById('resetMode').className=mode==='reset'?'primary':'secondary';
+    try{
+      const doc=frame.contentDocument;
+      if(mode==='signup')doc.getElementById('signupTab')?.click();
+      else doc.getElementById('loginTab')?.click();
+      if(mode==='reset')doc.getElementById('forgotBtn')?.scrollIntoView({block:'center'});
+      setTimeout(attachProbe,80);
+    }catch(error){log('mode switch failed: '+error.message);}
+  }
+
+  frame.addEventListener('load',()=>{log('member.html loaded');setTimeout(()=>applyMode(mode),120);});
+  document.getElementById('signupMode').addEventListener('click',()=>applyMode('signup'));
+  document.getElementById('loginMode').addEventListener('click',()=>applyMode('login'));
+  document.getElementById('resetMode').addEventListener('click',()=>applyMode('reset'));
+  const initial=new URLSearchParams(location.search).get('mode');
+  if(['signup','login','reset'].includes(initial))mode=initial;
+  frame.src=`member.html?qa_auth_probe=1&v=${Date.now()}`;
+})();
+</script>
+</body>
+</html>
