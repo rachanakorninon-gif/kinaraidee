@@ -1,0 +1,54 @@
+name: Auth Interaction Evidence Boundary Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auth-interaction-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve current Auth interaction evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+          test -s RELEASE-CHECKLIST.md || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+          test -s BETA-READY.md || { echo 'Missing BETA-READY.md'; exit 1; }
+
+          grep -Fq 'Current PR #373 Auth signup/sign-in/reset interaction remains separately unverified on real devices' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must keep current PR #373 Auth interaction acceptance unverified'; exit 1;
+          }
+          grep -Fq 'current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md Commercial gate must preserve current Auth interaction acceptance'; exit 1;
+          }
+          grep -Fq 'Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve deployment-trace scope for PR #373'; exit 1;
+          }
+          grep -Fq 'That deployment PASS does not satisfy current Auth interaction acceptance' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must reject deployment PASS as Auth interaction acceptance'; exit 1;
+          }
+
+          grep -Fq 'current PR #373 Auth interaction acceptance ยังต้องใช้หลักฐานจริงตาม scope; deployed static/live checks ห้ามใช้แทน weak/leaked-password rejection หรือ account-flow PASS' RELEASE-CHECKLIST.md || {
+            echo 'Release checklist must keep PR #373 Auth interaction acceptance open'; exit 1;
+          }
+          grep -Fq 'Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง' RELEASE-CHECKLIST.md || {
+            echo 'Beta Exit must require real-device Auth account-flow interaction evidence'; exit 1;
+          }
+
+          grep -Fq 'current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง' BETA-READY.md || {
+            echo 'BETA-READY.md must preserve current Auth interaction acceptance as an open Public Beta gate'; exit 1;
+          }
+          grep -Fq 'Automated/static/deployment evidence ไม่แทน real-device, assistive-technology หรือ commercial acceptance' BETA-READY.md || {
+            echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
+          }
+
+          echo 'Current Auth interaction acceptance remains open; deployment/static evidence is not promoted to account-flow PASS.'
