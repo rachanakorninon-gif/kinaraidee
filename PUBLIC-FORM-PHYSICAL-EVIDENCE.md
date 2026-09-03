@@ -39,6 +39,39 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 - Evidence location: **NOT CAPTURED**
 - Result: **NOT VERIFIED**
 
+## 2026-09-03 Android scoped supporting observations
+
+These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while exact device trace metadata and direct `aria-busy` verification remain incomplete. Details are also recorded in GitHub Issue #5 comment `5527422702`.
+
+### TC-11 supporting observations
+
+- Physical Android session exercised airplane-mode/offline submission with Beta marker `TC-11 Android offline recovery Beta test 2026-09-03`, rating 5 and type `feedback`.
+- The UI showed an understandable failure state and visibly restored the normal `ส่งความคิดเห็น` control while retaining the entered rating/message for retry.
+- After network restoration, a separate retry succeeded; the UI showed `ขอบคุณครับ เราได้รับความคิดเห็นของคุณแล้ว ✅` and cleared the submitted form state.
+- Supabase independently confirmed exactly one matching `beta_feedback` row at `2026-09-03 14:21:44.844204+00`.
+- The stored feedback row reported a reduced Chromium user-agent with Chrome `152.0.0.0`; this reduced token is not sufficient to infer exact device model or Android version.
+- No sufficiently traceable rapid-repeat observation was captured for TC-11 duplicate-submit acceptance in this session.
+- The visible button recovery does not directly prove the DOM `aria-busy` value.
+
+### TC-12 supporting observations
+
+- With required Beta fields populated and consent unchecked, the physical UI blocked submission and showed `กรุณายอมรับการใช้ข้อมูลเพื่อให้ทีมติดต่อกลับ`.
+- Beta marker `TC-12 Android Beta Test` with notes `TC-12 Android offline recovery Beta test 2026-09-03` was then exercised with consent checked and airplane mode enabled.
+- The offline attempt showed `ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง`; the normal `ส่งข้อมูลร้าน` control visibly returned and the entered data + consent remained available for retry.
+- After network restoration, a separate retry succeeded and the UI showed `✅ ส่งข้อมูลร้านเรียบร้อยแล้ว ทีมงานจะตรวจสอบและติดต่อกลับ`; the form fields and consent were cleared after success.
+- Supabase independently confirmed exactly one matching retry row at `2026-09-03 14:34:10.665115+00`, with `privacy_notice_version='2026-08-21'` and non-null `privacy_acknowledged_at='2026-09-03 14:34:08.844+00`.
+- Focused duplicate-guard retest used restaurant `TC-12 Android Duplicate Test` and notes `TC-12 Android duplicate guard retest 2026-09-03`. The tester explicitly reported pressing submit 3 times in rapid succession; Supabase independently found exactly one matching row at `2026-09-03 14:37:16.509208+00`.
+- These are Beta QA test records only and are not commercial partner/conversion/revenue evidence.
+- The visible button recovery does not directly prove the DOM `aria-busy` value.
+
+### Trace boundary for this session
+
+- Exact device model: `not captured`.
+- Exact Android version: `not captured`.
+- Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.
+- Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchor is Issue #5 comment `5527422702`.
+- Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.
+
 ## Evidence boundary
 
 - Static `Public Form Resilience Regression`, Pages, Live Smoke, source markers, CI, or repository documentation are implementation/deployment evidence only; they do **not** establish TC-11/TC-12 physical interaction PASS.
