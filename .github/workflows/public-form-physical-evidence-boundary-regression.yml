@@ -1,0 +1,52 @@
+name: Public Form Physical Evidence Boundary Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-form-physical-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve scoped 2026-09-03 public-form physical evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s PUBLIC-FORM-PHYSICAL-EVIDENCE.md || { echo 'Missing PUBLIC-FORM-PHYSICAL-EVIDENCE.md'; exit 1; }
+          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+
+          grep -Fq '## 2026-09-03 Android scoped supporting observations' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Missing scoped 2026-09-03 Android public-form evidence section'; exit 1;
+          }
+          grep -Fq 'Exact device model: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Physical evidence must preserve uncaptured exact device-model trace'; exit 1;
+          }
+          grep -Fq 'Exact Android version: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Physical evidence must preserve uncaptured Android-version trace'; exit 1;
+          }
+          grep -Fq 'Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Physical evidence must preserve uncaptured browser/PWA context'; exit 1;
+          }
+          grep -Fq 'The visible button recovery does not directly prove the DOM `aria-busy` value.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Physical evidence must preserve aria-busy verification boundary'; exit 1;
+          }
+          grep -Fq 'the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+            echo 'Physical evidence must preserve NOT VERIFIED canonical boundary'; exit 1;
+          }
+
+          grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must keep PR #201 Feedback/Partner acceptance open'; exit 1;
+          }
+          grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md Public Beta gate must preserve real form-interaction acceptance'; exit 1;
+          }
+
+          echo 'Scoped Android public-form observations remain evidence only; canonical PR #201 form acceptance is not promoted.'
