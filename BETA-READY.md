@@ -53,9 +53,12 @@ NF-09 มี **PASS แบบ scoped สำหรับ tested physical iPhone/V
 
 ## Gate ก่อน Commercial / Production
 
+Repository governance (`main` protection + required checks enforcement) มีหลักฐาน **ENFORCED** แล้วตาม `CURRENT-RELEASE.md` / Issue #35 และต้องคงสถานะนี้ไว้ แต่หลักฐานดังกล่าวเป็น governance-only และไม่ทำให้ Commercial พร้อมโดยลำพัง
+
+Gate ที่ยังเปิดอยู่ ได้แก่:
+
 - Public Beta technical/device/accessibility acceptance
 - Supabase leaked-password protection gate
-- `main` branch protection + required checks enforcement พร้อมหลักฐานว่า failing required check block merge ได้จริง
 - Group API retention/deletion policy, abuse controls, application-event observability และ monitoring baseline
 - Terms of Service / Privacy Policy / controller-contact / retention decisions ฉบับ Production
 - owner/on-call, monitoring, backup/recovery และ rollback/restore drill evidence
