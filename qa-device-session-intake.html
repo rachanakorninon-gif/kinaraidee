@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#ff8a00">
+  <title>QA Device Session Intake • กินอะไรดี</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}
+    main{max-width:920px;margin:auto;padding:18px 14px 48px}h1{margin:0 0 8px;font-size:clamp(24px,5vw,38px)}p{line-height:1.6}.muted{color:#6b5b4e}
+    .panel{background:#fff;border:1px solid #eadfce;border-radius:18px;padding:14px;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .metric{border:1px solid #eadfce;border-radius:14px;padding:10px;background:#fffdf8;min-height:80px}.metric b{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}.value{font-size:16px;font-weight:850;overflow-wrap:anywhere;white-space:pre-wrap}
+    .ready{background:#eaf9f7;border-color:#b6e7e1;color:#087d77}.warn{background:#fff8dd;border-color:#f3df96;color:#725700}.manual{background:#fff0ee;border-color:#f4c4bd;color:#8d2f25}
+    button{width:100%;border:0;border-radius:14px;padding:13px 12px;background:#ff8500;color:#fff;font:inherit;font-weight:850;margin-top:10px}code{overflow-wrap:anywhere}
+    @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>📱 QA Device Session Intake</h1>
+  <p class="muted">ใช้ก่อนเริ่ม Quick Run บนเครื่องยืม เพื่อช่วยเก็บ runtime/browser/PWA metadata ให้เร็วขึ้น หน้านี้ไม่ส่งข้อมูลไป backend ไม่เก็บข้อมูลใน storage และไม่สร้าง device PASS</p>
+
+  <section class="panel">
+    <div class="grid">
+      <div class="metric"><b>session time (device local)</b><div id="time" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>release SHA</b><div id="sha" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>PWA cache marker</b><div id="releaseCache" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>online</b><div id="online" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>browser context</b><div id="context" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>platform / OS hint</b><div id="platform" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>Android model (ถ้า browser เปิดเผย)</b><div id="model" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>browser/version hint</b><div id="browser" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>Service Worker</b><div id="sw" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>Kinaraidee cache names</b><div id="caches" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>screen / DPR</b><div id="screen" class="value">กำลังอ่าน…</div></div>
+      <div class="metric"><b>User-Agent (supporting hint only)</b><div id="ua" class="value">กำลังอ่าน…</div></div>
+    </div>
+
+    <div class="metric manual" style="margin-top:10px">
+      <b>ต้องยืนยันด้วยตนเองก่อนนับ device matrix</b>
+      <div class="value">Android: ถ้า model/OS/browser version ด้านบนครบ ให้ถ่ายภาพหน้านี้ไว้; ถ้า browser ไม่เปิดเผยข้อมูล ให้เปิด Settings/About phone + Chrome version เพิ่ม
+
+iPhone: exact iPhone model ต้องดูจาก Settings → General → About; ห้ามเดารุ่นจาก User-Agent. เก็บ iOS version และยืนยันว่าใช้ Safari browser tab หรือ Home-screen/standalone context ด้วย</div>
+    </div>
+
+    <div id="verdict" class="metric warn" style="margin-top:10px">
+      <b>metadata readiness</b>
+      <div id="verdictText" class="value">กำลังรวบรวมข้อมูล…</div>
+    </div>
+    <p class="muted"><b>Evidence boundary:</b> “METADATA READY” แปลว่าหน้านี้รวบรวม metadata ช่วยทดสอบได้เท่านั้น ไม่ใช่ TC/NF PASS, ไม่พิสูจน์ distinct model โดยลำพัง และไม่เปลี่ยน Public Beta/Commercial status</p>
+    <button id="refresh" type="button">อ่าน metadata ใหม่</button>
+  </section>
+</main>
+<script>
+(() => {
+  const $=id=>document.getElementById(id);
+  const set=(id,v)=>$(id).textContent=String(v??'ไม่พบข้อมูล');
+  const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  function browserHint(ua){
+    const m=ua.match(/(?:CriOS|Chrome)\/([\d.]+)/);if(m)return `Chrome ${m[1]}`;
+    const s=ua.match(/Version\/([\d.]+).*Safari\//);if(s)return `Safari ${s[1]}`;
+    const f=ua.match(/FxiOS\/([\d.]+)/);if(f)return `Firefox iOS ${f[1]}`;
+    return 'ดู User-Agent/Settings เพิ่ม';
+  }
+  function osHint(ua){
+    const ios=ua.match(/(?:iPhone|iPad).*OS ([\d_]+)/);if(ios)return `iOS/iPadOS hint ${ios[1].replaceAll('_','.')}`;
+    const android=ua.match(/Android ([\d.]+)/);if(android)return `Android hint ${android[1]}`;
+    return navigator.platform||'ไม่พบข้อมูล';
+  }
+  async function read(){
+    const ua=navigator.userAgent||'';
+    set('time',new Date().toLocaleString('th-TH',{hour12:false}));
+    set('online',navigator.onLine?'online':'offline');
+    set('context',isStandalone()?'Home-screen / standalone':'browser tab');
+    set('platform',osHint(ua));set('browser',browserHint(ua));set('ua',ua);
+    set('screen',`${screen.width}×${screen.height}; DPR=${window.devicePixelRatio||1}`);
+    set('model','browser ไม่เปิดเผย / ต้องยืนยันเอง');
+
+    try{
+      if(navigator.userAgentData?.getHighEntropyValues){
+        const hi=await navigator.userAgentData.getHighEntropyValues(['model','platform','platformVersion','fullVersionList']);
+        if(hi.model)set('model',hi.model);
+        if(hi.platform||hi.platformVersion)set('platform',`${hi.platform||''} ${hi.platformVersion||''}`.trim());
+        if(Array.isArray(hi.fullVersionList)&&hi.fullVersionList.length){
+          const chromium=hi.fullVersionList.find(x=>/Chrom|Google Chrome/i.test(x.brand));
+          if(chromium)set('browser',`${chromium.brand} ${chromium.version}`);
+        }
+      }
+    }catch(e){set('model','high-entropy API อ่านไม่ได้ / ต้องยืนยันเอง')}
+
+    try{
+      const meta=await fetch('release-meta.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json()});
+      set('sha',meta.sha||'ไม่พบ SHA');set('releaseCache',meta.pwa_cache||'ไม่พบ marker');
+    }catch(e){set('sha',`อ่าน release-meta ไม่ได้: ${e.message}`);set('releaseCache','อ่านไม่ได้')}
+
+    try{
+      if('serviceWorker' in navigator){
+        const reg=await navigator.serviceWorker.getRegistration('./');
+        const worker=reg?.active||reg?.waiting||reg?.installing;
+        set('sw',worker?`${worker.state} • ${worker.scriptURL}`:'ยังไม่พบ registration สำหรับ scope นี้');
+      }else set('sw','browser ไม่รองรับ Service Worker');
+    }catch(e){set('sw',`อ่านไม่ได้: ${e.message}`)}
+
+    try{
+      if('caches' in window){
+        const names=(await window.caches.keys()).filter(x=>x.includes('kinaraidee'));
+        set('caches',names.length?names.join('\n'):'ไม่พบ Kinaraidee cache');
+      }else set('caches','Cache API ไม่พร้อม');
+    }catch(e){set('caches',`อ่านไม่ได้: ${e.message}`)}
+
+    const releaseOk=/^[0-9a-f]{40}$/.test($('sha').textContent.trim());
+    const cacheOk=/kinaraidee-beta-v\d+/.test($('releaseCache').textContent);
+    $('verdict').className=`metric ${releaseOk&&cacheOk?'ready':'warn'}`;
+    $('verdictText').textContent=releaseOk&&cacheOk?'METADATA READY: runtime SHA/cache อ่านได้ — ยังต้องยืนยัน exact device model/OS/browser และทำ physical core-flow Quick Run':'PARTIAL METADATA: เก็บข้อมูลที่เห็นได้ก่อน และยืนยัน metadata ที่ขาดจาก Settings/browser';
+  }
+  window.addEventListener('online',read);window.addEventListener('offline',read);
+  $('refresh').addEventListener('click',read);read();
+})();
+</script>
+</body>
+</html>
