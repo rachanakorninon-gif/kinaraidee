@@ -29,14 +29,14 @@
 
 ## Verified browser/PWA deployment evidence — historical scope before PR #373
 - [x] Prior verified browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
-- [x] Runtime merge/deployed SHA = `00bdcb7f432598e2eb82e71dcf1a9f08798e4320`
+- [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
 - [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
 - [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
 - [x] Public Form Resilience Regression `32802440775` = SUCCESS for source recovery-state contracts; it does not submit a form
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
 - [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate at that time
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner หรือ Auth interaction; scoped physical evidenceสำหรับพฤติกรรมเหล่านั้นถูกบันทึกแยกด้านล่าง ขณะที่ weak/leaked-password rejection ยัง OPEN
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner หรือ Auth interaction; scoped physical evidence สำหรับพฤติกรรมเหล่านั้นถูกบันทึกแยกด้านล่าง ขณะที่ weak/leaked-password rejection ยัง OPEN
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
