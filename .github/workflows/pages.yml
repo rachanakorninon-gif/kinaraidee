@@ -11,6 +11,7 @@ on:
       - 'partner.html'
       - 'member.html'
       - 'reset-password.html'
+      - 'acquisition-dashboard.html'
       - 'campaign-3000-premium.html'
       - 'premium-research-preview.html'
       - 'deployment-check.html'
@@ -52,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html qa-sw-v15.js manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html qa-sw-v15.js manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -86,6 +87,20 @@ jobs:
           fi
           if grep -q "location.href='admin.html'" reset-password.html; then
             echo 'Member password reset must not redirect to the private owner dashboard.'
+            exit 1
+          fi
+      - name: Verify acquisition owner login shell before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'content="noindex,nofollow,noarchive"' acquisition-dashboard.html
+          grep -Fq 'content="no-referrer"' acquisition-dashboard.html
+          grep -Fq 'type="password"' acquisition-dashboard.html
+          grep -Fq '/functions/v1/acquisition-api' acquisition-dashboard.html
+          grep -Fq 'ไม่ใช่ Campaign 3,000 eligibility' acquisition-dashboard.html
+          grep -Fq 'ยังไม่รวมค่าโฆษณา' acquisition-dashboard.html
+          if grep -Fq 'href="admin.html"' acquisition-dashboard.html; then
+            echo 'Public acquisition login shell must not link to private admin.html.'
             exit 1
           fi
       - name: Verify campaign prelaunch boundary before deploy
@@ -225,7 +240,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html _site/
           cp manifest.webmanifest icon.svg sw.js qa-sw-v15.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
@@ -234,6 +249,7 @@ jobs:
           find _site -maxdepth 2 -type f | sort
           test -s _site/member.html
           test -s _site/reset-password.html
+          test -s _site/acquisition-dashboard.html
           test -s _site/campaign-3000-premium.html
           test -s _site/premium-research-preview.html
           test -s _site/deployment-check.html
@@ -247,6 +263,7 @@ jobs:
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
           grep -Fq "$marker" _site/release-meta.json
+          grep -Fq 'content="noindex,nofollow,noarchive"' _site/acquisition-dashboard.html
           test ! -e _site/.git
           test ! -e _site/.github
           test ! -e _site/supabase
