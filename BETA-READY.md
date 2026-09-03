@@ -32,7 +32,7 @@
 - NF-07 old-cache → current-cache upgrade บนอุปกรณ์จริง
 - visible keyboard focus บน deployed pages ด้วย real keyboard/focus navigation
 - Reduced Motion มี canonical scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ยังไม่ใช่ full-device/full-browser accessibility matrix PASS
-- current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง
+- current Auth acceptance เป็น **PARTIAL / OPEN**: replacement-password update และ sign-in-after-reset มี scoped physical PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`; signup, reset-email delivery และ weak/leaked-password rejection ยัง NOT VERIFIED / OPEN และห้ามขยายผล partial PASS เป็น blanket Auth/Security PASS
 - TC-11/TC-12 Feedback/Partner physical acceptance มี scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ยังต้องมี broader device-matrix coverage ตามเกณฑ์ Public Beta และห้ามขยายผล scoped PASS เป็น full-matrix PASS
 - TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง โดยคง scoped PASS เดิมไว้เฉพาะ session ที่มีหลักฐานจริง
 - Blocker/Critical ต้องเป็น 0 ตาม acceptance scope โดยค่าศูนย์ต้องมี release-scoped defect evidence รองรับจริง; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่เพียงพอให้ถือเป็น 0
