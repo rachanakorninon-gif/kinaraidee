@@ -15,7 +15,7 @@
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
-PR #373 prepares browser-side Auth password-security UX for Supabase weak-password rejection handling in `member.html` and `reset-password.html`, while preserving generic login failure wording and the existing `kinaraidee-beta-v16` Service Worker generation. This runtime change does not enable leaked-password protection, change Supabase Auth configuration, or create a successful/rejected account result.
+PR #373 prepares browser-side Auth password-security UX for Supabase weak-password rejection handling in `member.html` and `reset-password.html`, while preserving generic login failure wording and the existing `kinaraidee-beta-v16` Service Worker generation. This runtime change does not enable leaked-password protection, change Supabase Auth configuration, or by itself create a successful/rejected account result.
 
 The prior PR #201 public-form resilience runtime remains historical/scoped deployment and device evidence for the exact behaviors already verified. It is superseded as the current browser/PWA runtime candidate by PR #373, but those prior physical results are not rewritten or generalized.
 
@@ -34,15 +34,15 @@ Current runtime evidence boundary:
 
 Historical verified deployment evidence remains valid for its original scope:
 
-- PR #201 merged as `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`.
-- Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`.
+- PR #201 merged as `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
-- Live public `release-meta.json` matched `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
+- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
-Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not** establish that a weak/leaked password was rejected, that Supabase leaked-password protection is enabled, or that current Auth interaction acceptance passed on a real device.
+Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish weak/leaked-password rejection or real-device account-flow acceptance. Separate physical evidence now records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session; that physical evidence is documented independently in `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`.
 
 ## Supabase security evidence
 
@@ -51,7 +51,7 @@ Existing live evidence remains valid unless superseded by a later schema/configu
 - least-privilege browser-facing grants and anonymous Data API SELECT-denial evidence are recorded in `SUPABASE-GRANT-HARDENING-EVIDENCE.md`;
 - authenticated RLS read-isolation and cross-user negative mutation evidence are recorded in `SUPABASE-RLS-AUTHORIZATION-EVIDENCE.md` and `SUPABASE-RLS-NEGATIVE-EVIDENCE.md`;
 - the private admin-owner RLS helper remediation removed the prior public `SECURITY DEFINER` warning;
-- Supabase Auth leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment evidence.
+- Supabase Auth leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment or successful account-flow evidence.
 
 This scoped evidence does not prove every authenticated per-user JWT/RLS path, every mutation shape, external authenticated-session lifecycle, privileged-backend authorization path, Production Security PASS, Public Beta completion or Commercial GO.
 
@@ -70,13 +70,13 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.
 - Reduced Motion canonical result is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 physical session on 2026-09-04**. The browser received `prefers-reduced-motion=reduce`, the shipped accessibility rule was active with computed transition duration `1e-05s`, and the physical Surprise flow rendered `โจ๊กต้มยำหมู` and completed back to ready. Trace metadata and boundaries are recorded in `REAL-PLATFORM-UX-EVIDENCE.md` and Issue #133. This does not prove other device/browser combinations or full-matrix accessibility.
 - The earlier 2026-08-31 iPhone Reduced Motion observation remains historical supporting evidence only because exact iPhone model/iOS/Safari-or-PWA metadata were not captured; it is not the basis of the canonical PASS and missing metadata are not inferred.
-- NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.
-- Android Chrome still requires at least 3 device models total and iPhone Safari at least 2 device models total; current iPhone evidence covers only iPhone #1.
+- NF-07 remains **NOT VERIFIED**. PR #481/#482 prepared and deployed a deterministic historical-v15 QA fixture/verifier with exact fixture SHA-256 `39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c`; this setup/deployment evidence does not replace the still-required physical v15-baseline → normal close/reopen → v16 upgrade without clearing site data. Canonical boundary is `PWA-UPGRADE-PHYSICAL-EVIDENCE.md`.
+- Android Chrome still requires at least 3 distinct device models total and iPhone Safari at least 2 device models total. The traced OPPO session is **not automatically counted as Android #2**, because the historical Android #1 model/version was not captured and distinct-model identity cannot be proved.
 - Remaining TC-01–TC-15 / NF-01–NF-10 results must be scored only from actual device evidence.
 - TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session** recorded in `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network success and backend/privacy evidence. This does not satisfy the remaining Android/iPhone device-matrix minimum.
-- Current PR #373 Auth signup/sign-in/reset interaction remains separately unverified on real devices; the current deployment-trace PASS and historical PR #201 device evidence must not be promoted to Auth password-security interaction acceptance.
+- Current PR #373 Auth account-flow interaction is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session** for the tested recovery request/mail/verify path, replacement-password update, sign-in with the new password, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration recorded in `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`. The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side and broader device/account-lifecycle coverage is incomplete.
 
-Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to the current Auth runtime or full-matrix PASS.
+Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to another runtime path or full-matrix PASS.
 
 ## Group API / operations evidence
 
@@ -106,14 +106,14 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`. That deployment PASS does not satisfy current Auth interaction acceptance. Historical PR #201 deployment/device evidence remains valid only for the exact scoped behaviors already recorded. TC-11/TC-12 public-form interaction acceptance and the canonical Reduced Motion result are now complete for their documented scoped Android Chrome sessions, but the minimum open evidence still includes current Auth interaction acceptance as applicable, additional Android/iPhone device-count coverage, real keyboard-focus verification, NF-07, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`. That deployment PASS does not itself prove Auth interaction acceptance; the separate traced OPPO physical session now supplies scoped account-flow evidence for recovery/password-update/sign-in/new-signup/email-confirmation. Historical PR #201 deployment/device evidence remains valid only for the exact scoped behaviors already recorded. TC-11/TC-12 public-form interaction acceptance and the canonical Reduced Motion result are also complete for their documented scoped Android Chrome sessions. Minimum open evidence still includes weak/leaked-password rejection/server-side protection, additional Android/iPhone distinct-model coverage, real keyboard-focus verification, NF-07 physical upgrade, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
 Commercial launch remains **NO-GO** while important gates remain incomplete, including:
 
-- Public Beta technical/device/accessibility acceptance beyond the scoped historical device evidence;
-- current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes; the static deployment trace itself is verified;
+- Public Beta technical/device/accessibility acceptance beyond the scoped physical evidence;
+- broader Auth/Security lifecycle/device acceptance beyond the scoped OPPO recovery/sign-in/signup/confirmation flows; successful account flows do not establish leaked-password protection or Production Security PASS;
 - broader Feedback/Partner device-matrix coverage beyond the scoped Android Chrome TC-11/TC-12 PASS where required by the Product/Beta scope;
 - Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
@@ -133,8 +133,8 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 - Current PWA cache marker = `kinaraidee-beta-v16`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
-- PR #201 / `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #373 Auth deployment evidence or prove current Auth interaction acceptance.
-- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #373 Auth interaction acceptance or as evidence for devices that were not actually tested.
+- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #373 deployment evidence or the separate current scoped Auth physical evidence.
+- Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as PR #373 Auth physical evidence or as evidence for devices that were not actually tested.
 - Supabase grants/RLS evidence is scoped security evidence, not blanket Auth/security PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
-- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, additional public-form device coverage, current Auth interaction acceptance, keyboard-focus checks or the remaining full-device-matrix gates. Canonical Reduced Motion PASS is separately scoped to the traced OPPO Reno13 5G / Android 16 / Chrome 152 session.
+- Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, additional public-form device coverage, leaked-password rejection, broader Auth lifecycle/device coverage, keyboard-focus checks or the remaining full-device-matrix gates. Canonical Reduced Motion PASS is separately scoped to the traced OPPO Reno13 5G / Android 16 / Chrome 152 session.

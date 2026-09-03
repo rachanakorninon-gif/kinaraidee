@@ -73,7 +73,7 @@ jobs:
             *) echo "Unsupported NF-07 result: $result" >&2; exit 1 ;;
           esac
 
-          release_open='NF-07 requires a verifiable older-cache baseline and real-device upgrade to `kinaraidee-beta-v16`; the observed installed-PWA transitions are not promoted to NF-07 PASS without an independently captured older-cache marker.'
+          release_open='NF-07 remains **NOT VERIFIED**.'
           beta_open='- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด'
 
           if [ "$result" = 'PASS' ]; then
@@ -90,7 +90,7 @@ jobs:
               exit 1
             fi
             if grep -Fq "$release_open" "$release"; then
-              echo 'NF-07 PASS conflicts with stale CURRENT-RELEASE open-gate wording' >&2
+              echo 'NF-07 PASS conflicts with stale CURRENT-RELEASE open-gate status' >&2
               exit 1
             fi
             if grep -Fq -- "$beta_open" "$beta"; then
