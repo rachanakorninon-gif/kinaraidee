@@ -29,7 +29,7 @@ jobs:
             echo 'Auth physical evidence must preserve the corroborated scoped partial-PASS boundary'; exit 1;
           }
           grep -Fq 'The umbrella current PR #373 Auth acceptance remains **PARTIAL / OPEN** only because weak/leaked-password rejection remains a separate server-side security blocker' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
-            echo 'Auth physical evidence must keep umbrella PR #373 acceptance partial/open without reopening verified signup/confirmation'; exit 1;
+            echo 'Historical Auth physical evidence must keep the tested PR #373 umbrella partial/open without reopening verified signup/confirmation'; exit 1;
           }
           grep -Fq 'new-account signup request reaching confirmation-required state: PASS' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
             echo 'Auth physical evidence must preserve tested new-signup PASS'; exit 1;
@@ -41,14 +41,17 @@ jobs:
             echo 'Auth physical evidence must preserve tested recovery-path PASS without generalizing mail delivery'; exit 1;
           }
 
-          grep -Fq 'Current PR #373 Auth account-flow interaction is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve scoped physical account-flow PASS'; exit 1;
+          grep -Fq 'Auth account-flow interaction rooted in PR #373 is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve scoped physical account-flow PASS while allowing a later browser runtime to become current'; exit 1;
           }
           grep -Fq 'The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side' CURRENT-RELEASE.md || {
             echo 'CURRENT-RELEASE.md must keep leaked-password/server-side Auth gate open'; exit 1;
           }
-          grep -Fq 'That deployment PASS does not itself prove Auth interaction acceptance; the separate traced OPPO physical session now supplies scoped account-flow evidence' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must distinguish deployment evidence from physical Auth evidence'; exit 1;
+          grep -Fq 'does **not by itself** establish referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must distinguish current runtime deployment evidence from physical Auth evidence'; exit 1;
+          }
+          grep -Fq 'Separate physical evidence records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve the separate physical Auth evidence path'; exit 1;
           }
 
           grep -Fq '[x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope' RELEASE-CHECKLIST.md || {
@@ -57,10 +60,10 @@ jobs:
           grep -Fq '[ ] Weak/leaked-password rejection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' RELEASE-CHECKLIST.md || {
             echo 'Release checklist must keep leaked-password rejection open'; exit 1;
           }
-          grep -Fq '[x] current PR #373 account-flow interaction acceptance มี scoped physical OPPO Android Chrome evidence' RELEASE-CHECKLIST.md || {
-            echo 'Deployment/release checklist must record physical account-flow evidence separately'; exit 1;
+          grep -Fq '[x] PR #373 Auth account-flow interaction acceptance remains scoped physical OPPO Android Chrome evidence' RELEASE-CHECKLIST.md || {
+            echo 'Deployment/release checklist must preserve historical Auth-flow physical evidence separately from the current PR #499 runtime'; exit 1;
           }
-          grep -Fq '[ ] current PR #373 weak/leaked-password rejection acceptance' RELEASE-CHECKLIST.md || {
+          grep -Fq '[ ] PR #373 weak/leaked-password rejection acceptance remains open' RELEASE-CHECKLIST.md || {
             echo 'Deployment/release checklist must preserve remaining leaked-password acceptance'; exit 1;
           }
 
@@ -77,4 +80,4 @@ jobs:
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved; leaked-password and umbrella Auth/Security acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved independently of the later PR #499 browser runtime; leaked-password and umbrella Auth/Security acceptance stay open.'
