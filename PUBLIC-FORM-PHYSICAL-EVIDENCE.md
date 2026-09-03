@@ -13,7 +13,7 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## TC-11 Feedback physical acceptance
 
-- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64` available from same-device metadata capture; exact browser-tab vs installed-PWA context during the public-form interaction is **NOT CAPTURED**
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64` available from same-device metadata capture; exact browser-tab vs installed-PWA context during the original public-form offline-recovery interaction is **NOT CAPTURED**; a later focused duplicate-submit retest was explicitly captured in a Chrome tab
 - Tester/session reference: 2026-09-03 user-assisted Android physical QA session
 - Intended authorized Beta test submission completed: **NOT VERIFIED**
 - Duplicate-submit protection observed: **NOT VERIFIED**
@@ -41,7 +41,7 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## 2026-09-03 Android scoped supporting observations
 
-These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while the exact browser-tab vs installed-PWA interaction context, direct `aria-busy` verification, and TC-11 rapid-repeat duplicate-submit evidence remain incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
+These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while the exact browser-tab vs installed-PWA context for the original offline-recovery interactions and direct `aria-busy` verification remain incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
 
 ### TC-11 supporting observations
 
@@ -50,7 +50,8 @@ These observations came from a user-assisted physical Android session and materi
 - After network restoration, a separate retry succeeded; the UI showed `ขอบคุณครับ เราได้รับความคิดเห็นของคุณแล้ว ✅` and cleared the submitted form state.
 - Supabase independently confirmed exactly one matching `beta_feedback` row at `2026-09-03 14:21:44.844204+00`.
 - The stored feedback row reported a reduced Chromium user-agent with Chrome `152.0.0.0`; later same-device About Chrome evidence captured the exact installed Chrome application version as `152.0.7977.64`.
-- No sufficiently traceable rapid-repeat observation was captured for TC-11 duplicate-submit acceptance in this session.
+- Focused duplicate-guard retest used marker `TC-11 Android Chrome duplicate guard retest 2026-09-03` in an explicitly visible Chrome tab. The tester was instructed to press submit 3 times in rapid succession; the UI then showed the normal success state and cleared the submitted form fields.
+- Supabase independently confirmed exactly one matching `beta_feedback` row for that focused duplicate retest at `2026-09-03 16:15:57.958743+00`. This supports a scoped TC-11 duplicate-submit guard PASS for this Chrome-tab retest, while the canonical result remains unchanged until all required acceptance fields can move together.
 - The visible button recovery does not directly prove the DOM `aria-busy` value.
 
 ### TC-12 supporting observations
@@ -70,7 +71,7 @@ These observations came from a user-assisted physical Android session and materi
 - OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.
 - Software/build evidence: `CPH2689_16.0.5.1000(EX01B100P01)` and Android build shown in About Chrome as `CPH2689 Build/BP2A.250605.015`.
 - Browser application version captured on the same device: Chrome `152.0.7977.64`.
-- Exact browser-vs-installed-PWA context for the public-form interaction screenshots: `not captured`.
+- Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots: `not captured`; the later TC-11 duplicate-submit retest was explicitly captured in a Chrome tab.
 - Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchors are Issue #5 comments `5527228686` and `5527422702`.
 - Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.
 
