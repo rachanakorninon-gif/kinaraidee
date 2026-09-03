@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          files=(BETA-CHECKLIST.md BETA-DAY-1-RUNBOOK.md BETA-TESTER-GUIDE.md BETA-RECRUITMENT.md BETA-RESULTS-TEMPLATE.md BETA-30-DAY-PLAN.md PRODUCTION-READINESS.md LAUNCH-PLAN-30-DAYS.md RELEASE-CHECKLIST.md)
+          files=(BETA-METRICS.md BETA-CHECKLIST.md BETA-DAY-1-RUNBOOK.md BETA-TESTER-GUIDE.md BETA-RECRUITMENT.md BETA-RESULTS-TEMPLATE.md BETA-30-DAY-PLAN.md PRODUCTION-READINESS.md LAUNCH-PLAN-30-DAYS.md RELEASE-CHECKLIST.md)
           for file in "${files[@]}"; do
             test -s "$file" || exit 1
             grep -Fq 'release-scoped defect evidence' "$file" || exit 1
