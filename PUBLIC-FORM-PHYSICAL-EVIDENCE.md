@@ -56,7 +56,7 @@ These observations came from a user-assisted physical Android session and materi
 - After network restoration in that same visible Chrome tab, a separate retry succeeded; the UI showed `ขอบคุณครับ เราได้รับความคิดเห็นของคุณแล้ว ✅` and cleared the submitted form state.
 - Supabase independently confirmed exactly one matching `beta_feedback` row for the focused Chrome-tab offline-recovery marker at `2026-09-03 16:21:22.645204+00`.
 - This focused retest resolves the earlier browser-vs-installed-PWA ambiguity for the visible TC-11 failure-recovery and restored-network success behavior on this device.
-- The visible button recovery does not directly prove the DOM `aria-busy` value, so direct `aria-busy` acceptance remains open.
+- The visible button recovery does not directly prove the DOM `aria-busy` value. Direct `aria-busy` acceptance remains open.
 
 ### TC-12 supporting observations
 
@@ -73,7 +73,7 @@ These observations came from a user-assisted physical Android session and materi
 - Supabase independently confirmed exactly one matching row for that focused Chrome duplicate retest at `2026-09-03 16:35:51.907906+00`, with `privacy_notice_version='2026-08-21'` and a non-null privacy acknowledgement timestamp. This supports a scoped TC-12 duplicate-submit guard PASS for the Chrome-tab retest.
 - The focused Chrome retests resolve the earlier browser-vs-installed-PWA ambiguity for the visible TC-12 failure-recovery, retry-success and duplicate-submit behavior on this device.
 - These are Beta QA test records only and are not commercial partner/conversion/revenue evidence.
-- The visible button recovery does not directly prove the DOM `aria-busy` value, so direct `aria-busy` acceptance remains open.
+- The visible button recovery does not directly prove the DOM `aria-busy` value. Direct `aria-busy` acceptance remains open.
 
 ### Trace boundary for this session
 
