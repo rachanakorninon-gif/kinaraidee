@@ -14,6 +14,7 @@ on:
       - 'campaign-3000-premium.html'
       - 'premium-research-preview.html'
       - 'deployment-check.html'
+      - 'qa-public-form-state.html'
       - 'manifest.webmanifest'
       - 'icon.svg'
       - 'sw.js'
@@ -45,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -217,7 +218,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html _site/
           cp manifest.webmanifest icon.svg sw.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
@@ -229,6 +230,7 @@ jobs:
           test -s _site/campaign-3000-premium.html
           test -s _site/premium-research-preview.html
           test -s _site/deployment-check.html
+          test -s _site/qa-public-form-state.html
           test -s _site/release-meta.json
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
           grep -Fq "$marker" _site/release-meta.json
