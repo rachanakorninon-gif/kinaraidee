@@ -33,7 +33,7 @@
 - visible keyboard focus บน deployed pages ด้วย real keyboard/focus navigation
 - Reduced Motion บน real platform ที่เปิด reduced-motion preference พร้อม device/OS/browser-or-PWA trace metadata ครบ
 - current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง
-- real Feedback/Partner submission interaction สำหรับ changed paths ที่ยังเปิดอยู่
+- TC-11/TC-12 Feedback/Partner physical acceptance มี scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ยังต้องมี broader device-matrix coverage ตามเกณฑ์ Public Beta และห้ามขยายผล scoped PASS เป็น full-matrix PASS
 - TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง โดยคง scoped PASS เดิมไว้เฉพาะ session ที่มีหลักฐานจริง
 - Blocker/Critical ต้องเป็น 0 ตาม acceptance scope โดยค่าศูนย์ต้องมี release-scoped defect evidence รองรับจริง; การไม่มี defect report หรือ CI/synthetic-only evidence ไม่เพียงพอให้ถือเป็น 0
 
