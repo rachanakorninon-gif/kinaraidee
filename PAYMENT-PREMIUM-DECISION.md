@@ -4,6 +4,11 @@ Status: **NOT APPROVED**
 
 This document is the Commercial-readiness decision gate for payment and Premium monetization. It intentionally does **not** select a provider, merchant account, price, entitlement model, refund policy, webhook contract, reconciliation process, or authorize real-money acceptance.
 
+## Decision inputs
+
+- Time-bounded Thailand provider research: `PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md` (2026-09-04).
+- That snapshot is research-only. Stripe/Omise/2C2P comparisons, public pricing, recurring capability and PromptPay notes must be rechecked at provider-selection time and do **not** populate or approve any field below automatically.
+
 ## Decision fields
 
 - Payment provider: **UNSET**
@@ -30,4 +35,4 @@ Approval of this decision record does not itself prove subscribe/renew/cancel/pa
 
 ## Evidence boundary
 
-Repository architecture, UI concepts, static CI, draft pricing ideas, sandbox plans, issue comments, or this decision record are planning/governance evidence only. They do not prove a merchant account exists, a payment provider has been selected, a transaction occurred, Premium entitlement works, a conversion happened, revenue exists, Privacy/Terms are approved, Public Beta is complete, or Commercial GO is authorized.
+Repository architecture, UI concepts, static CI, draft pricing ideas, provider research, sandbox plans, issue comments, or this decision record are planning/governance evidence only. They do not prove a merchant account exists, a payment provider has been selected, a transaction occurred, Premium entitlement works, a conversion happened, revenue exists, Privacy/Terms are approved, Public Beta is complete, or Commercial GO is authorized.
