@@ -1,0 +1,77 @@
+name: Device Session Intake Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "qa-device-session-intake.html"
+      - "BORROWED-DEVICE-QUICK-RUN.md"
+      - ".github/workflows/device-session-intake-regression.yml"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "qa-device-session-intake.html"
+      - "BORROWED-DEVICE-QUICK-RUN.md"
+      - ".github/workflows/device-session-intake-regression.yml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  device-session-intake-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify metadata-only QA boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe='qa-device-session-intake.html'
+          runbook='BORROWED-DEVICE-QUICK-RUN.md'
+          pages='.github/workflows/pages.yml'
+          for file in "$probe" "$runbook" "$pages"; do test -s "$file" || { echo "Missing $file"; exit 1; }; done
+
+          grep -Fq 'QA Device Session Intake' "$probe"
+          grep -Fq "getHighEntropyValues(['model','platform','platformVersion','fullVersionList'])" "$probe"
+          grep -Fq "fetch('release-meta.json',{cache:'no-store'})" "$probe"
+          grep -Fq "navigator.serviceWorker.getRegistration('./')" "$probe"
+          grep -Fq "window.caches.keys()" "$probe"
+          grep -Fq 'METADATA READY:' "$probe"
+          grep -Fq 'ไม่ใช่ TC/NF PASS' "$probe"
+          grep -Fq 'exact iPhone model ต้องดูจาก Settings' "$probe"
+
+          if grep -Eqi '<form|localStorage|sessionStorage|XMLHttpRequest|sendBeacon|supabase|functions/v1|rest/v1' "$probe"; then
+            echo 'Device intake probe must remain no-submit/no-storage/no-backend.'
+            exit 1
+          fi
+          if grep -Eqi 'device (matrix )?PASS|Public Beta.*(GO|PASS)|Commercial.*GO' "$probe"; then
+            echo 'Metadata helper must not promote a physical/Beta/Commercial result.'
+            exit 1
+          fi
+
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          text=Path('qa-device-session-intake.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',text,flags=re.S)
+          if len(scripts)!=1:
+              raise SystemExit(f'Expected one inline script, found {len(scripts)}')
+          script=scripts[0]
+          fetches=re.findall(r"fetch\(([^\n;]+)",script)
+          if len(fetches)!=1 or "'release-meta.json'" not in fetches[0]:
+              raise SystemExit(f'Only same-origin release-meta.json fetch is allowed, found: {fetches}')
+          if re.search(r'\.setItem\s*\(|\.removeItem\s*\(|\.clear\s*\(',script):
+              raise SystemExit('Probe must not write browser storage.')
+          Path('/tmp/qa-device-session-intake-inline.js').write_text(script,encoding='utf-8')
+          PY
+          node --check /tmp/qa-device-session-intake-inline.js
+
+          grep -Fq -- "- 'qa-device-session-intake.html'" "$pages"
+          grep -Fq 'qa-device-session-intake.html' "$pages"
+          grep -Fq 'test -s _site/qa-device-session-intake.html' "$pages"
+          grep -Fq 'qa-device-session-intake.html' "$runbook"
+          grep -Fq 'metadata helper ไม่ใช่ physical PASS' "$runbook"
+
+          echo 'Device session intake helper is metadata-only, syntax-valid, explicitly deployed, and cannot create physical acceptance.'
