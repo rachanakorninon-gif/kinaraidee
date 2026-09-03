@@ -1,0 +1,83 @@
+name: Keyboard Focus Physical Probe Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "qa-keyboard-focus-state.html"
+      - "REAL-PLATFORM-UX-EVIDENCE.md"
+      - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
+      - ".github/workflows/keyboard-focus-physical-probe-regression.yml"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths:
+      - "qa-keyboard-focus-state.html"
+      - "REAL-PLATFORM-UX-EVIDENCE.md"
+      - "CURRENT-RELEASE.md"
+      - "BETA-CHECKLIST.md"
+      - ".github/workflows/keyboard-focus-physical-probe-regression.yml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  keyboard-focus-probe-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify keyboard-focus QA probe and physical-evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe='qa-keyboard-focus-state.html'
+          evidence='REAL-PLATFORM-UX-EVIDENCE.md'
+          release='CURRENT-RELEASE.md'
+          beta='BETA-CHECKLIST.md'
+
+          for file in "$probe" "$evidence" "$release" "$beta"; do
+            test -s "$file" || { echo "Missing $file"; exit 1; }
+          done
+
+          grep -Fq 'QA Keyboard Focus State Probe' "$probe"
+          grep -Fq 'e.isTrusted!==true' "$probe"
+          grep -Fq "e.key==='Tab'" "$probe"
+          grep -Fq "e.key==='Enter'||e.key===' '||e.key==='Spacebar'" "$probe"
+          grep -Fq "el.matches(':focus-visible')" "$probe"
+          grep -Fq 'trustedFocusTransitions>=3' "$probe"
+          grep -Fq 'visibleFocusObservations>=3' "$probe"
+          grep -Fq 'trustedActivations>=1' "$probe"
+          grep -Fq 'TRACE READY:' "$probe"
+          grep -Fq 'ยังไม่ใช่ Keyboard Focus PASS โดยอัตโนมัติ' "$probe"
+          grep -Fq 'no programmatic focus' "$probe"
+
+          if grep -Eq '\.focus[[:space:]]*\(' "$probe"; then
+            echo 'Keyboard physical probe must not programmatically focus app controls.'
+            exit 1
+          fi
+          if grep -Eq 'Keyboard Focus PASS|Keyboard focus result:[[:space:]]*PASS' "$probe"; then
+            echo 'QA trace probe must not declare the canonical physical result PASS.'
+            exit 1
+          fi
+
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          text=Path('qa-keyboard-focus-state.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',text,flags=re.S)
+          if len(scripts)!=1:
+              raise SystemExit(f'Expected exactly one inline script, found {len(scripts)}')
+          Path('/tmp/qa-keyboard-focus-inline.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/qa-keyboard-focus-inline.js
+
+          grep -Fq 'Keyboard focus result: **NOT VERIFIED**' "$evidence"
+          grep -Fq 'Static CSS inspection or automated focus-style regression does not establish this result.' "$evidence"
+          grep -Fq 'visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.' "$release"
+          grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$beta"
+          grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
+
+          echo 'Keyboard-focus physical QA probe is syntax-valid and cannot promote static/synthetic setup to PASS.'
