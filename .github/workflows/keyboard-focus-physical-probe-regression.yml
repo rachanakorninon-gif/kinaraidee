@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "data/qa-keyboard-focus-state.html"
+      - "qa-keyboard-focus-state.html"
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "CURRENT-RELEASE.md"
       - "BETA-CHECKLIST.md"
@@ -12,7 +12,7 @@ on:
       - ".github/workflows/pages.yml"
   pull_request:
     paths:
-      - "data/qa-keyboard-focus-state.html"
+      - "qa-keyboard-focus-state.html"
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "CURRENT-RELEASE.md"
       - "BETA-CHECKLIST.md"
@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          probe='data/qa-keyboard-focus-state.html'
+          probe='qa-keyboard-focus-state.html'
           evidence='REAL-PLATFORM-UX-EVIDENCE.md'
           release='CURRENT-RELEASE.md'
           beta='BETA-CHECKLIST.md'
@@ -54,31 +54,27 @@ jobs:
           grep -Fq 'TRACE READY:' "$probe"
           grep -Fq 'ยังไม่ใช่ Keyboard Focus PASS โดยอัตโนมัติ' "$probe"
           grep -Fq 'no programmatic focus' "$probe"
-          grep -Fq 'frame.src=`../index.html?qa_keyboard_focus=1&v=${Date.now()}`' "$probe"
-
-          if grep -Eq '\.focus[[:space:]]*\(' "$probe"; then
-            echo 'Keyboard physical probe must not programmatically focus app controls.'
-            exit 1
-          fi
-          if grep -Eq 'Keyboard Focus PASS|Keyboard focus result:[[:space:]]*PASS' "$probe"; then
-            echo 'QA trace probe must not declare the canonical physical result PASS.'
-            exit 1
-          fi
+          grep -Fq 'frame.src=`index.html?qa_keyboard_focus=1&v=${Date.now()}`' "$probe"
 
           python - <<'PY'
           import re
           from pathlib import Path
-          text=Path('data/qa-keyboard-focus-state.html').read_text(encoding='utf-8')
+          text=Path('qa-keyboard-focus-state.html').read_text(encoding='utf-8')
           scripts=re.findall(r'<script>(.*?)</script>',text,flags=re.S)
           if len(scripts)!=1:
               raise SystemExit(f'Expected exactly one inline script, found {len(scripts)}')
-          Path('/tmp/qa-keyboard-focus-inline.js').write_text(scripts[0],encoding='utf-8')
+          script=scripts[0]
+          if re.search(r'\.focus\s*\(',script):
+              raise SystemExit('Keyboard physical probe must not programmatically focus app controls.')
+          if re.search(r'Keyboard Focus PASS|Keyboard focus result:\s*PASS',script):
+              raise SystemExit('QA trace probe script must not declare the canonical physical result PASS.')
+          Path('/tmp/qa-keyboard-focus-inline.js').write_text(script,encoding='utf-8')
           PY
           node --check /tmp/qa-keyboard-focus-inline.js
 
-          # The curated Pages workflow already publishes every data/** file by copying the data directory.
-          grep -Fq -- "- 'data/**'" "$pages"
-          grep -Fq 'cp -R data _site/data' "$pages"
+          grep -Fq -- "- 'qa-keyboard-focus-state.html'" "$pages"
+          grep -Fq 'qa-keyboard-focus-state.html' "$pages"
+          grep -Fq 'test -s _site/qa-keyboard-focus-state.html' "$pages"
 
           grep -Fq 'Keyboard focus result: **NOT VERIFIED**' "$evidence"
           grep -Fq 'Static CSS inspection or automated focus-style regression does not establish this result.' "$evidence"
@@ -86,4 +82,4 @@ jobs:
           grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$beta"
           grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
 
-          echo 'Keyboard-focus physical QA probe is syntax-valid, publishable via data/**, and cannot promote static/synthetic setup to PASS.'
+          echo 'Keyboard-focus physical QA probe is syntax-valid, isolated from guarded runtime data, published explicitly by Pages, and cannot promote synthetic setup to PASS.'
