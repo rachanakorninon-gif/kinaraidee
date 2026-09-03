@@ -103,3 +103,19 @@
 - ทุก FAIL ต้องมี defect/Issue หรือบันทึกเหตุผลที่ตามแก้ได้
 
 ห้ามกรอก PASS จากการคาดเดา, CI/static review เพียงอย่างเดียว, synthetic monitoring, หรือผลของอุปกรณ์คนละเครื่อง
+
+## 2026-09-04 — Traceable OPPO Android Chrome session (current scoped evidence)
+
+อัปเดตส่วนนี้มีไว้เพื่อบันทึก session ที่มี metadata ครบ โดย **ไม่ย้ายหรือเดาว่าเป็น `Android #2`** เพราะ `Android #1` ในหลักฐานเก่าไม่มีรุ่นเครื่อง/เวอร์ชันที่ระบุตัวตนได้ จึงยังพิสูจน์ไม่ได้ว่าเป็นคนละ device model กัน การนับเกณฑ์ Android อย่างน้อย 3 รุ่นจึงยัง OPEN.
+
+| Device / context | Metadata | Scoped physical results | Still open |
+|---|---|---|---|
+| OPPO Reno13 5G (CPH2689), normal Chrome tab | Android 16 / ColorOS 16.0.5 / Chrome 152.0.7977.64 | TC-11 Feedback PASS: duplicate-submit, airplane-mode failure/recovery, direct `aria-busy=true → error → aria-busy absent + disabled=false`, restored-network retry and backend row. TC-12 Partner PASS: same recovery pattern + privacy acknowledgement/version metadata + backend row. Reduced Motion PASS: browser received `prefers-reduced-motion=reduce`, shipped rule loaded, computed transition `1e-05s`, Surprise completed and returned ready. Auth scoped PASS: recovery mail/verify, replacement password, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link `/verify`, implicit login and signed-in Member state with backend corroboration. | Weak/leaked-password rejection remains NOT VERIFIED because server-side protection is blocked separately; Keyboard Focus remains NOT VERIFIED; NF-07 remains NOT VERIFIED until the physical old-cache close/reopen run is completed; broader device matrix remains open. |
+
+Canonical detail for these results lives in `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`, `REAL-PLATFORM-UX-EVIDENCE.md` and `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`.
+
+### Historical wording supersession boundary
+
+- Earlier TC-11/TC-12 rows above that say failure-recovery acceptance was not yet established remain valid descriptions of the **older historical session at the time it was recorded**. They are superseded only for the traceable OPPO/Chrome session by the later focused physical PASS; they are not rewritten into a blanket all-device PASS.
+- Earlier wording that current PR #373 Auth interaction was not yet established is superseded for the tested OPPO path by the later recovery/password/sign-in/new-signup/email-confirmation evidence. The umbrella Auth/Security gate remains PARTIAL because leaked-password rejection and broader matrix/lifecycle coverage are still open.
+- PR #481/#482 add a deterministic historical-v15 NF-07 QA fixture/verifier only. That setup is **not** NF-07 physical PASS; `PWA-UPGRADE-PHYSICAL-EVIDENCE.md` remains NOT VERIFIED until a real close/reopen without clearing site data is captured.
