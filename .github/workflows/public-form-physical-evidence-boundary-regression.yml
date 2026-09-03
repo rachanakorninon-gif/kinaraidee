@@ -26,16 +26,35 @@ jobs:
           grep -Fq '## 2026-09-03 Android scoped supporting observations' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
             echo 'Missing scoped 2026-09-03 Android public-form evidence section'; exit 1;
           }
-          grep -Fq 'Exact device model: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Physical evidence must preserve uncaptured exact device-model trace'; exit 1;
-          }
-          grep -Fq 'Exact Android version: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Physical evidence must preserve uncaptured Android-version trace'; exit 1;
-          }
-          grep -Fq 'Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Physical evidence must preserve uncaptured browser/PWA context'; exit 1;
-          }
-          grep -Fq 'The visible button recovery does not directly prove the DOM `aria-busy` value.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+
+          if grep -Fq 'Exact device model: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
+            echo 'Exact device model remains uncaptured.'
+          else
+            grep -Fq 'Device: OPPO Reno13 5G (`CPH2689`).' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+              echo 'Physical evidence must preserve either uncaptured or verified exact device-model trace'; exit 1;
+            }
+          fi
+
+          if grep -Fq 'Exact Android version: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
+            echo 'Exact Android version remains uncaptured.'
+          else
+            grep -Fq 'OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+              echo 'Physical evidence must preserve either uncaptured or verified Android-version trace'; exit 1;
+            }
+          fi
+
+          if grep -Fq 'Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
+            echo 'Public-form browser/PWA context remains uncaptured.'
+          else
+            grep -Fq 'Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; later TC-11 and TC-12 focused duplicate-submit and offline-recovery/retry retests were explicitly captured in a Chrome tab.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+              echo 'Physical evidence must preserve historical context gap and later verified Chrome-tab retest context'; exit 1;
+            }
+            grep -Fq 'Browser application version captured on the same device: Chrome `152.0.7977.64`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
+              echo 'Physical evidence must preserve verified Chrome application version'; exit 1;
+            }
+          fi
+
+          grep -Fq 'The visible button recovery does not directly prove the DOM `aria-busy` value' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
             echo 'Physical evidence must preserve aria-busy verification boundary'; exit 1;
           }
           grep -Fq 'the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
