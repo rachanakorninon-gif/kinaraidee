@@ -31,7 +31,7 @@
 - iPhone Safari ให้ครบอย่างน้อย 2 device models ตามเกณฑ์ปัจจุบัน; NF-05 มี PASS แบบ scoped แล้วเฉพาะ iPhone/Safari #1 และห้ามขยายผลเป็น iPadOS หรือ second-iPhone coverage
 - NF-07 old-cache → current-cache upgrade บนอุปกรณ์จริง
 - visible keyboard focus บน deployed pages ด้วย real keyboard/focus navigation
-- Reduced Motion บน real platform ที่เปิด reduced-motion preference พร้อม device/OS/browser-or-PWA trace metadata ครบ
+- Reduced Motion มี canonical scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ยังไม่ใช่ full-device/full-browser accessibility matrix PASS
 - current Auth signup/sign-in/reset interaction acceptance สำหรับ runtime ปัจจุบันตาม scope ที่เกี่ยวข้อง
 - TC-11/TC-12 Feedback/Partner physical acceptance มี scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ยังต้องมี broader device-matrix coverage ตามเกณฑ์ Public Beta และห้ามขยายผล scoped PASS เป็น full-matrix PASS
 - TC-01–TC-15 และ NF-01–NF-10 ตาม platform/device scope ที่เกี่ยวข้อง โดยคง scoped PASS เดิมไว้เฉพาะ session ที่มีหลักฐานจริง
