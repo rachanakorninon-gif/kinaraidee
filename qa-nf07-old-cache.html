@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#ff8a00">
+<title>NF-07 QA — Old Cache Upgrade</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}.wrap{max-width:720px;margin:auto;padding:22px 16px 60px}.card{background:#fff;border:1px solid #eadfce;border-radius:22px;padding:18px;margin:14px 0}.hero{border:2px solid #ff8a00;background:#fff7e8}.title{font-size:30px;font-weight:950;margin:0 0 6px}.muted{color:#6f6258;line-height:1.6}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#fffdf8;border:1px solid #eadfce;border-radius:18px;padding:14px;min-height:110px}.metric b{display:block;font-size:14px;color:#75665a;margin-bottom:7px}.metric span{font-size:18px;font-weight:900;overflow-wrap:anywhere}.good{color:#0b7e77}.warn{color:#9a6300}.bad{color:#b3322d}.actions{display:grid;gap:10px}.btn{width:100%;border:0;border-radius:17px;padding:15px;font-size:17px;font-weight:900}.primary{background:#ff8500;color:#fff}.secondary{background:#fff;border:1px solid #d9cdbc;color:#2f241c}.danger{background:#fff1ef;border:1px solid #e3aaa3;color:#a2342d}.verdict{font-size:20px;font-weight:950;line-height:1.5;border-radius:18px;padding:16px;background:#fff6d9;color:#765800}.verdict.pass{background:#e9faf7;color:#087c73}.verdict.fail{background:#fff0ef;color:#a52d27}.log{background:#1f1f1f;color:#f6f6f6;border-radius:16px;padding:12px;white-space:pre-wrap;overflow:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:330px}.small{font-size:13px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#fff0d8;color:#8b4a00;font-weight:900}.steps{line-height:1.7}.steps li{margin:6px 0}@media(max-width:600px){.grid{grid-template-columns:1fr}.title{font-size:26px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="card hero">
+  <div class="pill">QA ONLY · NF-07</div>
+  <h1 class="title">Old-cache → v16 Physical Upgrade Probe</h1>
+  <p class="muted">หน้านี้ใช้เตรียม baseline จาก Service Worker v15 จริงในประวัติ repository แล้วตรวจว่าเปิดแอปตามปกติสามารถอัปเกรดกลับเป็น <code>kinaraidee-beta-v16</code> โดยไม่ล้าง site data ได้หรือไม่ หน้านี้ไม่เชื่อมจาก UI ปกติของแอป และผลจาก CI/fixture เพียงอย่างเดียวไม่ใช่ NF-07 PASS</p>
+</section>
+
+<section class="card">
+  <h2>สถานะสด</h2>
+  <div class="grid">
+    <div class="metric"><b>active Service Worker</b><span id="activeSw">กำลังอ่าน…</span></div>
+    <div class="metric"><b>page controller</b><span id="controllerSw">กำลังอ่าน…</span></div>
+    <div class="metric"><b>Cache Storage</b><span id="cacheKeys">กำลังอ่าน…</span></div>
+    <div class="metric"><b>release-meta</b><span id="releaseMeta">กำลังอ่าน…</span></div>
+    <div class="metric"><b>v15 fixture provenance</b><span id="fixtureHash">กำลังตรวจ…</span></div>
+    <div class="metric"><b>site-data persistence marker</b><span id="persistMarker">ยังไม่มี</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>ผลตรวจ</h2>
+  <div id="verdict" class="verdict">ยังไม่เริ่ม NF-07 setup</div>
+  <p class="small muted">PASS บนหน้านี้หมายถึง DOM/Service Worker state ที่ตรวจได้เท่านั้น การยอมรับ NF-07 ยังต้องมีหลักฐาน physical session ว่าได้ปิด/เปิดแอปหรือแท็บตาม activation path ปกติจริง และไม่ได้ clear app/site data</p>
+</section>
+
+<section class="card">
+  <h2>ขั้น A — เตรียม baseline v15</h2>
+  <p class="muted">ปุ่มนี้จะสลับ registration ของ origin นี้ไปใช้ไฟล์ <code>qa-sw-v15.js</code> ชั่วคราว ซึ่งถูก guard ให้ตรงแบบ byte-for-byte กับ <code>sw.js</code> ของ commit <code>46b494cc9430ee39c2322f9e0ae8b66149c0d3bf</code> (PWA v15) และจะสร้าง cache <code>kinaraidee-beta-v15</code> จริง</p>
+  <div class="actions">
+    <button id="prepareBtn" class="btn primary" type="button">1) เตรียม legacy v15 baseline</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>ขั้น B — ทำ physical upgrade</h2>
+  <ol class="steps">
+    <li>รอให้ผลด้านบนขึ้น <b>PREPARED: legacy v15 baseline verified</b></li>
+    <li>จากนั้น <b>ปิด Chrome/PWA จาก Recent Apps</b> ตามการใช้งานปกติ โดยไม่ clear site data</li>
+    <li>เปิด “กินอะไรดี” จากหน้าแรก/ไอคอนตามปกติขณะออนไลน์ หน้า <code>index.html</code> จะ register <code>./sw.js</code> ปัจจุบันเอง</li>
+    <li>รอหน้าโหลดแล้วปิด/เปิดซ้ำตาม activation path ปกติถ้าจำเป็น พร้อมจดจำนวนรอบจริง</li>
+    <li>กลับมาเปิดหน้านี้ด้วย <code>?verify=1</code> แล้วถ่ายภาพผลตรวจ</li>
+  </ol>
+  <a class="btn secondary" style="display:block;text-align:center;text-decoration:none" href="qa-nf07-old-cache.html?verify=1">เปิดโหมดตรวจหลังอัปเกรด</a>
+</section>
+
+<section class="card">
+  <h2>Emergency restore</h2>
+  <p class="muted">ถ้าหยุดการทดสอบกลางทาง ใช้ปุ่มนี้เพื่อ register Service Worker ปัจจุบันกลับคืนทันที ปุ่มนี้ไม่ล้าง localStorage/IndexedDB</p>
+  <button id="restoreBtn" class="btn danger" type="button">Restore กลับ sw.js v16</button>
+</section>
+
+<section class="card">
+  <h2>Event log</h2>
+  <div id="log" class="log">ready</div>
+</section>
+</main>
+<script>
+(() => {
+  const LEGACY_CACHE='kinaraidee-beta-v15';
+  const CURRENT_CACHE='kinaraidee-beta-v16';
+  const FIXTURE_SW='./qa-sw-v15.js';
+  const CURRENT_SW='./sw.js';
+  const FIXTURE_COMMIT='46b494cc9430ee39c2322f9e0ae8b66149c0d3bf';
+  const FIXTURE_SHA256='c5d174d461600ca7caf2da974b54ac1ca6353f39ca379480b6a177a3f10a8a1f';
+  const MARKER_KEY='kinaraidee_nf07_persistence_marker_v1';
+  const PREP_KEY='kinaraidee_nf07_prepared_v1';
+  const HISTORY_KEY='kinaraideeHistory';
+  const $=id=>document.getElementById(id);
+  const logLines=[];
+  const log=(msg)=>{const line=`[${new Date().toLocaleTimeString('th-TH')}] ${msg}`;logLines.push(line);$('log').textContent=logLines.slice(-80).join('\n')};
+  const shortUrl=(url)=>{try{const u=new URL(url);return u.pathname.split('/').pop()||u.pathname}catch{return url||'<none>'}};
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function sha256(text){const data=new TextEncoder().encode(text);const hash=await crypto.subtle.digest('SHA-256',data);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+  async function fetchText(path){const r=await fetch(`${path}?nf07_probe=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw new Error(`${path} HTTP ${r.status}`);return r.text()}
+  async function readRelease(){try{const r=await fetch(`./release-meta.json?nf07_probe=${Date.now()}`,{cache:'no-store'});if(!r.ok)return null;return await r.json()}catch{return null}}
+  function readPrep(){try{return JSON.parse(localStorage.getItem(PREP_KEY)||'null')}catch{return null}}
+  async function activeRegistration(){return navigator.serviceWorker?.getRegistration('./')||null}
+  async function waitFor(predicate,label,timeout=15000){const start=Date.now();while(Date.now()-start<timeout){const value=await predicate();if(value)return value;await sleep(250)}throw new Error(`timeout: ${label}`)}
+  async function snapshot(){
+    const reg=await activeRegistration();
+    const active=reg?.active?.scriptURL||'';
+    const controller=navigator.serviceWorker?.controller?.scriptURL||'';
+    const keys=await caches.keys();
+    const release=await readRelease();
+    let fixtureOk=false,fixtureHash='';
+    try{const text=await fetchText(FIXTURE_SW);fixtureHash=await sha256(text);fixtureOk=fixtureHash===FIXTURE_SHA256}catch(e){log(`fixture hash error: ${e.message}`)}
+    const marker=localStorage.getItem(MARKER_KEY)||'';
+    const prep=readPrep();
+    const history=localStorage.getItem(HISTORY_KEY)||'';
+    const historyHash=await sha256(history);
+    $('activeSw').textContent=shortUrl(active);$('activeSw').className=active?'good':'warn';
+    $('controllerSw').textContent=shortUrl(controller);$('controllerSw').className=controller?'good':'warn';
+    $('cacheKeys').textContent=keys.length?keys.join(', '):'<none>';
+    $('releaseMeta').textContent=release?`${String(release.sha||'').slice(0,12)}… / ${release.pwa_cache||'<none>'}`:'unavailable';
+    $('fixtureHash').textContent=fixtureOk?`MATCH ✅ ${fixtureHash.slice(0,12)}…`:`MISMATCH/ERROR ${fixtureHash.slice(0,12)}…`;$('fixtureHash').className=fixtureOk?'good':'bad';
+    $('persistMarker').textContent=marker?`present ✅ ${marker.slice(0,18)}…`:'<absent>';$('persistMarker').className=marker?'good':'warn';
+    return {reg,active,controller,keys,release,fixtureOk,fixtureHash,marker,prep,historyHash};
+  }
+  function setVerdict(text,type=''){$('verdict').textContent=text;$('verdict').className=`verdict ${type}`}
+  async function evaluate(){
+    const s=await snapshot();
+    const legacyActive=s.active.endsWith('/qa-sw-v15.js')&&s.controller.endsWith('/qa-sw-v15.js');
+    const legacyCache=s.keys.includes(LEGACY_CACHE);
+    const currentActive=s.active.endsWith('/sw.js')&&s.controller.endsWith('/sw.js');
+    const currentCache=s.keys.includes(CURRENT_CACHE);
+    const oldGone=!s.keys.includes(LEGACY_CACHE);
+    const releaseCurrent=s.release?.pwa_cache===CURRENT_CACHE;
+    const prepValid=!!s.prep&&s.prep.fixtureCommit===FIXTURE_COMMIT&&s.prep.fixtureSha256===FIXTURE_SHA256&&s.prep.marker===s.marker;
+    if(legacyActive&&legacyCache&&s.fixtureOk&&prepValid){setVerdict('PREPARED: legacy v15 baseline verified — ยังไม่ใช่ NF-07 PASS','pass');return s}
+    if(new URLSearchParams(location.search).get('verify')==='1'&&currentActive&&currentCache&&oldGone&&releaseCurrent&&s.fixtureOk&&prepValid){setVerdict('PASS (state verifier): v15 baseline trace exists → current sw.js/v16 active → old cache removed → site-data marker survived. ต้องแนบ physical close/reopen evidence ก่อนปิด NF-07','pass');return s}
+    if(new URLSearchParams(location.search).get('verify')==='1'){setVerdict('ยังไม่ครบ: ต้องเห็น current sw.js + kinaraidee-beta-v16 + ไม่มี v15 + persistence marker เดิม','warn');return s}
+    setVerdict('ยังไม่เริ่ม NF-07 setup');return s;
+  }
+  async function prepare(){
+    if(!('serviceWorker'in navigator)||!('caches'in window)){setVerdict('อุปกรณ์/เบราว์เซอร์นี้ไม่รองรับ Service Worker/Cache Storage','fail');return}
+    $('prepareBtn').disabled=true;
+    try{
+      const fixtureText=await fetchText(FIXTURE_SW);const fixtureHash=await sha256(fixtureText);
+      if(fixtureHash!==FIXTURE_SHA256)throw new Error('fixture SHA-256 ไม่ตรง historical v15');
+      const history=localStorage.getItem(HISTORY_KEY)||'';
+      const marker=`NF07-${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
+      localStorage.setItem(MARKER_KEY,marker);
+      localStorage.setItem(PREP_KEY,JSON.stringify({preparedAt:new Date().toISOString(),fixtureCommit:FIXTURE_COMMIT,fixtureSha256:FIXTURE_SHA256,marker,beforeHistoryHash:await sha256(history),beforeHistoryBytes:history.length}));
+      log(`persistence marker saved; history bytes=${history.length}`);
+      const reg=await navigator.serviceWorker.register(FIXTURE_SW,{scope:'./',updateViaCache:'none'});
+      log('legacy registration requested');
+      await waitFor(async()=>{await reg.update().catch(()=>{});return reg.active?.scriptURL?.endsWith('/qa-sw-v15.js')},'legacy worker active');
+      await waitFor(async()=>navigator.serviceWorker.controller?.scriptURL?.endsWith('/qa-sw-v15.js'),'legacy controller');
+      await waitFor(async()=>{const keys=await caches.keys();return keys.includes(LEGACY_CACHE)},'legacy cache present');
+      log('legacy v15 worker/controller/cache verified');
+      await evaluate();
+    }catch(e){log(`prepare failed: ${e.message}`);setVerdict(`PREPARE FAIL: ${e.message}`,'fail')}
+    finally{$('prepareBtn').disabled=false}
+  }
+  async function restore(){
+    $('restoreBtn').disabled=true;
+    try{
+      const reg=await navigator.serviceWorker.register(CURRENT_SW,{scope:'./',updateViaCache:'none'});
+      log('current sw.js registration requested');
+      await waitFor(async()=>{await reg.update().catch(()=>{});return reg.active?.scriptURL?.endsWith('/sw.js')},'current worker active',20000);
+      await waitFor(async()=>navigator.serviceWorker.controller?.scriptURL?.endsWith('/sw.js'),'current controller',20000);
+      await waitFor(async()=>{const keys=await caches.keys();return keys.includes(CURRENT_CACHE)&&!keys.includes(LEGACY_CACHE)},'current cache restored',20000);
+      log('current v16 worker/controller/cache restored');
+      await evaluate();
+    }catch(e){log(`restore failed: ${e.message}`);setVerdict(`RESTORE FAIL: ${e.message}`,'fail')}
+    finally{$('restoreBtn').disabled=false}
+  }
+  $('prepareBtn').addEventListener('click',prepare);
+  $('restoreBtn').addEventListener('click',restore);
+  navigator.serviceWorker?.addEventListener('controllerchange',()=>{log(`controllerchange → ${shortUrl(navigator.serviceWorker.controller?.scriptURL||'')}`);evaluate().catch(()=>{})});
+  window.addEventListener('pageshow',()=>evaluate().catch(e=>{log(`snapshot error: ${e.message}`);setVerdict(`STATE READ ERROR: ${e.message}`,'fail')}));
+})();
+</script>
+</body>
+</html>
