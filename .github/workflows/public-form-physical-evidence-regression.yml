@@ -66,6 +66,19 @@ jobs:
           require_text "$evidence" 'A PASS requires the tested device/OS/browser-or-PWA context, tester/session reference, and evidence location to be captured for both TC-11 and TC-12; missing trace metadata must remain `NOT CAPTURED`, not inferred from CI or deployment records.'
           require_text "$evidence" 'TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.'
 
+          # If scoped 2026-09-03 supporting observations are retained, keep their
+          # trace/evidence boundary explicit and prevent them from being promoted
+          # into canonical TC-11/TC-12 acceptance without the missing metadata.
+          if grep -Fq -- '## 2026-09-03 Android scoped supporting observations' "$evidence"; then
+            require_text "$evidence" 'These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while exact device trace metadata and direct `aria-busy` verification remain incomplete.'
+            require_text "$evidence" 'No sufficiently traceable rapid-repeat observation was captured for TC-11 duplicate-submit acceptance in this session.'
+            require_text "$evidence" 'These are Beta QA test records only and are not commercial partner/conversion/revenue evidence.'
+            require_text "$evidence" 'Exact device model: `not captured`.'
+            require_text "$evidence" 'Exact Android version: `not captured`.'
+            require_text "$evidence" 'Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.'
+            require_text "$evidence" 'Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.'
+          fi
+
           require_text "$tests" 'ห้ามทำเครื่องหมาย Pass โดยไม่ได้ทดสอบบนอุปกรณ์จริง'
           require_text "$matrix" '| TC-11 Feedback | PASS | UI success observed and backend row independently confirmed during the historical session. This does not establish PR #201 failure-recovery acceptance. |'
           require_text "$matrix" '| TC-12 Partner application | PASS | Consent + submission succeeded; Supabase independently confirmed'
