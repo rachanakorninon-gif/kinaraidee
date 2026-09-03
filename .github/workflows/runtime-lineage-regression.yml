@@ -27,6 +27,15 @@ jobs:
           changed="$(git diff --name-only "$candidate"..HEAD -- index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data || true)"
           test -z "$changed" || { echo 'Current branch already has undeclared browser/PWA runtime drift:'; printf '%s\n' "$changed"; exit 1; }
 
+      - name: Verify Beta device matrix declares current runtime candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$candidate" || { echo 'Unable to parse runtime candidate'; exit 1; }
+          grep -Fq "Current browser/PWA runtime candidate: PR #" BETA-DEVICE-MATRIX.md || { echo 'BETA-DEVICE-MATRIX.md is missing the current runtime declaration'; exit 1; }
+          grep -Fq "$candidate" BETA-DEVICE-MATRIX.md || { echo "BETA-DEVICE-MATRIX.md does not reference current runtime candidate $candidate"; exit 1; }
+
       - name: Verify docs-only descendant does not trip runtime guard
         shell: bash
         run: |
