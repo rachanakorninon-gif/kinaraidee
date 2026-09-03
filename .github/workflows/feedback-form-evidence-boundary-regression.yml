@@ -1,0 +1,42 @@
+name: Feedback Form Evidence Boundary Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feedback-form-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve scoped Feedback form evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+          test -s RELEASE-CHECKLIST.md || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+
+          grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve open PR #201 Feedback/Partner interaction acceptance'; exit 1;
+          }
+          grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md Public Beta gate must preserve real PR #201 form interaction evidence requirement'; exit 1;
+          }
+          grep -Fq 'real Feedback/Partner form submission acceptance ยังต้องใช้หลักฐานจริง; static regression และ deployment trace ห้ามใช้แทน backend insert/device interaction PASS' RELEASE-CHECKLIST.md || {
+            echo 'Deployment checklist must keep real Feedback/Partner submission acceptance open'; exit 1;
+          }
+          grep -Fq 'Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission' RELEASE-CHECKLIST.md || {
+            echo 'Product checklist must keep Feedback submission acceptance open'; exit 1;
+          }
+          grep -Fq 'automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น' RELEASE-CHECKLIST.md || {
+            echo 'Release checklist must reject automated evidence as a substitute for required real interaction'; exit 1;
+          }
+
+          echo 'Feedback form deployment/recovery evidence remains scoped; real PR #201 submission acceptance is still open'
