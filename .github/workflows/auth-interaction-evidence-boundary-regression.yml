@@ -25,11 +25,14 @@ jobs:
           test -s BETA-READY.md || { echo 'Missing BETA-READY.md'; exit 1; }
           test -s AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || { echo 'Missing AUTH-INTERACTION-PHYSICAL-EVIDENCE.md'; exit 1; }
 
-          grep -Fq 'Status: **PARTIAL PASS — PASSWORD UPDATE + SIGN-IN VERIFIED / SIGNUP + RESET-EMAIL DELIVERY + LEAKED-PASSWORD REJECTION NOT VERIFIED**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
-            echo 'Auth physical evidence must preserve the scoped partial-PASS boundary'; exit 1;
+          grep -Fq 'Status: **PARTIAL PASS — RECOVERY REQUEST/MAIL-SEND/VERIFY-LINK + PASSWORD UPDATE + SIGN-IN VERIFIED / SIGNUP + LEAKED-PASSWORD REJECTION NOT VERIFIED**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+            echo 'Auth physical evidence must preserve the corroborated scoped partial-PASS boundary'; exit 1;
           }
           grep -Fq 'The umbrella current PR #373 Auth acceptance remains **PARTIAL / OPEN**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
             echo 'Auth physical evidence must keep umbrella PR #373 acceptance partial/open'; exit 1;
+          }
+          grep -Fq 'recovery request / recovery mail-send / verification-link path: PASS for the tested QA sequence' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+            echo 'Auth physical evidence must preserve tested recovery-path PASS without generalizing mail delivery'; exit 1;
           }
 
           grep -Fq 'current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes' CURRENT-RELEASE.md || {
@@ -52,11 +55,11 @@ jobs:
           grep -Fq 'current Auth acceptance เป็น **PARTIAL / OPEN**' BETA-READY.md || {
             echo 'BETA-READY.md must record scoped Auth partial PASS while preserving the open umbrella gate'; exit 1;
           }
-          grep -Fq 'signup, reset-email delivery และ weak/leaked-password rejection ยัง NOT VERIFIED / OPEN' BETA-READY.md || {
+          grep -Fq 'signup และ weak/leaked-password rejection ยัง NOT VERIFIED / OPEN' BETA-READY.md || {
             echo 'BETA-READY.md must preserve the remaining Auth sub-gates'; exit 1;
           }
           grep -Fq 'Automated/static/deployment evidence ไม่แทน real-device, assistive-technology หรือ commercial acceptance' BETA-READY.md || {
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth password-update/sign-in evidence remains partial; signup/reset-email/leaked-password and umbrella Auth acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in evidence remains partial; signup/leaked-password and umbrella Auth acceptance stay open.'
