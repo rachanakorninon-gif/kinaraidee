@@ -26,7 +26,7 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## TC-12 Partner application physical acceptance
 
-- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64` available from same-device metadata capture; exact browser-tab vs installed-PWA context during the public-form interaction is **NOT CAPTURED**
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64`; later focused offline-recovery/retry and duplicate-submit retests were explicitly captured in a visible Chrome tab
 - Tester/session reference: 2026-09-03 user-assisted Android physical QA session
 - Intended authorized Beta test submission completed: **NOT VERIFIED**
 - Duplicate-submit protection observed: **NOT VERIFIED**
@@ -41,7 +41,7 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## 2026-09-03 Android scoped supporting observations
 
-These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while direct `aria-busy` verification remains incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
+These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while direct `aria-busy` verification remains incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702` plus later focused Chrome-retest comments.
 
 ### TC-11 supporting observations
 
@@ -66,8 +66,14 @@ These observations came from a user-assisted physical Android session and materi
 - After network restoration, a separate retry succeeded and the UI showed `✅ ส่งข้อมูลร้านเรียบร้อยแล้ว ทีมงานจะตรวจสอบและติดต่อกลับ`; the form fields and consent were cleared after success.
 - Supabase independently confirmed exactly one matching retry row at `2026-09-03 14:34:10.665115+00`, with `privacy_notice_version='2026-08-21'` and non-null `privacy_acknowledged_at='2026-09-03 14:34:08.844+00`.
 - Focused duplicate-guard retest used restaurant `TC-12 Android Duplicate Test` and notes `TC-12 Android duplicate guard retest 2026-09-03`. The tester explicitly reported pressing submit 3 times in rapid succession; Supabase independently found exactly one matching row at `2026-09-03 14:37:16.509208+00`.
+- Focused Chrome-tab offline-recovery retest used restaurant `TC-12 Android Chrome Retest` and notes `TC-12 Android Chrome offline recovery retest 2026-09-03`. A screenshot captured the Chrome address bar together with airplane-mode status, `ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง`, the normal `ส่งข้อมูลร้าน` control visibly restored, the Beta form data retained and consent still checked for retry.
+- After network restoration in that same visible Chrome tab, a separate retry succeeded; the UI showed `✅ ส่งข้อมูลร้านเรียบร้อยแล้ว ทีมงานจะตรวจสอบและติดต่อกลับ` and cleared the form fields and consent.
+- Supabase independently confirmed exactly one matching `partner_applications` row for that focused Chrome-tab offline-recovery marker at `2026-09-03 16:33:16.114258+00`, with `privacy_notice_version='2026-08-21'` and a non-null privacy acknowledgement timestamp.
+- Focused Chrome-tab duplicate-guard retest then used restaurant `TC-12 Android Chrome Duplicate Retest` and notes `TC-12 Android Chrome duplicate guard retest 2026-09-03`. The tester was instructed to press submit 3 times rapidly; the UI showed the success state and cleared the form fields and consent.
+- Supabase independently confirmed exactly one matching row for that focused Chrome duplicate retest at `2026-09-03 16:35:51.907906+00`, with `privacy_notice_version='2026-08-21'` and a non-null privacy acknowledgement timestamp. This supports a scoped TC-12 duplicate-submit guard PASS for the Chrome-tab retest.
+- The focused Chrome retests resolve the earlier browser-vs-installed-PWA ambiguity for the visible TC-12 failure-recovery, retry-success and duplicate-submit behavior on this device.
 - These are Beta QA test records only and are not commercial partner/conversion/revenue evidence.
-- The visible button recovery does not directly prove the DOM `aria-busy` value.
+- The visible button recovery does not directly prove the DOM `aria-busy` value, so direct `aria-busy` acceptance remains open.
 
 ### Trace boundary for this session
 
@@ -75,8 +81,8 @@ These observations came from a user-assisted physical Android session and materi
 - OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.
 - Software/build evidence: `CPH2689_16.0.5.1000(EX01B100P01)` and Android build shown in About Chrome as `CPH2689 Build/BP2A.250605.015`.
 - Browser application version captured on the same device: Chrome `152.0.7977.64`.
-- Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; the later TC-11 duplicate-submit and offline-recovery/retry retests were explicitly captured in a Chrome tab.
-- Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchors are Issue #5 comments `5527228686` and `5527422702`.
+- Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; later TC-11 and TC-12 focused duplicate-submit and offline-recovery/retry retests were explicitly captured in a Chrome tab.
+- Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; repository anchors include Issue #5 comments for the original and later focused Chrome retests.
 - Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.
 
 ## Evidence boundary
