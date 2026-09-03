@@ -56,7 +56,7 @@
 | Weak/leaked-password rejection | **NOT VERIFIED / blocked by current Supabase plan/configuration** | **OPEN / SEPARATE SECURITY GATE**; physical-device repetition cannot close it |
 | Android model count | OPPO is fully traceable; historical Android model is `not captured` | Need **2 additional distinct traceable Android models** with core-flow evidence |
 | iPhone model count | historical iPhone physical evidence exists but exact model is `not captured` | Need traceable distinct iPhone models; one new iPhone does not prove the unknown historical model is a different model |
-| Blocker/Critical = 0 | not established merely by no reports/CI | evaluate from release-scoped measured defect evidence after physical runs |
+| Blocker/Critical = 0 | not established merely by no reports/CI | evaluate only from **release-scoped defect evidence** after physical runs; absence of reports or CI/static/synthetic evidence is insufficient |
 
 ## Fast execution order for borrowed devices
 
