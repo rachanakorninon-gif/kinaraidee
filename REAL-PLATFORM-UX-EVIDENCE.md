@@ -1,6 +1,6 @@
 # Real Platform UX Evidence
 
-Status: **NOT VERIFIED**
+Status: **PARTIAL — REDUCED MOTION PASS / KEYBOARD FOCUS NOT VERIFIED**
 
 Purpose: canonical physical-platform evidence record for the remaining Public Beta UX gates covering visible keyboard focus and reduced-motion behavior on the currently deployed Kinaraidee runtime.
 
@@ -35,34 +35,34 @@ PASS requires one traceable physical-platform keyboard session with complete key
 
 ## Reduced-motion acceptance
 
-Reduced-motion result: **NOT VERIFIED**
+Reduced-motion result: **PASS**
 
 ### Reduced-motion trace metadata
 
-- Reduced-motion device / model: NOT CAPTURED
-- Reduced-motion OS / version: NOT CAPTURED
-- Reduced-motion browser or installed-PWA context / version: NOT CAPTURED
-- Reduced-motion tester / session reference: NOT CAPTURED
-- Reduced-motion evidence location: NOT CAPTURED
-- Reduced-motion test date/time: NOT CAPTURED
-- Reduced-motion verified deployed runtime / release marker: NOT CAPTURED
+- Reduced-motion device / model: OPPO Reno13 5G (CPH2689)
+- Reduced-motion OS / version: Android 16 / ColorOS 16.0.5
+- Reduced-motion browser or installed-PWA context / version: Google Chrome 152.0.7977.64, normal browser tab
+- Reduced-motion tester / session reference: owner-operated physical QA session, 2026-09-04 01:13–01:16 Asia/Bangkok; Issue #133 follow-up comment and Issue #5 QA comment
+- Reduced-motion evidence location: Issue #133 comment `5530154002`; Issue #5 comment `5530152334`; physical screenshots captured in the QA conversation for the same traced session
+- Reduced-motion test date/time: 2026-09-04 01:13–01:16 Asia/Bangkok
+- Reduced-motion verified deployed runtime / release marker: `qa-reduced-motion-state.html` from PR #469 / merge `eec4569d976acddf3072cb50f4ada69df7439f1d`, deployed by Pages run `33786610833`; the probe exercises the shipped live app flow and does not itself replace the declared browser/PWA runtime candidate
 
 Required physical interaction evidence:
 
-- Platform/browser reduced-motion preference was enabled before the tested interaction: NOT VERIFIED
-- The active page/session was confirmed to receive the reduced-motion preference: NOT VERIFIED
-- The tested core interaction remains usable with reduced motion enabled: NOT VERIFIED
-- Non-essential animation/motion covered by the current implementation is reduced or removed as intended: NOT VERIFIED
-- No new blocking, unreadable, or timing-dependent behavior appears under reduced motion: NOT VERIFIED
-- Any remaining motion that appears necessary or unexpected is recorded: NOT CAPTURED
+- Platform/browser reduced-motion preference was enabled before the tested interaction: VERIFIED — Android Accessibility `Remove animations` was ON before opening the QA session.
+- The active page/session was confirmed to receive the reduced-motion preference: VERIFIED — live probe reported `prefers-reduced-motion = reduce`.
+- The tested core interaction remains usable with reduced motion enabled: VERIFIED — physical Surprise interaction completed and rendered the menu result `โจ๊กต้มยำหมู`, with actionable result controls visible.
+- Non-essential animation/motion covered by the current implementation is reduced or removed as intended: VERIFIED — the shipped accessibility style reported loaded and computed transition duration was `1e-05s` under the deployed reduced-motion rule.
+- No new blocking, unreadable, or timing-dependent behavior appears under reduced motion: VERIFIED — probe reported PASS and the Surprise flow completed back to ready after the rendered result.
+- Any remaining motion that appears necessary or unexpected is recorded: NONE OBSERVED THAT BLOCKED OR OBSCURED THE TESTED SURPRISE FLOW IN THIS SESSION.
 
-PASS requires one traceable real-platform reduced-motion session with complete reduced-motion metadata and all required reduced-motion checks verified. Source markers, `prefers-reduced-motion` CSS inspection, browser emulation, or CI do not establish this result.
+PASS is scoped to this traceable real-platform reduced-motion session only. It does not establish keyboard-focus PASS, NF-07 PASS, full accessibility/device-matrix PASS, Public Beta completion, or Commercial GO.
 
-### Supporting physical observation — 2026-08-31 (non-canonical)
+### Supporting physical observation — 2026-08-31 (non-canonical historical support)
 
-Issue #133 records a scoped physical iPhone observation in which Reduce Motion was shown OFF and then ON in Settings, Kinaraidee rendered with the preference enabled, and the tested Surprise flow remained understandable through busy and completed-result states. The submitted observation also showed no prolonged/non-essential visible transition during that tested flow.
+Issue #133 records an earlier scoped physical iPhone observation in which Reduce Motion was shown OFF and then ON in Settings, Kinaraidee rendered with the preference enabled, and the tested Surprise flow remained understandable through busy and completed-result states. The submitted observation also showed no prolonged/non-essential visible transition during that tested flow.
 
-This is useful supporting evidence only. Exact iPhone model, iOS version, Safari-versus-installed-PWA context/version, and the complete canonical trace metadata were not captured and must not be guessed. Therefore this observation does **not** populate the canonical metadata/check fields above, does **not** change `Reduced-motion result: NOT VERIFIED`, and does not establish keyboard focus, NF-07, full device-matrix, Public Beta, or Commercial PASS.
+That earlier observation remains useful supporting evidence only because exact iPhone model, iOS version, Safari-versus-installed-PWA context/version, and complete canonical trace metadata were not captured. It is not the basis of the canonical PASS above and must not be used to infer missing iPhone metadata.
 
 ## Result boundary
 
