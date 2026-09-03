@@ -16,20 +16,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate canonical deployment status sync
+      - name: Validate canonical deployment status relationship
         shell: bash
         run: |
           set -euo pipefail
           runtime_status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           release_status="$(sed -n 's/^- Current runtime deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          runtime_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          last_verified="$(sed -n 's/^- Last verified deployed browser\/PWA descendant: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          release_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           test -n "$runtime_status" || { echo 'Unable to parse deployment status from CURRENT-RUNTIME.md'; exit 1; }
           test -n "$release_status" || { echo 'Unable to parse deployment status from CURRENT-RELEASE.md'; exit 1; }
           case "$runtime_status" in
-            'PENDING FOR CURRENT RUNTIME DEPLOYMENT'|'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE') ;;
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
+              test -z "$runtime_deployed" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
+              test -n "$last_verified" && test -n "$release_deployed" || { echo 'Pending runtime/release must retain last verified deployment evidence'; exit 1; }
+              test "$last_verified" = "$release_deployed" || { echo "Last verified deployment drift: runtime=$last_verified release=$release_deployed"; exit 1; }
+              test "$release_status" = 'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE' || { echo 'While a new runtime is pending, CURRENT-RELEASE must remain on the last verified deployed release'; exit 1; }
+              ;;
+            'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
+              test "$runtime_status" = "$release_status" || { echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"; exit 1; }
+              test -n "$runtime_deployed" && test "$runtime_deployed" = "$release_deployed" || { echo 'PASS runtime and release deployed SHA must match'; exit 1; }
+              ;;
             *) echo "Unexpected runtime deployment status: $runtime_status"; exit 1;;
           esac
-          test "$runtime_status" = "$release_status" || {
-            echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"
-            exit 1
-          }
-          echo "Canonical deployment status is synchronized: $runtime_status"
+          echo "Canonical deployment relationship is valid: runtime=$runtime_status release=$release_status"
