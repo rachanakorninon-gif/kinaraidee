@@ -1,6 +1,6 @@
 # Public Form Physical Evidence
 
-Status: **VERIFIED — scoped Android Chrome physical acceptance for TC-11 / TC-12**
+Status: **PASS**
 
 Purpose: record only real physical-device evidence for the deployed public Feedback and Partner form acceptance (TC-11 / TC-12). This file must not be used to fabricate or infer device, user, partner, conversion, payment, revenue, Public Beta, or Commercial results from CI, source review, Pages, Live Smoke, or synthetic checks.
 
@@ -14,31 +14,33 @@ Purpose: record only real physical-device evidence for the deployed public Feedb
 
 ## TC-11 Feedback physical acceptance
 
-- Device / OS / browser context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64`; focused acceptance retests were explicitly captured in a visible Chrome tab.
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64`; focused acceptance retests were explicitly captured in a visible Chrome tab.
 - Tester/session reference: 2026-09-03–04 continuous user-assisted Android physical QA session.
-- Intended authorized Beta test submission completed: **VERIFIED**
-- Duplicate-submit protection observed: **VERIFIED** — tester pressed submit 3 times rapidly in the focused Chrome retest and Supabase contained exactly one matching row.
-- Reproducible network/SDK failure exercised: **VERIFIED** — airplane-mode submission produced the expected failure state.
-- Submit control re-enabled after failure: **VERIFIED** — physical UI and DOM probe both showed recovery to `disabled=false`.
-- `aria-busy` cleared after failure: **VERIFIED** — same-origin physical QA probe directly observed `aria-busy=true` while sending, then removal to `<absent>` after error with `disabled=false`.
-- Success evidence kept separate from failure-recovery evidence: **VERIFIED** — restored-network retry was recorded separately from the offline failure round.
+- Intended authorized Beta test submission completed: **PASS**
+- Duplicate-submit protection observed: **PASS**
+- Reproducible network/SDK failure exercised: **PASS**
+- Submit control re-enabled after failure: **PASS**
+- `aria-busy` cleared after failure: **PASS**
+- Success evidence kept separate from failure-recovery evidence: **PASS**
 - Evidence location: GitHub Issue #5 comments including `5527228686`, `5527422702`, and DOM-state PASS comment `5529451809`; source screenshots were supplied in the same user-assisted QA conversation.
-- Result: **PASS — scoped to this Android Chrome device/session**
+- Result: **PASS**
+- Scope note: PASS is limited to this Android Chrome device/session and does not satisfy the remaining device-matrix minimum by itself.
 
 ## TC-12 Partner application physical acceptance
 
-- Device / OS / browser context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64`; focused acceptance retests were explicitly captured in a visible Chrome tab.
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64`; focused acceptance retests were explicitly captured in a visible Chrome tab.
 - Tester/session reference: 2026-09-03–04 continuous user-assisted Android physical QA session.
-- Intended authorized Beta test submission completed: **VERIFIED**
-- Duplicate-submit protection observed: **VERIFIED** — tester pressed submit 3 times rapidly in the focused Chrome retest and Supabase contained exactly one matching row.
-- Reproducible network/SDK failure exercised: **VERIFIED** — airplane-mode submission produced the expected failure state.
-- Submit control re-enabled after failure: **VERIFIED** — physical UI and DOM probe both showed recovery to `disabled=false`.
-- `aria-busy` cleared after failure: **VERIFIED** — same-origin physical QA probe directly observed `aria-busy=true` while sending, then removal to `<absent>` after error with `disabled=false`.
-- Privacy notice version recorded as expected: **VERIFIED** — focused successful rows recorded `privacy_notice_version='2026-08-21'`.
-- Privacy acknowledgement timestamp recorded as expected: **VERIFIED** — focused successful rows contained non-null `privacy_acknowledged_at`.
-- Success evidence kept separate from failure-recovery evidence: **VERIFIED** — restored-network retry was recorded separately from the offline failure round.
+- Intended authorized Beta test submission completed: **PASS**
+- Duplicate-submit protection observed: **PASS**
+- Reproducible network/SDK failure exercised: **PASS**
+- Submit control re-enabled after failure: **PASS**
+- `aria-busy` cleared after failure: **PASS**
+- Privacy notice version recorded as expected: **PASS**
+- Privacy acknowledgement timestamp recorded as expected: **PASS**
+- Success evidence kept separate from failure-recovery evidence: **PASS**
 - Evidence location: GitHub Issue #5 comments including `5527422702` and DOM-state PASS comment `5529522177`; source screenshots were supplied in the same user-assisted QA conversation.
-- Result: **PASS — scoped to this Android Chrome device/session**
+- Result: **PASS**
+- Scope note: PASS is limited to this Android Chrome device/session and does not satisfy the remaining device-matrix minimum by itself.
 
 ## 2026-09-03–04 Android scoped supporting observations
 
@@ -93,5 +95,6 @@ These observations came from a user-assisted physical Android session. They esta
 - The PASS above comes from the documented physical Android Chrome session and is limited to that device/browser scope.
 - Partner test records used for Beta QA must not be counted as real commercial partner, conversion, commission, payment, or revenue evidence.
 - If exact device/OS/browser metadata was not captured, keep `NOT CAPTURED`; never guess.
-- Do not combine unrelated devices/sessions into one PASS without explicitly documenting the scope and continuity of the evidence.
-- TC-11/TC-12 PASS does not imply full Android/iPhone device-matrix completion, Public Beta completion, tester recruitment, or Commercial GO.
+- A PASS requires the tested device/OS/browser-or-PWA context, tester/session reference, and evidence location to be captured for both TC-11 and TC-12; missing trace metadata must remain `NOT CAPTURED`, not inferred from CI or deployment records.
+- Change `Status` or a TC result to PASS only after the physical acceptance steps in `BETA-TEST-CASES.md` were actually executed and the supporting evidence is traceable.
+- TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.
