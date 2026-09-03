@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#ff8a00">
+  <title>QA Public Form DOM State Probe • กินอะไรดี</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}
+    main{max-width:980px;margin:auto;padding:18px 14px 48px}
+    h1{margin:0 0 8px;font-size:clamp(24px,5vw,38px)}
+    p{line-height:1.6}
+    .muted{color:#6b5b4e}
+    .panel{background:#fff;border:1px solid #eadfce;border-radius:18px;padding:14px;margin-top:12px}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{border:0;border-radius:14px;padding:13px 12px;font:inherit;font-weight:850;cursor:pointer}
+    .primary{background:#ff8500;color:#fff}
+    .secondary{background:#fff;border:1px solid #dfd2c2;color:#4f3c2e}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+    .metric{border:1px solid #eadfce;border-radius:14px;padding:10px;background:#fffdf8;min-height:82px}
+    .metric b{display:block;font-size:13px;color:#6b5b4e;margin-bottom:4px}
+    .value{font-size:19px;font-weight:900;overflow-wrap:anywhere}
+    .pass{background:#eaf9f7;border-color:#b6e7e1;color:#087d77}
+    .pending{background:#fff8dd;border-color:#f3df96;color:#725700}
+    .fail{background:#fff0ee;border-color:#f4c4bd;color:#a33126}
+    .log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;max-height:260px;overflow:auto;background:#1f1f1f;color:#f6f6f6;border-radius:12px;padding:10px;margin-top:10px}
+    iframe{width:100%;height:1120px;border:1px solid #dfd2c2;border-radius:18px;background:#fff;margin-top:12px}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#fff1dc;font-weight:800;font-size:12px}
+    @media(max-width:620px){.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}iframe{height:1050px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>🧪 QA Public Form DOM State Probe</h1>
+  <p class="muted">หน้านี้ใช้เฉพาะ QA เพื่อสังเกตค่า DOM ของฟอร์มจริงแบบ same-origin โดยไม่แก้พฤติกรรมของ <code>feedback.html</code> หรือ <code>partner.html</code> และไม่ได้เชื่อมจาก UI ปกติของแอป</p>
+
+  <section class="panel">
+    <div class="controls">
+      <button id="loadFeedback" class="primary" type="button">TC-11 Feedback</button>
+      <button id="loadPartner" class="secondary" type="button">TC-12 Partner</button>
+    </div>
+    <p><span class="badge" id="modeBadge">feedback</span> กรอกข้อมูลในฟอร์มด้านล่างตามรอบทดสอบ แล้วตัดอินเทอร์เน็ตก่อนกดส่ง ระบบ probe จะบันทึกการเปลี่ยน <code>disabled</code> และ <code>aria-busy</code> ของปุ่มส่งโดยตรง</p>
+
+    <div class="grid">
+      <div class="metric"><b>ปุ่มส่ง</b><div id="buttonText" class="value">รอโหลด…</div></div>
+      <div class="metric"><b>disabled</b><div id="disabledValue" class="value">—</div></div>
+      <div class="metric"><b>aria-busy</b><div id="ariaBusyValue" class="value">—</div></div>
+      <div class="metric"><b>ข้อความสถานะฟอร์ม</b><div id="messageValue" class="value">—</div></div>
+    </div>
+
+    <div id="verdict" class="metric pending" style="margin-top:10px">
+      <b>ผลตรวจ recovery</b>
+      <div id="verdictText" class="value">รอเห็น aria-busy=true → error → aria-busy ถูกลบ + disabled=false</div>
+    </div>
+
+    <div class="log" id="eventLog" aria-live="polite">[probe] waiting for iframe…</div>
+  </section>
+
+  <iframe id="formFrame" title="Public form under physical QA"></iframe>
+</main>
+
+<script>
+(() => {
+  const frame = document.getElementById('formFrame');
+  const modeBadge = document.getElementById('modeBadge');
+  const buttonText = document.getElementById('buttonText');
+  const disabledValue = document.getElementById('disabledValue');
+  const ariaBusyValue = document.getElementById('ariaBusyValue');
+  const messageValue = document.getElementById('messageValue');
+  const verdict = document.getElementById('verdict');
+  const verdictText = document.getElementById('verdictText');
+  const eventLog = document.getElementById('eventLog');
+
+  let mode = 'feedback';
+  let observer = null;
+  let messageObserver = null;
+  let busySeen = false;
+  let errorSeen = false;
+  let recovered = false;
+  let logLines = [];
+
+  function now() {
+    return new Date().toLocaleTimeString('th-TH', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+
+  function log(text) {
+    logLines.push(`[${now()}] ${text}`);
+    if (logLines.length > 40) logLines = logLines.slice(-40);
+    eventLog.textContent = logLines.join('\n');
+    eventLog.scrollTop = eventLog.scrollHeight;
+  }
+
+  function resetEvidence() {
+    busySeen = false;
+    errorSeen = false;
+    recovered = false;
+    logLines = [];
+    verdict.className = 'metric pending';
+    verdictText.textContent = 'รอเห็น aria-busy=true → error → aria-busy ถูกลบ + disabled=false';
+  }
+
+  function isFailureMessage(text) {
+    return /ไม่สำเร็จ|ตรวจสอบอินเทอร์เน็ต|ลองใหม่อีกครั้ง/.test(text || '');
+  }
+
+  function readState(source='read') {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      const buttonId = mode === 'feedback' ? 'sendBtn' : 'submitBtn';
+      const btn = doc.getElementById(buttonId);
+      const msg = doc.getElementById('msg');
+      if (!btn) return;
+
+      const busy = btn.getAttribute('aria-busy');
+      const disabled = !!btn.disabled;
+      const msgText = (msg?.textContent || '').trim();
+
+      buttonText.textContent = (btn.textContent || '').trim() || '—';
+      disabledValue.textContent = String(disabled);
+      ariaBusyValue.textContent = busy === null ? '<absent>' : busy;
+      messageValue.textContent = msgText || '<empty>';
+
+      if (busy === 'true') busySeen = true;
+      if (isFailureMessage(msgText)) errorSeen = true;
+      if (busySeen && errorSeen && busy === null && disabled === false) recovered = true;
+
+      if (recovered) {
+        verdict.className = 'metric pass';
+        verdictText.textContent = 'PASS: เคยเห็น aria-busy=true และหลัง error ค่า aria-busy ถูกลบ พร้อม disabled=false';
+      } else if (errorSeen && (!busySeen)) {
+        verdict.className = 'metric fail';
+        verdictText.textContent = 'ยังไม่ครบ: เห็น error แล้ว แต่ probe ยังไม่จับ aria-busy=true';
+      } else {
+        verdict.className = 'metric pending';
+      }
+
+      return {busy, disabled, msgText, buttonLabel:(btn.textContent || '').trim(), source};
+    } catch (error) {
+      verdict.className = 'metric fail';
+      verdictText.textContent = 'อ่าน iframe ไม่ได้: ' + error.message;
+    }
+  }
+
+  function attachProbe() {
+    if (observer) observer.disconnect();
+    if (messageObserver) messageObserver.disconnect();
+    resetEvidence();
+
+    try {
+      const doc = frame.contentDocument;
+      const buttonId = mode === 'feedback' ? 'sendBtn' : 'submitBtn';
+      const btn = doc?.getElementById(buttonId);
+      const msg = doc?.getElementById('msg');
+      if (!btn || !msg) {
+        log('form elements not found; waiting…');
+        setTimeout(attachProbe, 300);
+        return;
+      }
+
+      observer = new MutationObserver(records => {
+        for (const record of records) {
+          if (record.type === 'attributes' && record.attributeName === 'aria-busy') {
+            const current = btn.getAttribute('aria-busy');
+            if (record.oldValue === null || current === 'true') busySeen = true;
+            log(`aria-busy mutation: old=${record.oldValue ?? '<absent>'} current=${current ?? '<absent>'}`);
+          } else if (record.type === 'attributes' && record.attributeName === 'disabled') {
+            log(`disabled mutation: old=${record.oldValue ?? '<absent>'} current=${btn.hasAttribute('disabled')}`);
+          } else if (record.type === 'childList') {
+            log(`button text: ${(btn.textContent || '').trim()}`);
+          }
+        }
+        const state = readState('button-mutation');
+        if (state) log(`state: disabled=${state.disabled} aria-busy=${state.busy ?? '<absent>'}`);
+      });
+      observer.observe(btn, {attributes:true, attributeOldValue:true, attributeFilter:['aria-busy','disabled'], childList:true, subtree:true});
+
+      messageObserver = new MutationObserver(() => {
+        const state = readState('message-mutation');
+        if (state) log(`message: ${state.msgText || '<empty>'}`);
+      });
+      messageObserver.observe(msg, {attributes:true, childList:true, subtree:true, characterData:true});
+
+      const initial = readState('initial');
+      log(`probe armed for ${mode}; button=${buttonId}; initial disabled=${initial?.disabled} aria-busy=${initial?.busy ?? '<absent>'}`);
+    } catch (error) {
+      verdict.className = 'metric fail';
+      verdictText.textContent = 'Probe attach failed: ' + error.message;
+      log('attach failed: ' + error.message);
+    }
+  }
+
+  function load(nextMode) {
+    mode = nextMode;
+    modeBadge.textContent = mode;
+    document.getElementById('loadFeedback').className = mode === 'feedback' ? 'primary' : 'secondary';
+    document.getElementById('loadPartner').className = mode === 'partner' ? 'primary' : 'secondary';
+    resetEvidence();
+    const target = mode === 'feedback' ? 'feedback.html' : 'partner.html';
+    frame.src = `${target}?qa_aria_probe=1&v=${Date.now()}`;
+  }
+
+  frame.addEventListener('load', () => {
+    log(`iframe loaded: ${mode}`);
+    setTimeout(attachProbe, 100);
+  });
+  document.getElementById('loadFeedback').addEventListener('click', () => load('feedback'));
+  document.getElementById('loadPartner').addEventListener('click', () => load('partner'));
+
+  load(new URLSearchParams(location.search).get('form') === 'partner' ? 'partner' : 'feedback');
+})();
+</script>
+</body>
+</html>
