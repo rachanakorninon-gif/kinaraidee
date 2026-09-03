@@ -24,19 +24,19 @@
 - [x] `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 
 ## Current browser/PWA runtime
-- [x] Auth password-security UX candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; browser/PWA deployment trace verified through docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190`. This is deployed static/live-source evidence only and does not establish account-flow or leaked-password protection PASS.
+- [x] Auth password-security UX candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; browser/PWA deployment trace verified through docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190`. This is deployed static/live-source evidence only and does not itself establish account-flow or leaked-password protection PASS; separate scoped physical account-flow evidence is recorded below.
 - [ ] Supabase leaked-password protection ยังไม่ได้เปิด; runtime นี้เตรียมเฉพาะ WeakPasswordError UX และ account-enumeration-safe messaging เท่านั้น — Issue #372
 
 ## Verified browser/PWA deployment evidence — historical scope before PR #373
 - [x] Prior verified browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
-- [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
+- [x] Runtime merge/deployed SHA = `00bdcb7f432598e2eb82e71dcf1a9f08798e4320`
 - [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
 - [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
 - [x] Public Form Resilience Regression `32802440775` = SUCCESS for source recovery-state contracts; it does not submit a form
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
 - [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate at that time
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐาน real Feedback/Partner submission หลัง PR #201 หรือ real Auth account interaction / weak-password rejection ของ PR #373
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner หรือ Auth interaction; scoped physical evidenceสำหรับพฤติกรรมเหล่านั้นถูกบันทึกแยกด้านล่าง ขณะที่ weak/leaked-password rejection ยัง OPEN
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
@@ -55,8 +55,10 @@
 - [x] iPhone/Safari #1 v16: NF-05 install guidance / Add to Home Screen / standalone launch / suppression after “เข้าใจแล้ว” passed for the tested session only
 - [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
 - [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: canonical Reduced Motion physical PASS on 2026-09-04; browser received `prefers-reduced-motion=reduce`, shipped rule reduced transition to `1e-05s`, and the physical Surprise flow rendered a result and returned ready. Scope is this traced session only.
+- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: TC-11 Feedback + TC-12 Partner scoped physical PASS, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network retry success and backend/privacy corroboration. This is Beta QA evidence only and does not create commercial-partner evidence or full-matrix PASS.
+- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: current PR #373 Auth account-flow scoped physical PASS for recovery request/mail/verification-link, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration. Weak/leaked-password rejection remains NOT VERIFIED / OPEN.
 
-ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บางรายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามอนุมานเป็น PASS ของรุ่นอื่น, current PR #201 form-submission behavior, current PR #373 Auth interaction behavior หรือ full device matrix
+ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บาง historical รายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามขยาย scoped OPPO TC-11/TC-12/Auth/Reduced-Motion PASS ไปเป็น PASS ของรุ่นอื่น, full device matrix, blanket Auth/Security PASS หรือ Commercial GO
 
 ## ต้องตรวจบนอุปกรณ์จริงก่อน Beta acceptance / เพิ่ม traffic ตาม gate
 - [ ] Android Chrome อย่างน้อย 3 device models — ปัจจุบันยังไม่ครบจำนวนรุ่นและ exact model ของ historical Android session ไม่ถูกบันทึก
@@ -71,9 +73,10 @@
 - [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
 - [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages
 - [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64, 2026-09-04; ไม่ใช่ full-matrix PASS
-- [ ] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ
-- [ ] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance ตาม test scope ที่อนุมัติ; ห้ามนับ test record เป็น partner-commercial evidence
-- [ ] Auth weak-password/recovery UX ของ PR #373 ผ่าน real deployed browser/device interaction; current Pages/Live Smoke deployment trace ไม่เท่ากับ leaked-password protection หรือ account-flow PASS
+- [x] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; broader device-matrix coverage ยังเปิด
+- [x] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend/privacy acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ห้ามนับ Beta test record เป็น partner-commercial evidence และ broader device-matrix coverage ยังเปิด
+- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ของ PR #373 ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`; Pages/Live Smoke ไม่ใช่หลักฐานที่ใช้ปิดข้อนี้
+- [ ] Auth weak/leaked-password rejection/protection ของ PR #373 ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** และ successful account-flow evidence ห้ามใช้แทน rejection evidence
 - [ ] ติดตั้ง PWA และเปิดจากไอคอนบนทุกแพลตฟอร์มที่ใช้เป็น acceptance target
 - [ ] geolocation allow/deny ครบตาม matrix
 - [ ] Google Maps fallback ครบตาม matrix
