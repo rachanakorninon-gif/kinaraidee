@@ -103,18 +103,21 @@ jobs:
           marker="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          last_verified="$(sed -n 's/^- Last verified deployed browser\/PWA descendant: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           test -n "$marker" && test -n "$candidate" && test -n "$status" || { echo 'Unable to parse CURRENT-RUNTIME marker/candidate/status'; exit 1; }
           grep -Fq "\`$marker\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST PWA marker drift'; exit 1; }
-          grep -Fq "\`$candidate\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST runtime candidate drift'; exit 1; }
           case "$status" in
             'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
               test -z "$deployed" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
+              test -n "$last_verified" || { echo 'Pending runtime must identify the last verified deployed descendant'; exit 1; }
+              grep -Fq "\`$last_verified\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST last verified deployed SHA drift'; exit 1; }
               grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary missing'; exit 1; }
               grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS' CURRENT-RUNTIME.md || { echo 'Pending runtime prior-evidence boundary missing'; exit 1; }
               ;;
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               test -n "$deployed" || { echo 'PASS runtime must provide deployed SHA'; exit 1; }
+              grep -Fq "\`$candidate\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST runtime candidate drift'; exit 1; }
               grep -Fq "\`$deployed\`" BETA-CHECKLIST.md || { echo 'BETA-CHECKLIST deployed SHA drift'; exit 1; }
               ;;
             *)
