@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ff8a00">
+  <title>กินอะไรดี • Acquisition KPI</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#30251d}.app{max-width:900px;margin:auto;padding:22px 16px 60px}.card{background:#fff;border:1px solid #eee0cc;border-radius:22px;padding:18px;margin-top:16px}.top,.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}.metric{background:#fff;border:1px solid #eee0cc;border-radius:18px;padding:15px}.big{font-size:29px;font-weight:950;color:#f47c00}.muted{color:#777;font-size:14px}.row{padding:11px 0;border-bottom:1px solid #eee}.row:last-child{border-bottom:0}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button,.toolbar a,button{border:0;background:#ff8500;color:#fff;padding:11px 14px;border-radius:13px;font-weight:900;font-size:14px;text-decoration:none}.secondary{background:#fff!important;color:#5a4636!important;border:1px solid #dfd2c2!important}.login{max-width:460px;margin:60px auto}.login input{width:100%;padding:14px;border:1px solid #dccfbd;border-radius:13px;font-size:16px;margin-top:8px}.login button{width:100%;margin-top:8px}.notice{padding:12px;border-radius:13px;background:#fff8dd;margin-top:10px}.hidden{display:none!important}.section-title{margin-bottom:4px}.scope{background:#f6fbff;border:1px solid #d9edf9}.good{color:#137a3f}.warn{color:#9a5b00}@media(max-width:760px){.cards{grid-template-columns:repeat(2,1fr)}.top{display:block}.toolbar{margin-top:12px}}@media(max-width:420px){.cards{grid-template-columns:1fr 1fr}.big{font-size:25px}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <div id="loginBox" class="login card">
+    <h1>🔐 Owner Acquisition KPI</h1>
+    <p class="muted">ข้อมูลรวมเพื่อวัดการหาผู้ใช้ใหม่ของ “กินอะไรดี”</p>
+    <input id="email" type="email" placeholder="อีเมล Owner" autocomplete="username">
+    <input id="password" type="password" placeholder="รหัสผ่าน Owner" autocomplete="current-password">
+    <button id="passwordBtn">เข้าสู่ระบบ</button>
+    <div id="loginMsg" class="notice hidden"></div>
+  </div>
+
+  <div id="dash" class="hidden">
+    <div class="top">
+      <div>
+        <h1>📈 Acquisition KPI</h1>
+        <p class="muted">วัดจาก Supabase Auth + first-party UTM / Referral • ไม่ใช่ Campaign 3,000 eligibility</p>
+      </div>
+      <div class="toolbar">
+        <button id="refreshBtn">↻ รีเฟรช</button>
+        <a class="secondary" href="admin.html">← Dashboard หลัก</a>
+        <button class="secondary" id="logoutBtn">ออกจากระบบ</button>
+      </div>
+    </div>
+
+    <section class="card scope">
+      <b>ช่วงวัดผลจริง</b>
+      <div id="scopeText" class="muted">กำลังโหลด…</div>
+      <div class="muted">ค่า 0 หมายถึง query จริงพบ 0 รายการ ส่วนข้อมูลก่อนเริ่มระบบ tracking จะไม่ถูกตีความว่าเป็น Direct/Organic</div>
+    </section>
+
+    <div class="cards">
+      <div class="metric"><div class="muted">สมัครใหม่ (ช่วงวัดผล)</div><div id="signups" class="big">—</div></div>
+      <div class="metric"><div class="muted">ยืนยันอีเมล</div><div id="confirmed" class="big">—</div><div id="confirmRate" class="muted"></div></div>
+      <div class="metric"><div class="muted">มี Tracking Row</div><div id="tracked" class="big">—</div><div id="coverage" class="muted"></div></div>
+      <div class="metric"><div class="muted">ระบุแหล่งที่มาได้</div><div id="attributed" class="big">—</div></div>
+      <div class="metric"><div class="muted">Paid Social</div><div id="paid" class="big">—</div></div>
+      <div class="metric"><div class="muted">สมัครผ่าน Referral</div><div id="referrals" class="big">—</div><div id="referralRate" class="muted"></div></div>
+      <div class="metric"><div class="muted">Referral ยืนยันแล้ว</div><div id="confirmedRefs" class="big">—</div><div id="refConfirmRate" class="muted"></div></div>
+      <div class="metric"><div class="muted">ยังระบุแหล่งไม่ได้</div><div id="unattributed" class="big">—</div></div>
+    </div>
+
+    <section class="card"><h2 class="section-title">📱 Source</h2><div id="sources"></div></section>
+    <section class="card"><h2 class="section-title">🎯 Campaign</h2><div id="campaigns"></div></section>
+    <section class="card"><h2 class="section-title">🎬 Creative / Content</h2><div id="contents"></div></section>
+    <section class="card">
+      <h2 class="section-title">ข้อจำกัดของรายงาน</h2>
+      <p class="muted">ยังไม่รวมค่าโฆษณา, CAC/CPI, platform impressions/clicks หรือสิทธิ์รางวัล จนกว่าจะมีข้อมูลจริงจากระบบที่เป็น authority ของแต่ละค่า</p>
+    </section>
+  </div>
+</main>
+<script type="module">
+import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
+const SB='https://cuspfvfzprlgtvtdyilh.supabase.co';
+const KEY='sb_publishable_PGmPJ6_8tNIWm7zfF6qEng_0emmWchx';
+const API=SB+'/functions/v1/acquisition-api';
+const supabase=createClient(SB,KEY),$=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function msg(t){$('loginMsg').textContent=t;$('loginMsg').classList.remove('hidden')}
+async function api(payload={}){const{data:{session}}=await supabase.auth.getSession();if(!session)throw Error('กรุณาเข้าสู่ระบบ Owner');const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'summary',...payload})});const d=await r.json();if(!r.ok)throw Error(d.error||'โหลดข้อมูลไม่สำเร็จ');return d}
+const list=rows=>rows?.length?rows.map((x,i)=>`<div class="row"><span>${i+1}. <b>${esc(x.name)}</b><br><span class="muted">ยืนยัน ${x.confirmed}/${x.count} (${Number(x.confirmationRate||0).toFixed(1)}%)</span></span><b>${x.count} คน</b></div>`).join(''):'<div class="muted">ยังไม่มีข้อมูลที่วัดได้</div>';
+const dt=s=>new Date(s).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+async function load(){const{data:{session}}=await supabase.auth.getSession();if(!session){$('dash').classList.add('hidden');$('loginBox').classList.remove('hidden');return}try{const d=await api({days:30}),m=d.metrics||{};$('loginBox').classList.add('hidden');$('dash').classList.remove('hidden');$('scopeText').textContent=`${dt(d.measuredSince)} → ${dt(d.generatedAt)} • Tracking เริ่ม ${dt(d.trackingStartedAt)}`;$('signups').textContent=m.measuredSignups??0;$('confirmed').textContent=m.confirmedSignups??0;$('confirmRate').textContent=`${Number(m.confirmationRate||0).toFixed(1)}% ของผู้สมัคร`;$('tracked').textContent=m.trackedSignups??0;$('coverage').textContent=`Coverage ${Number(m.attributionCoverage||0).toFixed(1)}%`;$('attributed').textContent=m.attributedSignups??0;$('paid').textContent=m.paidSocialSignups??0;$('referrals').textContent=m.referralSignups??0;$('referralRate').textContent=`${Number(m.referralRate||0).toFixed(1)}% ของผู้สมัคร`;$('confirmedRefs').textContent=m.confirmedReferrals??0;$('refConfirmRate').textContent=`ยืนยัน ${Number(m.referralConfirmationRate||0).toFixed(1)}%`;$('unattributed').textContent=m.unattributedSignups??0;$('sources').innerHTML=list(d.bySource);$('campaigns').innerHTML=list(d.byCampaign);$('contents').innerHTML=list(d.byContent)}catch(e){msg('โหลด Acquisition KPI ไม่สำเร็จ: '+e.message)}}
+$('passwordBtn').onclick=async()=>{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('กรุณาใส่อีเมลและรหัสผ่าน');$('passwordBtn').disabled=true;const{error}=await supabase.auth.signInWithPassword({email,password});$('passwordBtn').disabled=false;if(error)return msg('เข้าสู่ระบบไม่สำเร็จ: '+error.message);$('password').value='';await load()};
+$('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('passwordBtn').click()});
+$('refreshBtn').onclick=load;$('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()};supabase.auth.onAuthStateChange((_e,s)=>{if(s)load()});load();
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+name: Acquisition KPI Dashboard Regression
+
+on:
+  pull_request:
+    paths:
+      - 'acquisition-dashboard.html'
+      - 'supabase/functions/acquisition-api/**'
+      - '.github/workflows/acquisition-dashboard-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'acquisition-dashboard.html'
+      - 'supabase/functions/acquisition-api/**'
+      - '.github/workflows/acquisition-dashboard-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify owner-only aggregate acquisition contract
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          api = Path('supabase/functions/acquisition-api/index.ts').read_text()
+          ui = Path('acquisition-dashboard.html').read_text()
+          required_api = [
+              "admin_dashboard_owners",
+              "sb.auth.getUser(token)",
+              "member_acquisition_attribution",
+              "member_referrals",
+              "campaignEligibilityIncluded:false",
+              "spendIncluded:false",
+              "trackingStartedAt",
+              "bySource:rank",
+              "byCampaign:rank",
+              "byContent:rank",
+          ]
+          required_ui = [
+              "/functions/v1/acquisition-api",
+              "ไม่ใช่ Campaign 3,000 eligibility",
+              "ยังไม่รวมค่าโฆษณา",
+              "ยังระบุแหล่งไม่ได้",
+          ]
+          for token in required_api:
+              assert token in api, f'missing API contract: {token}'
+          for token in required_ui:
+              assert token in ui, f'missing UI contract: {token}'
+          private_key_name = "SUPABASE_" + "SERVICE_ROLE_KEY"
+          assert private_key_name not in ui, 'service role key must never enter browser HTML'
+          assert "sourceOfTruth:'Supabase Auth + first-party acquisition/referral tables'" in api
+          assert "select('email,active')" in api, 'owner allow-list guard missing'
+          print('Acquisition dashboard contract OK')
+          PY
