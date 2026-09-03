@@ -137,3 +137,30 @@
 - [ ] มีวิธีหยุด Premium/partner traffic ชั่วคราวหากเกิด incident
 
 หมายเหตุ: การมี `ROLLBACK-RUNBOOK.md`, synthetic monitor หรือ rejection probe อย่างเดียวไม่ถือว่า Production operations/rollback readiness ผ่าน ต้องมี owner/channel/baseline และ drill จริงตามขอบเขตที่เปิดใช้งาน
+
+## Store Distribution (ถ้าต้องการ native store)
+- [ ] Google Play developer account
+- [ ] Apple Developer account
+- [ ] Store listing / screenshots / icon / description
+- [ ] Privacy declarations ของ Store ตรงกับพฤติกรรมแอปจริง
+- [ ] Billing implementation สอดคล้องกับข้อกำหนด Store ที่ใช้
+- [ ] ผ่าน review ของแต่ละ Store
+
+## Final Go / No-Go Record
+- วันที่ตัดสินใจ:
+- Release candidate / commit SHA:
+- ผู้อนุมัติ:
+- Beta evidence:
+- Deployment/Live Smoke evidence:
+- Payment evidence (ถ้ามี Premium):
+- Partner evidence (ถ้ามี commission):
+- Privacy/Legal review:
+- Security review:
+- Known accepted risks:
+- Rollback owner/วิธี rollback:
+
+### GO
+เปิดรับเงินจริงได้เฉพาะเมื่อรายการที่จำเป็นต่อรูปแบบธุรกิจที่เปิดใช้ผ่านครบ, มีหลักฐานตรวจสอบย้อนหลังได้ และ Blocker/Critical ด้าน Product, Payment, Privacy, Security = 0
+
+### NO-GO
+ถ้ารายการจำเป็นข้อใดยังไม่มีหลักฐานจริง ให้คง Public Beta/ทดสอบต่อและห้ามตีความช่องว่างว่า “ผ่าน”
