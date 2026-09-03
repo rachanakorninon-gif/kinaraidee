@@ -3,14 +3,15 @@
 ใช้ตารางนี้บันทึกผลทดสอบจริงรายอุปกรณ์ โดยอ้างอิง `BETA-TEST-CASES.md` และ `BETA-NEW-FLOW-TESTS.md`
 
 ## Release trace สำหรับรอบนี้
-- Current browser/PWA runtime candidate: PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2` — `kinaraidee-beta-v16`; merged/deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
-- Verified current deployment evidence: Pages `32802440796` = SUCCESS, corresponding Live Smoke `32802473505` = SUCCESS and Public Form Resilience Regression `32802440775` = SUCCESS on the exact PR #201 merged-main SHA.
+- Current browser/PWA runtime candidate: PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` — `kinaraidee-beta-v16`; current merged/deployed descendant SHA `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`.
+- Verified current deployment evidence: Pages `33229525995` = SUCCESS on exact descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Auth Password Security Live Smoke `33229548182` = SUCCESS, and main Live Smoke `33229548190` = SUCCESS after that deployment. This proves deployment lineage/source markers only; it does not create current Auth interaction acceptance.
+- Historical prior browser/PWA runtime: PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; merged/deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`. Historical Pages `32802440796`, Live Smoke `32802473505` and Public Form Resilience Regression `32802440775` remain scoped evidence for that prior runtime.
 - Historical PR #179 v16 deployment/device evidence remains scoped support for the member-history/favorite fixes; it is not reused as PR #201 form-submission acceptance.
 - v15 physical Android evidence confirmed Favorite/History **visual differentiation PASS** after a full installed-PWA restart (#172 closed) but exposed a fresh-favorite restart persistence failure (#177 historical v15 FAIL).
 - 2026-08-25 physical Android post-v16 evidence confirmed a new favorite survived a full Recent Apps close/reopen with the favorite count retained at 5; #177 is closed completed. This PASS is scoped to the tested Android installed-PWA session.
 - 2026-08-25 physical iPhone/Safari post-fix evidence confirmed the current-v16 TC-08 Location path: Kinaraidee displayed a persistent successful Location state and Google Maps received the menu name plus numeric coordinates rather than generic `ใกล้ฉัน`; #171 is closed completed. Exact coordinates are intentionally not retained in repository evidence.
 - 2026-08-25 physical iPhone/Safari NF-05 evidence confirmed Safari install guidance, Add to Home Screen, standalone launch from the installed icon, standalone hint suppression, and 7-day suppression after `เข้าใจแล้ว` + Safari reload. Scope is iPhone/Safari #1 only; exact device/iOS/Safari versions were not captured.
-- 2026-08-26 physical iPhone/VoiceOver NF-09 evidence on deployed PR #201/v16 validated external control activation, Surprise activation, one understandable busy announcement, successful completion, ready-state recovery and a successful second round. Issue #57 is closed completed. Exact iPhone/iOS/Safari-or-PWA versions were not captured.
+- 2026-08-26 physical iPhone/VoiceOver NF-09 evidence on deployed PR #201/v16 validated external control activation, Surprise activation, one understandable busy announcement, successful completion, ready-state recovery and a successful second round. Issue #57 is closed completed. Exact iPhone/iOS/Safari-or-PWA versions were not captured. This historical device PASS is not reused as current PR #373 Auth interaction acceptance.
 - Historical pre-fix browser/PWA evidence is retained only as scoped historical evidence and is not reused as a current device PASS where runtime behavior changed.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`, deployed as Supabase ACTIVE version 6 with source/deployment parity. Canonical rejection-only probe `32632951668` = SUCCESS. Backend evidence does **not** create a new device PASS by itself.
 - `CURRENT-RUNTIME.md` and `CURRENT-RELEASE.md` are the canonical release-state references when older notes conflict.
@@ -95,10 +96,10 @@
 - New Flow NF-01–NF-10 ต้องมีผลตาม platform ที่เกี่ยวข้อง; NF-05 และ NF-09 ผ่านแล้วเฉพาะ iPhone #1 ใน scope ที่บันทึก และไม่แทน iPadOS/Android TalkBack/อุปกรณ์อื่น
 - NF-07 ต้องตรวจ upgrade จาก cache รุ่นก่อนหน้าไป `kinaraidee-beta-v16` บนอุปกรณ์จริงอย่างน้อยหนึ่งเครื่องโดยมี baseline ที่ตรวจสอบได้; รอบ v15→v16 ที่มีอยู่ยังไม่ถูกนับเป็น NF-07 PASS เพราะไม่ได้จับ marker เก่าบนอุปกรณ์โดยตรง
 - NF-09 assistive-technology acceptance = **PASS สำหรับ iPhone/VoiceOver #1 บน PR #201/v16**; Android TalkBack #1 ยังคง INCONCLUSIVE และ PASS นี้ไม่ขยายไปยังอุปกรณ์อื่น
-- PR #201/v16 Pages + Live Smoke deployment trace ผ่านแล้ว; #177 Android restart persistence PASS, #171 iPhone Location PASS, NF-05 iPhone/Safari #1 PASS และ #57 iPhone/VoiceOver NF-09 PASS ถูกบันทึกในขอบเขตเครื่องที่ทดสอบ
+- Current PR #373 browser/PWA deployment trace ผ่านสำหรับ source/deployment lineage เท่านั้น; historical #177 Android restart persistence PASS, #171 iPhone Location PASS, NF-05 iPhone/Safari #1 PASS และ #57 iPhone/VoiceOver NF-09 PASS ยังถูกบันทึกตามขอบเขตเครื่อง/รันไทม์เดิมและไม่ถูกยกระดับเป็น current Auth interaction PASS
 - ยังต้องมี iPhone Safari เครื่องที่ 2 และ Android เพิ่มเพื่อครบ device-count gate; PASS ของ iPhone #1 ไม่ถูกขยายไปยังเครื่องอื่น
-- PR #201 Feedback/Partner real interaction/recovery acceptance ยังต้องทดสอบแยก; deployment/static evidence ไม่แทน physical interaction
-- Blocker/Critical ต้องเป็น 0 ก่อน Beta acceptance/เพิ่ม traffic ตาม gate ที่กำหนด
+- Feedback/Partner real interaction/recovery acceptance ยังต้องทดสอบแยก; deployment/static evidence ไม่แทน physical interaction
+- Blocker/Critical ต้องเป็น 0 จาก **release-scoped defect evidence** ก่อน Beta acceptance/เพิ่ม traffic; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความว่าเป็น zero-defect PASS
 - ทุก FAIL ต้องมี defect/Issue หรือบันทึกเหตุผลที่ตามแก้ได้
 
 ห้ามกรอก PASS จากการคาดเดา, CI/static review เพียงอย่างเดียว, synthetic monitoring, หรือผลของอุปกรณ์คนละเครื่อง
