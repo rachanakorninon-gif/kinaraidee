@@ -6,6 +6,10 @@
 
 ## 0. เก็บ metadata ก่อนเปิด Kinaraidee — ห้ามข้าม
 
+เริ่มจาก deployed helper: `qa-device-session-intake.html` เพื่ออ่าน release SHA/cache, browser/PWA context, Service Worker/cache และ Android model/version hint ถ้า browser เปิดเผย จากนั้นถ่าย screenshot หน้านี้เป็น supporting metadata checkpoint.
+
+**metadata helper ไม่ใช่ physical PASS** และข้อมูล auto-detected เป็น supporting hint เท่านั้น. ยังต้องยืนยันจากหน้าระบบ/Browser Settings เมื่อข้อมูลใดไม่ครบ โดยเฉพาะ exact iPhone model ซึ่งห้ามเดาจาก User-Agent.
+
 ถ่าย screenshot/บันทึกจากหน้าระบบของเครื่องให้เห็นข้อมูลที่ตรวจได้จริง:
 
 - ผู้ผลิต + รุ่นเครื่อง
