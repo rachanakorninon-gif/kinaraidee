@@ -1,0 +1,35 @@
+name: Runtime Deployment Status Sync Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-deployment-status-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate canonical deployment status sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          release_status="$(sed -n 's/^- Current runtime deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$runtime_status" || { echo 'Unable to parse deployment status from CURRENT-RUNTIME.md'; exit 1; }
+          test -n "$release_status" || { echo 'Unable to parse deployment status from CURRENT-RELEASE.md'; exit 1; }
+          case "$runtime_status" in
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT'|'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE') ;;
+            *) echo "Unexpected runtime deployment status: $runtime_status"; exit 1;;
+          esac
+          test "$runtime_status" = "$release_status" || {
+            echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"
+            exit 1
+          }
+          echo "Canonical deployment status is synchronized: $runtime_status"
