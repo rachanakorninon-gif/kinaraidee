@@ -33,7 +33,7 @@ jobs:
           grep -Fq "const CACHE='kinaraidee-beta-v15';" qa-sw-v15.js
           printf 'fixture sha256: '
           sha256sum qa-sw-v15.js
-          test "$(sha256sum qa-sw-v15.js | awk '{print $1}')" = 'c5d174d461600ca7caf2da974b54ac1ca6353f39ca379480b6a177a3f10a8a1f'
+          test "$(sha256sum qa-sw-v15.js | awk '{print $1}')" = '39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c'
           node --check qa-sw-v15.js
 
       - name: Syntax-check inline NF-07 probe JavaScript
