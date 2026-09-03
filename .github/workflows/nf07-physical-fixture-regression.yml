@@ -66,6 +66,7 @@ jobs:
           grep -Fq "PASS (state verifier)" qa-nf07-old-cache.html
           grep -Fq 'ยังไม่ใช่ NF-07 PASS' qa-nf07-old-cache.html
           grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          grep -Fq 'Expected SHA-256 of the exact historical fixture bytes: `39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c`' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
           grep -Fq 'Programmatically registering the v15 fixture is test setup' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
           grep -Fq 'A fresh v16 install is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
           grep -Fq 'A synthetic Cache Storage object or VM simulation is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
@@ -73,4 +74,4 @@ jobs:
             echo 'NF-07 physical evidence must not become PASS from fixture/CI setup alone.'
             exit 1
           fi
-          echo 'NF-07 historical fixture provenance, runtime hash and physical-evidence boundary preserved.'
+          echo 'NF-07 historical fixture provenance, runtime hash, evidence hash and physical-evidence boundary preserved.'
