@@ -66,7 +66,7 @@
 - [x] favorite/history persistence ใหม่ของ v16 ผ่าน physical Android favorite → full restart → History retention สำหรับ tested installed-PWA session และ Issue #177 ปิด
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องบน Android/iPhone ที่ใช้ทดสอบ
-- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน release candidate ล่าสุด; Android same-device/backend evidence มีแล้วแต่ full-matrix ยังเปิด
+- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน current changed-path acceptance scope; historical Android same-device/privacy-field/backend observations มีอยู่ก่อน PR #201 แต่ PR #201 duplicate-submit/failure-recovery acceptance และ full-matrix coverage ยังเปิดอยู่
 - [x] Android same-device member-history defects #38/#40 ผ่าน retest หลัง fixes ตาม evidence ที่บันทึก
 - [ ] Member history sync/write-race/restart-durability behavior ผ่านบน device matrix ที่จำเป็นและไม่มี regression หลัง release candidate ล่าสุด
 - [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา `kinaraidee-beta-v16` ผ่านการทดสอบตาม platform ที่กำหนด
