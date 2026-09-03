@@ -63,10 +63,14 @@ jobs:
             git cat-file -e "$deployed^{commit}" || { echo "Deployed runtime SHA is not present in repository history: $deployed"; exit 1; }
             git merge-base --is-ancestor "$candidate" "$deployed" || { echo "Deployed runtime SHA $deployed is not a descendant of candidate $candidate"; exit 1; }
             git merge-base --is-ancestor "$deployed" HEAD || { echo "Deployed runtime SHA is not an ancestor of HEAD: $deployed"; exit 1; }
+          else
+            deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+            test -z "$deployed" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
+            grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary missing'; exit 1; }
           fi
           echo "Declared runtime candidate $candidate is clean; deployment status is $status"
 
-      - name: Validate current release/runtime declaration sync
+      - name: Validate current release/runtime declaration relationship
         shell: bash
         run: |
           set -euo pipefail
@@ -74,23 +78,32 @@ jobs:
           release_candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           runtime_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           release_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          last_verified="$(sed -n 's/^- Last verified deployed browser\/PWA descendant: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           runtime_cache="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           release_cache="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           runtime_status="$(sed -n 's/^- Deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
           release_status="$(sed -n 's/^- Current runtime deployment status: \*\*\(.*\)\*\*.*/\1/p' CURRENT-RELEASE.md | head -n1)"
           test -n "$runtime_candidate" && test -n "$release_candidate" || { echo 'Unable to parse runtime candidate from canonical declarations'; exit 1; }
-          test -n "$runtime_deployed" && test -n "$release_deployed" || { echo 'Unable to parse deployed runtime SHA from canonical declarations'; exit 1; }
           test -n "$runtime_cache" && test -n "$release_cache" || { echo 'Unable to parse PWA cache marker from canonical declarations'; exit 1; }
           test -n "$runtime_status" && test -n "$release_status" || { echo 'Unable to parse deployment status from canonical declarations'; exit 1; }
+          test "$runtime_cache" = "$release_cache" || { echo "PWA cache marker drift: CURRENT-RUNTIME=$runtime_cache CURRENT-RELEASE=$release_cache"; exit 1; }
           case "$runtime_status" in
-            'PENDING FOR CURRENT RUNTIME DEPLOYMENT'|'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE') ;;
+            'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
+              test -z "$runtime_deployed" || { echo 'Pending runtime must not claim a current deployed SHA'; exit 1; }
+              test -n "$last_verified" || { echo 'Pending runtime must identify last verified deployed descendant'; exit 1; }
+              test -n "$release_deployed" || { echo 'CURRENT-RELEASE must retain the last verified deployed SHA while runtime is pending'; exit 1; }
+              test "$last_verified" = "$release_deployed" || { echo "Last verified deployment drift: CURRENT-RUNTIME=$last_verified CURRENT-RELEASE=$release_deployed"; exit 1; }
+              test "$release_status" = 'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE' || { echo 'CURRENT-RELEASE must remain on the last verified deployment while new runtime is pending'; exit 1; }
+              ;;
+            'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
+              test -n "$runtime_deployed" && test -n "$release_deployed" || { echo 'PASS runtime/release must provide deployed SHA'; exit 1; }
+              test "$runtime_candidate" = "$release_candidate" || { echo "Runtime candidate drift: CURRENT-RUNTIME=$runtime_candidate CURRENT-RELEASE=$release_candidate"; exit 1; }
+              test "$runtime_deployed" = "$release_deployed" || { echo "Deployed runtime drift: CURRENT-RUNTIME=$runtime_deployed CURRENT-RELEASE=$release_deployed"; exit 1; }
+              test "$runtime_status" = "$release_status" || { echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"; exit 1; }
+              ;;
             *) echo "Unexpected runtime deployment status: $runtime_status"; exit 1;;
           esac
-          test "$runtime_candidate" = "$release_candidate" || { echo "Runtime candidate drift: CURRENT-RUNTIME=$runtime_candidate CURRENT-RELEASE=$release_candidate"; exit 1; }
-          test "$runtime_deployed" = "$release_deployed" || { echo "Deployed runtime drift: CURRENT-RUNTIME=$runtime_deployed CURRENT-RELEASE=$release_deployed"; exit 1; }
-          test "$runtime_cache" = "$release_cache" || { echo "PWA cache marker drift: CURRENT-RUNTIME=$runtime_cache CURRENT-RELEASE=$release_cache"; exit 1; }
-          test "$runtime_status" = "$release_status" || { echo "Deployment status drift: CURRENT-RUNTIME=$runtime_status CURRENT-RELEASE=$release_status"; exit 1; }
-          echo "CURRENT-RUNTIME.md and CURRENT-RELEASE.md agree on candidate, deployed SHA, cache marker, and deployment status"
+          echo "CURRENT-RUNTIME.md and CURRENT-RELEASE.md preserve the correct pending/deployed evidence relationship"
 
       - name: Validate Beta readiness summary boundary
         shell: bash

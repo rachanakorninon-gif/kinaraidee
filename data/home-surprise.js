@@ -12,7 +12,15 @@
     if(h>=16&&h<22)return 'เย็น';
     return 'ดึก';
   }
+  function ensureAcquisition(){
+    if(window.KINARAIDEE_ACQUISITION||document.querySelector('script[src="data/acquisition.js"]'))return;
+    const s=document.createElement('script');
+    s.src='data/acquisition.js';
+    s.async=false;
+    document.body.appendChild(s);
+  }
   function ensureMemberSync(){
+    ensureAcquisition();
     if(window.KINARAIDEE_MEMBER_SYNC||document.querySelector('script[src="data/member-sync.js"]'))return;
     const s=document.createElement('script');
     s.src='data/member-sync.js';
@@ -105,6 +113,7 @@
   }
   function install(){
     ensureAccessibilityStyles();
+    ensureAcquisition();
     // index.html loads this helper directly. Start member sync before the user can
     // create a favorite, then bridge the PWA install helper as before.
     ensureMemberSync();
@@ -135,6 +144,7 @@
     const group=[...home.querySelectorAll('button')].find(x=>x.textContent.includes('เลือกพร้อมกัน'));
     if(group)home.insertBefore(b,group);else home.appendChild(b);
   }
+  ensureAcquisition();
   ensureMemberSync();
   window.addEventListener('pageshow',recover);
   window.addEventListener('online',recover);
