@@ -59,6 +59,7 @@ jobs:
           test -s PWA-UPGRADE-PHYSICAL-EVIDENCE.md
           grep -Fq "const LEGACY_CACHE='kinaraidee-beta-v15';" qa-nf07-old-cache.html
           grep -Fq "const CURRENT_CACHE='kinaraidee-beta-v16';" qa-nf07-old-cache.html
+          grep -Fq "const FIXTURE_SHA256='39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c';" qa-nf07-old-cache.html
           grep -Fq "navigator.serviceWorker.register(FIXTURE_SW,{scope:'./',updateViaCache:'none'})" qa-nf07-old-cache.html
           grep -Fq "navigator.serviceWorker.register(CURRENT_SW,{scope:'./',updateViaCache:'none'})" qa-nf07-old-cache.html
           grep -Fq "kinaraidee_nf07_persistence_marker_v1" qa-nf07-old-cache.html
@@ -72,4 +73,4 @@ jobs:
             echo 'NF-07 physical evidence must not become PASS from fixture/CI setup alone.'
             exit 1
           fi
-          echo 'NF-07 historical fixture provenance and physical-evidence boundary preserved.'
+          echo 'NF-07 historical fixture provenance, runtime hash and physical-evidence boundary preserved.'
