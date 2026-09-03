@@ -16,8 +16,9 @@
 - Historical live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
 - Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
-- Surprise busy-state accessibility has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; that historical result does not establish PR #373 Auth interaction acceptance. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT and second-device/full-matrix accessibility coverage is still open.
-- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
+- Surprise busy-state accessibility has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; that historical result remains scoped and does not replace current OPPO Auth evidence or second-device/full-matrix accessibility coverage. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT.
+- Current Auth account-flow evidence has scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 for recovery/password update/sign-in/new signup/email confirmation; leaked-password rejection remains NOT VERIFIED / blocked separately.
+- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, NF-07 physical fixture boundary, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -32,12 +33,13 @@
 - [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
 - [x] NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session และ Issue #57 ปิด completed; Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT และข้อนี้ไม่แทน second-device/full-matrix accessibility PASS
 - [ ] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages
-- [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
-- [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
+- [x] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 PASS; browser รับ `prefers-reduced-motion=reduce`, shipped rule ลด transition เป็น `1e-05s`, Surprise flow จบและกลับ ready; ยังไม่แทน full device matrix
+- [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`; deterministic historical-v15 fixture/verifier พร้อมแล้วแต่ยังต้อง physical close/reopen โดยไม่ clear site data
 - [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
 - [x] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; scoped OPPO Reno13 5G / Android 16 / Chrome 152 session ผ่าน duplicate-submit, failure recovery, direct `aria-busy` recovery, retry success และ privacy/backend evidence; ข้อนี้ไม่แทน full device matrix
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
-- [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง
+- [x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 มี recovery mail/verify, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion และ signed-in Member state พร้อม backend corroboration; automated deployed-source checks ไม่ใช่หลักฐานที่ใช้ปิดข้อนี้
+- [ ] Weak/leaked-password rejection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
 - [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; #177 ผ่านเฉพาะ tested Android session
 - [ ] Blocker = 0 และ Critical = 0 จาก release-scoped defect evidence จริง; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความว่าเป็น zero-defect PASS
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
@@ -52,13 +54,15 @@
 - [x] Historical PR #201 public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
 - [x] real Feedback/Partner form submission acceptance มี physical Android Chrome + backend evidence ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ข้อนี้เป็น scoped device/session PASS และไม่แทน full device matrix
-- [ ] current PR #373 Auth interaction acceptance ยังต้องใช้หลักฐานจริงตาม scope; deployed static/live checks ห้ามใช้แทน weak/leaked-password rejection หรือ account-flow PASS
+- [x] current PR #373 account-flow interaction acceptance มี scoped physical OPPO Android Chrome evidence ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md` สำหรับ recovery/password-update/sign-in/new-signup/email-confirmation; deployed static/live checks ไม่ได้ถูกใช้แทน physical PASS
+- [ ] current PR #373 weak/leaked-password rejection acceptance; deployed/static/account-success evidence ห้ามใช้แทน server-side rejection และ setting ยัง blocked ตาม Issue #372
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
 
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix บน current v16 scope ที่เกี่ยวข้อง
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่
-- [ ] visible keyboard focus และ reduced-motion behavior ผ่าน real-platform acceptance ตาม scope ที่กำหนด
+- [ ] visible keyboard focus ผ่าน real-platform acceptance ตาม scope ที่กำหนด
+- [x] reduced-motion behavior มี scoped real-platform PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ข้อนี้ไม่แทน device matrix ทั้งหมด
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v6 ยังไม่มี fresh multi-device regression จาก automated probe
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
 - [x] iPhone/Safari #1 Location allow + Maps fallback มี scoped v16 PASS ตาม Issue #171; ยังไม่แทน device matrix ทั้งหมด
@@ -108,10 +112,10 @@
 
 ## Security
 - [ ] ตรวจ Supabase RLS ทุกตาราง Production ด้วย role ที่เกี่ยวข้อง
-- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
+- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11/#372 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
 - [ ] ไม่มี service-role/secret/private key อยู่ใน browser, repository หรือ public build
 - [ ] rotate secret ที่เคยใช้ใน test หากจำเป็น
-- [ ] ทดสอบ auth / sign-out / password recovery / session expiry
+- [ ] ทดสอบ auth / sign-out / password recovery / session expiry — recovery/password-update/sign-in/new-signup/email-confirmation มี scoped OPPO PASS แล้ว แต่ session expiry และ broader lifecycle/device coverage ยังเปิด
 - [ ] ทดสอบ owner/admin authorization และ negative cases
 - [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
 - [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
