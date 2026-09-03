@@ -1,0 +1,42 @@
+name: Partner Form Evidence Boundary Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  partner-form-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve scoped Partner form evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+          test -s RELEASE-CHECKLIST.md || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+
+          grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve open PR #201 Feedback/Partner interaction acceptance'; exit 1;
+          }
+          grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md Public Beta gate must preserve real PR #201 form interaction evidence requirement'; exit 1;
+          }
+          grep -Fq 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS' RELEASE-CHECKLIST.md || {
+            echo 'Beta Exit must preserve PR #201 Partner form acceptance as NOT VERIFIED'; exit 1;
+          }
+          grep -Fq 'historical Android same-device/privacy-field/backend observations มีอยู่ก่อน PR #201 แต่ PR #201 duplicate-submit/failure-recovery acceptance และ full-matrix coverage ยังเปิดอยู่' RELEASE-CHECKLIST.md || {
+            echo 'Product checklist must keep historical Partner observations scoped and current PR #201 acceptance open'; exit 1;
+          }
+          grep -Fq 'PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance' RELEASE-CHECKLIST.md || {
+            echo 'Partner recovery boundary must reject static/deployment evidence as interaction acceptance'; exit 1;
+          }
+
+          echo 'Partner form evidence remains historical/scoped; current PR #201 interaction acceptance is still open'
