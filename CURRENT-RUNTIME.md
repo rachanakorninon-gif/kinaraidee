@@ -2,32 +2,25 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`
+- Current browser/PWA runtime candidate: `f401ad758e40914a10245cfab08497f7cdb99f7d`
 - PWA cache marker: `kinaraidee-beta-v16`
-- Runtime change: Auth password-security UX readiness. `member.html` now recognizes Supabase weak-password rejections during signup/sign-in, preserves generic login failure wording to avoid account enumeration, routes affected users to the existing password-reset flow, and switches password autocomplete correctly between signup and login. `reset-password.html` now gives clear weak-password guidance when a replacement password is rejected. Leaked-password protection itself is **not enabled by this runtime change**; Supabase Auth configuration remains separately gated in Issue #372. The Service Worker/app-shell generation remains `kinaraidee-beta-v16` because this change does not alter `sw.js`.
-- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
+- Runtime change: Referral/acquisition measurement readiness for the first-3,000-user growth plan. `data/acquisition.js` captures only allowlisted coarse UTM fields plus an optional referral code with strict slug/code validation and a bounded local-storage lifetime; `data/home-surprise.js` captures that context before member navigation; `member.html` passes the coarse first-touch values into Supabase Auth signup metadata, exposes an authenticated referral-summary/share UI, and clearly states that referral measurement is not Campaign 3,000 prize eligibility. `privacy.html` now discloses this measurement. The browser UI is designed to fail closed/gracefully while the corresponding Supabase referral schema/RPC is not deployed. The Service Worker/app-shell generation remains `kinaraidee-beta-v16` because this change does not alter `sw.js`.
+- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Runtime merge/deployed SHA: `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`
-- Current deployment trace: PR #373 merged as runtime source `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` changed no guarded browser/PWA runtime files. GitHub Pages run `33229525995` completed **success** for that exact descendant, Auth Password Security Live Smoke run `33229548182` completed **success**, and main Live Smoke run `33229548190` completed **success** after the deployment.
-- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does not prove Supabase leaked-password protection is enabled, a real weak/leaked password was rejected, or any signup/sign-in/reset interaction completed.
-- Historical prior runtime source candidate: `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`; historical merged/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320`.
-- Historical GitHub Pages run: `32802440796`.
-- Historical GitHub Pages run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
-- Historical corresponding Live Smoke run: `32802473505`.
-- Historical corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment. It remains historical evidence for the prior browser/PWA runtime.
-- Latest verified evidence-only deployed descendant before the current Auth trace: `5489cbbdc9ff618f1d32fa438ef91476dd350768` (PR #215 merge). Pages run `32843512340` completed **success** for that SHA and corresponding Live Smoke run `32843553479` completed **success**.
-- Read-only diagnostic run: `32752782165`.
-- Read-only diagnostic run `32752782165` is historical PR #179 diagnostic evidence only; no new diagnostic result is invented for the current runtime.
-- Public Form Resilience Regression run `32802440775` completed **success** on the prior PR #201 merged-main SHA. This validates source recovery-state contracts only; it does not validate Auth password-security interaction.
-- Physical Android post-v16 Favorite/History restart evidence remains scoped PASS for the tested installed-PWA session: the fresh favorite remained after the user fully closed the installed PWA from Recent Apps and reopened it without clearing data. Issue #177 is closed **completed** for that tested Android session.
-- Physical iPhone/Safari Location #171 and NF-05 evidence remain scoped PASS for the tested iPhone session family.
-- Physical iPhone/VoiceOver NF-09 acceptance on 2026-08-26 remains **PASS for the tested session** on deployed PR #201/v16. That historical evidence is not reused as Auth password-security acceptance.
-- Prior physical-device evidence remains scoped historical/current evidence only for the exact behaviors tested. It does not validate weak-password rejection behavior, leaked-password protection, or current Auth interaction acceptance.
+- Current runtime deployment evidence is pending. PR #499 source candidate `f401ad758e40914a10245cfab08497f7cdb99f7d` has not yet been merged/deployed to GitHub Pages. The last verified browser/PWA deployed descendant remains `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` for the prior Auth password-security runtime.
+- The referral/acquisition source and its CI contract do **not** prove that the Supabase referral schema/RPC is deployed, that a referral signup has completed, that any user count increased, that any paid-ad conversion occurred, or that any Campaign 3,000 prize entry exists.
+- Historical prior runtime source candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; historical merged/deployed SHA: `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`.
+- Historical Auth deployment trace: PR #373 merged as runtime source `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` changed no guarded browser/PWA runtime files. GitHub Pages run `33229525995`, Auth Password Security Live Smoke run `33229548182`, and main Live Smoke run `33229548190` completed **success** for that historical scoped trace.
+- Historical PR #201 merged/deployed SHA: `00bdcb7f432d542b732cf355336e9f08798e4320`; GitHub Pages run `32802440796` and corresponding Live Smoke run `32802473505` completed **success** for that historical public-form runtime.
+- Read-only diagnostic run `32752782165` remains historical PR #179 diagnostic evidence only.
+- Physical Android post-v16 Favorite/History restart evidence remains scoped PASS for the tested installed-PWA session; Physical iPhone/Safari Location #171, NF-05 and iPhone/VoiceOver NF-09 evidence remain scoped to the exact historical sessions tested.
+- Prior physical-device evidence remains scoped historical/current evidence only for the exact behaviors tested. It does not validate the new referral/acquisition flow, referral counting, backend deployment, prize eligibility or current runtime deployment.
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
 
-The current deployment trace verifies that the browser-facing Auth error/recovery UX introduced by PR #373 is present on the public Pages deployment represented by descendant SHA `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`. No guarded browser/PWA runtime files changed between the source candidate and that deployed descendant, and the Service Worker contract remains `kinaraidee-beta-v16`.
+The current source candidate `f401ad758e40914a10245cfab08497f7cdb99f7d` contains the guarded browser/PWA changes for acquisition capture, member referral UI and the updated privacy disclosure, plus the referral/acquisition regression contract. Its dedicated source/contract workflow passed on PR #499, but current browser/PWA deployment evidence remains pending until the candidate is merged and the resulting Pages/runtime trace is verified.
 
-This PASS is deliberately limited to deployment lineage and static/live source checks. It does not enable Supabase leaked-password protection, alter Auth password-strength configuration, prove a weak/leaked password was rejected in production, prove signup/sign-in/reset-email/reset-link/password-update interaction, or create any new user/account result.
+The last verified deployed browser/PWA descendant remains `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` for the prior Auth password-security runtime. No current Referral deployment PASS is inferred from that historical trace.
 
-The historical diagnostic/deployment/device evidence above remains valid only for its original scope. It does not imply leaked-password protection PASS, Auth security configuration approval, real-device weak-password acceptance, full Public Beta acceptance, payment/partner/legal readiness or Commercial GO. No account, payment, Premium, campaign-entry, conversion or revenue evidence is created by this runtime declaration.
+The referral schema/RPC SQL is staged in source and intentionally not counted as live backend evidence until an explicit Supabase deployment and post-deployment verification are executed. This runtime declaration does not create a user, referral, campaign entry, payment, Premium state, conversion or revenue result, and it does not change the existing Privacy/Legal or Commercial NO-GO gates.
