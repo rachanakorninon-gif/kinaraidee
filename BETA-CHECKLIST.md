@@ -24,11 +24,13 @@
 - [x] `BETA-DEVICE-MATRIX.md` และ `BETA-RUN-LOG.md`
 
 ## Current browser/PWA runtime
-- [x] Auth password-security UX candidate = PR #373 merged-main runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; browser/PWA deployment trace verified through docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190`. This is deployed static/live-source evidence only and does not itself establish account-flow or leaked-password protection PASS; separate scoped physical account-flow evidence is recorded below.
-- [ ] Supabase leaked-password protection ยังไม่ได้เปิด; runtime นี้เตรียมเฉพาะ WeakPasswordError UX และ account-enumeration-safe messaging เท่านั้น — Issue #372
+- [x] Referral/acquisition runtime candidate = PR #499 source `f401ad758e40914a10245cfab08497f7cdb99f7d`; browser/PWA deployment trace verified on merged-main descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793`, and Referral acquisition regression `33811512053`. This is deployment/source-contract evidence only and does not establish a real referral signup, campaign eligibility, user-count increase, conversion or revenue.
+- [x] Supabase referral/acquisition schema/RPC migration `20260903220832 / referral_acquisition_v1` และ referral-code privacy fix `20260903221043 / referral_code_privacy_fix_20260904` ถูก deploy แล้ว; post-fix read-only verification พบ referral rows = 0 และ attribution rows = 0 และ referral identifiers ใช้ random code ไม่ derive จาก account UUID. Backend deployment นี้ไม่ใช่ referral-success หรือ Campaign 3,000 PASS.
+- [ ] Supabase leaked-password protection ยังไม่ได้เปิด; Auth UX/runtime evidence ไม่แทน server-side rejection — Issue #372
 
-## Verified browser/PWA deployment evidence — historical scope before PR #373
-- [x] Prior verified browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
+## Verified browser/PWA deployment evidence — historical scope before PR #499
+- [x] Prior Auth browser/PWA runtime candidate = PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; historical deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, main Live Smoke `33229548190` = SUCCESS in that scoped trace.
+- [x] Prior public-form browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
 - [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
 - [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
 - [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
@@ -36,7 +38,7 @@
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
 - [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate at that time
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner หรือ Auth interaction; scoped physical evidence สำหรับพฤติกรรมเหล่านั้นถูกบันทึกแยกด้านล่าง ขณะที่ weak/leaked-password rejection ยัง OPEN
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner, Auth interaction หรือ referral interaction; scoped physical evidenceสำหรับพฤติกรรมที่ทดสอบจริงถูกบันทึกแยก ขณะที่ weak/leaked-password rejection และ referral physical acceptance ยัง OPEN
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
@@ -56,9 +58,10 @@
 - [x] iPhone/VoiceOver #1 on deployed PR #201/v16: NF-09 Surprise busy/ready accessibility passed for the tested physical session; VoiceOver activated Surprise, announced the busy state once, reached a result, returned to ready state and completed a second round. This does not create Android TalkBack, second-iPhone or full-matrix PASS.
 - [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: canonical Reduced Motion physical PASS on 2026-09-04; browser received `prefers-reduced-motion=reduce`, shipped rule reduced transition to `1e-05s`, and the physical Surprise flow rendered a result and returned ready. Scope is this traced session only.
 - [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: TC-11 Feedback + TC-12 Partner scoped physical PASS, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network retry success and backend/privacy corroboration. This is Beta QA evidence only and does not create commercial-partner evidence or full-matrix PASS.
-- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: current PR #373 Auth account-flow scoped physical PASS for recovery request/mail/verification-link, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration. Weak/leaked-password rejection remains NOT VERIFIED / OPEN.
+- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: Auth account-flow scoped physical PASS for recovery request/mail/verification-link, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration. Weak/leaked-password rejection remains NOT VERIFIED / OPEN.
+- [ ] PR #499 referral/acquisition real-device interaction acceptance; deployment/schema evidence above does not substitute for an actual referral signup/attribution test.
 
-ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บาง historical รายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามขยาย scoped OPPO TC-11/TC-12/Auth/Reduced-Motion PASS ไปเป็น PASS ของรุ่นอื่น, full device matrix, blanket Auth/Security PASS หรือ Commercial GO
+ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บาง historical รายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามขยาย scoped OPPO TC-11/TC-12/Auth/Reduced-Motion PASS ไปเป็น PASS ของ referral flow, รุ่นอื่น, full device matrix, blanket Auth/Security PASS หรือ Commercial GO
 
 ## ต้องตรวจบนอุปกรณ์จริงก่อน Beta acceptance / เพิ่ม traffic ตาม gate
 - [ ] Android Chrome อย่างน้อย 3 device models — ปัจจุบันยังไม่ครบจำนวนรุ่นและ exact model ของ historical Android session ไม่ถูกบันทึก
@@ -75,8 +78,8 @@
 - [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64, 2026-09-04; ไม่ใช่ full-matrix PASS
 - [x] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; broader device-matrix coverage ยังเปิด
 - [x] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend/privacy acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ห้ามนับ Beta test record เป็น partner-commercial evidence และ broader device-matrix coverage ยังเปิด
-- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ของ PR #373 ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`; Pages/Live Smoke ไม่ใช่หลักฐานที่ใช้ปิดข้อนี้
-- [ ] Auth weak/leaked-password rejection/protection ของ PR #373 ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** และ successful account-flow evidence ห้ามใช้แทน rejection evidence
+- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`; Pages/Live Smoke ไม่ใช่หลักฐานที่ใช้ปิดข้อนี้
+- [ ] Auth weak/leaked-password rejection/protection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** และ successful account-flow evidence ห้ามใช้แทน rejection evidence
 - [ ] ติดตั้ง PWA และเปิดจากไอคอนบนทุกแพลตฟอร์มที่ใช้เป็น acceptance target
 - [ ] geolocation allow/deny ครบตาม matrix
 - [ ] Google Maps fallback ครบตาม matrix

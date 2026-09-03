@@ -51,11 +51,12 @@ revoke all on public.member_referral_codes from anon, authenticated;
 revoke all on public.member_referrals from anon, authenticated;
 revoke all on public.member_acquisition_attribution from anon, authenticated;
 
--- Backfill codes for members that existed before this feature.
+-- Referral codes are random public identifiers and must not derive from account UUIDs.
+-- Bare ON CONFLICT keeps an astronomically unlikely code collision from failing setup.
 insert into public.member_referral_codes(user_id,code)
-select id, 'K' || upper(substr(replace(id::text,'-',''),1,12))
+select id, 'K' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,20))
 from auth.users
-on conflict (user_id) do nothing;
+on conflict do nothing;
 
 create or replace function kinaraidee_private.handle_new_auth_user_growth()
 returns trigger
@@ -71,9 +72,11 @@ declare
   v_campaign text;
   v_content text;
 begin
+  -- Referral codes are random public identifiers and must not derive from account UUIDs.
+  -- Bare ON CONFLICT keeps an astronomically unlikely code collision from failing signup.
   insert into public.member_referral_codes(user_id,code)
-  values (new.id, 'K' || upper(substr(replace(new.id::text,'-',''),1,12)))
-  on conflict (user_id) do nothing;
+  values (new.id, 'K' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,20)))
+  on conflict do nothing;
 
   v_referral := upper(nullif(btrim(coalesce(new.raw_user_meta_data->>'kinaraidee_referral_code','')),''));
   v_source := lower(nullif(btrim(coalesce(new.raw_user_meta_data->>'kinaraidee_utm_source','')),''));

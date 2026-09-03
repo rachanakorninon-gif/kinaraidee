@@ -5,20 +5,22 @@
 หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
 
 ## Current runtime candidate
-- Current browser/PWA runtime candidate: `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` (PR #373 Auth password-security UX readiness)
+- Current browser/PWA runtime candidate: `f401ad758e40914a10245cfab08497f7cdb99f7d` (PR #499 referral/acquisition measurement readiness)
 - Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
-- Runtime merge/deployed SHA: `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`
+- Runtime merge/deployed SHA: `02540bb61c3c62de4cfba34e92a876503765847d`
 - Current Group API source candidate: `fefc29322ac13f7066038a663bfeb7091d218b8f` (PR #93), deployed as Supabase `group-api` ACTIVE version 6 with source blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be` and bundle SHA-256 `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
 - Expected Service Worker cache: `kinaraidee-beta-v16`
-- PR #373 prepares browser-side Auth UX to handle Supabase weak-password rejection safely in signup/sign-in/reset flows. It does not enable leaked-password protection, change Supabase Auth configuration, or create a new Service Worker cache generation.
-- Current verified browser/PWA deployment trace: docs-only descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` changed no guarded browser/PWA runtime files; Pages run `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190` completed success. This is deployment/static evidence only, not Auth interaction or leaked-password configuration PASS.
+- PR #499 adds privacy-conscious referral/acquisition measurement while preserving the existing `kinaraidee-beta-v16` Service Worker generation. It does not establish a successful referral signup, Campaign 3,000 eligibility, user growth, conversion or revenue.
+- Current verified browser/PWA deployment trace: merged-main descendant `02540bb61c3c62de4cfba34e92a876503765847d`; Pages run `33811511793`, main Live Smoke `33811548157`, and Referral acquisition regression `33811512053` completed success on the traced PR #499 deployment/source. This is deployment/source-contract evidence only, not referral real-device acceptance.
+- Supabase referral/acquisition schema/RPC migration `20260903220832 / referral_acquisition_v1` and referral-code privacy fix `20260903221043 / referral_code_privacy_fix_20260904` are deployed. Post-fix verification retained no literal identifiers: all 7 existing code rows were unique/random-format while referral rows = 0 and attribution rows = 0. These are backend integrity observations only, not user/referral/campaign counts.
+- Historical PR #373 Auth runtime remains scoped deployment/Auth evidence: source `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`, deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190`. This historical trace does not replace the current PR #499 runtime.
 - Historical verified browser/PWA deployment evidence remains PR #201: Pages run `32802440796` = success and Live Smoke run `32802473505` = success for deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`; Public Form Resilience Regression run `32802440775` = success on that exact merged-main SHA.
 - Historical live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
 - Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support.
 - Canonical Group API v6 rejection-only probe run `32632951668` = success on main SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; matching Supabase platform logs include version-6 chunked >8 KiB POST 413. This is backend rejection/deployment evidence only, not device or complete monitoring evidence.
 - Surprise busy-state accessibility has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; that historical result remains scoped and does not replace current OPPO Auth evidence or second-device/full-matrix accessibility coverage. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT.
-- Current Auth account-flow evidence has scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 for recovery/password update/sign-in/new signup/email confirmation; leaked-password rejection remains NOT VERIFIED / blocked separately.
-- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, NF-07 physical fixture boundary, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX and Group API source-contract checks.
+- Current Auth account-flow evidence has scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 for recovery/password update/sign-in/new signup/email confirmation; leaked-password rejection remains NOT VERIFIED / blocked separately. This evidence is rooted in the PR #373 Auth flow but remains valid independently of PR #499 becoming the current browser runtime.
+- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, NF-07 physical fixture boundary, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX, referral-acquisition and Group API source-contract checks.
 
 ## Beta Exit Evidence
 - [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
@@ -45,8 +47,9 @@
 - [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
 
 ## Deployment & Release Evidence
-- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current PR #373 runtime candidate และสถานะ **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE** สอดคล้องกัน
-- [x] Current PR #373 Auth runtime มี canonical descendant Pages deployment + corresponding live-check evidence ตาม release contract — deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth live smoke `33229548182`, main Live Smoke `33229548190`
+- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current PR #499 runtime candidate และสถานะ **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE** สอดคล้องกัน
+- [x] Current PR #499 referral/acquisition runtime มี canonical descendant Pages deployment + corresponding live-check evidence ตาม release contract — deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793`, main Live Smoke `33811548157`, Referral acquisition regression `33811512053`
+- [x] Historical PR #373 Auth runtime deployment trace ยังคง scoped evidence — deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth live smoke `33229548182`, main Live Smoke `33229548190`
 - [x] Historical PR #201 GitHub Pages deployment ของ `00bdcb7f432d542b732cf355336e9f08798e4320` สำเร็จและ trace กลับไปยัง commit ได้ — run `32802440796`
 - [x] Historical PR #201 public `release-meta.json` ถูกตรวจและมี deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` กับ live Service Worker marker `kinaraidee-beta-v16`
 - [x] Historical PR #201 corresponding Live Smoke สำเร็จ — run `32802473505`
@@ -54,8 +57,8 @@
 - [x] Historical PR #201 public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
 - [x] real Feedback/Partner form submission acceptance มี physical Android Chrome + backend evidence ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ข้อนี้เป็น scoped device/session PASS และไม่แทน full device matrix
-- [x] current PR #373 account-flow interaction acceptance มี scoped physical OPPO Android Chrome evidence ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md` สำหรับ recovery/password-update/sign-in/new-signup/email-confirmation; deployed static/live checks ไม่ได้ถูกใช้แทน physical PASS
-- [ ] current PR #373 weak/leaked-password rejection acceptance; deployed/static/account-success evidence ห้ามใช้แทน server-side rejection และ setting ยัง blocked ตาม Issue #372
+- [x] PR #373 Auth account-flow interaction acceptance remains scoped physical OPPO Android Chrome evidence ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md` สำหรับ recovery/password-update/sign-in/new-signup/email-confirmation; deployed static/live checks ไม่ได้ถูกใช้แทน physical PASS
+- [ ] PR #373 weak/leaked-password rejection acceptance remains open; deployed/static/account-success evidence ห้ามใช้แทน server-side rejection และ setting ยัง blocked ตาม Issue #372
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
 
 ## Product
