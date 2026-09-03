@@ -4,6 +4,13 @@
 
 Canonical queue: `OWNER-DECISIONS-QUEUE.md`.
 
+Research inputs:
+- Distribution: `DISTRIBUTION-RESEARCH-SNAPSHOT.md`
+- Web/PWA payment providers: `PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md`
+- Premium/payment decision record: `PAYMENT-PREMIUM-DECISION.md`
+
+เอกสารข้างต้นเป็น research/decision-preparation เท่านั้น ไม่ใช่ owner approval, merchant approval, billing authorization, native-store approval, payment execution หรือ Commercial GO.
+
 ## Decision 1 — Distribution รอบเชิงพาณิชย์แรก
 
 ### A — Web/PWA first — **ข้อเสนอแนะสำหรับรอบแรก**
