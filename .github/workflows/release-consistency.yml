@@ -59,6 +59,24 @@ jobs:
           esac
           echo "Declared runtime candidate $candidate is clean; deployment status is $status"
 
+      - name: Validate current release/runtime declaration sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          release_candidate="$(sed -n 's/^- Current browser\/PWA runtime candidate: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          runtime_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          release_deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          runtime_cache="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          release_cache="$(sed -n 's/^- PWA cache marker: `\([^`]*\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+          test -n "$runtime_candidate" && test -n "$release_candidate" || { echo 'Unable to parse runtime candidate from canonical declarations'; exit 1; }
+          test -n "$runtime_deployed" && test -n "$release_deployed" || { echo 'Unable to parse deployed runtime SHA from canonical declarations'; exit 1; }
+          test -n "$runtime_cache" && test -n "$release_cache" || { echo 'Unable to parse PWA cache marker from canonical declarations'; exit 1; }
+          test "$runtime_candidate" = "$release_candidate" || { echo "Runtime candidate drift: CURRENT-RUNTIME=$runtime_candidate CURRENT-RELEASE=$release_candidate"; exit 1; }
+          test "$runtime_deployed" = "$release_deployed" || { echo "Deployed runtime drift: CURRENT-RUNTIME=$runtime_deployed CURRENT-RELEASE=$release_deployed"; exit 1; }
+          test "$runtime_cache" = "$release_cache" || { echo "PWA cache marker drift: CURRENT-RUNTIME=$runtime_cache CURRENT-RELEASE=$release_cache"; exit 1; }
+          echo "CURRENT-RUNTIME.md and CURRENT-RELEASE.md agree on candidate, deployed SHA, and cache marker"
+
       - name: Validate declared Group API source candidate lineage
         shell: bash
         run: |
