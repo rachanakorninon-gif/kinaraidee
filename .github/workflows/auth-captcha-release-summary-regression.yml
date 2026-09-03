@@ -45,12 +45,13 @@ jobs:
             *) echo "Unexpected Captcha decision status: $status"; exit 1 ;;
           esac
 
-          # Captcha decision/configuration evidence is never equivalent to observed
-          # auth-flow, real-device/accessibility, Public Beta or Commercial evidence.
+          # Captcha decision/configuration evidence is independent from already observed
+          # auth account-flow evidence and from real-device/accessibility/Beta/Commercial gates.
           grep -Fq 'Auth Captcha decision/configuration evidence ไม่แทน client integration, real-device/accessibility หรือ auth-flow regression evidence' "$security"
           grep -Fq 'Public Beta is still **NOT COMPLETE**' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
-          grep -Fq -- '- [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง' "$checklist"
+          grep -Fq -- '- [x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope;' "$checklist"
+          grep -Fq -- '- [ ] Weak/leaked-password rejection ผ่านบน production Auth service;' "$checklist"
           grep -Fq -- '- [ ] Blocker = 0 และ Critical = 0' "$checklist"
 
           if [ "$status" = 'NOT APPROVED' ]; then
@@ -80,8 +81,9 @@ jobs:
           {
             echo '## Auth Captcha release-summary regression'
             echo
-            echo '- Canonical Captcha status is validated independently from release summary wording.'
+            echo '- Canonical Captcha status is validated independently from release summary wording and already-observed account-flow evidence.'
             echo '- NOT APPROVED cannot be promoted into release readiness while decision fields remain unresolved.'
-            echo '- APPROVED authorizes implementation/controlled validation only; real auth-flow/device evidence remains separate.'
+            echo '- Scoped physical Auth account-flow PASS does not imply Captcha or leaked-password PASS.'
+            echo '- APPROVED authorizes implementation/controlled validation only; Captcha real-device evidence remains separate.'
             echo '- Public Beta NOT COMPLETE and Commercial NO-GO remain independent gates.'
           } >> "$GITHUB_STEP_SUMMARY"
