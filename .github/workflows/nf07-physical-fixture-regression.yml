@@ -34,6 +34,22 @@ jobs:
           printf 'fixture sha256: '
           sha256sum qa-sw-v15.js
           test "$(sha256sum qa-sw-v15.js | awk '{print $1}')" = 'c5d174d461600ca7caf2da974b54ac1ca6353f39ca379480b6a177a3f10a8a1f'
+          node --check qa-sw-v15.js
+
+      - name: Syntax-check inline NF-07 probe JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          text=Path('qa-nf07-old-cache.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',text,flags=re.S)
+          if len(scripts)!=1:
+              raise SystemExit(f'Expected exactly one inline script, found {len(scripts)}')
+          Path('/tmp/qa-nf07-inline.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/qa-nf07-inline.js
 
       - name: Verify QA probe and evidence boundary
         shell: bash
