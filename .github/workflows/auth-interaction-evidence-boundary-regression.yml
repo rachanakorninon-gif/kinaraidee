@@ -25,11 +25,17 @@ jobs:
           test -s BETA-READY.md || { echo 'Missing BETA-READY.md'; exit 1; }
           test -s AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || { echo 'Missing AUTH-INTERACTION-PHYSICAL-EVIDENCE.md'; exit 1; }
 
-          grep -Fq 'Status: **PARTIAL PASS — RECOVERY REQUEST/MAIL-SEND/VERIFY-LINK + PASSWORD UPDATE + SIGN-IN VERIFIED / SIGNUP + LEAKED-PASSWORD REJECTION NOT VERIFIED**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+          grep -Fq 'Status: **PARTIAL PASS — RECOVERY REQUEST/MAIL-SEND/VERIFY-LINK + PASSWORD UPDATE + SIGN-IN + NEW SIGNUP + EMAIL CONFIRMATION VERIFIED / LEAKED-PASSWORD REJECTION NOT VERIFIED**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
             echo 'Auth physical evidence must preserve the corroborated scoped partial-PASS boundary'; exit 1;
           }
-          grep -Fq 'The umbrella current PR #373 Auth acceptance remains **PARTIAL / OPEN**' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
-            echo 'Auth physical evidence must keep umbrella PR #373 acceptance partial/open'; exit 1;
+          grep -Fq 'The umbrella current PR #373 Auth acceptance remains **PARTIAL / OPEN** only because weak/leaked-password rejection remains a separate server-side security blocker' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+            echo 'Auth physical evidence must keep umbrella PR #373 acceptance partial/open without reopening verified signup/confirmation'; exit 1;
+          }
+          grep -Fq 'new-account signup request reaching confirmation-required state: PASS' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+            echo 'Auth physical evidence must preserve tested new-signup PASS'; exit 1;
+          }
+          grep -Fq 'confirmation-link completion and resulting signed-in Member state: PASS' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
+            echo 'Auth physical evidence must preserve tested confirmation-link PASS'; exit 1;
           }
           grep -Fq 'recovery request / recovery mail-send / verification-link path: PASS for the tested QA sequence' AUTH-INTERACTION-PHYSICAL-EVIDENCE.md || {
             echo 'Auth physical evidence must preserve tested recovery-path PASS without generalizing mail delivery'; exit 1;
@@ -49,17 +55,20 @@ jobs:
             echo 'Release checklist must keep remaining PR #373 Auth interaction acceptance open'; exit 1;
           }
           grep -Fq 'Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง' RELEASE-CHECKLIST.md || {
-            echo 'Beta Exit must keep remaining real-device Auth account-flow evidence open'; exit 1;
+            echo 'Beta Exit must preserve real-device Auth account-flow evidence requirement'; exit 1;
           }
 
           grep -Fq 'current Auth acceptance เป็น **PARTIAL / OPEN**' BETA-READY.md || {
             echo 'BETA-READY.md must record scoped Auth partial PASS while preserving the open umbrella gate'; exit 1;
           }
-          grep -Fq 'signup และ weak/leaked-password rejection ยัง NOT VERIFIED / OPEN' BETA-READY.md || {
-            echo 'BETA-READY.md must preserve the remaining Auth sub-gates'; exit 1;
+          grep -Fq 'new-account signup → confirmation-mail delivery → confirmation-link → signed-in Member flow มี scoped PASS/corroboration' BETA-READY.md || {
+            echo 'BETA-READY.md must preserve verified new-account signup/confirmation scope'; exit 1;
+          }
+          grep -Fq 'weak/leaked-password rejection ยัง NOT VERIFIED / OPEN' BETA-READY.md || {
+            echo 'BETA-READY.md must preserve remaining leaked-password sub-gate'; exit 1;
           }
           grep -Fq 'Automated/static/deployment evidence ไม่แทน real-device, assistive-technology หรือ commercial acceptance' BETA-READY.md || {
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth recovery/password-update/sign-in evidence remains partial; signup/leaked-password and umbrella Auth acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved; leaked-password and umbrella Auth acceptance stay open.'
