@@ -50,7 +50,7 @@ jobs:
           grep -Fq 'TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' "$release"
           grep -Fq 'Status: **PASS**' "$forms"
           grep -Fq 'Status: **PARTIAL PASS — RECOVERY REQUEST/MAIL-SEND/VERIFY-LINK + PASSWORD UPDATE + SIGN-IN + NEW SIGNUP + EMAIL CONFIRMATION VERIFIED / LEAKED-PASSWORD REJECTION NOT VERIFIED**' "$auth"
-          grep -Fq 'Reduced Motion: **PASS**' "$ux"
+          grep -Fq 'Reduced-motion result: **PASS**' "$ux"
 
           grep -Fq -- '- [x] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
           grep -Fq -- '- [x] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend/privacy acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
