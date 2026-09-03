@@ -29,7 +29,7 @@
 | Supabase auth / RLS | VALIDATE | `SECURITY.md`, Auth physical evidence | production negative/security gates ผ่าน |
 | Partner tracking / conversion | VALIDATE | backend + `MONETIZATION-PLAN.md` | verified click/conversion/reconciliation |
 | Restaurant partners | EXTERNAL | partner applications/agreements | มีร้านจริงและข้อตกลงจริง |
-| Premium payment | EXTERNAL | payment provider | merchant + sandbox/production gate ผ่าน |
+| Premium payment | EXTERNAL | `PAYMENT-PREMIUM-DECISION.md`, `PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md` | merchant + approved provider/price/entitlement decision + sandbox/production gate ผ่าน |
 | Production Privacy / Terms | EXTERNAL | policy/legal review | policy/contact/notice พร้อมจริง |
 | Monitoring / support / rollback | VALIDATE | `RELEASE-CHECKLIST.md` | procedure + safe rehearsal ผ่าน |
 | Native stores | N/A | release decision | เปลี่ยนเมื่อเลือก native distribution |
@@ -105,4 +105,4 @@
 
 ## Source of truth
 ใช้เอกสารนี้เป็น dashboard แต่รายละเอียด gate ต้องอ้างอิง:
-`CURRENT-RELEASE.md`, `CURRENT-RUNTIME.md`, `BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-DAILY-LOG.md`, `BETA-RESULTS-TEMPLATE.md`, `BORROWED-DEVICE-QUICK-RUN.md`, `OWNER-DECISIONS-QUEUE.md`, `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`, `REAL-PLATFORM-UX-EVIDENCE.md`, `PWA-UPGRADE-PHYSICAL-EVIDENCE.md`, `PAYMENT-PREMIUM-DECISION.md`, `PRODUCTION-PRIVACY-LEGAL-DECISION.md`, `MONETIZATION-PLAN.md`, `SECURITY.md`, `RELEASE-CHECKLIST.md`, `COMMERCIAL-EXECUTION-EVIDENCE.md`.
+`CURRENT-RELEASE.md`, `CURRENT-RUNTIME.md`, `BETA-CHECKLIST.md`, `BETA-DEVICE-MATRIX.md`, `BETA-RUN-LOG.md`, `BETA-DAILY-LOG.md`, `BETA-RESULTS-TEMPLATE.md`, `BORROWED-DEVICE-QUICK-RUN.md`, `OWNER-DECISIONS-QUEUE.md`, `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`, `REAL-PLATFORM-UX-EVIDENCE.md`, `PWA-UPGRADE-PHYSICAL-EVIDENCE.md`, `PAYMENT-PREMIUM-DECISION.md`, `PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md`, `PRODUCTION-PRIVACY-LEGAL-DECISION.md`, `MONETIZATION-PLAN.md`, `SECURITY.md`, `RELEASE-CHECKLIST.md`, `COMMERCIAL-EXECUTION-EVIDENCE.md`.
