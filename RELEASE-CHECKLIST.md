@@ -35,7 +35,7 @@
 - [ ] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`
 - [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
-- [ ] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; มี scoped historical Android same-device/privacy-field/backend observations แต่ PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS
+- [x] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; scoped OPPO Reno13 5G / Android 16 / Chrome 152 session ผ่าน duplicate-submit, failure recovery, direct `aria-busy` recovery, retry success และ privacy/backend evidence; ข้อนี้ไม่แทน full device matrix
 - [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
 - [ ] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง
 - [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; #177 ผ่านเฉพาะ tested Android session
@@ -51,7 +51,7 @@
 - [x] Public Form Resilience Regression run `32802440775` ยืนยัน source recovery-state contracts บน exact PR #201 merged-main SHA โดยไม่ submit form จริง
 - [x] Historical PR #201 public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
 - [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
-- [ ] real Feedback/Partner form submission acceptance ยังต้องใช้หลักฐานจริง; static regression และ deployment trace ห้ามใช้แทน backend insert/device interaction PASS
+- [x] real Feedback/Partner form submission acceptance มี physical Android Chrome + backend evidence ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ข้อนี้เป็น scoped device/session PASS และไม่แทน full device matrix
 - [ ] current PR #373 Auth interaction acceptance ยังต้องใช้หลักฐานจริงตาม scope; deployed static/live checks ห้ามใช้แทน weak/leaked-password rejection หรือ account-flow PASS
 - [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
 
@@ -66,13 +66,13 @@
 - [x] favorite/history persistence ใหม่ของ v16 ผ่าน physical Android favorite → full restart → History retention สำหรับ tested installed-PWA session และ Issue #177 ปิด
 - [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
 - [ ] partner/fallback cards render ถูกต้องบน Android/iPhone ที่ใช้ทดสอบ
-- [ ] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน current changed-path acceptance scope; historical Android same-device/privacy-field/backend observations มีอยู่ก่อน PR #201 แต่ PR #201 duplicate-submit/failure-recovery acceptance และ full-matrix coverage ยังเปิดอยู่
+- [x] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน current changed-path acceptance scope; scoped Android Chrome physical/backend evidence ยืนยัน privacy notice version และ acknowledgement timestamp แล้ว แต่ full-matrix coverage ยังเปิดอยู่
 - [x] Android same-device member-history defects #38/#40 ผ่าน retest หลัง fixes ตาม evidence ที่บันทึก
 - [ ] Member history sync/write-race/restart-durability behavior ผ่านบน device matrix ที่จำเป็นและไม่มี regression หลัง release candidate ล่าสุด
 - [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา `kinaraidee-beta-v16` ผ่านการทดสอบตาม platform ที่กำหนด
 - [x] iPhone/Safari #1 Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” มี NF-05 scoped PASS บน v16; ยังไม่แทน iPadOS/second iPhone
-- [ ] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission
-- [ ] Partner application recovery path ใช้งานจริงได้หลัง network/submission failure ตาม device/platform scope; PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance
+- [x] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission — scoped OPPO Reno13 5G / Android 16 / Chrome 152 physical acceptance is recorded separately
+- [x] Partner application recovery path ใช้งานจริงได้หลัง network/submission failure ตาม device/platform scope; PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance — scoped OPPO Reno13 5G / Android 16 / Chrome 152 physical acceptance is recorded separately
 - [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
 
 ## Accounts & Payments

@@ -20,23 +20,88 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
-          test -s RELEASE-CHECKLIST.md || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+          evidence='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+          release='CURRENT-RELEASE.md'
+          checklist='RELEASE-CHECKLIST.md'
 
-          grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve open PR #201 Feedback/Partner interaction acceptance'; exit 1;
-          }
-          grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md Public Beta gate must preserve real PR #201 form interaction evidence requirement'; exit 1;
-          }
-          grep -Fq 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS' RELEASE-CHECKLIST.md || {
-            echo 'Beta Exit must preserve PR #201 Partner form acceptance as NOT VERIFIED'; exit 1;
-          }
-          grep -Fq 'historical Android same-device/privacy-field/backend observations มีอยู่ก่อน PR #201 แต่ PR #201 duplicate-submit/failure-recovery acceptance และ full-matrix coverage ยังเปิดอยู่' RELEASE-CHECKLIST.md || {
-            echo 'Product checklist must keep historical Partner observations scoped and current PR #201 acceptance open'; exit 1;
-          }
-          grep -Fq 'PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance' RELEASE-CHECKLIST.md || {
+          test -s "$evidence" || { echo 'Missing PUBLIC-FORM-PHYSICAL-EVIDENCE.md'; exit 1; }
+          test -s "$release" || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+          test -s "$checklist" || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+
+          status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$evidence" | head -n1)"
+          case "$status" in
+            'NOT VERIFIED'|'PASS') ;;
+            *) echo "Unsupported public-form physical evidence status: $status"; exit 1 ;;
+          esac
+
+          # This boundary must hold in every state: static/deployment evidence is never
+          # a substitute for the real Partner interaction acceptance described here.
+          grep -Fq 'PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance' "$checklist" || {
             echo 'Partner recovery boundary must reject static/deployment evidence as interaction acceptance'; exit 1;
           }
 
-          echo 'Partner form evidence remains historical/scoped; current PR #201 interaction acceptance is still open'
+          if [ "$status" = 'NOT VERIFIED' ]; then
+            grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release" || {
+              echo 'CURRENT-RELEASE.md must preserve open PR #201 Feedback/Partner interaction acceptance while evidence is NOT VERIFIED'; exit 1;
+            }
+            grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' "$release" || {
+              echo 'CURRENT-RELEASE.md Public Beta gate must preserve real PR #201 form interaction evidence requirement while evidence is NOT VERIFIED'; exit 1;
+            }
+            grep -Fq 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED** และห้ามนับเป็น TC-12 PASS' "$checklist" || {
+              echo 'Beta Exit must preserve PR #201 Partner form acceptance as NOT VERIFIED'; exit 1;
+            }
+            grep -Fq 'historical Android same-device/privacy-field/backend observations มีอยู่ก่อน PR #201 แต่ PR #201 duplicate-submit/failure-recovery acceptance และ full-matrix coverage ยังเปิดอยู่' "$checklist" || {
+              echo 'Product checklist must keep historical Partner observations scoped while acceptance is NOT VERIFIED'; exit 1;
+            }
+            echo 'Partner form evidence remains historical/scoped; current PR #201 interaction acceptance is still open'
+            exit 0
+          fi
+
+          # PASS is allowed only when the canonical physical-form file contains a
+          # complete, traceable Partner acceptance and downstream docs keep it scoped.
+          grep -Fq '## TC-12 Partner application physical acceptance' "$evidence" || {
+            echo 'PASS requires a TC-12 physical acceptance block'; exit 1;
+          }
+          grep -Fq 'Duplicate-submit protection observed: **PASS**' "$evidence" || {
+            echo 'PASS requires observed duplicate-submit protection'; exit 1;
+          }
+          grep -Fq 'Reproducible network/SDK failure exercised: **PASS**' "$evidence" || {
+            echo 'PASS requires reproducible failure recovery evidence'; exit 1;
+          }
+          grep -Fq 'Submit control re-enabled after failure: **PASS**' "$evidence" || {
+            echo 'PASS requires submit-control recovery'; exit 1;
+          }
+          grep -Fq '`aria-busy` cleared after failure: **PASS**' "$evidence" || {
+            echo 'PASS requires direct aria-busy recovery evidence'; exit 1;
+          }
+          grep -Fq 'Privacy notice version recorded as expected: **PASS**' "$evidence" || {
+            echo 'PASS requires Partner privacy notice version evidence'; exit 1;
+          }
+          grep -Fq 'Privacy acknowledgement timestamp recorded as expected: **PASS**' "$evidence" || {
+            echo 'PASS requires Partner privacy acknowledgement evidence'; exit 1;
+          }
+          grep -Fq 'TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' "$release" || {
+            echo 'CURRENT-RELEASE.md must record the scoped Android Chrome public-form PASS'; exit 1;
+          }
+          grep -Fq -- '- [x] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`' "$checklist" || {
+            echo 'Beta Exit checklist must reflect the scoped TC-12 physical PASS'; exit 1;
+          }
+          grep -Fq 'scoped OPPO Reno13 5G / Android 16 / Chrome 152' "$checklist" || {
+            echo 'Checklist PASS must preserve the tested device/browser scope'; exit 1;
+          }
+          if grep -Fq 'PR #201 duplicate-submit + failure-recovery acceptance ยัง **NOT VERIFIED**' "$checklist"; then
+            echo 'Scoped physical PASS cannot coexist with the stale TC-12 NOT VERIFIED marker.'
+            exit 1
+          fi
+          if grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release"; then
+            echo 'Scoped physical PASS cannot coexist with the stale public-form-open release marker.'
+            exit 1
+          fi
+          grep -Fq 'does not satisfy the remaining Android/iPhone device-matrix minimum' "$release" || {
+            echo 'Scoped physical PASS must not imply full device-matrix completion'; exit 1;
+          }
+          grep -Fq 'Partner test records used for Beta QA must not be counted as real commercial partner, conversion, commission, payment, or revenue evidence.' "$evidence" || {
+            echo 'Partner Beta records must remain separated from commercial evidence'; exit 1;
+          }
+
+          echo 'Partner form physical PASS is traceable and scoped; static/deployment, full-matrix, Public Beta and Commercial boundaries remain intact'

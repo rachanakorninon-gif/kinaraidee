@@ -16,56 +16,88 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Preserve scoped 2026-09-03 public-form physical evidence boundary
+      - name: Preserve scoped public-form physical evidence boundary
         shell: bash
         run: |
           set -euo pipefail
-          test -s PUBLIC-FORM-PHYSICAL-EVIDENCE.md || { echo 'Missing PUBLIC-FORM-PHYSICAL-EVIDENCE.md'; exit 1; }
-          test -s CURRENT-RELEASE.md || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
+          evidence='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+          release='CURRENT-RELEASE.md'
 
-          grep -Fq '## 2026-09-03 Android scoped supporting observations' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Missing scoped 2026-09-03 Android public-form evidence section'; exit 1;
-          }
+          test -s "$evidence" || { echo 'Missing PUBLIC-FORM-PHYSICAL-EVIDENCE.md'; exit 1; }
+          test -s "$release" || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
 
-          if grep -Fq 'Exact device model: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
-            echo 'Exact device model remains uncaptured.'
+          status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$evidence" | head -n1)"
+          case "$status" in
+            'NOT VERIFIED'|'PASS') ;;
+            *) echo "Unsupported public-form physical evidence status: $status"; exit 1 ;;
+          esac
+
+          # Supporting evidence must remain explicitly scoped and traceable whether the
+          # canonical result is still open or has moved to PASS.
+          if grep -Fq '## 2026-09-03 Android scoped supporting observations' "$evidence"; then
+            echo 'Historical 2026-09-03 supporting section retained.'
           else
-            grep -Fq 'Device: OPPO Reno13 5G (`CPH2689`).' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-              echo 'Physical evidence must preserve either uncaptured or verified exact device-model trace'; exit 1;
+            grep -Fq '## 2026-09-03–04 Android scoped supporting observations' "$evidence" || {
+              echo 'Missing scoped 2026-09-03–04 Android public-form evidence section'; exit 1;
             }
           fi
 
-          if grep -Fq 'Exact Android version: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
-            echo 'Exact Android version remains uncaptured.'
-          else
-            grep -Fq 'OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-              echo 'Physical evidence must preserve either uncaptured or verified Android-version trace'; exit 1;
+          grep -Fq 'Device: OPPO Reno13 5G (`CPH2689`).' "$evidence" || {
+            echo 'Physical evidence must preserve verified exact device-model trace'; exit 1;
+          }
+          grep -Fq 'OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.' "$evidence" || {
+            echo 'Physical evidence must preserve verified Android-version trace'; exit 1;
+          }
+          grep -Fq 'Browser application version captured on the same device: Chrome `152.0.7977.64`.' "$evidence" || {
+            echo 'Physical evidence must preserve verified Chrome application version'; exit 1;
+          }
+          grep -Fq 'Focused TC-11 and TC-12 duplicate-submit, offline-recovery/retry, and final DOM-state retests were explicitly captured in a Chrome tab.' "$evidence" || {
+            echo 'Physical evidence must preserve verified Chrome-tab retest context'; exit 1;
+          }
+
+          if [ "$status" = 'NOT VERIFIED' ]; then
+            grep -Fq 'The visible button recovery does not directly prove the DOM `aria-busy` value' "$evidence" || {
+              echo 'Open evidence must preserve aria-busy verification boundary'; exit 1;
             }
+            grep -Fq 'the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured' "$evidence" || {
+              echo 'Open evidence must preserve NOT VERIFIED canonical boundary'; exit 1;
+            }
+            grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release" || {
+              echo 'CURRENT-RELEASE.md must keep PR #201 Feedback/Partner acceptance open while canonical evidence is NOT VERIFIED'; exit 1;
+            }
+            grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' "$release" || {
+              echo 'CURRENT-RELEASE.md Public Beta gate must preserve real form-interaction acceptance while canonical evidence is NOT VERIFIED'; exit 1;
+            }
+            echo 'Scoped Android public-form observations remain supporting evidence; canonical PR #201 form acceptance is not promoted.'
+            exit 0
           fi
 
-          if grep -Fq 'Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md; then
-            echo 'Public-form browser/PWA context remains uncaptured.'
-          else
-            grep -Fq 'Exact browser-vs-installed-PWA context for the original TC-11/TC-12 offline-recovery screenshots was not captured; later TC-11 and TC-12 focused duplicate-submit and offline-recovery/retry retests were explicitly captured in a Chrome tab.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-              echo 'Physical evidence must preserve historical context gap and later verified Chrome-tab retest context'; exit 1;
-            }
-            grep -Fq 'Browser application version captured on the same device: Chrome `152.0.7977.64`.' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-              echo 'Physical evidence must preserve verified Chrome application version'; exit 1;
-            }
+          # PASS requires the later focused physical sequence that closes the former
+          # visible-UI-only aria-busy gap without rewriting the earlier observations.
+          grep -Fq 'Final DOM-state physical retest used the QA-only same-origin probe on the same Android Chrome device' "$evidence" || {
+            echo 'PASS requires direct same-device DOM-state physical retest evidence'; exit 1;
+          }
+          grep -Fq 'The probe directly recorded `aria-busy` mutation from `<absent>` to `true`' "$evidence" || {
+            echo 'PASS requires direct aria-busy=true observation'; exit 1;
+          }
+          grep -Fq 'The probe displayed the physical verdict: `PASS: เคยเห็น aria-busy=true และหลัง error ค่า aria-busy ถูกลบ พร้อม disabled=false`.' "$evidence" || {
+            echo 'PASS requires the recorded recovery verdict'; exit 1;
+          }
+          grep -Fq 'The PASS above comes from the documented physical Android Chrome session and is limited to that device/browser scope.' "$evidence" || {
+            echo 'PASS must remain limited to the documented Android Chrome session'; exit 1;
+          }
+          grep -Fq 'TC-11/TC-12 PASS does not imply full device-matrix completion, Public Beta completion, or Commercial GO.' "$evidence" || {
+            echo 'PASS must preserve full-matrix/Public-Beta/Commercial boundary'; exit 1;
+          }
+          grep -Fq 'TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' "$release" || {
+            echo 'CURRENT-RELEASE.md must record the same scoped physical PASS'; exit 1;
+          }
+          if grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release"; then
+            echo 'PASS cannot coexist with the stale public-form-open release marker.'
+            exit 1
           fi
-
-          grep -Fq 'The visible button recovery does not directly prove the DOM `aria-busy` value' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Physical evidence must preserve aria-busy verification boundary'; exit 1;
-          }
-          grep -Fq 'the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured' PUBLIC-FORM-PHYSICAL-EVIDENCE.md || {
-            echo 'Physical evidence must preserve NOT VERIFIED canonical boundary'; exit 1;
+          grep -Fq 'does not satisfy the remaining Android/iPhone device-matrix minimum' "$release" || {
+            echo 'CURRENT-RELEASE.md must preserve remaining device-matrix boundary'; exit 1;
           }
 
-          grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must keep PR #201 Feedback/Partner acceptance open'; exit 1;
-          }
-          grep -Fq 'real Feedback/Partner form interaction for the PR #201 changed paths' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md Public Beta gate must preserve real form-interaction acceptance'; exit 1;
-          }
-
-          echo 'Scoped Android public-form observations remain evidence only; canonical PR #201 form acceptance is not promoted.'
+          echo 'Scoped Android public-form physical PASS is traceable; full-matrix, Public Beta and Commercial boundaries remain intact.'
