@@ -54,17 +54,17 @@ jobs:
 
           grep -Fq -- '- [x] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
           grep -Fq -- '- [x] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend/privacy acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
-          grep -Fq -- '- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ของ PR #373 ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+          grep -Fq -- '- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
           grep -Fq -- '- [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
 
           # Open gates must not be closed by the scoped OPPO evidence.
           grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' "$nf07"
           grep -Fq -- '- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`' "$checklist"
           grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$checklist"
-          grep -Fq -- '- [ ] Auth weak/leaked-password rejection/protection ของ PR #373 ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' "$checklist"
+          grep -Fq -- '- [ ] Auth weak/leaked-password rejection/protection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' "$checklist"
           grep -Fq -- '- [ ] Android Chrome อย่างน้อย 3 device models' "$checklist"
           grep -Fq -- '- [ ] iPhone Safari อย่างน้อย 2 device models' "$checklist"
           grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
-          echo 'Beta checklist matches scoped physical evidence while NF-07, keyboard focus, leaked-password and distinct-device gates remain open.'
+          echo 'Beta checklist matches scoped physical evidence while NF-07, keyboard focus, leaked-password and distinct-device gates remain open, independent of which later browser runtime is current.'
