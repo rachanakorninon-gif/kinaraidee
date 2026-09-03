@@ -6,6 +6,7 @@ Canonical queue: `OWNER-DECISIONS-QUEUE.md`.
 
 Research inputs:
 - Distribution: `DISTRIBUTION-RESEARCH-SNAPSHOT.md`
+- Supabase paid-plan cost/capability: `SUPABASE-PAID-PLAN-RESEARCH-SNAPSHOT.md`
 - Web/PWA payment providers: `PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md`
 - Premium/payment decision record: `PAYMENT-PREMIUM-DECISION.md`
 
