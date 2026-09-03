@@ -41,21 +41,27 @@ jobs:
             echo 'Auth physical evidence must preserve tested recovery-path PASS without generalizing mail delivery'; exit 1;
           }
 
-          grep -Fq 'current browser/PWA Auth interaction acceptance appropriate to the PR #373 Auth changes' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md Commercial gate must preserve current Auth interaction acceptance'; exit 1;
+          grep -Fq 'Current PR #373 Auth account-flow interaction is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve scoped physical account-flow PASS'; exit 1;
           }
-          grep -Fq 'Current PR #373 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve deployment-trace scope for PR #373'; exit 1;
+          grep -Fq 'The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must keep leaked-password/server-side Auth gate open'; exit 1;
           }
-          grep -Fq 'That deployment PASS does not satisfy current Auth interaction acceptance' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must reject deployment PASS as blanket Auth interaction acceptance'; exit 1;
+          grep -Fq 'That deployment PASS does not itself prove Auth interaction acceptance; the separate traced OPPO physical session now supplies scoped account-flow evidence' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must distinguish deployment evidence from physical Auth evidence'; exit 1;
           }
 
-          grep -Fq 'current PR #373 Auth interaction acceptance ยังต้องใช้หลักฐานจริงตาม scope; deployed static/live checks ห้ามใช้แทน weak/leaked-password rejection หรือ account-flow PASS' RELEASE-CHECKLIST.md || {
-            echo 'Release checklist must keep remaining PR #373 Auth interaction acceptance open'; exit 1;
+          grep -Fq '[x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope' RELEASE-CHECKLIST.md || {
+            echo 'Release checklist must preserve scoped real-device Auth account-flow PASS'; exit 1;
           }
-          grep -Fq 'Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope; automated deployed-source checks ไม่แทนการสมัคร/เข้าสู่ระบบ/รับอีเมล reset และตั้งรหัสผ่านจริง' RELEASE-CHECKLIST.md || {
-            echo 'Beta Exit must preserve real-device Auth account-flow evidence requirement'; exit 1;
+          grep -Fq '[ ] Weak/leaked-password rejection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' RELEASE-CHECKLIST.md || {
+            echo 'Release checklist must keep leaked-password rejection open'; exit 1;
+          }
+          grep -Fq '[x] current PR #373 account-flow interaction acceptance มี scoped physical OPPO Android Chrome evidence' RELEASE-CHECKLIST.md || {
+            echo 'Deployment/release checklist must record physical account-flow evidence separately'; exit 1;
+          }
+          grep -Fq '[ ] current PR #373 weak/leaked-password rejection acceptance' RELEASE-CHECKLIST.md || {
+            echo 'Deployment/release checklist must preserve remaining leaked-password acceptance'; exit 1;
           }
 
           grep -Fq 'current Auth acceptance เป็น **PARTIAL / OPEN**' BETA-READY.md || {
@@ -71,4 +77,4 @@ jobs:
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved; leaked-password and umbrella Auth acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved; leaked-password and umbrella Auth/Security acceptance stay open.'
