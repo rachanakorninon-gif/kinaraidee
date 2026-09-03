@@ -5,12 +5,14 @@ on:
     paths:
       - 'acquisition-dashboard.html'
       - 'supabase/functions/acquisition-api/**'
+      - '.github/workflows/pages.yml'
       - '.github/workflows/acquisition-dashboard-regression.yml'
   push:
     branches: [main]
     paths:
       - 'acquisition-dashboard.html'
       - 'supabase/functions/acquisition-api/**'
+      - '.github/workflows/pages.yml'
       - '.github/workflows/acquisition-dashboard-regression.yml'
 
 permissions:
@@ -27,6 +29,7 @@ jobs:
           from pathlib import Path
           api = Path('supabase/functions/acquisition-api/index.ts').read_text()
           ui = Path('acquisition-dashboard.html').read_text()
+          pages = Path('.github/workflows/pages.yml').read_text()
           required_api = [
               "admin_dashboard_owners",
               "sb.auth.getUser(token)",
@@ -44,6 +47,8 @@ jobs:
               "ไม่ใช่ Campaign 3,000 eligibility",
               "ยังไม่รวมค่าโฆษณา",
               "ยังระบุแหล่งไม่ได้",
+              'content="noindex,nofollow,noarchive"',
+              'content="no-referrer"',
           ]
           for token in required_api:
               assert token in api, f'missing API contract: {token}'
@@ -53,5 +58,8 @@ jobs:
           assert private_key_name not in ui, 'service role key must never enter browser HTML'
           assert "sourceOfTruth:'Supabase Auth + first-party acquisition/referral tables'" in api
           assert "select('email,active')" in api, 'owner allow-list guard missing'
+          assert "acquisition-dashboard.html" in pages, 'Pages must explicitly publish the noindex acquisition login shell'
+          assert "test ! -e _site/admin.html" in pages, 'private admin.html must remain excluded from Pages artifact'
+          assert 'href="admin.html"' not in ui, 'public acquisition shell must not link to private admin page'
           print('Acquisition dashboard contract OK')
           PY
