@@ -1,0 +1,68 @@
+name: Referral acquisition regression
+
+on:
+  pull_request:
+    paths:
+      - 'data/acquisition.js'
+      - 'data/home-surprise.js'
+      - 'member.html'
+      - 'privacy.html'
+      - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/referral-acquisition-v1-rollback.sql'
+      - '.github/workflows/referral-acquisition-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data/acquisition.js'
+      - 'data/home-surprise.js'
+      - 'member.html'
+      - 'privacy.html'
+      - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/referral-acquisition-v1-rollback.sql'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check data/acquisition.js
+          node --check data/home-surprise.js
+      - name: Referral and attribution contract
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          const acquisition=fs.readFileSync('data/acquisition.js','utf8');
+          const home=fs.readFileSync('data/home-surprise.js','utf8');
+          const member=fs.readFileSync('member.html','utf8');
+          const privacy=fs.readFileSync('privacy.html','utf8');
+          const sql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
+          const rollback=fs.readFileSync('supabase/referral-acquisition-v1-rollback.sql','utf8');
+
+          must(acquisition.includes('kinaraideeAcquisitionV1'),'missing acquisition storage key');
+          must(acquisition.includes('kinaraidee_referral_code'),'missing referral signup metadata');
+          must(acquisition.includes("['utm_source','utm_medium','utm_campaign','utm_content']"),'UTM allowlist changed unexpectedly');
+          must(acquisition.includes("/^[a-z0-9_-]+$/"),'UTM values must remain slug-only');
+          must(home.includes('ensureAcquisition()'),'home must capture acquisition before signup navigation');
+          must(member.includes('data/acquisition.js'),'member page must load acquisition capture');
+          must(member.includes("sb.rpc('get_my_referral_summary')"),'member page must use backend referral summary');
+          must(member.includes('ยังไม่ใช่สิทธิ์เข้าร่วมแคมเปญรางวัล'),'member UI must preserve prize non-eligibility boundary');
+          must(privacy.includes('การวัดการชวนเพื่อนและแหล่งที่มา'),'privacy notice must disclose referral measurement');
+
+          for(const table of ['member_referral_codes','member_referrals','member_acquisition_attribution']){
+            must(sql.includes(`alter table public.${table} enable row level security`),`${table} must have RLS enabled`);
+            must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} must not expose raw rows to clients`);
+          }
+          must(sql.includes("where rc.user_id=(select auth.uid())"),'referral summary must scope to auth.uid()');
+          must(sql.includes('revoke all on function public.get_my_referral_summary() from public, anon'),'RPC must not be callable by public/anon');
+          must(sql.includes("not prize/campaign eligibility truth"),'schema must preserve prize eligibility boundary');
+          must(rollback.includes('drop table if exists public.member_referrals'),'rollback must remove referral table');
+          NODE
