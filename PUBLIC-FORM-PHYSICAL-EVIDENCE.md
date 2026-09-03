@@ -13,21 +13,21 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 
 ## TC-11 Feedback physical acceptance
 
-- Device / OS / browser or installed-PWA context: **NOT CAPTURED**
-- Tester/session reference: **NOT CAPTURED**
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64` available from same-device metadata capture; exact browser-tab vs installed-PWA context during the public-form interaction is **NOT CAPTURED**
+- Tester/session reference: 2026-09-03 user-assisted Android physical QA session
 - Intended authorized Beta test submission completed: **NOT VERIFIED**
 - Duplicate-submit protection observed: **NOT VERIFIED**
 - Reproducible network/SDK failure exercised: **NOT VERIFIED**
 - Submit control re-enabled after failure: **NOT VERIFIED**
 - `aria-busy` cleared after failure: **NOT VERIFIED**
 - Success evidence kept separate from failure-recovery evidence: **NOT VERIFIED**
-- Evidence location: **NOT CAPTURED**
+- Evidence location: GitHub Issue #5 comments `5527228686` / `5527422702`; source screenshots were supplied in the same user-assisted QA conversation
 - Result: **NOT VERIFIED**
 
 ## TC-12 Partner application physical acceptance
 
-- Device / OS / browser or installed-PWA context: **NOT CAPTURED**
-- Tester/session reference: **NOT CAPTURED**
+- Device / OS / browser or installed-PWA context: OPPO Reno13 5G (`CPH2689`) / Android 16 / Chrome `152.0.7977.64` available from same-device metadata capture; exact browser-tab vs installed-PWA context during the public-form interaction is **NOT CAPTURED**
+- Tester/session reference: 2026-09-03 user-assisted Android physical QA session
 - Intended authorized Beta test submission completed: **NOT VERIFIED**
 - Duplicate-submit protection observed: **NOT VERIFIED**
 - Reproducible network/SDK failure exercised: **NOT VERIFIED**
@@ -36,12 +36,12 @@ Purpose: record only real physical-device evidence for PR #201 / deployed `kinar
 - Privacy notice version recorded as expected: **NOT VERIFIED**
 - Privacy acknowledgement timestamp recorded as expected: **NOT VERIFIED**
 - Success evidence kept separate from failure-recovery evidence: **NOT VERIFIED**
-- Evidence location: **NOT CAPTURED**
+- Evidence location: GitHub Issue #5 comment `5527422702`; source screenshots were supplied in the same user-assisted QA conversation
 - Result: **NOT VERIFIED**
 
 ## 2026-09-03 Android scoped supporting observations
 
-These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while exact device trace metadata and direct `aria-busy` verification remain incomplete. Details are also recorded in GitHub Issue #5 comment `5527422702`.
+These observations came from a user-assisted physical Android session and materially improve the evidence record, but they do not promote the canonical acceptance fields above while the exact browser-tab vs installed-PWA interaction context, direct `aria-busy` verification, and TC-11 rapid-repeat duplicate-submit evidence remain incomplete. Details are also recorded in GitHub Issue #5 comments `5527228686` and `5527422702`.
 
 ### TC-11 supporting observations
 
@@ -49,7 +49,7 @@ These observations came from a user-assisted physical Android session and materi
 - The UI showed an understandable failure state and visibly restored the normal `ส่งความคิดเห็น` control while retaining the entered rating/message for retry.
 - After network restoration, a separate retry succeeded; the UI showed `ขอบคุณครับ เราได้รับความคิดเห็นของคุณแล้ว ✅` and cleared the submitted form state.
 - Supabase independently confirmed exactly one matching `beta_feedback` row at `2026-09-03 14:21:44.844204+00`.
-- The stored feedback row reported a reduced Chromium user-agent with Chrome `152.0.0.0`; this reduced token is not sufficient to infer exact device model or Android version.
+- The stored feedback row reported a reduced Chromium user-agent with Chrome `152.0.0.0`; later same-device About Chrome evidence captured the exact installed Chrome application version as `152.0.7977.64`.
 - No sufficiently traceable rapid-repeat observation was captured for TC-11 duplicate-submit acceptance in this session.
 - The visible button recovery does not directly prove the DOM `aria-busy` value.
 
@@ -66,10 +66,12 @@ These observations came from a user-assisted physical Android session and materi
 
 ### Trace boundary for this session
 
-- Exact device model: `not captured`.
-- Exact Android version: `not captured`.
-- Exact browser-vs-installed-PWA context for the public-form screenshots: `not captured`.
-- Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchor is Issue #5 comment `5527422702`.
+- Device: OPPO Reno13 5G (`CPH2689`).
+- OS: Android 16; ColorOS 16.0.5; Android security update shown as 1 July 2026.
+- Software/build evidence: `CPH2689_16.0.5.1000(EX01B100P01)` and Android build shown in About Chrome as `CPH2689 Build/BP2A.250605.015`.
+- Browser application version captured on the same device: Chrome `152.0.7977.64`.
+- Exact browser-vs-installed-PWA context for the public-form interaction screenshots: `not captured`.
+- Screenshot evidence was supplied during the 2026-09-03 user-assisted QA conversation; the repository evidence anchors are Issue #5 comments `5527228686` and `5527422702`.
 - Because the canonical contract requires complete trace metadata and direct acceptance fields to move together, the canonical TC-11/TC-12 result blocks above remain unchanged until a fully qualifying session is captured.
 
 ## Evidence boundary
