@@ -24,16 +24,21 @@ jobs:
           set -euo pipefail
           test -s qa-sw-v15.js
           git cat-file -e 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf^{commit}
-          git show 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf:sw.js > /tmp/historical-sw-v15.js
+          historical_blob="$(git rev-parse 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf:sw.js)"
+          fixture_blob="$(git hash-object qa-sw-v15.js)"
+          test "$historical_blob" = '175198a177fc1025a9c431ee90ebfc5b07d4d620'
+          test "$fixture_blob" = "$historical_blob" || {
+            echo "qa-sw-v15.js blob $fixture_blob must match historical sw.js blob $historical_blob"
+            exit 1
+          }
+          git cat-file blob "$historical_blob" > /tmp/historical-sw-v15.js
           cmp -s /tmp/historical-sw-v15.js qa-sw-v15.js || {
             echo 'qa-sw-v15.js must remain byte-for-byte identical to historical sw.js at commit 46b494cc9430ee39c2322f9e0ae8b66149c0d3bf'
             diff -u /tmp/historical-sw-v15.js qa-sw-v15.js || true
             exit 1
           }
           grep -Fq "const CACHE='kinaraidee-beta-v15';" qa-sw-v15.js
-          printf 'fixture sha256: '
-          sha256sum qa-sw-v15.js
-          test "$(sha256sum qa-sw-v15.js | awk '{print $1}')" = '39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c'
+          printf 'historical/fixture git blob: %s\n' "$historical_blob"
           node --check qa-sw-v15.js
 
       - name: Syntax-check inline NF-07 probe JavaScript
