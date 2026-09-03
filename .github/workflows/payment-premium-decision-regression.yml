@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
@@ -12,6 +13,7 @@ on:
     branches: ['main']
     paths:
       - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md'
       - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
       - 'CURRENT-RELEASE.md'
       - 'RELEASE-CHECKLIST.md'
@@ -33,8 +35,10 @@ jobs:
         run: |
           set -euo pipefail
           file='PAYMENT-PREMIUM-DECISION.md'
+          research='PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md'
           privacy='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
           test -s "$file"
+          test -s "$research"
           test -s "$privacy"
           grep -Eq '^Status: \*\*(NOT APPROVED|APPROVED)\*\*$' "$file"
           required_fields=(
@@ -74,6 +78,17 @@ jobs:
           grep -Fq 'timezone-qualified ISO-8601 timestamp' "$file"
           grep -Fq 'does not itself prove subscribe/renew/cancel/payment-failure execution' "$file"
           grep -Fq 'They do not prove a merchant account exists' "$file"
+
+          # Public-provider research is an input only; it must never silently become a provider/account/price decision.
+          grep -Fq 'PAYMENT-PROVIDER-RESEARCH-SNAPSHOT.md' "$file"
+          grep -Fq 'do **not** populate or approve any field below automatically' "$file"
+          grep -Fq '**Provider selection = UNSET**' "$research"
+          grep -Fq 'merchant account = not opened/verified' "$research"
+          grep -Fq 'Premium price/cadence/entitlements = UNSET' "$research"
+          grep -Fq 'Canonical decision gate: `PAYMENT-PREMIUM-DECISION.md`.' "$research"
+          grep -Fq 'must be rechecked at provider-selection time' "$research"
+          grep -Fq 'does not establish merchant approval' "$research"
+          grep -Fq 'Public Beta completion or Commercial GO' "$research"
 
       - name: Verify Commercial checklist respects payment decision and execution boundaries
         shell: bash
@@ -143,6 +158,7 @@ jobs:
             echo '## Payment / Premium decision regression'
             echo
             echo '- NOT APPROVED requires policy-sensitive payment fields to remain UNSET and all Commercial payment checklist gates to remain open.'
+            echo '- Public-provider research is time-bounded decision input only; it cannot select a provider, establish a merchant account, set price/entitlements, or approve a Payment/Premium gate.'
             echo '- APPROVED may establish reviewed decision outputs such as price and Free/Premium entitlement, subject to the decision contract.'
             echo '- Merchant-account reality, subscription lifecycle execution, webhook/entitlement execution, transaction/reconciliation and refund/cancel execution gates remain open in both decision states until separate provider-backed evidence exists.'
             echo '- CURRENT-RELEASE.md must keep Payment/Premium as a Commercial blocker until provider-backed lifecycle evidence exists.'
