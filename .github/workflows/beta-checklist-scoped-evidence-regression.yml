@@ -1,0 +1,70 @@
+name: Beta Checklist Scoped Evidence Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "BETA-CHECKLIST.md"
+      - "CURRENT-RELEASE.md"
+      - "AUTH-INTERACTION-PHYSICAL-EVIDENCE.md"
+      - "PUBLIC-FORM-PHYSICAL-EVIDENCE.md"
+      - "REAL-PLATFORM-UX-EVIDENCE.md"
+      - "PWA-UPGRADE-PHYSICAL-EVIDENCE.md"
+      - ".github/workflows/beta-checklist-scoped-evidence-regression.yml"
+  pull_request:
+    paths:
+      - "BETA-CHECKLIST.md"
+      - "CURRENT-RELEASE.md"
+      - "AUTH-INTERACTION-PHYSICAL-EVIDENCE.md"
+      - "PUBLIC-FORM-PHYSICAL-EVIDENCE.md"
+      - "REAL-PLATFORM-UX-EVIDENCE.md"
+      - "PWA-UPGRADE-PHYSICAL-EVIDENCE.md"
+      - ".github/workflows/beta-checklist-scoped-evidence-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  beta-checklist-scoped-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preserve scoped physical evidence and open gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          checklist='BETA-CHECKLIST.md'
+          release='CURRENT-RELEASE.md'
+          auth='AUTH-INTERACTION-PHYSICAL-EVIDENCE.md'
+          forms='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
+          ux='REAL-PLATFORM-UX-EVIDENCE.md'
+          nf07='PWA-UPGRADE-PHYSICAL-EVIDENCE.md'
+
+          for file in "$checklist" "$release" "$auth" "$forms" "$ux" "$nf07"; do
+            test -s "$file" || { echo "Missing $file"; exit 1; }
+          done
+
+          # Canonical evidence must still support every scoped checkbox promoted here.
+          grep -Fq 'TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session**' "$release"
+          grep -Fq 'Status: **PASS**' "$forms"
+          grep -Fq 'Status: **PARTIAL PASS — RECOVERY REQUEST/MAIL-SEND/VERIFY-LINK + PASSWORD UPDATE + SIGN-IN + NEW SIGNUP + EMAIL CONFIRMATION VERIFIED / LEAKED-PASSWORD REJECTION NOT VERIFIED**' "$auth"
+          grep -Fq 'Reduced-motion result: **PASS**' "$ux"
+
+          grep -Fq -- '- [x] real Feedback submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+          grep -Fq -- '- [x] real Partner application submission/failure-recovery interaction สำหรับ PR #201 changed path พร้อม backend/privacy acceptance — scoped PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+          grep -Fq -- '- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ของ PR #373 ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+          grep -Fq -- '- [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+
+          # Open gates must not be closed by the scoped OPPO evidence.
+          grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' "$nf07"
+          grep -Fq -- '- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`' "$checklist"
+          grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$checklist"
+          grep -Fq -- '- [ ] Auth weak/leaked-password rejection/protection ของ PR #373 ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' "$checklist"
+          grep -Fq -- '- [ ] Android Chrome อย่างน้อย 3 device models' "$checklist"
+          grep -Fq -- '- [ ] iPhone Safari อย่างน้อย 2 device models' "$checklist"
+          grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
+          grep -Fq 'Commercial launch remains **NO-GO**' "$release"
+
+          echo 'Beta checklist matches scoped physical evidence while NF-07, keyboard focus, leaked-password and distinct-device gates remain open.'
