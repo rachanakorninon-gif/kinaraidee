@@ -1,0 +1,74 @@
+name: Marketing First 100 Regression
+
+on:
+  pull_request:
+    paths:
+      - 'MARKETING-FIRST-100-ORGANIC-TEST.md'
+      - 'MARKETING-ACQUISITION-READINESS.md'
+      - 'MARKETING-FIRST-PAID-TEST-PLAN.md'
+      - 'tools/marketing-url-builder.mjs'
+      - '.github/workflows/marketing-first100-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'MARKETING-FIRST-100-ORGANIC-TEST.md'
+      - 'MARKETING-ACQUISITION-READINESS.md'
+      - 'MARKETING-FIRST-PAID-TEST-PLAN.md'
+      - 'tools/marketing-url-builder.mjs'
+      - '.github/workflows/marketing-first100-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  first100-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate first-100 organic URL matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='MARKETING-FIRST-100-ORGANIC-TEST.md'
+          campaign='th_first100_core_202609'
+          sources=(tiktok instagram youtube facebook)
+          contents=(c001_todayeat c002_anything c003_surprise_demo c004_budget)
+          count=0
+          for source in "${sources[@]}"; do
+            for content in "${contents[@]}"; do
+              url="$(node tools/marketing-url-builder.mjs \
+                --source "$source" \
+                --medium organic_social \
+                --campaign "$campaign" \
+                --content "$content")"
+              grep -Fq "$url" "$doc" || {
+                echo "First-100 doc missing builder-approved URL: $url"
+                exit 1
+              }
+              count=$((count+1))
+            done
+          done
+          test "$count" -eq 16
+          echo "Validated $count builder-approved First-100 URLs"
+      - name: Guard truth and spend boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='MARKETING-FIRST-100-ORGANIC-TEST.md'
+          grep -Fq 'READY FOR ORGANIC TEST / NO PAID SPEND AUTHORIZED' "$doc"
+          grep -Fq '100 newly confirmed accounts' "$doc"
+          grep -Fq 'anonymous product usage is not yet counted' "$doc"
+          grep -Fq 'recommendation result reached' "$doc"
+          grep -Fq 'not yet measured' "$doc"
+          grep -Fq 'Campaign 3,000 eligibility' "$doc"
+          if grep -Eq 'utm_medium=paid_social|utm_campaign=[^` ]*(prize|premium_3000)' "$doc"; then
+            echo 'First-100 organic pack contains paid or blocked prize/Premium acquisition URL.'
+            exit 1
+          fi
+      - name: Guard current measurement truth in canonical plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'CORE ACQUISITION MEASUREMENT DEPLOYED / PAID ACQUISITION NOT YET LAUNCHED' MARKETING-ACQUISITION-READINESS.md
+          grep -Fq 'account acquisition measurement is deployed' MARKETING-FIRST-PAID-TEST-PLAN.md
+          grep -Fq 'Recommendation results | NOT MEASURED' MARKETING-FIRST-PAID-TEST-PLAN.md
