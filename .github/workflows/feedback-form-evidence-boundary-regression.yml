@@ -23,10 +23,12 @@ jobs:
           evidence='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
           release='CURRENT-RELEASE.md'
           checklist='RELEASE-CHECKLIST.md'
+          beta_ready='BETA-READY.md'
 
           test -s "$evidence" || { echo 'Missing PUBLIC-FORM-PHYSICAL-EVIDENCE.md'; exit 1; }
           test -s "$release" || { echo 'Missing CURRENT-RELEASE.md'; exit 1; }
           test -s "$checklist" || { echo 'Missing RELEASE-CHECKLIST.md'; exit 1; }
+          test -s "$beta_ready" || { echo 'Missing BETA-READY.md'; exit 1; }
 
           status="$(sed -n 's/^Status: \*\*\([^*]*\)\*\*$/\1/p' "$evidence" | head -n1)"
           case "$status" in
@@ -78,6 +80,9 @@ jobs:
           }
           grep -Fq 'Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission — scoped OPPO Reno13 5G / Android 16 / Chrome 152 physical acceptance is recorded separately' "$checklist" || {
             echo 'Product checklist must reflect scoped Feedback physical acceptance'; exit 1;
+          }
+          grep -Fq 'TC-11/TC-12 Feedback/Partner physical acceptance มี scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ยังต้องมี broader device-matrix coverage ตามเกณฑ์ Public Beta และห้ามขยายผล scoped PASS เป็น full-matrix PASS' "$beta_ready" || {
+            echo 'BETA-READY.md must reflect scoped public-form PASS and preserve the remaining device-matrix boundary'; exit 1;
           }
           if grep -Fq 'Real Feedback and Partner application submission behavior for PR #201 remains open' "$release"; then
             echo 'Scoped physical PASS cannot coexist with stale public-form-open release marker.'
