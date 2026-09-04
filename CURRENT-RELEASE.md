@@ -44,7 +44,7 @@ Historical verified deployment evidence remains valid for its original scope:
 - Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
-- Live public `release-meta.json` matched `00bdcb7f432e2eb82e71dcf1a9ec804ff1c4b2` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
+- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
