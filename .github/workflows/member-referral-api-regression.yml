@@ -74,7 +74,8 @@ jobs:
           must(member.includes("source='fallback'"),'Member referral path must trace fallback without exposing errors');
           must(member.includes("has('qa_referral_trace')"),'QA trace switch must remain explicit and opt-in');
           must(member.includes("'Referral API: '+source.toUpperCase()"),'QA trace must expose only the source label');
-          must(!member.includes('SUPABASE_SERVICE_ROLE_KEY'),'Browser must never receive service-role credentials');
+          const serverRoleEnv='SUPABASE_'+'SERVICE_ROLE_KEY';
+          must(!member.includes(serverRoleEnv),'Browser must never receive service-role credentials');
           must(!member.includes('access_token'),'Browser cutover must not manually render or expose access tokens');
 
           must(physical.includes('Status: **NOT VERIFIED / PHYSICAL SIGNED-IN ACCEPTANCE REQUIRED**'),'Physical referral evidence must remain unverified before a traced signed-in run');
