@@ -19,6 +19,7 @@ No provider is considered production-ready merely because UI/client code exists.
 - Current Auth identities observed by an aggregate-only read on 2026-09-05: provider `email` only. No user identifiers, emails, phone numbers, tokens or social-provider subject IDs were retained in evidence.
 - Existing email/password signup, confirmation, recovery/password-update and sign-in have scoped physical evidence on OPPO Android Chrome. The separate leaked-password-protection gate remains OPEN and must not be reclassified by this work.
 - Current browser/PWA runtime remains PR #520 Edge-only referral-summary runtime. This branch must not supersede that runtime until provider configuration, regression and physical acceptance are complete.
+- The client prototype lives under `prototype/auth-multi-provider/` and is intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime.
 
 ## Supabase / provider model
 
@@ -62,7 +63,7 @@ Do not invent or derive application account IDs from provider identifiers. Exist
 
 Supabase can automatically link verified OAuth identities that return the same verified email. Manual OAuth identity linking is also available through `linkIdentity()` when enabled.
 
-Kinaraidee must **not** auto-merge two existing application accounts based only on name, phone-like text, unverified email, LINE display name, Facebook display name, or client-supplied metadata.
+Kinaraidee must not auto-merge two existing application accounts based only on name, phone-like text, unverified email, LINE display name, Facebook display name, or client-supplied metadata.
 
 Before exposing a user-facing "เชื่อมบัญชี" action:
 - require an authenticated current session;
