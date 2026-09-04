@@ -76,14 +76,14 @@
 
 Group API เป็น public Edge Function โดย `verify_jwt=false` เพื่อรองรับ accountless invited-friend voting ดังนั้น rollback ต้องคง product/security invariants ที่จำเป็นและห้ามแก้ configuration แบบสุ่มเพื่อให้ incident หายชั่วคราว
 
-**Current reference evidence ณ 2026-08-23 (ใช้เพื่อเตรียมความพร้อม ไม่ใช่คำสั่งให้ rollback):**
+**Current reference evidence ณ 2026-09-05 (ใช้เพื่อเตรียมความพร้อม ไม่ใช่คำสั่งให้ rollback):**
 
-- current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`
-- current inspected source blob: `04e7f595ef73b9fdbdf377ba3b8936a818a109be`
-- current inspected deployment: Supabase `group-api` ACTIVE version 6
-- current inspected bundle SHA-256: `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`
-- current v6 rejection-only live verification: run `32632951668` on `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`
-- historical v5 evidence is superseded for current source/deployment parity; use `GROUP-API-DEPLOYMENT-EVIDENCE.md` for the current verified anchors and prior-version history
+- current Group API source candidate: PR #518 / `8ab5fc9dd506740b48b245469421518381bbe079`
+- current inspected source blob: `93d5d4afe9436e23ac5a9af3567349bedd8b73af`
+- current inspected deployment: Supabase `group-api` ACTIVE version 7
+- current inspected bundle SHA-256: `363f7f547f8b773bec46e211a59c380e276f1fbf2fcc2852471dfd1608730887`
+- current v7 rejection-only live verification: run `32632951668` attempt 2 / job `101112482238`; application-owned presence read-back is separately recorded in `GROUP-API-DEPLOYMENT-EVIDENCE.md`
+- historical v6 and earlier evidence is superseded for current source/deployment parity; use `GROUP-API-DEPLOYMENT-EVIDENCE.md` for the current verified anchors and prior-version history
 
 เลข/version ข้างต้นเป็น evidence anchors เท่านั้น. ก่อน incident rollback จริงต้องตรวจ `CURRENT-RELEASE.md`, `GROUP-API-DEPLOYMENT-EVIDENCE.md`, current Supabase deployment และ incident scope ใหม่เสมอ เพราะ source candidate อาจเปลี่ยนไปแล้ว.
 
