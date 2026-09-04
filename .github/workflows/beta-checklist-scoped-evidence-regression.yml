@@ -10,6 +10,7 @@ on:
       - "PUBLIC-FORM-PHYSICAL-EVIDENCE.md"
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "PWA-UPGRADE-PHYSICAL-EVIDENCE.md"
+      - "PRODUCT-EVENT-PHYSICAL-EVIDENCE.md"
       - ".github/workflows/beta-checklist-scoped-evidence-regression.yml"
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - "PUBLIC-FORM-PHYSICAL-EVIDENCE.md"
       - "REAL-PLATFORM-UX-EVIDENCE.md"
       - "PWA-UPGRADE-PHYSICAL-EVIDENCE.md"
+      - "PRODUCT-EVENT-PHYSICAL-EVIDENCE.md"
       - ".github/workflows/beta-checklist-scoped-evidence-regression.yml"
   workflow_dispatch:
 
@@ -41,8 +43,9 @@ jobs:
           forms='PUBLIC-FORM-PHYSICAL-EVIDENCE.md'
           ux='REAL-PLATFORM-UX-EVIDENCE.md'
           nf07='PWA-UPGRADE-PHYSICAL-EVIDENCE.md'
+          product='PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'
 
-          for file in "$checklist" "$release" "$auth" "$forms" "$ux" "$nf07"; do
+          for file in "$checklist" "$release" "$auth" "$forms" "$ux" "$nf07" "$product"; do
             test -s "$file" || { echo "Missing $file"; exit 1; }
           done
 
@@ -66,13 +69,29 @@ jobs:
             grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$checklist"
           fi
 
-          # Independent open gates must not be closed by scoped physical evidence for other behaviors.
-          grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' "$nf07"
-          grep -Fq -- '- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`' "$checklist"
+          # NF-07 is now a scoped physical PASS only because the qualifying old-cache→current physical trace exists.
+          grep -Fq 'Status: **SCOPED PHYSICAL PASS — NF-07 v15 → v16**' "$nf07"
+          grep -Fq 'Device: OPPO Reno13 5G (CPH2689)' "$nf07"
+          grep -Fq 'Historical cache marker: `kinaraidee-beta-v15`' "$nf07"
+          grep -Fq 'Actual reopen count before current behavior appeared: **1**' "$nf07"
+          grep -Fq 'No manual site/app-data clear occurred' "$nf07"
+          grep -Fq 'legacy `kinaraidee-beta-v15` cache: absent' "$nf07"
+          grep -Fq 'site-data persistence marker: survived' "$nf07"
+          grep -Fq 'Home + Surprise usability check' "$nf07"
+          grep -Fq -- '- [x] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
+
+          # Product Event may be promoted only from the isolated physical QA run plus backend corroboration and cleanup.
+          grep -Fq 'Status: **SCOPED PHYSICAL PASS — OPPO ANDROID CHROME / QA TELEMETRY CLEANED**' "$product"
+          grep -Fq 'distinguishable browser sessions: **2**' "$product"
+          grep -Fq 'maximum rows for any `(session,event)` pair: **1**' "$product"
+          grep -Fq 'Matching QA rows remaining after cleanup: **0**' "$product"
+          grep -Fq -- '- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: Product Event scoped physical QA PASS on 2026-09-05' "$checklist"
+
+          # Independent open gates must remain open despite these scoped physical passes.
           grep -Fq -- '- [ ] Auth weak/leaked-password rejection/protection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' "$checklist"
           grep -Fq -- '- [ ] Android Chrome อย่างน้อย 3 device models' "$checklist"
           grep -Fq -- '- [ ] iPhone Safari อย่างน้อย 2 device models' "$checklist"
           grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
-          echo 'Beta checklist matches scoped physical evidence while independent NF-07, leaked-password and distinct-device gates remain open; Keyboard Focus state is bound to its canonical physical evidence result.'
+          echo 'Beta checklist matches scoped physical evidence for forms/Auth/accessibility/NF-07/Product Event while leaked-password and distinct-device gates remain open.'

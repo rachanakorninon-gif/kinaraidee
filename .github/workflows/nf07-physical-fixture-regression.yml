@@ -51,12 +51,14 @@ jobs:
           PY
           node --check /tmp/qa-nf07-inline.js
 
-      - name: Verify QA probe and evidence boundary
+      - name: Verify QA probe, fixture provenance and recorded physical boundary
         shell: bash
         run: |
           set -euo pipefail
+          evidence='PWA-UPGRADE-PHYSICAL-EVIDENCE.md'
           test -s qa-nf07-old-cache.html
-          test -s PWA-UPGRADE-PHYSICAL-EVIDENCE.md
+          test -s "$evidence"
+
           grep -Fq "const LEGACY_CACHE='kinaraidee-beta-v15';" qa-nf07-old-cache.html
           grep -Fq "const CURRENT_CACHE='kinaraidee-beta-v16';" qa-nf07-old-cache.html
           grep -Fq "const FIXTURE_SHA256='39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c';" qa-nf07-old-cache.html
@@ -65,13 +67,22 @@ jobs:
           grep -Fq "kinaraidee_nf07_persistence_marker_v1" qa-nf07-old-cache.html
           grep -Fq "PASS (state verifier)" qa-nf07-old-cache.html
           grep -Fq 'ยังไม่ใช่ NF-07 PASS' qa-nf07-old-cache.html
-          grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
-          grep -Fq 'Expected SHA-256 of the exact historical fixture bytes: `39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c`' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
-          grep -Fq 'Programmatically registering the v15 fixture is test setup' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
-          grep -Fq 'A fresh v16 install is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
-          grep -Fq 'A synthetic Cache Storage object or VM simulation is not NF-07 PASS.' PWA-UPGRADE-PHYSICAL-EVIDENCE.md
-          if grep -Eq '^Status: \*\*PASS' PWA-UPGRADE-PHYSICAL-EVIDENCE.md; then
-            echo 'NF-07 physical evidence must not become PASS from fixture/CI setup alone.'
-            exit 1
-          fi
-          echo 'NF-07 historical fixture provenance, runtime hash, evidence hash and physical-evidence boundary preserved.'
+
+          grep -Fq 'Status: **SCOPED PHYSICAL PASS — NF-07 v15 → v16**' "$evidence"
+          grep -Fq 'Historical commit: `46b494cc9430ee39c2322f9e0ae8b66149c0d3bf`' "$evidence"
+          grep -Fq 'Historical cache marker: `kinaraidee-beta-v15`' "$evidence"
+          grep -Fq 'Expected SHA-256: `39eadd35eba67436ee41db17a119f0739dc5c7d9dda58dd951a13766572bf72c`' "$evidence"
+          grep -Fq 'Device: OPPO Reno13 5G (CPH2689)' "$evidence"
+          grep -Fq 'OS: Android 16 / ColorOS 16.0.5' "$evidence"
+          grep -Fq 'Browser: Chrome 152.0.7977.64' "$evidence"
+          grep -Fq 'Actual reopen count before current behavior appeared: **1**' "$evidence"
+          grep -Fq 'No manual site/app-data clear occurred' "$evidence"
+          grep -Fq 'legacy `kinaraidee-beta-v15` cache: absent' "$evidence"
+          grep -Fq 'site-data persistence marker: survived' "$evidence"
+          grep -Fq 'Home + Surprise usability check' "$evidence"
+          grep -Fq 'QA fixtures, source review and synthetic Service Worker tests remain setup/implementation evidence only and cannot create physical PASS by themselves.' "$evidence"
+          grep -Fq 'It does not establish the remaining device matrix' "$evidence"
+          grep -Fq 'Public Beta completion' "$evidence"
+          grep -Fq 'Commercial GO.' "$evidence"
+
+          echo 'NF-07 historical fixture provenance and the recorded scoped physical v15→v16 acceptance boundary are preserved.'
