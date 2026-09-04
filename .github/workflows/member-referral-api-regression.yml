@@ -59,20 +59,31 @@ jobs:
           for(const table of ['member_referral_codes','member_referrals']){
             must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} raw rows must stay unavailable to browser roles`);
           }
-          must(sql.includes("where rc.user_id=(select auth.uid())"),'Existing RPC must remain caller-scoped during additive migration stage');
-          must(member.includes("sb.rpc('get_my_referral_summary')"),'Stage 1 must not switch the browser referral path before backend verification');
-          must(!member.includes('member-referral-api'),'Stage 1 must remain backend-additive and create no new physical-browser PASS claim');
+          must(sql.includes("where rc.user_id=(select auth.uid())"),'Fallback RPC must remain caller-scoped until physical cutover acceptance');
+          must(sql.includes('grant execute on function public.get_my_referral_summary() to authenticated'),'Fallback RPC must remain available until physical cutover acceptance');
+
+          const edge="sb.functions.invoke('member-referral-api',{body:{}})";
+          const fallback="sb.rpc('get_my_referral_summary')";
+          must(member.includes(edge),'Member page must call authenticated Edge Function first');
+          must(member.includes(fallback),'Member page must retain caller-scoped RPC fallback until physical acceptance');
+          must(member.indexOf(edge)<member.indexOf(fallback),'Edge Function must be attempted before RPC fallback');
+          must(member.includes("source='edge'"),'Member referral path must default trace source to edge');
+          must(member.includes("source='fallback'"),'Member referral path must trace fallback without exposing errors');
+          must(member.includes("has('qa_referral_trace')"),'QA trace switch must remain explicit and opt-in');
+          must(member.includes("'Referral API: '+source.toUpperCase()"),'QA trace must expose only the source label');
+          must(!member.includes('SUPABASE_SERVICE_ROLE_KEY'),'Browser must never receive service-role credentials');
+          must(!member.includes('access_token'),'Browser cutover must not manually render or expose access tokens');
           NODE
 
       - name: Record staged evidence boundary
         shell: bash
         run: |
           {
-            echo '## Member referral API staged boundary'
+            echo '## Member referral API cutover boundary'
             echo
-            echo '- Additive backend source only; current browser RPC remains unchanged in this stage.'
-            echo '- Caller identity must come from a verified Bearer token.'
-            echo '- Service-role table access remains server-side and raw referral rows stay unavailable to browser roles.'
-            echo '- Response is limited to the caller random referral code plus aggregate total/confirmed counts.'
-            echo '- CI or backend deployment does not create real-device referral interaction acceptance or Commercial GO.'
+            echo '- Browser attempts the authenticated Edge Function first and keeps the existing caller-scoped RPC only as a temporary fallback.'
+            echo '- Caller identity remains server-verified; service-role table access stays server-side and raw referral rows stay unavailable to browser roles.'
+            echo '- Optional QA trace exposes only EDGE/FALLBACK/UNAVAILABLE source state, never token/account/user payload.'
+            echo '- RPC fallback must not be revoked until the changed signed-in referral interaction is physically accepted.'
+            echo '- CI/deployment does not create real-device referral interaction acceptance or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
