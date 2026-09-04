@@ -10,6 +10,8 @@ on:
       - 'supabase/referral-acquisition-v1.sql'
       - 'supabase/referral-code-privacy-fix-20260904.sql'
       - 'supabase/referral-acquisition-v1-rollback.sql'
+      - 'supabase/referral-summary-edge-cutover-20260904.sql'
+      - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/referral-acquisition-regression.yml'
   push:
     branches: [main]
@@ -21,6 +23,8 @@ on:
       - 'supabase/referral-acquisition-v1.sql'
       - 'supabase/referral-code-privacy-fix-20260904.sql'
       - 'supabase/referral-acquisition-v1-rollback.sql'
+      - 'supabase/referral-summary-edge-cutover-20260904.sql'
+      - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/referral-acquisition-regression.yml'
 
 permissions:
@@ -50,6 +54,8 @@ jobs:
           const sql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
           const privacyFix=fs.readFileSync('supabase/referral-code-privacy-fix-20260904.sql','utf8');
           const rollback=fs.readFileSync('supabase/referral-acquisition-v1-rollback.sql','utf8');
+          const cutover=fs.readFileSync('supabase/referral-summary-edge-cutover-20260904.sql','utf8');
+          const physical=fs.readFileSync('REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md','utf8');
 
           must(acquisition.includes('kinaraideeAcquisitionV1'),'missing acquisition storage key');
           must(acquisition.includes('kinaraidee_referral_code'),'missing referral signup metadata');
@@ -57,7 +63,8 @@ jobs:
           must(acquisition.includes("/^[a-z0-9_-]+$/"),'UTM values must remain slug-only');
           must(home.includes('ensureAcquisition()'),'home must capture acquisition before signup navigation');
           must(member.includes('data/acquisition.js'),'member page must load acquisition capture');
-          must(member.includes("sb.rpc('get_my_referral_summary')"),'member page must use backend referral summary');
+          must(member.includes("sb.functions.invoke('member-referral-api',{body:{}})"),'member page must use authenticated Edge referral summary');
+          must(!member.includes("sb.rpc('get_my_referral_summary')"),'member page must not restore the old RPC fallback after physical EDGE acceptance');
           must(member.includes('ยังไม่ใช่สิทธิ์เข้าร่วมแคมเปญรางวัล'),'member UI must preserve prize non-eligibility boundary');
           must(privacy.includes('การวัดการชวนเพื่อนและแหล่งที่มา'),'privacy notice must disclose referral measurement');
 
@@ -65,9 +72,12 @@ jobs:
             must(sql.includes(`alter table public.${table} enable row level security`),`${table} must have RLS enabled`);
             must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} must not expose raw rows to clients`);
           }
-          must(sql.includes("where rc.user_id=(select auth.uid())"),'referral summary must scope to auth.uid()');
-          must(sql.includes('revoke all on function public.get_my_referral_summary() from public, anon'),'RPC must not be callable by public/anon');
+          must(sql.includes("where rc.user_id=(select auth.uid())"),'historical referral summary RPC definition must remain caller-scoped for provenance/rollback review');
+          must(sql.includes('revoke all on function public.get_my_referral_summary() from public, anon'),'historical RPC must not be callable by public/anon');
+          must(cutover.includes('revoke execute on function public.get_my_referral_summary() from public, anon, authenticated;'),'post-acceptance cutover must revoke the old RPC from browser/public roles after Edge-only deployment');
           must(sql.includes("not prize/campaign eligibility truth"),'schema must preserve prize eligibility boundary');
+          must(physical.includes('QA source label shown: **`EDGE`**'),'browser RPC removal must remain backed by canonical physical EDGE evidence');
+          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP PENDING**'),'physical EDGE acceptance must remain explicit while ordered live security follow-up is pending');
 
           const randomCode="'K' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,20))";
           must(sql.includes(randomCode),'fresh-install schema must generate random referral codes');
