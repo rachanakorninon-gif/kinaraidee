@@ -38,10 +38,10 @@ Deno.serve(async(req)=>{
       .eq('user_id',user.id)
       .maybeSingle(),
     sb.from('member_referrals')
-      .select('*',{count:'exact',head:true})
+      .select('status',{count:'exact',head:true})
       .eq('referrer_user_id',user.id),
     sb.from('member_referrals')
-      .select('*',{count:'exact',head:true})
+      .select('status',{count:'exact',head:true})
       .eq('referrer_user_id',user.id)
       .eq('status','confirmed')
   ])
