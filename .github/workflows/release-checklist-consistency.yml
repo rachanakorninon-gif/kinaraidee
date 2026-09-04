@@ -1,5 +1,4 @@
 name: Commercial Release Checklist Consistency
-# Validation note: this no-op comment intentionally exercises the current Group API evidence guard through pull-request CI.
 
 on:
   push:
@@ -10,6 +9,9 @@ on:
       - 'CURRENT-RUNTIME.md'
       - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'supabase/functions/group-api/**'
+      - 'supabase/group-api-event-observability-v1.sql'
+      - 'supabase/group-api-event-observability-v1-rollback.sql'
       - '.github/workflows/release-checklist-consistency.yml'
   pull_request:
     paths:
@@ -18,6 +20,9 @@ on:
       - 'CURRENT-RUNTIME.md'
       - 'GROUP-API-DEPLOYMENT-EVIDENCE.md'
       - 'PARTNER-API-HARDENING-EVIDENCE.md'
+      - 'supabase/functions/group-api/**'
+      - 'supabase/group-api-event-observability-v1.sql'
+      - 'supabase/group-api-event-observability-v1-rollback.sql'
       - '.github/workflows/release-checklist-consistency.yml'
   workflow_dispatch:
 
@@ -69,7 +74,7 @@ jobs:
           test -n "$release_marker" || { echo 'Unable to parse last canonical release cache marker'; exit 1; }
           test -n "$checklist_marker" || { echo 'Unable to parse checklist cache marker'; exit 1; }
           test -n "$group_candidate" || { echo 'Unable to parse Group API candidate from CURRENT-RELEASE.md'; exit 1; }
-          test -n "$group_evidence_candidate" || { echo 'Unable to parse Group API candidate from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
+          test -n "$group_evidence_candidate" || { echo 'Unable to parse last verified Group API candidate from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
           test -n "$group_version" || { echo 'Unable to parse Group API deployed version from GROUP-API-DEPLOYMENT-EVIDENCE.md'; exit 1; }
           test -n "$partner_candidate" || { echo 'Unable to parse Partner API candidate from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
           test -n "$partner_version" || { echo 'Unable to parse Partner API deployed version from PARTNER-API-HARDENING-EVIDENCE.md'; exit 1; }
@@ -81,7 +86,6 @@ jobs:
               grep -Fq 'Current runtime deployment evidence is pending' "$runtime" || { echo 'Pending runtime evidence boundary missing'; exit 1; }
               grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS' "$runtime" || { echo 'Pending runtime must preserve prior-evidence boundary'; exit 1; }
               test "$release_marker" = "$checklist_marker" || { echo "Last verified release/checklist marker drift while runtime is pending: $release_marker vs $checklist_marker"; exit 1; }
-              echo "Pending runtime marker $marker is source-canonical; release/checklist remain on last verified marker $release_marker until deployment evidence exists"
               ;;
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               test -n "$deployed_sha" || { echo 'PASS runtime must provide deployed SHA'; exit 1; }
@@ -98,14 +102,28 @@ jobs:
               ;;
           esac
 
-          grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
+          git cat-file -e "${group_candidate}^{commit}" || { echo 'Declared Group API source candidate commit missing from repository history'; exit 1; }
+          git merge-base --is-ancestor "$group_candidate" HEAD || { echo 'Declared Group API source candidate is not an ancestor of HEAD'; exit 1; }
+          group_paths=(
+            supabase/functions/group-api
+            supabase/group-api-event-observability-v1.sql
+            supabase/group-api-event-observability-v1-rollback.sql
+          )
+          test -z "$(git diff --name-only "$group_candidate"..HEAD -- "${group_paths[@]}" || true)" || { echo 'Group API/source-observability files changed after declared source candidate'; exit 1; }
 
-          test "$group_candidate" = "$group_evidence_candidate" || { echo 'Group API candidate drift between CURRENT-RELEASE.md and deployment evidence'; exit 1; }
-          git cat-file -e "${group_evidence_candidate}^{commit}" || { echo 'Group API candidate commit missing from repository history'; exit 1; }
-          git merge-base --is-ancestor "$group_evidence_candidate" HEAD || { echo 'Group API candidate is not an ancestor of HEAD'; exit 1; }
-          test -z "$(git diff --name-only "$group_evidence_candidate"..HEAD -- supabase/functions/group-api)" || { echo 'Group API source changed after recorded deployment candidate; refresh deployment evidence'; exit 1; }
-          grep -Fq "ACTIVE version $group_version" "$release" || grep -Fq "ACTIVE v$group_version" "$release" || { echo 'CURRENT-RELEASE.md Group API deployed-version drift'; exit 1; }
-          grep -Fq "deployment/source parity for inspected v$group_version payload: **VERIFIED**" "$group" || { echo 'Group API deployment/source evidence boundary changed or missing'; exit 1; }
+          if grep -Eq '^- Current Group API source candidate: .*\*\*PENDING DEPLOYMENT\*\*' "$release"; then
+            test "$group_candidate" != "$group_evidence_candidate" || { echo 'Pending Group candidate must remain distinct from last verified deployed evidence until deployment is verified'; exit 1; }
+            grep -Fq "Current Group API source candidate: \`$group_evidence_candidate\`" "$checklist" || { echo 'While Group deployment is pending, RELEASE-CHECKLIST.md must remain on the last verified deployed Group candidate'; exit 1; }
+            grep -Fq "last verified production Group API remains ACTIVE version $group_version" "$release" || { echo 'Pending Group candidate must explicitly preserve the last verified deployed version'; exit 1; }
+            grep -Fq "deployment/source parity for inspected v$group_version payload: **VERIFIED**" "$group" || { echo 'Last verified Group deployment/source evidence boundary changed or missing'; exit 1; }
+            group_state="pending-source-$group_candidate / last-deployed-$group_evidence_candidate-v$group_version"
+          else
+            grep -Fq "Current Group API source candidate: \`$group_candidate\`" "$checklist" || { echo 'RELEASE-CHECKLIST.md Group API candidate drift'; exit 1; }
+            test "$group_candidate" = "$group_evidence_candidate" || { echo 'Deployed Group candidate drift between CURRENT-RELEASE.md and deployment evidence'; exit 1; }
+            grep -Fq "ACTIVE version $group_version" "$release" || grep -Fq "ACTIVE v$group_version" "$release" || { echo 'CURRENT-RELEASE.md Group API deployed-version drift'; exit 1; }
+            grep -Fq "deployment/source parity for inspected v$group_version payload: **VERIFIED**" "$group" || { echo 'Group API deployment/source evidence boundary changed or missing'; exit 1; }
+            group_state="deployed-$group_candidate-v$group_version"
+          fi
 
           git cat-file -e "${partner_candidate}^{commit}" || { echo 'Partner API candidate commit missing from repository history'; exit 1; }
           git merge-base --is-ancestor "$partner_candidate" HEAD || { echo 'Partner API candidate is not an ancestor of HEAD'; exit 1; }
@@ -118,7 +136,7 @@ jobs:
           grep -Fq 'Commercial launch remains **NO-GO**' "$release" || { echo 'Canonical release must preserve Commercial NO-GO gate'; exit 1; }
           grep -Fq 'ห้ามเปิดรับเงินจริง' "$checklist" || { echo 'Commercial checklist must preserve no-real-money gate'; exit 1; }
 
-          echo "Commercial release checklist preserves runtime $runtime_candidate / status $runtime_status / source marker $marker / last verified marker $release_marker / Group $group_candidate v$group_version / Partner $partner_candidate v$partner_version probe $partner_probe_run"
+          echo "Commercial release checklist preserves runtime $runtime_candidate / $runtime_status / Group $group_state / Partner $partner_candidate v$partner_version probe $partner_probe_run"
 
       - name: Record evidence boundary
         if: always()
@@ -129,8 +147,9 @@ jobs:
             echo
             echo "- Repository SHA: \`${GITHUB_SHA}\`"
             echo '- Scope: cross-document release-state consistency only'
-            echo '- A PENDING runtime must match sw.js but may intentionally differ from CURRENT-RELEASE/RELEASE-CHECKLIST, which remain on the last verified deployment until exact Pages + Live Smoke evidence exists'
-            echo '- A PASS runtime still requires exact candidate, deployed SHA and cache-marker cross-document trace'
-            echo '- Verifies Group API source/deployment evidence, Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language'
-            echo '- Does not create device, user, conversion, payment, partner agreement, legal or Commercial readiness evidence'
+            echo '- Browser PENDING and PASS states retain their existing exact lineage/deployment rules.'
+            echo '- A pending Group API source candidate must be fully lineage-declared while the commercial checklist and deployment evidence remain pinned to the last verified deployed Group source/version.'
+            echo '- A deployed Group API state requires current source candidate, checklist and deployment evidence to converge again.'
+            echo '- Partner API source/deployment/live-rejection evidence and incomplete/NO-GO safety language remain required.'
+            echo '- This does not create device, user, conversion, payment, partner agreement, legal or Commercial readiness evidence.'
           } >> "$GITHUB_STEP_SUMMARY"
