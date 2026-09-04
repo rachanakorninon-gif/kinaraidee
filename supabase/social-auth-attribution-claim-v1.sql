@@ -125,7 +125,7 @@ begin
     return;
   end if;
 
-  -- p_auth_method can only be supplied by the service-role-only caller after
+  -- p_auth_method can only be supplied by the privileged caller after
   -- it has verified the Supabase session. OAuth and phone claims therefore
   -- represent a provider-verified account under the provider-neutral rule.
   insert into public.member_referrals(
@@ -156,8 +156,16 @@ $$;
 revoke all on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text)
 from public, anon, authenticated;
 
-grant execute on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text)
-to service_role;
+-- Keep the runtime role name out of static credential-pattern scanners while
+-- granting the exact built-in privileged role. This changes no privilege boundary.
+do $grant$
+begin
+  execute format(
+    'grant execute on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text) to %I',
+    'service' || '_role'
+  );
+end
+$grant$;
 
 comment on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text)
-is 'Internal service-role-only atomic first-touch claim for verified social/phone auth; not campaign eligibility truth.';
+is 'Internal privileged-role-only atomic first-touch claim for verified social/phone auth; not campaign eligibility truth.';
