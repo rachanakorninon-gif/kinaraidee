@@ -38,7 +38,7 @@
 - [x] Favorite/History differentiation (`❤️ เมนูโปรด` / `👍 เลือกกิน`) มี physical Android evidence และ Issue #172 ปิดแล้ว
 - [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
 - [x] NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session และ Issue #57 ปิด completed; Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT และข้อนี้ไม่แทน second-device/full-matrix accessibility PASS
-- [ ] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages
+- [x] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages — scoped Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82 PASS โดยใช้ built-in hardware keyboard; trusted Tab/Shift+Tab, visible focus และ Space/Enter activation ผ่านใน Home → meal-selection → back flow; ข้อนี้ไม่แทน full accessibility/device matrix
 - [x] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 PASS; browser รับ `prefers-reduced-motion=reduce`, shipped rule ลด transition เป็น `1e-05s`, Surprise flow จบและกลับ ready; ยังไม่แทน full device matrix
 - [ ] NF-07 ถูก retest จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`; deterministic historical-v15 fixture/verifier พร้อมแล้วแต่ยังต้อง physical close/reopen โดยไม่ clear site data
 - [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
@@ -72,7 +72,7 @@
 ## Product
 - [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix บน current v16 scope ที่เกี่ยวข้อง
 - [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่
-- [ ] visible keyboard focus ผ่าน real-platform acceptance ตาม scope ที่กำหนด
+- [x] visible keyboard focus ผ่าน scoped real-platform acceptance — Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82, built-in hardware keyboard; `REAL-PLATFORM-UX-EVIDENCE.md`; ไม่แทน broader accessibility/device matrix
 - [x] reduced-motion behavior มี scoped real-platform PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ข้อนี้ไม่แทน device matrix ทั้งหมด
 - [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v6 ยังไม่มี fresh multi-device regression จาก automated probe
 - [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ

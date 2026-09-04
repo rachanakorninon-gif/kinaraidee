@@ -1,6 +1,6 @@
 # Real Platform UX Evidence
 
-Status: **PARTIAL — REDUCED MOTION PASS / KEYBOARD FOCUS NOT VERIFIED**
+Status: **PASS — REDUCED MOTION PASS / KEYBOARD FOCUS PASS**
 
 Purpose: canonical physical-platform evidence record for the remaining Public Beta UX gates covering visible keyboard focus and reduced-motion behavior on the currently deployed Kinaraidee runtime.
 
@@ -10,28 +10,30 @@ The two acceptance results are independent and may be exercised on different dev
 
 ## Keyboard focus acceptance
 
-Keyboard focus result: **NOT VERIFIED**
+Keyboard focus result: **PASS**
 
 ### Keyboard trace metadata
 
-- Keyboard device / model: NOT CAPTURED
-- Keyboard OS / version: NOT CAPTURED
-- Keyboard browser or installed-PWA context / version: NOT CAPTURED
-- Keyboard tester / session reference: NOT CAPTURED
-- Keyboard evidence location: NOT CAPTURED
-- Keyboard test date/time: NOT CAPTURED
-- Keyboard verified deployed runtime / release marker: NOT CAPTURED
+- Keyboard device / model: Built-in Lenovo notebook keyboard / Lenovo system model 83DV
+- Keyboard OS / version: Windows 11 Version 25H2 / OS Build 26200.9168
+- Keyboard browser or installed-PWA context / version: Google Chrome 152.0.7977.82, normal browser tab
+- Keyboard tester / session reference: owner-operated physical QA session, 2026-09-04 22:42–23:15 Asia/Bangkok; Issue #133 accessibility follow-up and Issue #5 Beta QA follow-up
+- Keyboard evidence location: Issue #133 keyboard-focus physical QA follow-up; Issue #5 keyboard-focus QA follow-up; physical screenshots captured in the QA conversation for the same traced session
+- Keyboard test date/time: 2026-09-04 22:42–23:15 Asia/Bangkok
+- Keyboard verified deployed runtime / release marker: live `qa-keyboard-focus-state.html` exercised the same-origin shipped app on the declared browser/PWA runtime candidate `ea409cd02fc7744514b8c867a67f56ec0187de80`, cache `kinaraidee-beta-v16`; canonical deployed descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`, Pages `33838629999` and main Live Smoke `33838665915` remain the current browser/PWA deployment trace. Later documentation/Group-API descendants do not supersede this browser/PWA runtime declaration.
 
 Required physical interaction evidence:
 
-- Keyboard navigation was performed with a real hardware keyboard or equivalent platform keyboard navigation path: NOT VERIFIED
-- Interactive controls can be reached in a logical sequence without pointer/touch-only interaction: NOT VERIFIED
-- A visible focus indicator is present on focused actionable controls: NOT VERIFIED
-- Focus is not visually lost during the tested core flow: NOT VERIFIED
-- Activation with keyboard controls works for the tested actionable elements: NOT VERIFIED
-- Any unreachable, trapped, hidden, or ambiguous focus state is recorded: NOT CAPTURED
+- Keyboard navigation was performed with a real hardware keyboard or equivalent platform keyboard navigation path: VERIFIED — the tester explicitly confirmed use of the notebook's built-in Lenovo hardware keyboard.
+- Interactive controls can be reached in a logical sequence without pointer/touch-only interaction: VERIFIED — trusted Tab moved through the primary Home action, back control and meal options; trusted Shift+Tab reversed the sequence from dinner → lunch → breakfast → back.
+- A visible focus indicator is present on focused actionable controls: VERIFIED — the live probe reported `:focus-visible=true` with `2.5px solid rgb(11, 107, 203)` outline and `2.5px` offset on multiple controls, and the indicator was visually apparent in the physical screenshots.
+- Focus is not visually lost during the tested core flow: VERIFIED — visible focus remained trackable through the tested Home → meal-selection path and during reverse navigation; no focus trap or lost-focus state was observed.
+- Activation with keyboard controls works for the tested actionable elements: VERIFIED — Space activated the primary `ช่วยฉันเลือก` action and Enter activated the back control, returning the app to Home as expected; both activations were recorded as trusted keyboard activations by the probe.
+- Any unreachable, trapped, hidden, or ambiguous focus state is recorded: NONE OBSERVED IN THE TESTED HOME → MEAL-SELECTION → BACK CORE FLOW.
 
 PASS requires one traceable physical-platform keyboard session with complete keyboard metadata and all required keyboard interaction checks verified. Static CSS inspection or automated focus-style regression does not establish this result.
+
+This PASS is scoped to the traced Lenovo / Windows 11 / Chrome physical keyboard session and tested Home → meal-selection → back interaction only. It does not establish full accessibility coverage, the Android/iPhone device matrix, NF-07, referral-summary Edge acceptance, Product Event real-user acceptance, leaked-password protection, Public Beta completion or Commercial GO.
 
 ## Reduced-motion acceptance
 

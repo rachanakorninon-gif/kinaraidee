@@ -76,10 +76,22 @@ jobs:
           grep -Fq 'qa-keyboard-focus-state.html' "$pages"
           grep -Fq 'test -s _site/qa-keyboard-focus-state.html' "$pages"
 
-          grep -Fq 'Keyboard focus result: **NOT VERIFIED**' "$evidence"
+          # The probe remains evidence-neutral: it can produce TRACE READY but never self-promotes PASS.
           grep -Fq 'Static CSS inspection or automated focus-style regression does not establish this result.' "$evidence"
-          grep -Fq 'visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.' "$release"
-          grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$beta"
+
+          # Canonical Keyboard Focus state may be PASS only from the independent real-hardware evidence record.
+          if grep -Fq 'Keyboard focus result: **PASS**' "$evidence"; then
+            grep -Fq 'Keyboard device / model: Built-in Lenovo notebook keyboard / Lenovo system model 83DV' "$evidence"
+            grep -Fq 'Keyboard OS / version: Windows 11 Version 25H2 / OS Build 26200.9168' "$evidence"
+            grep -Fq 'Keyboard browser or installed-PWA context / version: Google Chrome 152.0.7977.82, normal browser tab' "$evidence"
+            grep -Fq 'Visible Keyboard Focus canonical result is **PASS for the scoped Lenovo system model 83DV' "$release"
+            grep -Fq -- '- [x] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages — scoped PASS: Lenovo system model 83DV' "$beta"
+          else
+            grep -Fq 'Keyboard focus result: **NOT VERIFIED**' "$evidence"
+            grep -Fq 'visible keyboard focus must be verified with real keyboard/focus navigation on deployed pages.' "$release"
+            grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$beta"
+          fi
+
           grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
 
-          echo 'Keyboard-focus physical QA probe is syntax-valid, isolated from guarded runtime data, published explicitly by Pages, and cannot promote synthetic setup to PASS.'
+          echo 'Keyboard-focus QA probe remains evidence-neutral and published by Pages; canonical PASS, when present, is bound to independent traceable real-hardware evidence rather than synthetic setup.'
