@@ -36,11 +36,11 @@ jobs:
             test -s "$f" || { echo "Missing marketing readiness file: $f"; exit 1; }
           done
 
-          grep -Fq 'Status: **PREPARED / PAID ACQUISITION NOT YET LAUNCHED**' "$readiness" || {
-            echo 'Acquisition readiness must remain pre-launch until a separate paid-media GO exists'; exit 1;
+          grep -Fq 'Status: **CORE ACQUISITION MEASUREMENT DEPLOYED / PAID ACQUISITION NOT YET LAUNCHED**' "$readiness" || {
+            echo 'Acquisition measurement may be deployed, but paid acquisition must remain not launched until a separate paid-media GO exists'; exit 1;
           }
           grep -Fq 'Status: **DESIGN ONLY / MEASUREMENT NOT IMPLEMENTED BY THIS DOCUMENT**' "$attribution" || {
-            echo 'Attribution contract must not imply production measurement is implemented'; exit 1;
+            echo 'Attribution contract document itself must not imply that it deploys production measurement'; exit 1;
           }
           grep -Fq 'Status: **PRE-LAUNCH / PRODUCTION PREP ONLY**' "$creative" || {
             echo 'Creative matrix must remain pre-launch preparation'; exit 1;
@@ -89,6 +89,12 @@ jobs:
           grep -Fq 'Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.' "$readiness" || {
             echo 'Prize-entry and eligible-count evidence boundary is missing'; exit 1;
           }
+          grep -Fq 'Product Funnel is deployed for reviewed UTM traffic' "$readiness" || {
+            echo 'Deployed Product Funnel measurement truth is missing'; exit 1;
+          }
+          grep -Fq 'Product telemetry is best-effort and is not Campaign 3,000 eligibility truth.' "$readiness" || {
+            echo 'Product telemetry eligibility boundary is missing'; exit 1;
+          }
           grep -Fq 'Budget: **UNSET**' "$testplan" || {
             echo 'Marketing test budget must remain UNSET until separately approved'; exit 1;
           }
@@ -126,11 +132,12 @@ jobs:
           {
             echo '## Marketing claims boundary'
             echo
-            echo '- Confirms readiness, attribution, scripts, test design, social content, community replies and publishing evidence remain pre-launch/prepared only.'
+            echo '- Confirms core acquisition measurement may be deployed while scripts, paid tests, social content, community replies and publishing remain pre-launch/prepared only.'
+            echo '- Requires deployed Product Funnel truth to remain separate from paid-media launch and Campaign 3,000 eligibility.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
             echo '- Requires prize eligible-user counts to remain unreported until backed by a trusted aggregate and campaign-gate approval.'
             echo '- Requires social channel creation/publishing to remain unverified until real platform evidence exists.'
             echo '- Requires observed zero to remain distinct from NOT MEASURED in social evidence.'
             echo '- Requires paid-test budget to remain UNSET and paid acquisition NOT LAUNCHED.'
-            echo '- Does not authorize ad spend, billing, analytics collection, social publishing, Premium sales, prize entries or Commercial GO.'
+            echo '- Does not authorize ad spend, billing, new analytics collection, social publishing, Premium sales, prize entries or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
