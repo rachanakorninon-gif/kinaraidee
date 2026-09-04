@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
-      - 'data/member-auth-multi-provider.js'
+      - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   push:
     branches: [main]
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
-      - 'data/member-auth-multi-provider.js'
+      - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   workflow_dispatch:
 
@@ -27,7 +27,7 @@ jobs:
           node-version: '22'
 
       - name: JavaScript syntax
-        run: node --check data/member-auth-multi-provider.js
+        run: node --check prototype/auth-multi-provider/member-auth-multi-provider.js
 
       - name: Preserve staged rollout and security boundaries
         shell: bash
@@ -35,8 +35,10 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const fs=require('fs');
-          const js=fs.readFileSync('data/member-auth-multi-provider.js','utf8');
+          const js=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
           const doc=fs.readFileSync('AUTH-MULTI-PROVIDER-ROLLOUT.md','utf8');
+          const member=fs.readFileSync('member.html','utf8');
+          const sw=fs.readFileSync('sw.js','utf8');
           const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
 
           must(js.includes("Object.freeze({line:false,phone:false,facebook:false})"),'new providers must default disabled');
@@ -48,12 +50,15 @@ jobs:
           must(!js.includes('provider_token')&&!js.includes('provider_refresh_token'),'app must not persist provider tokens');
           must(!js.includes('localStorage.setItem')&&!js.includes('sessionStorage.setItem'),'foundation must not add browser persistence for OTP/provider identity data');
           must(js.includes("/^0\\d{9}$/")&&js.includes("/^\\+66\\d{9}$/"),'Thai phone normalization must be format-bounded');
+          must(!member.includes('member-auth-multi-provider.js'),'prototype must remain unwired from the production member page');
+          must(!sw.includes('member-auth-multi-provider.js'),'prototype must remain outside the production Service Worker cache');
           must(doc.includes('Status: **FOUNDATION ONLY / PROVIDERS NOT ENABLED**'),'rollout document must remain explicit that providers are not enabled');
           must(doc.includes('referral/acquisition attribution parity'),'rollout must preserve acquisition/referral parity gate');
           must(doc.includes('No provider is considered production-ready merely because UI/client code exists.'),'client code must not imply provider readiness');
           must(doc.includes('must not auto-merge two existing application accounts'),'account merge safety boundary missing');
           must(doc.includes('SMS spend/abuse controls'),'phone OTP cost/abuse boundary missing');
-          must(doc.includes('Secrets must never be committed')||doc.includes('no secrets committed'),'secret boundary missing');
+          must(doc.includes('no secrets committed'),'secret boundary missing');
+          must(doc.includes('intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime'),'non-deployed prototype boundary missing');
           NODE
 
       - name: Summary
@@ -63,7 +68,8 @@ jobs:
             echo '## Multi-provider Auth foundation'
             echo
             echo '- LINE / Phone / Facebook remain disabled by default.'
-            echo '- Client integration skeleton is syntax-checked without enabling any Production provider.'
+            echo '- Prototype client integration is syntax-checked outside the deployed browser/PWA runtime.'
+            echo '- member.html and the Service Worker do not load/cache the prototype.'
             echo '- Provider credentials/configuration, referral attribution parity, abuse controls and physical acceptance remain required before enablement.'
             echo '- Existing email/password Auth remains the current Production path.'
           } >> "$GITHUB_STEP_SUMMARY"
