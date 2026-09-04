@@ -34,14 +34,14 @@ jobs:
           test -s "$measurement" || { echo 'Missing PRODUCT-EVENT-MEASUREMENT.md'; exit 1; }
           test -s "$physical" || { echo 'Missing PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'; exit 1; }
 
-          grep -Fq 'Status: **PRODUCTION MEASUREMENT DEPLOYED / REAL-DEVICE ACCEPTANCE OPEN**' "$measurement" || {
-            echo 'Product Event measurement must preserve deployed production truth while physical acceptance remains open'; exit 1;
+          grep -Fq 'Status: **PRODUCTION MEASUREMENT DEPLOYED / SCOPED REAL-DEVICE ACCEPTANCE PASS**' "$measurement" || {
+            echo 'Product Event measurement must preserve deployed production truth and the recorded scoped physical PASS'; exit 1;
           }
-          grep -Fq 'Physical interaction acceptance remains open and is prepared in `PRODUCT-EVENT-PHYSICAL-EVIDENCE.md`.' "$measurement" || {
-            echo 'Measurement doc must route the open physical acceptance gate to its evidence record'; exit 1;
+          grep -Fq 'Scoped physical interaction acceptance is recorded in `PRODUCT-EVENT-PHYSICAL-EVIDENCE.md`.' "$measurement" || {
+            echo 'Measurement doc must route scoped physical acceptance to its canonical evidence record'; exit 1;
           }
-          grep -Fq 'Status: **READY FOR PHYSICAL EXECUTION / NOT VERIFIED**' "$physical" || {
-            echo 'Physical Product Event acceptance must remain NOT VERIFIED until real-device evidence is recorded'; exit 1;
+          grep -Fq 'Status: **SCOPED PHYSICAL PASS — OPPO ANDROID CHROME / QA TELEMETRY CLEANED**' "$physical" || {
+            echo 'Physical Product Event evidence must preserve the recorded scoped PASS and cleanup state'; exit 1;
           }
 
           grep -Fq 'qa_product_event_physical_202609' "$physical" || {
@@ -56,8 +56,8 @@ jobs:
           grep -Fq 'QA Product Event rows must be deleted after evidence capture' "$physical" || {
             echo 'Physical QA cleanup requirement is missing'; exit 1;
           }
-          grep -Fq 'Matching QA rows remaining after cleanup: NOT RUN' "$physical" || {
-            echo 'Cleanup verification must remain explicitly unverified before physical execution'; exit 1;
+          grep -Fq 'Matching QA rows remaining after cleanup: **0**' "$physical" || {
+            echo 'Cleanup verification must remain zero for the controlled physical run'; exit 1;
           }
 
           grep -Fq '`landing` = 1' "$physical"
@@ -65,6 +65,12 @@ jobs:
           grep -Fq '`guided_start` = 1' "$physical"
           grep -Fq '`recommendation_result` = 1' "$physical"
           grep -Fq '`nearby_tap` = 1' "$physical"
+          grep -Fq 'distinguishable browser sessions: **2**' "$physical" || {
+            echo 'Surprise and Guided must remain traceable as distinct private browser sessions'; exit 1;
+          }
+          grep -Fq 'maximum rows for any `(session,event)` pair: **1**' "$physical" || {
+            echo 'Physical evidence must preserve deduplication corroboration'; exit 1;
+          }
           grep -Fq 'Synthetic/API smoke, CI, source inspection, Pages deployment and Owner-dashboard availability cannot substitute for this physical acceptance.' "$physical" || {
             echo 'Synthetic/deployment evidence boundary is missing'; exit 1;
           }
@@ -74,6 +80,9 @@ jobs:
           grep -Fq 'Campaign 3,000 eligibility or prize-entry truth;' "$physical" || {
             echo 'Physical evidence must not become Campaign 3,000 authority'; exit 1;
           }
+          grep -Fq 'Public Beta completion or Commercial GO.' "$physical" || {
+            echo 'Scoped Product Event PASS must not be generalized to launch readiness'; exit 1;
+          }
 
       - name: Record boundary
         shell: bash
@@ -81,8 +90,9 @@ jobs:
           {
             echo '## Product Event physical evidence boundary'
             echo
-            echo '- Production measurement is deployed; real-device interaction acceptance remains open.'
-            echo '- Physical QA uses a dedicated QA UTM campaign, separate from First-100 and paid/prize/Premium campaigns.'
-            echo '- QA Product Event rows must be cleaned after evidence capture so the Owner dashboard baseline remains uncontaminated.'
-            echo '- No CI, synthetic API smoke or deployment evidence can promote the physical record to PASS.'
+            echo '- Production measurement is deployed and one scoped OPPO Android Chrome physical interaction run is accepted.'
+            echo '- Physical QA used a dedicated QA UTM campaign, separate from First-100 and paid/prize/Premium campaigns.'
+            echo '- Surprise and Guided were isolated into distinct private browser sessions; the conditional Nearby action was exercised when exposed.'
+            echo '- Controlled QA Product Event rows were cleaned after evidence capture and the matching follow-up count is zero.'
+            echo '- This scoped PASS does not establish real-user funnel traction, Public Beta completion or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
