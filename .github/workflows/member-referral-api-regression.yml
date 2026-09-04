@@ -6,6 +6,7 @@ on:
       - 'supabase/functions/member-referral-api/**'
       - 'member.html'
       - 'supabase/referral-acquisition-v1.sql'
+      - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/member-referral-api-regression.yml'
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - 'supabase/functions/member-referral-api/**'
       - 'member.html'
       - 'supabase/referral-acquisition-v1.sql'
+      - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/member-referral-api-regression.yml'
   workflow_dispatch:
 
@@ -36,6 +38,7 @@ jobs:
           const api=fs.readFileSync('supabase/functions/member-referral-api/index.ts','utf8');
           const member=fs.readFileSync('member.html','utf8');
           const sql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
+          const physical=fs.readFileSync('REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md','utf8');
 
           must(api.includes('@supabase/supabase-js@2.112.2'),'Supabase client version must stay pinned');
           must(api.includes("const allowedOrigin='https://rachanakorninon-gif.github.io'"),'Member referral API must restrict browser origin');
@@ -59,20 +62,39 @@ jobs:
           for(const table of ['member_referral_codes','member_referrals']){
             must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} raw rows must stay unavailable to browser roles`);
           }
-          must(sql.includes("where rc.user_id=(select auth.uid())"),'Existing RPC must remain caller-scoped during additive migration stage');
-          must(member.includes("sb.rpc('get_my_referral_summary')"),'Stage 1 must not switch the browser referral path before backend verification');
-          must(!member.includes('member-referral-api'),'Stage 1 must remain backend-additive and create no new physical-browser PASS claim');
+          must(sql.includes("where rc.user_id=(select auth.uid())"),'Fallback RPC must remain caller-scoped until physical cutover acceptance');
+          must(sql.includes('grant execute on function public.get_my_referral_summary() to authenticated'),'Fallback RPC must remain available until physical cutover acceptance');
+
+          const edge="sb.functions.invoke('member-referral-api',{body:{}})";
+          const fallback="sb.rpc('get_my_referral_summary')";
+          must(member.includes(edge),'Member page must call authenticated Edge Function first');
+          must(member.includes(fallback),'Member page must retain caller-scoped RPC fallback until physical acceptance');
+          must(member.indexOf(edge)<member.indexOf(fallback),'Edge Function must be attempted before RPC fallback');
+          must(member.includes("source='edge'"),'Member referral path must default trace source to edge');
+          must(member.includes("source='fallback'"),'Member referral path must trace fallback without exposing errors');
+          must(member.includes("has('qa_referral_trace')"),'QA trace switch must remain explicit and opt-in');
+          must(member.includes("'Referral API: '+source.toUpperCase()"),'QA trace must expose only the source label');
+          const serverRoleEnv='SUPABASE_'+'SERVICE_ROLE_KEY';
+          must(!member.includes(serverRoleEnv),'Browser must never receive service-role credentials');
+          must(!member.includes('access_token'),'Browser cutover must not manually render or expose access tokens');
+
+          must(physical.includes('Status: **NOT VERIFIED / PHYSICAL SIGNED-IN ACCEPTANCE REQUIRED**'),'Physical referral evidence must remain unverified before a traced signed-in run');
+          must(physical.includes('QA source label is exactly **`EDGE`**'),'Physical PASS must require the Edge path');
+          must(physical.includes('`FALLBACK` means user-facing continuity worked but the Edge cutover is **NOT PASS**'),'Fallback must not be promoted to Edge acceptance');
+          must(physical.includes('referral code')&&physical.includes('access/refresh token'),'Physical evidence privacy exclusions must cover referral identifiers and tokens');
+          must(physical.includes('does not prove referral conversion'),'Physical evidence must preserve downstream overclaim boundary');
           NODE
 
       - name: Record staged evidence boundary
         shell: bash
         run: |
           {
-            echo '## Member referral API staged boundary'
+            echo '## Member referral API cutover boundary'
             echo
-            echo '- Additive backend source only; current browser RPC remains unchanged in this stage.'
-            echo '- Caller identity must come from a verified Bearer token.'
-            echo '- Service-role table access remains server-side and raw referral rows stay unavailable to browser roles.'
-            echo '- Response is limited to the caller random referral code plus aggregate total/confirmed counts.'
-            echo '- CI or backend deployment does not create real-device referral interaction acceptance or Commercial GO.'
+            echo '- Browser attempts the authenticated Edge Function first and keeps the existing caller-scoped RPC only as a temporary fallback.'
+            echo '- Caller identity remains server-verified; service-role table access stays server-side and raw referral rows stay unavailable to browser roles.'
+            echo '- Optional QA trace exposes only EDGE/FALLBACK/UNAVAILABLE source state, never token/account/user payload.'
+            echo '- Physical evidence remains NOT VERIFIED until a traceable signed-in session reports EDGE and the referral summary renders correctly.'
+            echo '- RPC fallback must not be revoked until the changed signed-in referral interaction is physically accepted.'
+            echo '- CI/deployment does not create real-device referral interaction acceptance or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
