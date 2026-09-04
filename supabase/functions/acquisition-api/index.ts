@@ -110,7 +110,10 @@ Deno.serve(async(req)=>{
   const referralRows=referralResult.rows.filter((r:any)=>measuredIds.has(r.referred_user_id))
   const productRows=productEventResult.rows
   const hasAttribution=(r:any)=>Boolean(r.utm_source||r.utm_medium||r.utm_campaign||r.utm_content||r.referral_code)
+  const hasFullUtm=(r:any)=>Boolean(r.utm_source&&r.utm_medium&&r.utm_campaign&&r.utm_content)
   const attributedRows=attributionRows.filter(hasAttribution)
+  const productWindowAttributedRows=productWindowAttributionRows.filter(hasFullUtm)
+  const productWindowConfirmedAttributed=productWindowAttributedRows.filter((r:any)=>productWindowConfirmedIds.has(r.user_id)).length
 
   const rank=(rows:any[],key:string)=>{
     const grouped=new Map<string,{count:number,confirmed:number}>()
@@ -143,7 +146,7 @@ Deno.serve(async(req)=>{
       else if(row.event_name==='recommendation_result')current.result++
       else if(row.event_name==='nearby_tap')current.nearby++
     }
-    for(const row of productWindowAttributionRows){
+    for(const row of productWindowAttributedRows){
       const raw=row[key]
       if(!raw)continue
       const current=rowFor(String(raw))
@@ -208,8 +211,8 @@ Deno.serve(async(req)=>{
       recommendationResults,
       nearbyTaps,
       resultRate:pct(recommendationResults,landingSessions),
-      signupRate:pct(productWindowAttributionRows.length,landingSessions),
-      confirmedRate:pct(productWindowConfirmedIds.size,landingSessions)
+      signupRate:pct(productWindowAttributedRows.length,landingSessions),
+      confirmedRate:pct(productWindowConfirmedAttributed,landingSessions)
     },
     bySource:rank(attributionRows,'utm_source'),
     byCampaign:rank(attributionRows,'utm_campaign'),
