@@ -1,0 +1,106 @@
+name: Social Auth Attribution Claim Regression
+
+on:
+  pull_request:
+    paths:
+      - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
+      - 'supabase/social-auth-attribution-claim-v1.sql'
+      - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
+      - 'supabase/functions/member-acquisition-claim/**'
+      - 'prototype/auth-multi-provider/**'
+      - 'member.html'
+      - 'sw.js'
+      - '.github/workflows/social-auth-attribution-claim-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
+      - 'supabase/social-auth-attribution-claim-v1.sql'
+      - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
+      - 'supabase/functions/member-acquisition-claim/**'
+      - 'prototype/auth-multi-provider/**'
+      - 'member.html'
+      - 'sw.js'
+      - '.github/workflows/social-auth-attribution-claim-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source-only security and rollout contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          const sql=fs.readFileSync('supabase/social-auth-attribution-claim-v1.sql','utf8');
+          const rollback=fs.readFileSync('supabase/social-auth-attribution-claim-v1-rollback.sql','utf8');
+          const edge=fs.readFileSync('supabase/functions/member-acquisition-claim/index.ts','utf8');
+          const design=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md','utf8');
+          const member=fs.readFileSync('member.html','utf8');
+          const sw=fs.readFileSync('sw.js','utf8');
+          const prototype=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
+          const privilegedRole='service'+'_role';
+
+          must(design.includes('Status: **SOURCE PREPARED / NOT APPLIED OR DEPLOYED**'),'design must remain explicitly source-only');
+          must(design.includes('Require the Auth account to be no older than **1 hour**'),'signup claim-window contract missing');
+          must(design.includes(privilegedRole),'privileged DB role contract missing from design');
+          must(design.includes('Provider-neutral confirmation rule'),'provider-neutral confirmation boundary missing');
+
+          must(sql.includes('create or replace function public.claim_member_acquisition_internal'),'internal claim RPC missing');
+          must(sql.includes('security invoker'),'claim RPC must remain SECURITY INVOKER');
+          must(sql.includes("p_auth_method not in ('oauth','phone')"),'claim RPC must reject unsupported auth methods');
+          must(!sql.includes('from auth.users'),'SECURITY INVOKER claim RPC must not rely on auth.users SELECT privileges');
+          must(sql.includes('for update'),'claim RPC must lock attribution row for concurrent retries');
+          must(sql.includes("return query select 'already_claimed'"),'claim RPC must preserve first-touch idempotency');
+          must(sql.includes('v_referrer = p_user_id'),'claim RPC must reject self referral');
+          must(sql.includes("'confirmed'"),'verified social/phone referral must use provider-neutral confirmed state');
+          must(sql.includes('on conflict (referred_user_id) do nothing'),'claim RPC must prevent duplicate referred-user rows');
+          must(sql.includes('revoke all on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text)\nfrom public, anon, authenticated;'),'browser roles must not execute internal claim RPC');
+          must(sql.includes("'service' || '_role'"),'internal RPC must explicitly target the built-in privileged role');
+          must(sql.includes("'grant execute on function public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text) to %I'"),'internal RPC grant statement missing');
+          must(sql.includes('not campaign eligibility truth'),'claim RPC comment must preserve campaign boundary');
+
+          must(rollback.includes('drop function if exists public.claim_member_acquisition_internal(uuid,text,text,text,text,text,text)'),'rollback must remove only claim RPC');
+
+          must(edge.includes("const allowedOrigin='https://rachanakorninon-gif.github.io'"),'Edge claim must be exact-origin bound');
+          must(edge.includes('const maxRequestBytes=4096'),'Edge claim body limit missing');
+          must(edge.includes('const maxClaimAgeMs=60*60*1000'),'verified Auth edge must enforce one-hour signup claim window');
+          must(edge.includes("Date.parse(String(user.created_at||''))"),'claim window must derive from verified Auth user creation time');
+          must(edge.includes("result:'claim_window_expired'"),'old-account claim must fail closed');
+          must(edge.includes("new Set(['utm_source','utm_medium','utm_campaign','utm_content','referral_code'])"),'Edge claim allowlist changed unexpectedly');
+          must(!edge.includes("'user_id'"),'Edge request body must not accept user_id');
+          must(!edge.includes("'provider'"),'Edge request body must not accept provider');
+          must(edge.includes("new Set(['custom:line','facebook'])"),'approved social-provider allowlist missing');
+          must(edge.includes("providers.has('phone')"),'phone verified-session path missing');
+          must(edge.includes('sb.auth.getUser(token)'),'Edge claim must derive user from verified Auth bearer token');
+          must(edge.includes("sb.rpc('claim_member_acquisition_internal'"),'Edge claim must call only the internal atomic RPC');
+          must(!edge.includes('console.'),'Edge claim must not log request/auth/referral data');
+          must(!edge.includes('provider_token')&&!edge.includes('provider_refresh_token'),'Edge claim must not persist provider tokens');
+          must(!edge.includes("from('member_acquisition_attribution')")&&!edge.includes("from('member_referrals')")&&!edge.includes("from('member_referral_codes')"),'Edge claim should not bypass the atomic RPC with raw table writes');
+
+          must(prototype.includes('Object.freeze({line:false,phone:false,facebook:false})'),'provider rollout flags must remain disabled');
+          must(!member.includes('member-acquisition-claim'),'Production member page must remain unwired during source-only phase');
+          must(!member.includes('claim_member_acquisition_internal'),'Production member page must not call internal RPC');
+          must(!sw.includes('member-acquisition-claim'),'Service Worker must not cache/wire source-only claim endpoint');
+          NODE
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo '## Social Auth attribution claim source'
+            echo
+            echo '- Database RPC + rollback + Edge source are prepared but not applied/deployed.'
+            echo '- Internal RPC remains SECURITY INVOKER and privileged-role-only, with no auth.users dependency.'
+            echo '- Edge source verifies the Auth bearer token, exact origin, request size, approved provider and acquisition allowlist.'
+            echo '- Verified Auth created_at enforces the one-hour signup window; DB row lock + first-touch check + referral PK preserve retry/concurrency idempotency.'
+            echo '- Production member page and Service Worker remain unwired; rollout flags remain disabled.'
+          } >> "$GITHUB_STEP_SUMMARY"
