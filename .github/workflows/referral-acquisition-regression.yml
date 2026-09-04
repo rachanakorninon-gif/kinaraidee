@@ -12,6 +12,7 @@ on:
       - 'supabase/referral-acquisition-v1-rollback.sql'
       - 'supabase/referral-summary-edge-cutover-20260904.sql'
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - '.github/workflows/referral-acquisition-regression.yml'
   push:
     branches: [main]
@@ -25,6 +26,7 @@ on:
       - 'supabase/referral-acquisition-v1-rollback.sql'
       - 'supabase/referral-summary-edge-cutover-20260904.sql'
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - '.github/workflows/referral-acquisition-regression.yml'
 
 permissions:
@@ -56,6 +58,7 @@ jobs:
           const rollback=fs.readFileSync('supabase/referral-acquisition-v1-rollback.sql','utf8');
           const cutover=fs.readFileSync('supabase/referral-summary-edge-cutover-20260904.sql','utf8');
           const physical=fs.readFileSync('REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md','utf8');
+          const socialDesign=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md','utf8');
 
           must(acquisition.includes('kinaraideeAcquisitionV1'),'missing acquisition storage key');
           must(acquisition.includes('kinaraidee_referral_code'),'missing referral signup metadata');
@@ -93,6 +96,19 @@ jobs:
           must(!sql.includes("replace(new.id::text,'-','')"),'signup trigger must not derive referral code from auth user UUID');
           must(!privacyFix.includes("replace(new.id::text,'-','')"),'privacy-fix trigger must not derive referral code from auth user UUID');
           must(privacyFix.includes('20260903221043 / referral_code_privacy_fix_20260904'),'migration trace marker missing');
-
           must(rollback.includes('drop table if exists public.member_referrals'),'rollback must remove referral table');
+
+          must(socialDesign.includes('Status: **DESIGN APPROVED FOR SOURCE PREPARATION / NOT DEPLOYED**'),'social attribution design must remain explicitly non-deployed');
+          must(socialDesign.includes('The server derives the target user from the verified Supabase bearer token'),'social claim must derive user server-side');
+          must(socialDesign.includes('Exactly-once first touch'),'social claim must remain first-touch/idempotent');
+          must(socialDesign.includes('No provider-profile trust'),'provider metadata must not become acquisition input');
+          must(socialDesign.includes('Server-side referral resolution'),'referral owner must resolve server-side');
+          must(socialDesign.includes('No raw growth-table browser access'),'raw growth tables must stay unavailable to browser roles');
+          must(socialDesign.includes('Provider rollout stays disabled'),'provider rollout boundary missing');
+          must(socialDesign.includes('Email/password account: confirmed only after `email_confirmed_at` becomes non-null'),'email confirmation semantics must be preserved');
+          must(socialDesign.includes('OAuth social account (LINE/Facebook): the post-auth attribution claim executes only from an already authenticated OAuth session'),'social confirmation basis missing');
+          must(socialDesign.includes('Phone OTP account: the post-auth claim executes only after OTP verification produced an authenticated session'),'phone confirmation basis missing');
+          must(socialDesign.includes('forged `user_id`'),'negative forged-user test missing');
+          must(socialDesign.includes('concurrent repeat claims create at most one referral relationship'),'concurrency acceptance missing');
+          must(!member.includes('member-acquisition-claim'),'production member page must not wire the proposed social attribution endpoint during design-only phase');
           NODE
