@@ -11,7 +11,7 @@
 - Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**.
 - Runtime merge/deployed SHA: `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`.
 - PWA cache marker: `kinaraidee-beta-v16`.
-- Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
+- Current Group API source candidate: PR #518 / `8ab5fc9dd506740b48b245469421518381bbe079`; this candidate adds server-only daily event/reason presence observations and is **PENDING DEPLOYMENT**. The last verified production Group API remains ACTIVE version 6 from the prior PR #93 lineage until merge + migration + redeployment evidence exists.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
@@ -44,7 +44,7 @@ Historical verified deployment evidence remains valid for its original scope:
 - Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
-- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
+- Live public `release-meta.json` matched `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
@@ -95,18 +95,19 @@ Historical Android/iPhone observations remain scoped to the exact behaviors and 
 
 ## Group API / operations evidence
 
-- Group API source candidate remains PR #93 / Supabase ACTIVE version 6 according to prior verified deployment/source evidence.
+- Group API source candidate is PR #518 / `8ab5fc9dd506740b48b245469421518381bbe079`, currently **PENDING DEPLOYMENT**. Supabase ACTIVE version 6 from the prior PR #93 lineage remains the last verified live deployment until the new schema is applied and this candidate is redeployed with source/deployment parity evidence.
+- PR #518 prepares a server-only daily presence bucket for allowlisted application event/reason categories. It stores no room/token/voter/tags/IP/request body/account identifier and no request/event count; browser roles receive no table/RPC access. Preparation/CI does not prove live ingestion.
 - Rejection-only probes and bounded-body behavior are backend security/availability evidence only.
-- Group retention policy remains **NOT APPROVED**.
+- Group retention policy remains **NOT APPROVED**. Operational/application-log retention remains separately **NOT APPROVED**; PR #518 does not invent a purge duration or automatic deletion policy.
 - Read-only retention/dry-run contracts and cleanup-design documents do not execute deletion and do not establish Privacy/Legal approval.
-- Application-event observability, monitoring owner/baseline, complete anonymous abuse controls and production retention cleanup remain incomplete.
+- Application-event live ingestion remains **NOT VERIFIED** until the migration is applied, Group API is redeployed, a non-mutating live event is exercised and the server-only daily bucket is read back. Monitoring owner/baseline, complete anonymous abuse controls and production retention cleanup remain incomplete.
 - Operations evidence templates, recovery-integrity contracts and rollback/runbook preparation do not constitute backup restore or rollback drill PASS until executed evidence exists.
 
 ## Partner API evidence
 
 - Partner API request-body handling, coordinate validation, no-store/nosniff and rejection-only probe mechanisms are documented in `PARTNER-API-HARDENING-EVIDENCE.md`.
 - Supabase ACTIVE v15 source/deployment parity remains the scoped deployment evidence for the Partner API source candidate.
-- Merged-main Partner API Live Rejection Probe run `32675596758` completed **success** on exact SHA `5ca280f4832e0d0fc1aa7057bb68f4df001d4067`; job `97283018587` passed GET=405 with no-store/nosniff, malformed JSON=400 and oversized body=413.
+- Merged-main Partner API Live Rejection Probe run `32675596758` completed **success** on exact SHA `5ca280f4832e0fc1aa7057bb68f4df001d4067`; job `97283018587` passed GET=405 with no-store/nosniff, malformed JSON=400 and oversized body=413.
 - Read-only diagnostic run `32675626819` confirmed the exact push run/SHA.
 - This is **VERIFIED PASS FOR REJECTION BEHAVIOR ONLY**. It does not establish successful product-action requests, production traffic baseline, complete abuse controls, recurring monitoring/alert SLA, approved retention, partner agreement, conversion/reconciliation, revenue or Commercial readiness.
 - No user, click, conversion or revenue figure is inferred from API hardening/live-rejection evidence.
@@ -121,7 +122,7 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #514 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on merged-main descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a` with Pages `33838629999` and main Live Smoke `33838665915`. The changed referral-summary signed-in Edge interaction remains physically NOT VERIFIED and the RPC fallback/Advisor warning therefore remain OPEN. Historical PR #509 Product Event backend ingress retains its separate controlled synthetic PASS with the generated row cleaned after verification, but Product Event real-user interaction remains OPEN. These deployment/backend facts do not prove a real referral interaction, Campaign 3,000 eligibility, user growth or conversion. Separate traced OPPO physical evidence continues to provide scoped account-flow, TC-11/TC-12 and Reduced Motion results for the behaviors actually tested. Historical PR #201/PR #373/PR #499 deployment/device/Auth/acquisition evidence remains valid only for the exact scopes already recorded. Minimum open evidence still includes weak/leaked-password rejection/server-side protection, additional Android/iPhone distinct-model coverage, real keyboard-focus verification, NF-07 physical upgrade, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #514 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on merged-main descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a` with Pages `33838629999` and main Live Smoke `33838665915`. The changed referral-summary signed-in Edge interaction remains physically NOT VERIFIED and the RPC fallback/Advisor warning therefore remain OPEN. Historical PR #509 Product Event backend ingress retains its separate controlled synthetic PASS with the generated row cleaned after verification, but Product Event real-user interaction remains OPEN. Group API PR #518 is source/schema preparation only and remains PENDING DEPLOYMENT / application-event ingestion NOT VERIFIED. These deployment/backend facts do not prove a real referral interaction, Campaign 3,000 eligibility, user growth or conversion. Separate traced OPPO physical evidence continues to provide scoped account-flow, TC-11/TC-12 and Reduced Motion results for the behaviors actually tested. Historical PR #201/PR #373/PR #499 deployment/device/Auth/acquisition evidence remains valid only for the exact scopes already recorded. Minimum open evidence still includes weak/leaked-password rejection/server-side protection, additional Android/iPhone distinct-model coverage, real keyboard-focus verification, NF-07 physical upgrade, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
@@ -134,7 +135,7 @@ Commercial launch remains **NO-GO** while important gates remain incomplete, inc
 - Supabase leaked-password protection gate (focused follow-up **Issue #372**; historical security tracker **Issue #11**), currently **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**;
 - repository governance must remain enforced; Issue #35 is closed after verified required-check blocking evidence;
 - remaining external authenticated API/JWT lifecycle and privileged-backend negative authorization evidence beyond currently scoped tests;
-- Group API application-event observability, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45);
+- Group API application-event live ingestion, retention/deletion policy, complete anonymous abuse controls and monitoring ownership/baseline (#45); PR #518 preparation does not close these gates until deployed/read back;
 - Partner API complete abuse-control/monitoring/retention and real partner-commercial evidence;
 - Production Privacy/Terms/controller/contact/retention/legal decisions;
 - Production owner/on-call, monitoring, backup/recovery and real rollback/restore drill evidence;
@@ -147,12 +148,12 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 - Current browser/PWA runtime candidate = PR #514 source runtime `ea409cd02fc7744514b8c867a67f56ec0187de80`; deployment status = **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; deployed descendant = `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`.
 - Current PWA cache marker = `kinaraidee-beta-v16`.
-- Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
+- Current Group API source candidate = PR #518 / `8ab5fc9dd506740b48b245469421518381bbe079`; deployment/application-event ingestion status = **PENDING / NOT VERIFIED**. Prior PR #93 / ACTIVE version 6 remains the last verified live Group API deployment until new deployment evidence supersedes it.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
 - PR #509 / `0bd5acfb9946e10ed5624205165123eabc8035b4` with deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba` remains historical verified Product Event browser/PWA deployment evidence and does not replace current PR #514 runtime or create Product Event/referral-summary acceptance.
 - PR #499 / `f401ad758e40914a10245cfab08497f7cdb99f7d` with deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d` remains historical verified referral/acquisition browser/PWA deployment evidence and does not replace current PR #514 runtime or create Product Event/referral acceptance.
 - PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` with deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` remains historical verified Auth browser/PWA deployment evidence and does not replace the current runtime or create referral/Product Event acceptance.
-- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #514 deployment evidence.
+- PR #201 / `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #514 deployment evidence.
 - Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as referral/acquisition physical evidence or as evidence for devices that were not actually tested.
 - Supabase grants/RLS/referral-schema/Product-Event evidence is scoped backend security/integrity/ingestion evidence, not blanket Auth/security, referral-success, real-user Product Funnel or campaign PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.

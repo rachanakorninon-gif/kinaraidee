@@ -34,28 +34,64 @@ jobs:
           fi
 
           echo "Canonical reviewed baseline is an ancestor of HEAD: $baseline"
-          echo 'A docs/workflow-only descendant does not require baseline churn; guarded runtime/API/schema drift is checked below.'
+          echo 'Docs/workflow-only descendants need no baseline churn; guarded browser/API/schema drift must be represented by its canonical source candidate.'
 
           browser_paths=(
             index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html
             manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data
           )
-          api_schema_paths=(
-            supabase/functions/group-api supabase/functions/partner-api supabase/migrations
+          group_paths=(
+            supabase/functions/group-api
+            supabase/group-api-event-observability-v1.sql
+            supabase/group-api-event-observability-v1-rollback.sql
           )
+          partner_paths=(supabase/functions/partner-api)
+          generic_schema_paths=(supabase/migrations)
 
           browser_changed="$(git diff --name-only "$baseline"..HEAD -- "${browser_paths[@]}" || true)"
-          api_schema_changed="$(git diff --name-only "$baseline"..HEAD -- "${api_schema_paths[@]}" || true)"
+          group_changed="$(git diff --name-only "$baseline"..HEAD -- "${group_paths[@]}" || true)"
+          partner_changed="$(git diff --name-only "$baseline"..HEAD -- "${partner_paths[@]}" || true)"
+          generic_schema_changed="$(git diff --name-only "$baseline"..HEAD -- "${generic_schema_paths[@]}" || true)"
 
-          if [ -n "$api_schema_changed" ]; then
-            echo 'API/schema files changed after the canonical reviewed baseline:'
-            printf '%s\n' "$api_schema_changed"
-            echo 'Advance the appropriate API/security evidence candidate before treating the descendant as reviewed.'
+          if [ -n "$group_changed" ]; then
+            group_candidate="$(sed -n 's/^- Current Group API source candidate: PR #[0-9][0-9]* \/ `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RELEASE.md | head -n1)"
+            test -n "$group_candidate" || { echo 'Group API drift exists but CURRENT-RELEASE.md has no parseable source candidate'; exit 1; }
+            git cat-file -e "$group_candidate^{commit}" || { echo 'Declared Group API candidate commit is missing'; exit 1; }
+            git merge-base --is-ancestor "$baseline" "$group_candidate" || { echo 'Group API candidate is not a descendant of the canonical reviewed baseline'; exit 1; }
+            git merge-base --is-ancestor "$group_candidate" HEAD || { echo 'Group API candidate is not an ancestor of HEAD'; exit 1; }
+            undeclared_group="$(git diff --name-only "$group_candidate"..HEAD -- "${group_paths[@]}" || true)"
+            if [ -n "$undeclared_group" ]; then
+              echo 'Group API/schema files changed after the declared Group source candidate:'
+              printf '%s\n' "$undeclared_group"
+              exit 1
+            fi
+            echo "Declared Group API candidate $group_candidate contains all guarded Group API/schema drift after baseline $baseline."
+          fi
+
+          if [ -n "$partner_changed" ]; then
+            partner_candidate="$(sed -n 's/^- PR #[0-9][0-9]* merged as `\([0-9a-f]\{40\}\)`.*/\1/p' PARTNER-API-HARDENING-EVIDENCE.md | head -n1)"
+            test -n "$partner_candidate" || { echo 'Partner API drift exists but deployment evidence has no parseable source candidate'; exit 1; }
+            git cat-file -e "$partner_candidate^{commit}" || { echo 'Declared Partner API candidate commit is missing'; exit 1; }
+            git merge-base --is-ancestor "$baseline" "$partner_candidate" || { echo 'Partner API candidate is not a descendant of the canonical reviewed baseline'; exit 1; }
+            git merge-base --is-ancestor "$partner_candidate" HEAD || { echo 'Partner API candidate is not an ancestor of HEAD'; exit 1; }
+            undeclared_partner="$(git diff --name-only "$partner_candidate"..HEAD -- "${partner_paths[@]}" || true)"
+            if [ -n "$undeclared_partner" ]; then
+              echo 'Partner API files changed after the declared Partner source candidate:'
+              printf '%s\n' "$undeclared_partner"
+              exit 1
+            fi
+            echo "Declared Partner API candidate $partner_candidate contains all guarded Partner drift after baseline $baseline."
+          fi
+
+          if [ -n "$generic_schema_changed" ]; then
+            echo 'Generic migration files changed after the canonical reviewed baseline and are not covered by a source-specific candidate:'
+            printf '%s\n' "$generic_schema_changed"
+            echo 'Advance the appropriate reviewed schema/security evidence before treating this descendant as reviewed.'
             exit 1
           fi
 
           if [ -z "$browser_changed" ]; then
-            echo 'Descendants after the canonical reviewed baseline are evidence/workflow/documentation-only with respect to guarded runtime/API/schema paths.'
+            echo 'All guarded non-browser changes are represented by their source-specific candidates; no browser/PWA drift remains.'
             exit 0
           fi
 
@@ -79,7 +115,7 @@ jobs:
           case "$status" in
             'PENDING FOR CURRENT RUNTIME DEPLOYMENT')
               grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md || { echo 'Pending runtime evidence boundary is missing'; exit 1; }
-              echo "Declared pending browser runtime $candidate contains all runtime drift after reviewed baseline $baseline; API/schema paths remain clean."
+              echo "Declared pending browser runtime $candidate contains all browser drift after reviewed baseline $baseline."
               ;;
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
@@ -90,7 +126,7 @@ jobs:
               changed_to_deployed="$(git diff --name-only "$candidate".."$deployed" -- "${browser_paths[@]}" || true)"
               test -z "$changed_to_deployed" || { echo 'Guarded browser/PWA files changed between candidate and deployed descendant'; printf '%s\n' "$changed_to_deployed"; exit 1; }
               grep -Fq 'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' CURRENT-RUNTIME.md || { echo 'Verified runtime PASS scope boundary is missing'; exit 1; }
-              echo "Declared verified browser runtime $candidate is represented by deployed descendant $deployed with no guarded runtime drift; API/schema paths remain clean."
+              echo "Declared verified browser runtime $candidate is represented by deployed descendant $deployed with no guarded browser drift."
               ;;
             *)
               echo "Unexpected runtime deployment status: $status"
