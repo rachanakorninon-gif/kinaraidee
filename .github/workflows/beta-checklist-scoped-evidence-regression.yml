@@ -57,14 +57,22 @@ jobs:
           grep -Fq -- '- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation ผ่าน real deployed browser/device interaction — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
           grep -Fq -- '- [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64' "$checklist"
 
-          # Open gates must not be closed by the scoped OPPO evidence.
+          # Keyboard Focus may be promoted only when its independent canonical physical result is PASS.
+          if grep -Fq 'Keyboard focus result: **PASS**' "$ux"; then
+            grep -Fq 'Keyboard device / model: Built-in Lenovo notebook keyboard / Lenovo system model 83DV' "$ux"
+            grep -Fq 'Keyboard browser or installed-PWA context / version: Google Chrome 152.0.7977.82, normal browser tab' "$ux"
+            grep -Fq -- '- [x] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages — scoped PASS: Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82' "$checklist"
+          else
+            grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$checklist"
+          fi
+
+          # Independent open gates must not be closed by scoped physical evidence for other behaviors.
           grep -Fq 'Status: **NOT VERIFIED — NF-07 PHYSICAL CLOSE/REOPEN UPGRADE STILL REQUIRED**' "$nf07"
           grep -Fq -- '- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16`' "$checklist"
-          grep -Fq -- '- [ ] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages' "$checklist"
           grep -Fq -- '- [ ] Auth weak/leaked-password rejection/protection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**' "$checklist"
           grep -Fq -- '- [ ] Android Chrome อย่างน้อย 3 device models' "$checklist"
           grep -Fq -- '- [ ] iPhone Safari อย่างน้อย 2 device models' "$checklist"
           grep -Fq 'Public Beta is still **NOT COMPLETE**.' "$release"
           grep -Fq 'Commercial launch remains **NO-GO**' "$release"
 
-          echo 'Beta checklist matches scoped physical evidence while NF-07, keyboard focus, leaked-password and distinct-device gates remain open, independent of which later browser runtime is current.'
+          echo 'Beta checklist matches scoped physical evidence while independent NF-07, leaked-password and distinct-device gates remain open; Keyboard Focus state is bound to its canonical physical evidence result.'
