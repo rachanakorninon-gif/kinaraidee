@@ -2,6 +2,8 @@
 -- SOURCE ONLY until explicitly applied after review.
 -- Purpose: close the OAuth/Phone post-auth first-touch attribution gap without
 -- exposing raw growth tables to browser roles.
+-- The trusted Edge caller performs Auth verification + signup-window checks;
+-- this RPC stays SECURITY INVOKER and service-role-only for atomic DB mutation.
 
 create or replace function public.claim_member_acquisition_internal(
   p_user_id uuid,
@@ -18,7 +20,6 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_created_at timestamptz;
   v_source text;
   v_medium text;
   v_campaign text;
@@ -37,7 +38,7 @@ begin
     return;
   end if;
 
-  if p_auth_method not in ('oauth','phone') then
+  if p_auth_method is null or p_auth_method not in ('oauth','phone') then
     return query select 'unsupported_auth_method'::text, false;
     return;
   end if;
@@ -71,24 +72,6 @@ begin
 
   if v_source is null and v_medium is null and v_campaign is null and v_content is null and v_referral is null then
     return query select 'nothing_to_claim'::text, false;
-    return;
-  end if;
-
-  select u.created_at
-  into v_created_at
-  from auth.users u
-  where u.id = p_user_id;
-
-  if v_created_at is null then
-    return query select 'user_not_found'::text, false;
-    return;
-  end if;
-
-  -- This endpoint is only for the immediate post-auth signup handoff. The
-  -- short claim window prevents a long-lived existing account from being
-  -- retroactively re-attributed on a later campaign login.
-  if now() - v_created_at > interval '1 hour' then
-    return query select 'claim_window_expired'::text, false;
     return;
   end if;
 
