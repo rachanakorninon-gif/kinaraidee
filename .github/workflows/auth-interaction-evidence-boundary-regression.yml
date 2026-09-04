@@ -47,11 +47,11 @@ jobs:
           grep -Fq 'The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side' CURRENT-RELEASE.md || {
             echo 'CURRENT-RELEASE.md must keep leaked-password/server-side Auth gate open'; exit 1;
           }
-          grep -Fq 'does **not by itself** establish Product Event real-user acceptance, referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must distinguish current runtime/Product Event deployment evidence from physical Auth evidence'; exit 1;
+          grep -Fq 'does **not by itself** establish Product Event physical interaction, referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must distinguish deployment evidence from scoped physical Product Event/Auth evidence'; exit 1;
           }
-          grep -Fq 'Separate physical evidence records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must preserve the separate physical Auth evidence path'; exit 1;
+          grep -Fq 'Separate physical evidence records scoped Product Event QA, recovery/password-update/sign-in/new-signup/email-confirmation and other behavior-specific passes' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must preserve separate physical evidence paths instead of generalizing deployment evidence'; exit 1;
           }
 
           grep -Fq '[x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope' RELEASE-CHECKLIST.md || {
@@ -80,4 +80,4 @@ jobs:
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved independently of the later browser runtime; leaked-password and umbrella Auth/Security acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved independently of the later browser runtime and Product Event QA; leaked-password and umbrella Auth/Security acceptance stay open.'
