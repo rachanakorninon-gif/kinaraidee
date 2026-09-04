@@ -1,8 +1,8 @@
 # Kinaraidee — Social Auth Attribution Parity Design
 
-Status: **DESIGN APPROVED FOR SOURCE PREPARATION / NOT DEPLOYED**
+Status: **SOURCE PREPARED / NOT APPLIED OR DEPLOYED**
 
-Related: Issue #529, Issue #526, PR #525, PR #528.
+Related: Issue #529, Issue #526, PR #525, PR #528, PR #530.
 
 ## Problem statement
 
@@ -30,7 +30,8 @@ Any implementation must preserve all of these:
 6. **No raw growth-table browser access.** Existing RLS/revokes remain unchanged; the browser uses an authenticated Edge endpoint only.
 7. **Campaign boundary.** Acquisition/referral measurement remains separate from Campaign 3,000 eligibility truth.
 8. **No token/identity evidence.** QA evidence remains aggregate-only and excludes Auth/provider tokens, subject IDs, account IDs, email, phone and raw referral codes.
-9. **Provider rollout stays disabled.** The implementation can be prepared and deployed behind a non-user-visible path, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
+9. **Provider rollout stays disabled.** Source may be prepared and later deployed behind a non-user-visible path, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
+10. **Signup-time claim only.** Social/phone attribution may be claimed only in the immediate post-auth signup handoff, not retroactively on an old account's later campaign login.
 
 ## Provider-neutral confirmation rule
 
@@ -46,9 +47,17 @@ This rule is narrower than “any `auth.users` row is confirmed” and avoids re
 
 The acquisition dashboard must eventually use the same provider-neutral definition when reporting confirmed signups. Until that change is implemented and verified, existing dashboard confirmation metrics must not be interpreted as complete social-auth confirmation metrics.
 
-## Proposed authenticated Edge contract
+## Prepared source contract
 
-Candidate function name: `member-acquisition-claim`.
+Prepared but not applied/deployed:
+
+- database source: `supabase/social-auth-attribution-claim-v1.sql`
+- rollback: `supabase/social-auth-attribution-claim-v1-rollback.sql`
+- Edge source: `supabase/functions/member-acquisition-claim/index.ts`
+
+The database contract is an internal `public.claim_member_acquisition_internal(...)` RPC with `SECURITY INVOKER`; execute is revoked from `public`, `anon` and `authenticated` and granted only to `service_role`. The public schema placement is solely so the service-role Edge client can call the RPC through the configured PostgREST API surface; browser roles receive no execute grant.
+
+The Edge source verifies the bearer token with Supabase Auth, derives the user and approved auth method server-side, accepts only LINE/Facebook OAuth or Phone, and calls the internal RPC. It does not accept `user_id`, provider, token or arbitrary metadata fields in the JSON body.
 
 ### Request
 
@@ -64,66 +73,72 @@ Candidate function name: `member-acquisition-claim`.
 }
 ```
 
-The endpoint must reject unknown action/user/provider fields rather than silently storing them.
+The endpoint rejects unknown action/user/provider fields rather than silently storing them.
 
 ### Server steps
 
-1. Enforce method/origin/content-size limits.
+1. Enforce exact Kinaraidee Pages origin, POST-only behavior and a 4 KiB request-body limit.
 2. Verify bearer token with Supabase Auth and derive `user.id` server-side.
-3. Normalize and validate each allowlisted acquisition field with the existing regex/length limits.
-4. Read the user's existing `member_acquisition_attribution` row.
-5. If any reviewed attribution field is already populated, return an idempotent `already_claimed` result and make no mutation.
-6. Otherwise populate only currently-empty first-touch attribution fields for that user. Never replace a non-null reviewed field.
-7. If no referral code was supplied, finish successfully.
-8. If a referral code was supplied, resolve it server-side from `member_referral_codes`.
-9. Ignore/reject an invalid referral and reject self-referral; do not expose the referral owner.
-10. Insert one `member_referrals` row with `referred_user_id = authenticated user`, using `ON CONFLICT (referred_user_id) DO NOTHING`.
-11. Determine referral confirmation from the authenticated method:
-    - email identity without confirmed email => `pending`;
-    - verified social/phone session claim => `confirmed` at claim time;
-    - existing email-confirmation trigger continues to promote pending email referrals.
-12. Return only a minimal result such as `claimed`, `already_claimed`, `referral_recorded`, never raw attribution/referral rows.
+3. Derive `oauth` only from current approved social provider identities (`custom:line`, `facebook`) or `phone` from a verified Phone identity; email-only sessions are not accepted by this endpoint.
+4. Normalize and validate each allowlisted acquisition field with the existing regex/length limits.
+5. Require the Auth account to be no older than **1 hour**. This is an explicit retry window for the immediate post-signup handoff and prevents an old account from being retroactively attributed on a later campaign login.
+6. Ensure the user's `member_acquisition_attribution` row exists, then lock it with `FOR UPDATE` so competing callback/retry tabs serialize.
+7. If any reviewed attribution field is already populated, return `already_claimed` and make no mutation.
+8. Otherwise populate the reviewed first-touch fields exactly once.
+9. If no referral code was supplied, finish successfully.
+10. If a referral code was supplied, resolve it server-side from `member_referral_codes`.
+11. Invalid/unresolved or self referral does not create a relationship and does not expose the referral owner.
+12. Insert at most one `member_referrals` row with `ON CONFLICT (referred_user_id) DO NOTHING`.
+13. Since this endpoint only accepts already-verified social/phone sessions, a referral successfully created through the claim is `confirmed` at claim time under the provider-neutral rule.
+14. Return only a minimal status plus a boolean indicating whether a referral relation was inserted; never return raw attribution/referral rows.
 
 ## Concurrency and idempotency
 
-A simple read-then-update is not sufficient by itself because two callback tabs could race. The live implementation must use a database-side atomic contract, for example an RPC available only to `service_role`, that:
+A simple read-then-update is not sufficient because two callback tabs can race. The prepared database function therefore performs the row lock, first-touch update, referral resolution and referral insert in one database transaction.
 
-- locks or conditionally updates the user's attribution row only if all reviewed attribution columns are still null;
-- resolves/inserts the referral relationship in the same transaction;
-- returns only a small status enum;
-- is safe to retry after network interruption.
+The implementation is designed to be safe to retry after a network interruption:
 
-The Edge Function should authenticate/origin-bound the request and call this service-role-only atomic database contract.
+- first successful claim populates the row;
+- later/repeated claim observes a populated row and returns `already_claimed`;
+- the referral table primary key on `referred_user_id` plus `ON CONFLICT DO NOTHING` prevents duplicate referred-user relationships.
 
 ## Negative acceptance cases
 
-Before deployment, automated tests must prove:
+Before deployment, automated/source checks must prove:
 
-- forged `user_id` in the JSON body is rejected/ignored and cannot target another account;
-- unknown fields are not persisted;
-- malformed/overlong UTM/referral values are rejected or normalized to null according to the approved contract;
+- forged `user_id` in the JSON body cannot target another account because `user_id` is not an accepted body key;
+- unknown fields are rejected;
+- malformed/overlong UTM/referral values are rejected;
 - invalid referral does not create a relationship;
 - self referral does not create a relationship;
 - repeat claim cannot overwrite first-touch attribution;
 - concurrent repeat claims create at most one referral relationship;
+- a claim from an account older than the one-hour signup window is rejected;
+- an email-only session cannot use the social/phone claim endpoint;
 - raw referral/acquisition tables remain inaccessible to `anon` and `authenticated`;
+- the internal RPC is executable only by `service_role`;
 - the endpoint does not log request body, token, user ID or referral code;
-- existing email signup trigger behavior remains unchanged.
+- existing email signup trigger behavior remains unchanged;
+- Production `member.html` and Service Worker remain unwired from this source during the source-only phase.
 
 ## Controlled live acceptance plan
 
-After source review and deployment behind the disabled provider UI:
+After source review, explicit migration application and Edge deployment behind the disabled provider UI:
 
 1. Use a fresh controlled browser context with reviewed synthetic UTM/referral data that is isolated from marketing/campaign measurement.
 2. Complete one new LINE signup through the controlled direct provider path.
 3. Invoke the post-auth claim from the authenticated session.
 4. Verify aggregate-only backend evidence: one LINE identity, one populated acquisition row for that controlled account, at most one referral relation, no duplicate on repeat login/claim.
 5. Repeat returning-user login and claim; verify attribution does not change and no second referral relation appears.
-6. Clean up only the controlled QA acquisition/referral rows if the existing evidence policy calls for cleanup; never delete the Auth account merely to manufacture a PASS unless an explicit test-account cleanup procedure authorizes it.
-7. Re-run existing email/password signup attribution regression.
+6. Exercise invalid referral, self referral, malformed field, old-account claim and retry/concurrent claim negatives without retaining PII in evidence.
+7. Re-run existing raw-table privilege checks and Security Advisor after migration/deployment.
+8. Re-run existing email/password signup attribution regression.
+9. Update acquisition-dashboard confirmation calculation to the same provider-neutral definition before interpreting social-auth confirmation metrics as complete.
 
 ## Production enablement boundary
 
-Closing Issue #529 alone is not sufficient to turn on LINE/Facebook/Phone buttons. The per-provider rollout document still requires physical account isolation, network/failure UX, accessibility, email-auth regression after UI integration and broader supported-device coverage.
+Source preparation does not authorize migration application, Edge deployment or Production provider UI wiring. Issue #529 remains OPEN until live controlled attribution/retry/negative evidence and email regression are verified.
+
+Closing Issue #529 alone is still not sufficient to turn on LINE/Facebook/Phone buttons. The per-provider rollout document also requires physical account isolation, network/failure UX, accessibility, email-auth regression after UI integration and broader supported-device coverage.
 
 Public Beta and Commercial readiness remain separate gates.
