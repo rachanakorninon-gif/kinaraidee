@@ -77,7 +77,12 @@ jobs:
           must(cutover.includes('revoke execute on function public.get_my_referral_summary() from public, anon, authenticated;'),'post-acceptance cutover must revoke the old RPC from browser/public roles after Edge-only deployment');
           must(sql.includes("not prize/campaign eligibility truth"),'schema must preserve prize eligibility boundary');
           must(physical.includes('QA source label shown: **`EDGE`**'),'browser RPC removal must remain backed by canonical physical EDGE evidence');
-          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP PENDING**'),'physical EDGE acceptance must remain explicit while ordered live security follow-up is pending');
+          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP VERIFIED**'),'canonical referral evidence must record completed ordered security follow-up');
+          must(physical.includes('PR #520 merged as `aa470986589d83dd95b4efd6e4a4d68a9f55965d`'),'canonical referral evidence must pin the Edge-only deployed runtime');
+          must(physical.includes('GitHub Pages run `33898258213` = **success**'),'canonical referral evidence must retain exact Pages deployment evidence');
+          must(physical.includes('main Live Smoke `33898314400` = **success**'),'canonical referral evidence must retain exact live-smoke evidence');
+          must(physical.includes('`anon_execute=false`') && physical.includes('`authenticated_execute=false`'),'canonical referral evidence must retain negative browser-role RPC privilege verification');
+          must(physical.includes('no longer reports the former authenticated-callable SECURITY DEFINER warning'),'canonical referral evidence must retain post-cutover Advisor verification');
 
           const randomCode="'K' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,20))";
           must(sql.includes(randomCode),'fresh-install schema must generate random referral codes');

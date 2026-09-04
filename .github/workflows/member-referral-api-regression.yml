@@ -82,13 +82,18 @@ jobs:
           must(!member.includes(serverRoleEnv),'Browser must never receive service-role credentials');
           must(!member.includes('access_token'),'Browser cutover must not manually render or expose access tokens');
 
-          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP PENDING**'),'Physical referral evidence must record the accepted EDGE session while ordered security follow-up remains pending');
+          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP VERIFIED**'),'Physical referral evidence must record completed ordered post-cutover security verification');
           must(physical.includes('QA source label shown: **`EDGE`**'),'Physical evidence must contain the privacy-safe EDGE label');
           must(physical.includes('Referral summary rendered without an unavailable message: **PASS**'),'Physical evidence must verify successful summary rendering');
           must(physical.includes('Total-referral field rendered as a number: **PASS**'),'Physical evidence must verify total aggregate rendering without storing the value');
           must(physical.includes('Confirmed-referral field rendered as a number: **PASS**'),'Physical evidence must verify confirmed aggregate rendering without storing the value');
           must(physical.includes('Share button enabled after load: **PASS**')&&physical.includes('Copy button enabled after load: **PASS**'),'Physical evidence must verify both controls enabled');
           must(physical.includes('No numeric aggregate values were retained.'),'Physical evidence must not retain referral aggregate values');
+          must(physical.includes('PR #520 merged as `aa470986589d83dd95b4efd6e4a4d68a9f55965d`'),'Physical evidence must pin the Edge-only deployment SHA');
+          must(physical.includes('GitHub Pages run `33898258213` = **success**'),'Physical evidence must retain exact post-cutover Pages evidence');
+          must(physical.includes('main Live Smoke `33898314400` = **success**'),'Physical evidence must retain exact post-cutover live-smoke evidence');
+          must(physical.includes('`anon_execute=false`')&&physical.includes('`authenticated_execute=false`'),'Physical evidence must retain post-cutover browser-role RPC privilege verification');
+          must(physical.includes('no longer reports the former authenticated-callable SECURITY DEFINER warning'),'Physical evidence must retain post-cutover Advisor verification');
           must(physical.includes('does not prove referral conversion'),'Physical evidence must preserve downstream overclaim boundary');
           NODE
 
@@ -98,10 +103,11 @@ jobs:
           {
             echo '## Member referral API post-acceptance boundary'
             echo
-            echo '- A traced signed-in physical session has accepted the EDGE retrieval/render path under the canonical privacy-safe evidence contract.'
-            echo '- Browser source now uses the authenticated Edge Function only; the temporary RPC fallback is absent from member.html.'
-            echo '- Cutover SQL stages revocation of old RPC execute access from PUBLIC/anon/authenticated, but live revocation must wait for fresh Edge-only Pages + main Live Smoke deployment evidence.'
-            echo '- Caller identity remains server-verified; service-role table access stays server-side and raw referral rows stay unavailable to browser roles.'
+            echo '- A traced signed-in physical session accepted the EDGE retrieval/render path under the canonical privacy-safe evidence contract.'
+            echo '- Browser source uses the authenticated Edge Function only; the temporary RPC fallback is absent from member.html.'
+            echo '- The Edge-only runtime deployed successfully on the recorded Pages + main Live Smoke trace before old RPC execute access was revoked from PUBLIC/anon/authenticated.'
+            echo '- Post-cutover privilege verification is negative for browser roles, raw referral rows remain unavailable to browser roles, and the former referral-summary SECURITY DEFINER Advisor warning is absent.'
+            echo '- Caller identity remains server-verified; service-role table access stays server-side.'
             echo '- Optional QA trace exposes only EDGE/UNAVAILABLE source state, never token/account/user payload.'
-            echo '- Physical EDGE acceptance does not establish referral conversion, Product Event real-user acceptance, Public Beta completion or Commercial GO.'
+            echo '- Physical EDGE acceptance and completed browser/RPC cutover do not establish referral conversion, Product Event real-user acceptance, Public Beta completion or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
