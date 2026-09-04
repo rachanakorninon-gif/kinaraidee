@@ -1,0 +1,88 @@
+name: Product Event Physical Evidence Boundary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PRODUCT-EVENT-MEASUREMENT.md'
+      - 'PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'
+      - '.github/workflows/product-event-physical-evidence-regression.yml'
+  push:
+    branches: ["main"]
+    paths:
+      - 'PRODUCT-EVENT-MEASUREMENT.md'
+      - 'PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'
+      - '.github/workflows/product-event-physical-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  physical-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve deployed-vs-physical truth boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          measurement='PRODUCT-EVENT-MEASUREMENT.md'
+          physical='PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'
+
+          test -s "$measurement" || { echo 'Missing PRODUCT-EVENT-MEASUREMENT.md'; exit 1; }
+          test -s "$physical" || { echo 'Missing PRODUCT-EVENT-PHYSICAL-EVIDENCE.md'; exit 1; }
+
+          grep -Fq 'Status: **PRODUCTION MEASUREMENT DEPLOYED / REAL-DEVICE ACCEPTANCE OPEN**' "$measurement" || {
+            echo 'Product Event measurement must preserve deployed production truth while physical acceptance remains open'; exit 1;
+          }
+          grep -Fq 'Physical interaction acceptance remains open and is prepared in `PRODUCT-EVENT-PHYSICAL-EVIDENCE.md`.' "$measurement" || {
+            echo 'Measurement doc must route the open physical acceptance gate to its evidence record'; exit 1;
+          }
+          grep -Fq 'Status: **READY FOR PHYSICAL EXECUTION / NOT VERIFIED**' "$physical" || {
+            echo 'Physical Product Event acceptance must remain NOT VERIFIED until real-device evidence is recorded'; exit 1;
+          }
+
+          grep -Fq 'qa_product_event_physical_202609' "$physical" || {
+            echo 'Physical evidence must use a QA-isolated Product Event campaign'; exit 1;
+          }
+          grep -Fq 'Do **not** use `th_first100_core_202609`' "$physical" || {
+            echo 'Physical QA telemetry must remain separated from First-100 acquisition'; exit 1;
+          }
+          grep -Fq 'do not create a new member account;' "$physical" || {
+            echo 'Physical QA must not contaminate account-attribution evidence'; exit 1;
+          }
+          grep -Fq 'QA Product Event rows must be deleted after evidence capture' "$physical" || {
+            echo 'Physical QA cleanup requirement is missing'; exit 1;
+          }
+          grep -Fq 'Matching QA rows remaining after cleanup: NOT RUN' "$physical" || {
+            echo 'Cleanup verification must remain explicitly unverified before physical execution'; exit 1;
+          }
+
+          grep -Fq '`landing` = 1' "$physical"
+          grep -Fq '`surprise_tap` = 1' "$physical"
+          grep -Fq '`guided_start` = 1' "$physical"
+          grep -Fq '`recommendation_result` = 1' "$physical"
+          grep -Fq '`nearby_tap` = 1' "$physical"
+          grep -Fq 'Synthetic/API smoke, CI, source inspection, Pages deployment and Owner-dashboard availability cannot substitute for this physical acceptance.' "$physical" || {
+            echo 'Synthetic/deployment evidence boundary is missing'; exit 1;
+          }
+          grep -Fq 'First-100 traction, a real-user funnel baseline or conversion rate;' "$physical" || {
+            echo 'Physical evidence must not be generalized into acquisition traction'; exit 1;
+          }
+          grep -Fq 'Campaign 3,000 eligibility or prize-entry truth;' "$physical" || {
+            echo 'Physical evidence must not become Campaign 3,000 authority'; exit 1;
+          }
+
+      - name: Record boundary
+        shell: bash
+        run: |
+          {
+            echo '## Product Event physical evidence boundary'
+            echo
+            echo '- Production measurement is deployed; real-device interaction acceptance remains open.'
+            echo '- Physical QA uses a dedicated QA UTM campaign, separate from First-100 and paid/prize/Premium campaigns.'
+            echo '- QA Product Event rows must be cleaned after evidence capture so the Owner dashboard baseline remains uncontaminated.'
+            echo '- No CI, synthetic API smoke or deployment evidence can promote the physical record to PASS.'
+          } >> "$GITHUB_STEP_SUMMARY"
