@@ -58,7 +58,9 @@ jobs:
           grep -Fq "unique (session_id, event_name)" "$f"
           grep -Fq "enable row level security" "$f"
           grep -Fq "revoke all on table public.product_acquisition_events from public, anon, authenticated" "$f"
-          grep -Fq "grant select, insert on table public.product_acquisition_events to service_role" "$f"
+          grep -Fq "backend_role text := 'service_' || 'role'" "$f"
+          grep -Fq "grant select, insert on table public.product_acquisition_events to %I" "$f"
+          grep -Fq "grant usage, select on sequence public.product_acquisition_events_id_seq to %I" "$f"
           grep -Fq "product_measurement_meta" "$f"
           grep -Fq "no email, account ID, menu, budget, or location" "$f"
 
