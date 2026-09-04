@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
+declare const EdgeRuntime:{waitUntil:(promise:Promise<unknown>)=>void}
+
 const cors = {
   'Access-Control-Allow-Origin':'*',
   'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type',
@@ -22,6 +24,8 @@ const hostTokenPattern=/^[0-9a-f]{64}$/
 const validRoomId=(value:unknown)=>uuidPattern.test(String(value||''))
 const token=()=>crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','')
 const maxRequestBytes=8192
+const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+const observedThisInstance=new Set<string>()
 
 const readBodyLimited=async(req:Request)=>{
   if(!req.body) return {ok:true as const,text:''}
@@ -51,8 +55,20 @@ const readBodyLimited=async(req:Request)=>{
 
 // Privacy-safe operational event logging. Never include room IDs, host tokens,
 // voter IDs, tags, IP addresses, request bodies, or other user-supplied values.
+// The database observation copies only the allowlisted event/reason category,
+// stores at most one presence row per UTC day/category, and never counts requests.
+const observeEvent=async(event:string,fields:Record<string,number|string|boolean>)=>{
+  const reason=typeof fields.reason==='string'?fields.reason:''
+  const today=new Date().toISOString().slice(0,10)
+  const localKey=`${today}|${event}|${reason}`
+  if(observedThisInstance.has(localKey)) return
+  observedThisInstance.add(localKey)
+  const {error}=await supabase.rpc('observe_group_api_event',{p_event_name:event,p_reason:reason})
+  if(error) observedThisInstance.delete(localKey)
+}
 const logEvent=(event:string,fields:Record<string,number|string|boolean>={})=>{
   console.log(JSON.stringify({component:'group-api',event,...fields}))
+  try{EdgeRuntime.waitUntil(observeEvent(event,fields).catch(()=>{}))}catch{}
 }
 
 Deno.serve(async(req)=>{
@@ -78,7 +94,6 @@ Deno.serve(async(req)=>{
   }
   const rawBody=bodyResult.text
 
-  const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   let b:any
   try{b=JSON.parse(rawBody)}catch{
     logEvent('request_rejected',{reason:'invalid_json'})
