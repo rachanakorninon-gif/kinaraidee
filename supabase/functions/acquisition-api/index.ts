@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2.112.2'
 
 const cors={
   'Access-Control-Allow-Origin':'*',
@@ -60,6 +60,13 @@ Deno.serve(async(req)=>{
   const measuredSinceMs=Math.max(requestedSinceMs,trackingStartMs)
   const measuredSince=new Date(measuredSinceMs).toISOString()
 
+  const {data:productMeta,error:productMetaError}=await sb.from('product_measurement_meta').select('started_at,schema_version').eq('singleton',true).maybeSingle()
+  if(productMetaError||!productMeta?.started_at)return json({error:'product_measurement_meta_failed'},500)
+  const productTrackingStartedAt=String(productMeta.started_at)
+  const productTrackingStartMs=new Date(productTrackingStartedAt).getTime()
+  const productMeasuredSinceMs=Math.max(requestedSinceMs,productTrackingStartMs)
+  const productMeasuredSince=new Date(productMeasuredSinceMs).toISOString()
+
   const users:any[]=[]
   const perPage=1000
   for(let page=1;page<=50;page++){
@@ -74,12 +81,15 @@ Deno.serve(async(req)=>{
   const measuredUsers=users.filter((u:any)=>new Date(u.created_at).getTime()>=measuredSinceMs)
   const measuredIds=new Set(measuredUsers.map((u:any)=>u.id))
   const confirmedIds=new Set(measuredUsers.filter((u:any)=>Boolean(u.email_confirmed_at)).map((u:any)=>u.id))
+  const productWindowUsers=users.filter((u:any)=>new Date(u.created_at).getTime()>=productMeasuredSinceMs)
+  const productWindowIds=new Set(productWindowUsers.map((u:any)=>u.id))
+  const productWindowConfirmedIds=new Set(productWindowUsers.filter((u:any)=>Boolean(u.email_confirmed_at)).map((u:any)=>u.id))
 
-  const fetchPaged=async(table:string,select:string,dateColumn:string)=>{
+  const fetchPaged=async(table:string,select:string,dateColumn:string,since:string,limit=20000)=>{
     const all:any[]=[]
     const pageSize=1000
-    for(let from=0;from<20000;from+=pageSize){
-      const {data,error}=await sb.from(table).select(select).gte(dateColumn,measuredSince).order(dateColumn,{ascending:true}).range(from,from+pageSize-1)
+    for(let from=0;from<limit;from+=pageSize){
+      const {data,error}=await sb.from(table).select(select).gte(dateColumn,since).order(dateColumn,{ascending:true}).range(from,from+pageSize-1)
       if(error)return {error,rows:[] as any[]}
       const batch=data||[]
       all.push(...batch)
@@ -88,16 +98,22 @@ Deno.serve(async(req)=>{
     return {error:new Error('row_limit'),rows:[] as any[]}
   }
 
-  const [attributionResult,referralResult]=await Promise.all([
-    fetchPaged('member_acquisition_attribution','user_id,utm_source,utm_medium,utm_campaign,utm_content,referral_code,created_at','created_at'),
-    fetchPaged('member_referrals','referred_user_id,status,created_at,confirmed_at','created_at')
+  const [attributionResult,referralResult,productEventResult]=await Promise.all([
+    fetchPaged('member_acquisition_attribution','user_id,utm_source,utm_medium,utm_campaign,utm_content,referral_code,created_at','created_at',measuredSince),
+    fetchPaged('member_referrals','referred_user_id,status,created_at,confirmed_at','created_at',measuredSince),
+    fetchPaged('product_acquisition_events','session_id,event_name,utm_source,utm_medium,utm_campaign,utm_content,occurred_at','occurred_at',productMeasuredSince,50000)
   ])
-  if(attributionResult.error||referralResult.error)return json({error:'db_error'},500)
+  if(attributionResult.error||referralResult.error||productEventResult.error)return json({error:'db_error'},500)
 
   const attributionRows=attributionResult.rows.filter((r:any)=>measuredIds.has(r.user_id))
+  const productWindowAttributionRows=attributionResult.rows.filter((r:any)=>productWindowIds.has(r.user_id))
   const referralRows=referralResult.rows.filter((r:any)=>measuredIds.has(r.referred_user_id))
+  const productRows=productEventResult.rows
   const hasAttribution=(r:any)=>Boolean(r.utm_source||r.utm_medium||r.utm_campaign||r.utm_content||r.referral_code)
+  const hasFullUtm=(r:any)=>Boolean(r.utm_source&&r.utm_medium&&r.utm_campaign&&r.utm_content)
   const attributedRows=attributionRows.filter(hasAttribution)
+  const productWindowAttributedRows=productWindowAttributionRows.filter(hasFullUtm)
+  const productWindowConfirmedAttributed=productWindowAttributedRows.filter((r:any)=>productWindowConfirmedIds.has(r.user_id)).length
 
   const rank=(rows:any[],key:string)=>{
     const grouped=new Map<string,{count:number,confirmed:number}>()
@@ -113,6 +129,46 @@ Deno.serve(async(req)=>{
     return [...grouped.entries()].map(([name,v])=>({name,count:v.count,confirmed:v.confirmed,confirmationRate:pct(v.confirmed,v.count)})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)).slice(0,20)
   }
 
+  const productRank=(key:string)=>{
+    const grouped=new Map<string,{landing:number,guided:number,surprise:number,result:number,nearby:number,signups:number,confirmed:number}>()
+    const rowFor=(name:string)=>{
+      const current=grouped.get(name)||{landing:0,guided:0,surprise:0,result:0,nearby:0,signups:0,confirmed:0}
+      grouped.set(name,current)
+      return current
+    }
+    for(const row of productRows){
+      const raw=row[key]
+      if(!raw)continue
+      const current=rowFor(String(raw))
+      if(row.event_name==='landing')current.landing++
+      else if(row.event_name==='guided_start')current.guided++
+      else if(row.event_name==='surprise_tap')current.surprise++
+      else if(row.event_name==='recommendation_result')current.result++
+      else if(row.event_name==='nearby_tap')current.nearby++
+    }
+    for(const row of productWindowAttributedRows){
+      const raw=row[key]
+      if(!raw)continue
+      const current=rowFor(String(raw))
+      current.signups++
+      if(productWindowConfirmedIds.has(row.user_id))current.confirmed++
+    }
+    return [...grouped.entries()].map(([name,v])=>({
+      name,...v,
+      resultRate:pct(v.result,v.landing),
+      signupRate:pct(v.signups,v.landing),
+      confirmedRate:pct(v.confirmed,v.landing)
+    })).sort((a,b)=>b.landing-a.landing||b.result-a.result||a.name.localeCompare(b.name)).slice(0,20)
+  }
+
+  const eventCount=(name:string)=>productRows.filter((r:any)=>r.event_name===name).length
+  const productSessions=new Set(productRows.map((r:any)=>r.session_id)).size
+  const landingSessions=eventCount('landing')
+  const guidedStarts=eventCount('guided_start')
+  const surpriseTaps=eventCount('surprise_tap')
+  const recommendationResults=eventCount('recommendation_result')
+  const nearbyTaps=eventCount('nearby_tap')
+
   const measuredSignups=measuredUsers.length
   const confirmedSignups=confirmedIds.size
   const trackedSignups=attributionRows.length
@@ -123,13 +179,15 @@ Deno.serve(async(req)=>{
 
   return json({
     observed:true,
-    sourceOfTruth:'Supabase Auth + first-party acquisition/referral tables',
+    sourceOfTruth:'Supabase Auth + first-party acquisition/referral/product-event tables',
     campaignEligibilityIncluded:false,
     spendIncluded:false,
     days,
     requestedSince:new Date(requestedSinceMs).toISOString(),
     trackingStartedAt,
     measuredSince,
+    productTrackingStartedAt,
+    productMeasuredSince,
     generatedAt:new Date().toISOString(),
     metrics:{
       measuredSignups,
@@ -145,8 +203,22 @@ Deno.serve(async(req)=>{
       referralRate:pct(referralSignups,measuredSignups),
       referralConfirmationRate:pct(confirmedReferrals,referralSignups)
     },
+    productMetrics:{
+      measuredSessions:productSessions,
+      landingSessions,
+      guidedStarts,
+      surpriseTaps,
+      recommendationResults,
+      nearbyTaps,
+      resultRate:pct(recommendationResults,landingSessions),
+      signupRate:pct(productWindowAttributedRows.length,landingSessions),
+      confirmedRate:pct(productWindowConfirmedAttributed,landingSessions)
+    },
     bySource:rank(attributionRows,'utm_source'),
     byCampaign:rank(attributionRows,'utm_campaign'),
-    byContent:rank(attributionRows,'utm_content')
+    byContent:rank(attributionRows,'utm_content'),
+    productBySource:productRank('utm_source'),
+    productByCampaign:productRank('utm_campaign'),
+    productByContent:productRank('utm_content')
   })
 })
