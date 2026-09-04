@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
+      - 'LINE-AUTH-CONTROLLED-EVIDENCE.md'
       - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   push:
     branches: [main]
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
+      - 'LINE-AUTH-CONTROLLED-EVIDENCE.md'
       - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   workflow_dispatch:
@@ -37,6 +39,7 @@ jobs:
           const fs=require('fs');
           const js=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
           const doc=fs.readFileSync('AUTH-MULTI-PROVIDER-ROLLOUT.md','utf8');
+          const evidence=fs.readFileSync('LINE-AUTH-CONTROLLED-EVIDENCE.md','utf8');
           const member=fs.readFileSync('member.html','utf8');
           const sw=fs.readFileSync('sw.js','utf8');
           const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
@@ -50,15 +53,27 @@ jobs:
           must(!js.includes('provider_token')&&!js.includes('provider_refresh_token'),'app must not persist provider tokens');
           must(!js.includes('localStorage.setItem')&&!js.includes('sessionStorage.setItem'),'foundation must not add browser persistence for OTP/provider identity data');
           must(js.includes("/^0\\d{9}$/")&&js.includes("/^\\+66\\d{9}$/"),'Thai phone normalization must be format-bounded');
+
           must(!member.includes('member-auth-multi-provider.js'),'prototype must remain unwired from the production member page');
+          must(!member.includes('custom:line'),'production member page must not directly enable LINE before remaining gates close');
           must(!sw.includes('member-auth-multi-provider.js'),'prototype must remain outside the production Service Worker cache');
-          must(doc.includes('Status: **FOUNDATION ONLY / PROVIDERS NOT ENABLED**'),'rollout document must remain explicit that providers are not enabled');
+
+          must(doc.includes('Status: **FOUNDATION + CONTROLLED LINE CONFIG / PRODUCTION PROVIDERS NOT ENABLED**'),'rollout status must preserve disabled Production boundary');
           must(doc.includes('referral/acquisition attribution parity'),'rollout must preserve acquisition/referral parity gate');
-          must(doc.includes('No provider is considered production-ready merely because UI/client code exists.'),'client code must not imply provider readiness');
+          must(doc.includes('No provider is considered production-ready merely because provider configuration or UI/client code exists.'),'provider setup must not imply Production readiness');
           must(doc.includes('must not auto-merge two existing application accounts'),'account merge safety boundary missing');
           must(doc.includes('SMS spend/abuse controls'),'phone OTP cost/abuse boundary missing');
-          must(doc.includes('no secrets committed'),'secret boundary missing');
           must(doc.includes('intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime'),'non-deployed prototype boundary missing');
+          must(doc.includes('https://access.line.me/oauth2/v2.1/authorize'),'reviewed LINE authorization endpoint missing');
+          must(doc.includes('https://api.line.me/oauth2/v2.1/token'),'reviewed LINE token endpoint missing');
+          must(doc.includes('https://api.line.me/oauth2/v2.1/userinfo'),'reviewed LINE userinfo endpoint missing');
+
+          must(evidence.includes('Status: **CONTROLLED CONFIGURATION VERIFIED / PRODUCTION BUTTON DISABLED**'),'LINE evidence must not imply Production enablement');
+          must(evidence.includes('Manual OAuth2'),'LINE evidence must record the successful provider mode');
+          must(evidence.includes('Returning LINE login PASS'),'returning-user controlled evidence missing');
+          must(evidence.includes('referral/acquisition attribution parity for a LINE-created account'),'remaining attribution blocker must stay explicit');
+          must(evidence.includes('physical cross-account profile/history/favorite/referral isolation acceptance'),'remaining isolation blocker must stay explicit');
+          must(!evidence.match(/client secret\s*[:=]\s*[A-Za-z0-9_-]{16,}/i),'evidence must not contain a client secret value');
           NODE
 
       - name: Summary
@@ -67,9 +82,10 @@ jobs:
           {
             echo '## Multi-provider Auth foundation'
             echo
-            echo '- LINE / Phone / Facebook remain disabled by default.'
-            echo '- Prototype client integration is syntax-checked outside the deployed browser/PWA runtime.'
-            echo '- member.html and the Service Worker do not load/cache the prototype.'
-            echo '- Provider credentials/configuration, referral attribution parity, abuse controls and physical acceptance remain required before enablement.'
+            echo '- LINE / Phone / Facebook remain disabled in the deployed member UI.'
+            echo '- Controlled LINE Manual OAuth2 setup and login evidence is documented separately without user identifiers or secrets.'
+            echo '- LINE authorization, cancel/return, new login, returning login and user-initiated logout have scoped controlled evidence only.'
+            echo '- Referral/acquisition parity, physical cross-account isolation, network/failure UX, accessibility and broader device coverage remain open before Production enablement.'
+            echo '- Prototype client integration remains outside member.html and the Service Worker cache.'
             echo '- Existing email/password Auth remains the current Production path.'
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,6 +1,6 @@
 # Kinaraidee — Multi-provider Auth Rollout
 
-Status: **FOUNDATION ONLY / PROVIDERS NOT ENABLED**
+Status: **FOUNDATION + CONTROLLED LINE CONFIG / PRODUCTION PROVIDERS NOT ENABLED**
 
 Purpose: add safer, lower-friction member sign-in options for Thai users while preserving the existing email/password path, account identity boundaries, referral/acquisition attribution, and current Public Beta evidence rules.
 
@@ -11,32 +11,34 @@ Purpose: add safer, lower-friction member sign-in options for Thai users while p
 3. **Facebook Login** — secondary social option.
 4. **Email + password** — existing fallback and recovery path.
 
-No provider is considered production-ready merely because UI/client code exists.
+No provider is considered production-ready merely because provider configuration or UI/client code exists.
 
 ## Current production facts
 
 - Supabase project: `cuspfvfzprlgtvtdyilh` (`Kinaraidee`).
-- Current Auth identities observed by an aggregate-only read on 2026-09-05: provider `email` only. No user identifiers, emails, phone numbers, tokens or social-provider subject IDs were retained in evidence.
+- Aggregate-only Auth read on 2026-09-05 after controlled LINE tests shows 7 `email` identities and 1 `custom:line` identity mapped to 1 Supabase user. No user identifiers, emails, phone numbers, tokens or social-provider subject IDs are retained in repository evidence.
+- The controlled LINE identity has no email address, matching the intentionally email-optional initial LINE test path.
 - Existing email/password signup, confirmation, recovery/password-update and sign-in have scoped physical evidence on OPPO Android Chrome. The separate leaked-password-protection gate remains OPEN and must not be reclassified by this work.
-- Current browser/PWA runtime remains PR #520 Edge-only referral-summary runtime. This branch must not supersede that runtime until provider configuration, regression and physical acceptance are complete.
-- The client prototype lives under `prototype/auth-multi-provider/` and is intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime.
+- The deployed member UI remains email/password only. The client prototype under `prototype/auth-multi-provider/` remains intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime.
+- Controlled LINE provider evidence is recorded in `LINE-AUTH-CONTROLLED-EVIDENCE.md` and does not authorize Production enablement.
 
 ## Supabase / provider model
 
 ### LINE
 
-Use a Supabase **Custom OAuth/OIDC Provider** identifier `custom:line` only after a LINE Login channel exists and the callback is registered.
+The configured Supabase custom provider identifier is `custom:line` with display name `LINE`.
 
-Preferred OIDC inputs if accepted by the hosted Supabase provider setup:
-- identifier: `custom:line`
-- name: `LINE`
+Hosted OIDC auto-discovery was evaluated first but failed controlled interoperability during ID-token verification. The controlled provider was therefore recreated using **Manual OAuth2** configuration with:
+
 - issuer: `https://access.line.me`
-- scopes: `openid profile email`
-- Supabase callback URL to register at LINE: `https://cuspfvfzprlgtvtdyilh.supabase.co/auth/v1/callback`
+- authorization: `https://access.line.me/oauth2/v2.1/authorize`
+- token: `https://api.line.me/oauth2/v2.1/token`
+- userinfo: `https://api.line.me/oauth2/v2.1/userinfo`
+- scopes: `openid, profile`
+- email optional: enabled for the controlled test path
+- Supabase callback URL registered at LINE: `https://cuspfvfzprlgtvtdyilh.supabase.co/auth/v1/callback`
 
-LINE Login documentation identifies `https://access.line.me` as the ID-token issuer, uses the v2.1 authorization/token flow, supports PKCE, and exposes the OpenID userinfo endpoint at `https://api.line.me/oauth2/v2.1/userinfo`.
-
-If hosted OIDC auto-discovery does not interoperate cleanly with LINE, configure a manual OAuth2 custom provider instead and verify the resulting ID/userinfo mapping before enabling the browser button.
+No LINE email permission is claimed for the current controlled path. If email is requested later, Kinaraidee must first add an explicit product need, user-facing consent disclosure and privacy-policy handling rather than silently widening scopes.
 
 ### Facebook
 
@@ -58,6 +60,8 @@ Phone OTP has a direct external-message cost and must not be switched on merely 
 The canonical account identity remains the Supabase Auth user UUID. Email, phone, Facebook identity and LINE identity are login methods, not application primary keys.
 
 Do not invent or derive application account IDs from provider identifiers. Existing member tables continue to scope by `auth.uid()` / `user_id`.
+
+Read-only backend inspection confirms current `member_profiles` and `member_food_history` RLS policies are scoped to `auth.uid() = user_id`; referral tables retain RLS and no direct `anon` / `authenticated` table grants. These are supporting structural safeguards only and do not replace physical cross-account isolation acceptance.
 
 ## Identity linking rule
 
@@ -137,21 +141,28 @@ For each provider independently:
 - cancel/deny flow returns usable UI;
 - network/failure retry does not trap the user;
 - logout works;
-- account/profile/history/favorite access remains scoped to the authenticated user;
+- account/profile/history/favorite/referral access remains scoped to the authenticated user;
 - referral/acquisition attribution parity verified for new-account creation;
 - no provider access token, Auth token, OTP, phone number or provider subject identifier is stored in QA evidence;
 - accessibility labels/focus and busy/error states reviewed;
 - existing email/password/recovery flow regression still passes;
 - Public Beta and Commercial status remain separate gates.
 
+Current controlled LINE evidence has already established authorization reachability, cancel/return usability, one signed-out new LINE login, returning-user login to the same controlled LINE identity, and user-initiated logout. These scoped PASS items must not be generalized to the remaining gates.
+
 Additional Phone OTP gates:
 - SMS provider/cost owner defined;
 - OTP resend/rate-limit behavior verified;
 - abuse/captcha decision reviewed before meaningful public traffic.
 
-Additional LINE gate:
-- verify behavior from Safari/Chrome and at least one context where the LINE app is installed; in-app-browser behavior must be recorded separately from Safari/Chrome rather than generalized.
+Additional LINE gates still OPEN:
+- physical cross-account profile/history/favorite/referral isolation acceptance;
+- referral/acquisition attribution parity for LINE-created accounts;
+- network/provider failure retry;
+- accessibility review of the actual LINE button flow;
+- existing email/password/recovery regression after LINE UI integration;
+- Safari/Chrome coverage plus at least one LINE-app-installed context; in-app-browser behavior must be recorded separately from Safari/Chrome rather than generalized.
 
 ## What this foundation does not authorize
 
-This document does not authorize purchasing an SMS service, enabling paid provider features, creating external LINE/Meta developer assets on the user's behalf, changing Supabase Auth provider configuration, enabling Captcha, merging duplicate accounts, opening Public Beta recruitment, or claiming Commercial readiness.
+This document does not authorize purchasing an SMS service, enabling paid provider features, enabling any provider button in Production before its remaining gates close, enabling Captcha, merging duplicate accounts, opening Public Beta recruitment, or claiming Commercial readiness.
