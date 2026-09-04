@@ -17,7 +17,8 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Raw `member_referral_codes` and `member_referrals` tables remain unavailable to browser roles; the Edge Function keeps raw referral access server-side.
 - Supabase Auth leaked-password protection remains a separate WARN / OPEN gate and is not affected by referral cutover acceptance.
 - Product Event real-user interaction acceptance, NF-07 physical cache upgrade, the remaining Android/iPhone device matrix, and other open Beta gates are unchanged.
-- Historical Auth/public-form/Reduced-Motion/Keyboard-Focus physical evidence retains only its recorded scope and is not generalized by this referral result.
+- Issue #177 is closed **completed** for the tested physical Android installed-PWA session: the fresh favorite remained after the user fully closed the installed PWA from Recent Apps and reopened it without clearing data.
+- Historical Auth/public-form/Reduced-Motion/Keyboard-Focus physical evidence and Android Favorite/History restart evidence retain only their recorded scope and are not generalized by this referral result.
 - Public Beta is still **NOT COMPLETE**
 
 ## Evidence boundary
