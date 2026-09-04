@@ -19,6 +19,14 @@
     s.async=false;
     document.body.appendChild(s);
   }
+  function ensureProductEvents(){
+    ensureAcquisition();
+    if(window.KINARAIDEE_PRODUCT_EVENTS||document.querySelector('script[src="data/product-events.js"]'))return;
+    const s=document.createElement('script');
+    s.src='data/product-events.js';
+    s.async=false;
+    document.body.appendChild(s);
+  }
   function ensureMemberSync(){
     ensureAcquisition();
     if(window.KINARAIDEE_MEMBER_SYNC||document.querySelector('script[src="data/member-sync.js"]'))return;
@@ -114,6 +122,7 @@
   function install(){
     ensureAccessibilityStyles();
     ensureAcquisition();
+    ensureProductEvents();
     // index.html loads this helper directly. Start member sync before the user can
     // create a favorite, then bridge the PWA install helper as before.
     ensureMemberSync();
@@ -145,6 +154,7 @@
     if(group)home.insertBefore(b,group);else home.appendChild(b);
   }
   ensureAcquisition();
+  ensureProductEvents();
   ensureMemberSync();
   window.addEventListener('pageshow',recover);
   window.addEventListener('online',recover);
