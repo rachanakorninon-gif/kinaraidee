@@ -62,15 +62,16 @@ jobs:
           grep -Fq "product_measurement_meta" "$f"
           grep -Fq "no email, account ID, menu, budget, or location" "$f"
 
-      - name: Validate runtime isolation and PWA cache
+      - name: Validate runtime isolation and canonical PWA boundary
         shell: bash
         run: |
           set -euo pipefail
           grep -Fq "ensureProductEvents" data/home-surprise.js
           grep -Fq "data/product-events.js" data/home-surprise.js
-          grep -Fq "kinaraidee-beta-v17" sw.js
-          grep -Fq "./data/acquisition.js" sw.js
-          grep -Fq "./data/product-events.js" sw.js
+          grep -Fq "kinaraidee-beta-v16" sw.js
+          grep -Fq "kinaraidee-beta-v16" CURRENT-RUNTIME.md
+          grep -Fq "kinaraidee-beta-v16" CURRENT-RELEASE.md
+          grep -Fq "await cache.put(event.request,response.clone())" sw.js
           if grep -Fq "product-event-api" index.html; then
             echo "Telemetry API must remain isolated from the core inline recommendation runtime"
             exit 1
@@ -83,7 +84,7 @@ jobs:
           f=supabase/functions/acquisition-api/index.ts
           grep -Fq "@supabase/supabase-js@2.112.2" "$f"
           grep -Fq "product_acquisition_events" "$f"
-          grep -Fq "productMeasurement" "$f" || grep -Fq "productMetrics" "$f"
+          grep -Fq "productMetrics" "$f"
           grep -Fq "productWindowAttributedRows" "$f"
           grep -Fq "campaignEligibilityIncluded:false" "$f"
           grep -Fq "Product Funnel" acquisition-dashboard.html
@@ -107,5 +108,6 @@ jobs:
             echo '- Reviewed UTM traffic only; one row per session/event stage.'
             echo '- No email, account ID, menu, budget or location in product telemetry.'
             echo '- Browser has no direct read access to raw product-event rows.'
+            echo '- Telemetry is additive to the canonical v16 PWA generation; core recommendation remains independent.'
             echo '- Product measurement remains separate from Campaign 3,000 eligibility and spend.'
           } >> "$GITHUB_STEP_SUMMARY"
