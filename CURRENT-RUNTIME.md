@@ -10,6 +10,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Last verified GitHub Pages run `33838629999` completed **success** for `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`.
 - Last verified main Live Smoke run `33838665915` completed **success** for the same prior deployed descendant.
 - Current runtime deployment evidence is pending for source candidate `4e2e1789921aa6fd73b2677ac5def2bc35a8be73`; the prior Pages/Live Smoke trace does not prove deployment of this new Edge-only browser source.
+- Prior verified deployment evidence remains historical and is not reused as current PASS.
 - Historical prior runtime source candidate: `ea409cd02fc7744514b8c867a67f56ec0187de80`; last verified deployed descendant: `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`.
 - Referral-summary physical acceptance is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 signed-in session on 2026-09-04 Asia/Bangkok**. The privacy-safe QA source label was `EDGE`; the referral summary rendered, both aggregate fields rendered as numbers, and Share/Copy controls became enabled. No aggregate values, referral code/link, email, account identifier, token, browser storage/session payload or raw authenticated request/response were retained in evidence.
 - `member-referral-api` remains ACTIVE v1 with `verify_jwt=true`; source/deployment parity and missing/malformed-JWT rejection-only smoke remain verified through the prior backend evidence.
