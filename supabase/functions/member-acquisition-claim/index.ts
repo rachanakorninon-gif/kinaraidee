@@ -2,6 +2,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.112.2'
 
 const allowedOrigin='https://rachanakorninon-gif.github.io'
 const maxRequestBytes=4096
+const maxClaimAgeMs=60*60*1000
+const maxFutureClockSkewMs=5*60*1000
 const cors={
   'Access-Control-Allow-Origin':allowedOrigin,
   'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type',
@@ -106,6 +108,11 @@ Deno.serve(async(req)=>{
   else if([...providers].some(provider=>socialProviders.has(provider)))authMethod='oauth'
   if(!authMethod)return json({error:'unsupported_auth_method'},403)
 
+  const createdAtMs=Date.parse(String(user.created_at||''))
+  const ageMs=Date.now()-createdAtMs
+  if(!Number.isFinite(createdAtMs)||ageMs < -maxFutureClockSkewMs)return json({error:'invalid_auth_state'},403)
+  if(ageMs>maxClaimAgeMs)return json({result:'claim_window_expired',referral_recorded:false},409)
+
   const {data,error}=await sb.rpc('claim_member_acquisition_internal',{
     p_user_id:user.id,
     p_auth_method:authMethod,
@@ -122,7 +129,6 @@ Deno.serve(async(req)=>{
   const allowedResults=new Set([
     'claimed',
     'already_claimed',
-    'claim_window_expired',
     'claimed_referral_unresolved',
     'claimed_self_referral_rejected',
     'claimed_referral_recorded',
