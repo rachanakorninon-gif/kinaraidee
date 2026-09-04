@@ -7,17 +7,19 @@
 ## Current source/runtime state
 
 - Canonical reviewed `main` baseline: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace). This baseline is intentionally allowed to remain an ancestor of newer QA/workflow/documentation-only descendants; `Kinaraidee Release Baseline Regression` blocks guarded browser/API/schema drift after it, so a docs-only merge does not require baseline churn.
-- Current browser/PWA runtime candidate: `f401ad758e40914a10245cfab08497f7cdb99f7d` (PR #499 referral/acquisition measurement readiness).
+- Current browser/PWA runtime candidate: `0bd5acfb9946e10ed5624205165123eabc8035b4` (PR #509 Product Event Measurement).
 - Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**.
-- Runtime merge/deployed SHA: `02540bb61c3c62de4cfba34e92a876503765847d`.
+- Runtime merge/deployed SHA: `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`.
 - PWA cache marker: `kinaraidee-beta-v16`.
 - Current Group API source candidate: PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f`; prior connected inspection verified Supabase ACTIVE version 6 source/deployment parity.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
-PR #499 adds privacy-conscious referral/acquisition measurement: allowlisted coarse UTM/referral capture, signup metadata, authenticated referral-summary/share UI and an explicit Campaign 3,000 non-eligibility boundary, while preserving `kinaraidee-beta-v16`. The browser runtime is deployed. Its Supabase referral schema/RPC and the subsequent referral-code privacy correction are also deployed, but deployment does not by itself prove any successful referral signup, user growth, campaign entry, conversion or revenue.
+PR #509 adds privacy-minimal Product Event Measurement for reviewed UTM traffic while preserving `kinaraidee-beta-v16`: a random browser-session UUID and coarse allowlisted UTM fields are used to record unique-session funnel stages without account identity, email, menu, budget or precise-location fields. Core recommendation behavior remains independent of telemetry availability. The browser/PWA runtime, Product Event schema and Edge Functions are deployed, but deployment does not by itself prove any real-user Product Funnel interaction, conversion, retention, paid-ad performance, Campaign 3,000 eligibility or revenue.
 
-The prior PR #373 Auth password-security runtime remains historical deployed evidence for the Auth UX and the scoped physical account-flow tests already recorded. It is superseded as the current browser/PWA runtime candidate by PR #499, but those prior physical/Auth results are not rewritten or generalized to referral/acquisition acceptance.
+PR #499 remains historical deployed evidence for referral/acquisition measurement readiness: allowlisted coarse UTM/referral capture, signup metadata, authenticated referral-summary/share UI and an explicit Campaign 3,000 non-eligibility boundary. Its Supabase referral schema/RPC and subsequent referral-code privacy correction remain deployed. Those facts do not by themselves prove a successful referral signup, user growth, campaign entry, conversion or revenue.
+
+The prior PR #373 Auth password-security runtime remains historical deployed evidence for the Auth UX and the scoped physical account-flow tests already recorded. It is superseded as the current browser/PWA runtime candidate; those prior physical/Auth results are not rewritten or generalized to referral/acquisition or Product Event acceptance.
 
 ## Browser/PWA deployment evidence
 
@@ -25,16 +27,18 @@ Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 
 Current runtime evidence boundary:
 
-- PR #499 source runtime candidate is `f401ad758e40914a10245cfab08497f7cdb99f7d`.
-- PR #499 merged to main as descendant `02540bb61c3c62de4cfba34e92a876503765847d`.
-- GitHub Pages run `33811511793` completed **success** for exact merged-main SHA `02540bb61c3c62de4cfba34e92a876503765847d`.
-- Referral acquisition regression run `33811512053` completed **success** on that exact push SHA.
-- This deployment PASS proves browser/PWA source/deployment lineage only. It does not prove a real referral signup, attribution event, Campaign 3,000 eligibility, user-count increase, paid-ad conversion or revenue.
+- PR #509 source runtime candidate is `0bd5acfb9946e10ed5624205165123eabc8035b4`.
+- PR #509 merged to main as descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`.
+- GitHub Pages run `33823701475` completed **success** for exact merged-main SHA `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`.
+- Main Live Smoke run `33823746430` completed **success** for the same deployed SHA.
+- Product Event API Live Smoke run `33824058988` completed **success** from a GitHub-hosted runner against production ingestion: first allowed-origin insert succeeded, duplicate submission was idempotent, and wrong-origin submission was rejected. The exact synthetic trace created one `landing` row; that row was deleted after evidence capture and a follow-up query confirmed 0 matching rows remain.
+- This deployment PASS proves browser/PWA source/deployment lineage and scoped production-ingress behavior only. It does not prove a real Product Funnel interaction, referral signup, attribution outcome, Campaign 3,000 eligibility, user-count increase, paid-ad conversion or revenue.
 
 Historical verified deployment evidence remains valid for its original scope:
 
+- PR #499 source runtime `f401ad758e40914a10245cfab08497f7cdb99f7d` merged/deployed through descendant `02540bb61c3c62de4cfba34e92a876503765847d`; Pages `33811511793` and Referral acquisition regression `33811512053` completed **success** for that historical acquisition-measurement trace.
 - PR #373 source runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` was verified through descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`; Pages `33229525995`, Auth Password Security Live Smoke `33229548182` and main Live Smoke `33229548190` completed **success** for that historical scoped trace.
-- PR #201 merged as `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- PR #201 merged as `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` source through deployed descendant `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
@@ -42,7 +46,7 @@ Historical verified deployment evidence remains valid for its original scope:
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
-Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance. Separate physical evidence records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session; that evidence remains documented independently in `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`.
+Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish Product Event real-user acceptance, referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance. Separate physical evidence records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session; that evidence remains documented independently in `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`.
 
 ## Supabase security evidence
 
@@ -54,9 +58,10 @@ Existing live evidence remains valid unless superseded by a later schema/configu
 - referral/acquisition schema/RPC migration `20260903220832 / referral_acquisition_v1` is deployed;
 - referral-code privacy migration `20260903221043 / referral_code_privacy_fix_20260904` is deployed. It changed referral-code generation from an account-derived identifier fragment to a random public identifier using `gen_random_uuid()` and rotated legacy codes only before referral/acquisition usage existed;
 - scoped post-fix verification retained no literal codes/account identifiers: 7 referral-code rows existed, all 7 were unique/random-format, referral rows = 0 and acquisition-attribution rows = 0. These are backend integrity observations only and must not be interpreted as active-user/referral/campaign counts;
+- Product Event Measurement schema is deployed with RLS enabled and no direct `anon`/`authenticated` table access; `product-event-api` is ACTIVE v1 and `acquisition-api` is ACTIVE v2. Product tracking start is recorded as `2026-09-04 00:55:19 UTC` (`2026-09-04 07:55:19 Asia/Bangkok`). Product telemetry is best-effort and not identity, payment, Premium or Campaign 3,000 eligibility truth;
 - Supabase Auth leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** and must not be inferred from code/CI/deployment or successful account-flow evidence.
 
-This scoped evidence does not prove every authenticated per-user JWT/RLS path, every mutation shape, external authenticated-session lifecycle, privileged-backend authorization path, a successful referral signup, Production Security PASS, Public Beta completion or Commercial GO.
+This scoped evidence does not prove every authenticated per-user JWT/RLS path, every mutation shape, external authenticated-session lifecycle, privileged-backend authorization path, a successful referral signup, real-user Product Event behavior, Production Security PASS, Public Beta completion or Commercial GO.
 
 No paid-plan upgrade is authorized or inferred.
 
@@ -79,6 +84,7 @@ Public Beta is still **NOT COMPLETE**. CI, source inspection and Live Smoke do n
 - TC-11 Feedback and TC-12 Partner application physical acceptance are **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session** recorded in `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network success and backend/privacy evidence. This does not satisfy the remaining Android/iPhone device-matrix minimum.
 - Auth account-flow interaction rooted in PR #373 is **PASS for the scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 session** for the tested recovery request/mail/verify path, replacement-password update, sign-in with the new password, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration recorded in `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`. The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side and broader device/account-lifecycle coverage is incomplete.
 - No real-device referral/acquisition acceptance is inferred from PR #499 deployment or backend schema deployment.
+- No real-device Product Event Measurement interaction acceptance is inferred from PR #509 deployment, Pages/Live Smoke, or the synthetic production API probe.
 
 Historical Android/iPhone observations remain scoped to the exact behaviors and runtime versions observed and are not automatically promoted to another runtime path or full-matrix PASS.
 
@@ -110,7 +116,7 @@ This governance PASS is scoped to merge-rule enforcement. It does not replace ru
 
 Public Beta remains **NOT COMPLETE**.
 
-Current PR #499 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on merged-main descendant `02540bb61c3c62de4cfba34e92a876503765847d`. This deployment and live backend schema/privacy-fix evidence do not prove a real referral interaction, Campaign 3,000 eligibility, user growth or conversion. Separate traced OPPO physical evidence continues to provide scoped account-flow, TC-11/TC-12 and Reduced Motion results for the behaviors actually tested. Historical PR #201/PR #373 deployment/device/Auth evidence remains valid only for the exact scopes already recorded. Minimum open evidence still includes weak/leaked-password rejection/server-side protection, additional Android/iPhone distinct-model coverage, real keyboard-focus verification, NF-07 physical upgrade, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
+Current PR #509 is the browser/PWA runtime candidate and its browser/PWA deployment trace is verified PASS on merged-main descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`. Product Event backend ingress has a separate controlled synthetic PASS with its generated row cleaned after verification. These deployment/backend facts do not prove real-user Product Funnel interaction, a real referral interaction, Campaign 3,000 eligibility, user growth or conversion. Separate traced OPPO physical evidence continues to provide scoped account-flow, TC-11/TC-12 and Reduced Motion results for the behaviors actually tested. Historical PR #201/PR #373/PR #499 deployment/device/Auth/acquisition evidence remains valid only for the exact scopes already recorded. Minimum open evidence still includes weak/leaked-password rejection/server-side protection, additional Android/iPhone distinct-model coverage, real keyboard-focus verification, NF-07 physical upgrade, remaining device-matrix coverage and Blocker/Critical closure appropriate to Beta acceptance. Issue #5 remains the primary technical/device QA tracker; Issue #1 remains Beta launch acceptance.
 
 ## Commercial Readiness impact
 
@@ -133,13 +139,14 @@ No user-count, conversion, revenue, payment success, partner readiness, legal ap
 
 ## Supersession rule
 
-- Current browser/PWA runtime candidate = PR #499 source runtime `f401ad758e40914a10245cfab08497f7cdb99f7d`; deployment status = **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; deployed descendant = `02540bb61c3c62de4cfba34e92a876503765847d`.
+- Current browser/PWA runtime candidate = PR #509 source runtime `0bd5acfb9946e10ed5624205165123eabc8035b4`; deployment status = **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; deployed descendant = `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`.
 - Current PWA cache marker = `kinaraidee-beta-v16`.
 - Current Group API source candidate = merged PR #93 / `fefc29322ac13f7066038a663bfeb7091d218b8f` until another Group API source change occurs.
 - Partner API source/deployment lineage and scoped live rejection evidence are tracked in `PARTNER-API-HARDENING-EVIDENCE.md`; Partner API evidence does not supersede browser/PWA or Group API candidates.
-- PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` with deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` remains historical verified Auth browser/PWA deployment evidence and does not replace the current PR #499 runtime or create referral acceptance.
-- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #499 deployment evidence.
+- PR #499 / `f401ad758e40914a10245cfab08497f7cdb99f7d` with deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d` remains historical verified referral/acquisition browser/PWA deployment evidence and does not replace current PR #509 runtime or create Product Event/referral acceptance.
+- PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` with deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c` remains historical verified Auth browser/PWA deployment evidence and does not replace the current runtime or create referral/Product Event acceptance.
+- PR #201 / `00bdcb7f432d542b732cf355336e9f08798e4320` remains historical verified browser/PWA deployment evidence for the public-form resilience runtime and does not replace current PR #509 deployment evidence.
 - Historical PR #179 deployment and device evidence remains scoped historical/current support for the exact behaviors tested; it is not reused as referral/acquisition physical evidence or as evidence for devices that were not actually tested.
-- Supabase grants/RLS/referral-schema evidence is scoped backend security/integrity evidence, not blanket Auth/security, referral-success or campaign PASS.
+- Supabase grants/RLS/referral-schema/Product-Event evidence is scoped backend security/integrity/ingestion evidence, not blanket Auth/security, referral-success, real-user Product Funnel or campaign PASS.
 - Governance enforcement evidence is scoped merge-rule evidence, not Product/Security/Commercial readiness evidence.
 - Physical iPhone/VoiceOver evidence closes NF-09 only for the tested session; it does not close NF-07, second-device requirements, additional public-form device coverage, leaked-password rejection, broader Auth lifecycle/device coverage, keyboard-focus checks or the remaining full-device-matrix gates. Canonical Reduced Motion PASS is separately scoped to the traced OPPO Reno13 5G / Android 16 / Chrome 152 session.

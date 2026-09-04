@@ -10,7 +10,7 @@ Get the first trustworthy acquisition baseline without Influencer fees or paid m
 
 Operational target for this pack: **100 newly confirmed accounts after the tracking start**.
 
-Important: the public Web/PWA can be used before account creation, and anonymous product usage is not yet counted by the Acquisition KPI dashboard. Therefore `100 confirmed accounts` is a measurable acquisition milestone, **not a claim that total product users equal 100**.
+Important: the public Web/PWA can be used before account creation. Privacy-minimal Product Funnel events are now measured separately for reviewed UTM traffic, but they are best-effort anonymous browser-session observations and are not authenticated account counts. Therefore `100 confirmed accounts` is a measurable acquisition milestone, **not a claim that total product users equal 100**.
 
 ## Truth boundary
 
@@ -22,6 +22,7 @@ This pack is core-product acquisition only.
 - No Premium-live claim.
 - No Campaign 3,000 prize-entry claim.
 - Ordinary signup/referral measurement is not prize eligibility.
+- Product Funnel measurement is not authenticated identity, Premium/payment truth or Campaign 3,000 eligibility.
 - Do not invent landing sessions, recommendation-result counts, installs, spend, CAC or CPI.
 
 ## Measurement that is available now
@@ -30,7 +31,7 @@ Owner dashboard:
 
 `https://rachanakorninon-gif.github.io/kinaraidee/acquisition-dashboard.html`
 
-Observed first-party metrics currently available:
+Observed first-party account metrics currently available:
 
 - new account signup
 - confirmed account
@@ -43,15 +44,17 @@ Observed first-party metrics currently available:
 - referral signup
 - confirmed referral
 
-Not yet measured as first-party product events:
+Privacy-minimal Product Funnel measurement is deployed for reviewed UTM traffic and can observe unique browser-session stages:
 
 - landing session
 - Surprise / `ไม่รู้เลย` tap
 - guided-choice start
 - recommendation result reached
-- nearby-restaurant tap
+- nearby-restaurant tap where exposed by the current UI
 
-Do not substitute signup for those product events.
+Product Funnel telemetry uses a random browser-session UUID plus coarse reviewed UTM fields and remains separate from authenticated account identity. Production ingestion was verified by a controlled synthetic probe and the generated synthetic row was deleted after evidence capture. That probe proves endpoint behavior only; it does **not** establish any real-user funnel count, conversion rate or creative winner.
+
+Do not substitute signup for product events or product events for signup/confirmed-account truth.
 
 ## UTM taxonomy for the first-100 test
 
@@ -151,7 +154,8 @@ Before public distribution:
 2. Use the core product before signup.
 3. If a genuine tester chooses to create an account, use a real email and complete the normal confirmation flow.
 4. Verify the Owner dashboard attributes the new confirmed account to the expected source/campaign/content.
-5. Do not create fake production users just to increase counts.
+5. Verify Product Funnel observations only when genuinely produced; never copy the controlled synthetic smoke result into a real-user baseline.
+6. Do not create fake production users just to increase counts.
 
 Because acquisition capture is first-touch and persists for up to 30 days, repeated testing in the same normal browser may preserve the first source. Use a fresh/private test context when validating another UTM cell. Do not clear attribution for real users.
 
@@ -173,9 +177,9 @@ Add:
 - C002 social friction
 - C004 budget utility
 
-Compare **observed confirmed accounts by source and creative**, not likes/views alone.
+Compare **observed confirmed accounts by source and creative**, not likes/views alone. Product Funnel stages may be compared separately only after genuine reviewed-UTM observations exist with clear denominator semantics.
 
-Do not label a creative a product-behavior winner because recommendation-result events are not yet measured.
+Do not label a creative a product-behavior winner from deployment or synthetic-probe evidence alone.
 
 ### Wave 3 — 50 → 100 confirmed accounts
 
@@ -191,6 +195,7 @@ Use natural referral sharing only. Referral counts are growth measurement and re
 | Attribution coverage is materially below expected tagged traffic | investigate browser flow/link handling before spend |
 | High platform views but no confirmed accounts | attention signal only; do not call it an acquisition winner |
 | Confirmed accounts repeatedly come from one source/content pair | prioritize more organic iterations of that pair |
+| Genuine Product Funnel observations differ materially by source/content | inspect stage denominators and sample size before calling a product-behavior signal |
 | Referral signups begin appearing | record as organic growth evidence; do not convert them into prize entries |
 | No reliable signal by 100 confirmed accounts | improve message/product/account-value flow before paid scale |
 
@@ -207,6 +212,7 @@ Record once per publishing day:
 - top campaign (`th_first100_core_202609` expected for this test)
 - top content
 - referral signups / confirmed referrals
+- genuine Product Funnel observations when present, kept separate from authenticated account counts
 - broken-link or confusing-comment evidence
 
 Platform-native views/clicks may be recorded separately when genuinely observed, but the current first-party dashboard is not the authority for those platform metrics.
@@ -220,6 +226,7 @@ Before proposing spend, require:
 - acquisition dashboard still returns trustworthy observed data
 - tagged signup attribution has been proven with genuine users
 - at least one truthful creative/source combination has produced observed confirmed accounts
+- Product Funnel observations, if used in a decision, come from genuine reviewed-UTM traffic rather than synthetic smoke
 - destination is stable on target mobile devices
 - no unresolved high-severity signup/privacy issue
 - budget/account/billing approval is recorded separately

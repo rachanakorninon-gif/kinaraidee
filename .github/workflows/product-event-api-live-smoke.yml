@@ -1,0 +1,71 @@
+name: Product Event API Live Smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/product-event-api-live-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-ingestion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exercise production ingestion boundary
+        shell: bash
+        env:
+          ENDPOINT: https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/product-event-api
+          ALLOWED_ORIGIN: https://rachanakorninon-gif.github.io
+          SMOKE_CAMPAIGN: internal_product_event_smoke_20260904
+        run: |
+          set -euo pipefail
+
+          sid="$(python3 - <<'PY'
+          import uuid
+          print(uuid.uuid4())
+          PY
+          )"
+          content="smoke_${GITHUB_RUN_ID}"
+          body="$(jq -cn \
+            --arg sid "$sid" \
+            --arg content "$content" \
+            --arg campaign "$SMOKE_CAMPAIGN" \
+            '{session_id:$sid,event_name:"landing",utm_source:"qr",utm_medium:"qr",utm_campaign:$campaign,utm_content:$content}')"
+
+          call_api() {
+            local origin="$1" out="$2"
+            curl --silent --show-error --retry 3 --retry-all-errors \
+              --connect-timeout 10 --max-time 30 \
+              -o "$out" -w '%{http_code}' \
+              -X POST "$ENDPOINT" \
+              -H "Origin: $origin" \
+              -H 'Content-Type: application/json' \
+              --data "$body"
+          }
+
+          first_code="$(call_api "$ALLOWED_ORIGIN" /tmp/first.json)"
+          test "$first_code" = '201' || { echo "first insert expected 201, got $first_code"; cat /tmp/first.json; exit 1; }
+          jq -e '.ok == true and .duplicate == false' /tmp/first.json >/dev/null
+
+          duplicate_code="$(call_api "$ALLOWED_ORIGIN" /tmp/duplicate.json)"
+          test "$duplicate_code" = '200' || { echo "duplicate expected 200, got $duplicate_code"; cat /tmp/duplicate.json; exit 1; }
+          jq -e '.ok == true and .duplicate == true' /tmp/duplicate.json >/dev/null
+
+          wrong_code="$(call_api 'https://example.invalid' /tmp/wrong.json)"
+          test "$wrong_code" = '403' || { echo "wrong origin expected 403, got $wrong_code"; cat /tmp/wrong.json; exit 1; }
+          jq -e '.error == "origin_not_allowed"' /tmp/wrong.json >/dev/null
+
+          {
+            echo '## Product Event API live smoke'
+            echo
+            echo '- Production POST: PASS (201)'
+            echo '- Duplicate same session/stage: PASS (200 + duplicate=true)'
+            echo '- Wrong Origin: PASS (403 origin_not_allowed)'
+            echo "- Synthetic campaign: \`$SMOKE_CAMPAIGN\`"
+            echo "- Synthetic content: \`$content\`"
+            echo "- Synthetic session: \`$sid\`"
+            echo '- Cleanup of the synthetic row is performed separately through the Supabase admin path after evidence capture.'
+            echo '- This probe does not create an account, Premium entitlement, Campaign 3,000 eligibility or ad-spend evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"

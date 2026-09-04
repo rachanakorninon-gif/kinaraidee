@@ -16,11 +16,12 @@ Prepare a truthful acquisition funnel for “กินอะไรดี” that
 - Public campaign page is PRE-LAUNCH only.
 - Paid Premium is not approved/active.
 - Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.
-- Ordinary account signup/referral measurement is not a prize entry.
+- Ordinary account signup/referral measurement and Product Funnel measurement are not prize entries.
+- Paid acquisition is not launched; measurement deployment is not spend authorization.
 
-## Current measurement truth — deployed 2026-09-04
+## Current measurement truth — deployed and production-ingress verified 2026-09-04
 
-First-party acquisition/referral measurement is now deployed for the account funnel:
+First-party acquisition/referral measurement is deployed for the account funnel:
 
 - first-touch `utm_source`, `utm_medium`, `utm_campaign`, `utm_content` capture
 - reviewed referral-code capture
@@ -28,23 +29,35 @@ First-party acquisition/referral measurement is now deployed for the account fun
 - aggregate signup / confirmed-account / referral reporting
 - Owner-only Acquisition KPI dashboard at `acquisition-dashboard.html`
 
-The dashboard can truthfully report observed account acquisition by source/campaign/content after the tracking start. It does **not** currently measure or claim:
+Product Funnel is deployed for reviewed UTM traffic and measures privacy-minimal unique-session stages:
 
-- anonymous landing sessions
-- Surprise / `ไม่รู้เลย` taps
-- guided-choice starts
-- recommendation results reached
-- nearby-restaurant taps
-- platform impressions/clicks
-- media spend, CAC or CPI
+- `landing`
+- Surprise / `ไม่รู้เลย` tap
+- guided-choice start
+- recommendation result reached
+- nearby-restaurant action where the current UI exposes it
+
+The Product Funnel uses a random browser-session UUID and coarse reviewed UTM fields. It does not intentionally collect email, account ID, menu choice, budget, precise location, or prize eligibility in the product-event row. Repeated submissions for the same session/stage are idempotent.
+
+Production ingress was verified separately through a controlled GitHub-hosted synthetic probe. The synthetic row from that verification was removed after evidence capture. This proves scoped endpoint/deployment behavior, not real-user acceptance or conversion performance.
+
+Product telemetry is best-effort and is not Campaign 3,000 eligibility truth.
+
+The Owner dashboard can truthfully report observed reviewed-UTM Product Funnel stages together with account acquisition aggregates after the respective tracking starts. It does **not** make unavailable data appear as zero and it does not replace external platform authority for:
+
+- impressions / reach
+- platform-defined video views
+- link clicks before arrival where only the ad platform observes them
+- media spend
+- provider-billed CAC/CPI inputs
 - Premium payment/entitlement
 - Campaign 3,000 eligibility
 
-Use `NOT MEASURED` or the appropriate external platform source for unavailable events. Do not turn an unavailable event into zero.
+Use `NOT MEASURED` or the appropriate external platform source for unavailable values. Do not turn an unavailable event into zero.
 
 ## Funnel stages
 
-### Stage A — Core product acquisition (measurement-ready for account attribution)
+### Stage A — Core product acquisition (product measurement deployed)
 
 Ad/organic promise:
 - “วันนี้กินอะไรดี?”
@@ -61,7 +74,7 @@ Primary product action:
 
 Do not require account creation before the user experiences the core value.
 
-Important measurement limit: those anonymous/product actions are not yet first-party dashboard events. Current internal acquisition truth begins at signup attribution and confirmation.
+Current first-party Product Funnel truth begins only for traffic that satisfies the reviewed-UTM measurement contract. Organic/direct traffic without that reviewed attribution context must not be silently counted as the same acquisition cohort.
 
 ### Stage B — Account value (measurable now)
 
@@ -74,6 +87,8 @@ Current observed account KPIs may include:
 - confirmed account
 - source/campaign/content attribution
 - referral signup / confirmed referral
+
+Product-session measurement and account measurement are separate evidence domains. Do not infer account identity from the random product-session UUID.
 
 ### Stage C — Premium value research / validation
 
@@ -108,6 +123,8 @@ Only after LIVE:
 - public messaging may say entries are open
 - counter may display trusted backend aggregate
 - creative may use the approved campaign rules/prize wording
+
+Product Funnel rows, ordinary accounts and referrals do not become prize entries merely because measurement exists.
 
 ## Campaign families to prepare
 
@@ -148,7 +165,7 @@ PRE-LAUNCH creative must not imply entry is open. LIVE creative requires final l
 
 Use `MARKETING-FIRST-100-ORGANIC-TEST.md` as the current execution pack.
 
-Its measurable operational target is 100 newly confirmed accounts, while explicitly acknowledging that anonymous Web/PWA use is not yet counted by the Acquisition KPI dashboard.
+Its operational account target may be 100 newly confirmed accounts, while Product Funnel stages may additionally be observed for reviewed-UTM traffic. The two numbers answer different questions and must not be substituted for each other.
 
 Use campaign slug:
 
@@ -171,7 +188,7 @@ Suggested initial creative cells:
 | E | วันนี้กินอะไรดี? | 4:5 static/video | Meta feed adaptation |
 | F | ไม่ต้องคิด ให้เราช่วยเลือก | 1:1 static/video | reusable control |
 
-Do not declare a product-behavior winner from impressions/CTR or signup alone while recommendation-result events remain unmeasured.
+Once a separately authorized paid test exists, product-behavior comparisons may use observed reviewed-UTM landing → action → recommendation-result rates. Do not declare a paid-media winner from impressions/CTR alone, and do not treat Product Funnel success as Premium or prize eligibility.
 
 ## KPI hierarchy
 
@@ -182,15 +199,13 @@ Do not declare a product-behavior winner from impressions/CTR or signup alone wh
 - link clicks
 - spend
 
-### Level 2 — landing/product
-Desired future first-party events:
-- landing session
+### Level 2 — landing/product (first-party measured for reviewed UTM traffic)
+- landing unique session
 - Surprise tap or guided-choice start
 - recommendation result reached
 - nearby-restaurant action where relevant
-- PWA install prompt/help interaction where implemented
 
-Current status: **NOT MEASURED in Acquisition KPI**.
+These are best-effort product telemetry stages, not authenticated identities. Deduplication is scoped to the same random browser session and event stage.
 
 ### Level 3 — account (first-party measured now)
 - signup completed
@@ -210,27 +225,36 @@ Current status: **NOT MEASURED in Acquisition KPI**.
 - trusted unique eligible count
 
 Never substitute:
-- click for signup
+- click for landing session
+- landing session for recommendation result
+- product session for account
 - signup for recommendation result
 - checkout redirect for payment
 - account for Premium
 - Premium for prize eligibility
+- Product Funnel event for prize entry
 - stated interview intent for conversion
 
 ## Decision metrics
 
-With current real data, evaluate observed account acquisition on:
+With current first-party data, evaluate observed reviewed-UTM core acquisition on:
 
+- landing sessions by source/campaign/content
+- Surprise/guided-start rate from landing sessions
+- recommendation-result rate from landing sessions
+- recommendation-result rate from started choice flows where denominator semantics are explicit
 - confirmed accounts by source/campaign/content
 - signup confirmation rate
 - attribution coverage
 - referral signup / confirmation signal
 
-When product-event measurement exists, add:
+When external paid-media data and separately authorized spend exist, add:
 
 - cost per qualified product session
 - cost per recommendation result
-- recommendation-result rate from landing sessions
+- media-platform CTR / video metrics using the platform as authority
+
+Do not compute spend-based CAC/CPI from a missing or manually assumed spend value.
 
 After Premium/product/payment approval, add:
 
@@ -264,6 +288,8 @@ Organic core-product distribution can be prepared/executed with reviewed truthfu
 - destination links and creative truthful
 - budget owner approved
 - media account/billing ready
+
+Deployed Product Funnel measurement satisfies only part of the measurement-readiness work. It does not authorize spend.
 
 **Premium/prize acquisition GO** requires all additional payment and campaign legal gates.
 

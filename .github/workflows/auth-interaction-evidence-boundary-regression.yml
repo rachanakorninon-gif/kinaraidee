@@ -47,8 +47,8 @@ jobs:
           grep -Fq 'The umbrella Auth/Security acceptance remains **PARTIAL / OPEN** because weak/leaked-password rejection is still NOT VERIFIED / blocked server-side' CURRENT-RELEASE.md || {
             echo 'CURRENT-RELEASE.md must keep leaked-password/server-side Auth gate open'; exit 1;
           }
-          grep -Fq 'does **not by itself** establish referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance' CURRENT-RELEASE.md || {
-            echo 'CURRENT-RELEASE.md must distinguish current runtime deployment evidence from physical Auth evidence'; exit 1;
+          grep -Fq 'does **not by itself** establish Product Event real-user acceptance, referral interaction acceptance, weak/leaked-password rejection or any new real-device account-flow acceptance' CURRENT-RELEASE.md || {
+            echo 'CURRENT-RELEASE.md must distinguish current runtime/Product Event deployment evidence from physical Auth evidence'; exit 1;
           }
           grep -Fq 'Separate physical evidence records scoped recovery/password-update/sign-in/new-signup/email-confirmation PASS on the traced OPPO Android Chrome session' CURRENT-RELEASE.md || {
             echo 'CURRENT-RELEASE.md must preserve the separate physical Auth evidence path'; exit 1;
@@ -61,7 +61,7 @@ jobs:
             echo 'Release checklist must keep leaked-password rejection open'; exit 1;
           }
           grep -Fq '[x] PR #373 Auth account-flow interaction acceptance remains scoped physical OPPO Android Chrome evidence' RELEASE-CHECKLIST.md || {
-            echo 'Deployment/release checklist must preserve historical Auth-flow physical evidence separately from the current PR #499 runtime'; exit 1;
+            echo 'Deployment/release checklist must preserve historical Auth-flow physical evidence separately from the current browser runtime'; exit 1;
           }
           grep -Fq '[ ] PR #373 weak/leaked-password rejection acceptance remains open' RELEASE-CHECKLIST.md || {
             echo 'Deployment/release checklist must preserve remaining leaked-password acceptance'; exit 1;
@@ -80,4 +80,4 @@ jobs:
             echo 'BETA-READY.md must preserve automated/deployment evidence boundary'; exit 1;
           }
 
-          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved independently of the later PR #499 browser runtime; leaked-password and umbrella Auth/Security acceptance stay open.'
+          echo 'Scoped Auth recovery/password-update/sign-in/new-signup/email-confirmation evidence is preserved independently of the later browser runtime; leaked-password and umbrella Auth/Security acceptance stay open.'

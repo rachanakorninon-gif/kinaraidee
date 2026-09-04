@@ -1,6 +1,6 @@
 # Kinaraidee — First Paid Acquisition Test Plan
 
-Status: **TEST DESIGN ONLY / ACCOUNT ATTRIBUTION DEPLOYED / BUDGET UNSET / NO SPEND AUTHORIZED**
+Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**
 
 Purpose: define the first small paid-media experiment before any billing or campaign launch is approved.
 
@@ -24,23 +24,25 @@ First-party account acquisition measurement is deployed and can observe:
 - attribution coverage
 - referral signup / confirmed referral
 
+Privacy-minimal Product Funnel measurement is also deployed for reviewed UTM traffic and can observe unique-session stages:
+
+- landing
+- Surprise / `ไม่รู้เลย` tap
+- guided-choice start
+- recommendation result reached
+- nearby-restaurant tap where exposed by the current UI
+
 Owner view:
 
 `https://rachanakorninon-gif.github.io/kinaraidee/acquisition-dashboard.html`
 
-The following preferred product events are still **NOT MEASURED** by the Acquisition KPI dashboard:
+Product Funnel telemetry uses a random browser-session UUID and coarse reviewed UTM fields. It is best-effort, separate from authenticated account identity, and is not Premium/payment/Campaign 3,000 eligibility truth. Production ingress was verified by a controlled synthetic probe; its generated row was deleted after evidence capture. That verification does not prove real-user conversion performance.
 
-- landing session
-- Surprise / `ไม่รู้เลย` tap
-- guided-choice start
-- recommendation result reached
-- nearby-restaurant tap
-
-Platform impressions/clicks/spend remain external platform truth until a reviewed ingestion/source exists. Do not write zero for an unavailable event.
+Platform impressions/clicks/spend remain external platform truth. Do not write zero for an unavailable event.
 
 ## Phase 0 — organic baseline first
 
-Before spending, execute `MARKETING-FIRST-100-ORGANIC-TEST.md` far enough to prove genuine tagged signup attribution and obtain an initial source/creative baseline.
+Before spending, execute `MARKETING-FIRST-100-ORGANIC-TEST.md` far enough to prove genuine tagged signup attribution and obtain an initial source/creative baseline. Reviewed-UTM Product Funnel observations may now be used as a separate product-behavior baseline where denominator semantics are explicit.
 
 Organic completion does not authorize paid media. Budget/account/billing approval remains separate.
 
@@ -50,11 +52,11 @@ Answer one question first:
 
 > Which truthful core-product message most efficiently attracts useful users and produces downstream evidence we can actually measure?
 
-Because recommendation-result events are not yet instrumented, the first paid run must distinguish:
+The first paid run must distinguish:
 
 - **media diagnostics** from platform reporting
+- **observed product behavior** from first-party reviewed-UTM Product Funnel telemetry
 - **observed account acquisition** from the first-party dashboard
-- **product-result conversion = NOT MEASURED** until a verified product-event source exists
 
 Do not optimize around giveaway interest, Premium checkout or prize entry.
 
@@ -104,13 +106,14 @@ Do not hard-code currency or amount before approval.
 - CTR
 - CPC
 
-### Product outcome — desired but not yet first-party measured
+### Product outcome — first-party measured for reviewed UTM traffic
+- landing unique session
 - recommendation result reached
 - Surprise tap
 - guided-choice start
-- nearby-restaurant tap
+- nearby-restaurant tap where relevant
 
-Until implemented, label these `NOT MEASURED`; do not infer them from signup or clicks.
+These are best-effort session-level product events. They are not authenticated user counts or Campaign 3,000 eligibility.
 
 ### Account acquisition — first-party measured now
 - signup completed
@@ -130,15 +133,16 @@ Only after the relevant product/backend gates exist:
 
 Do **not** select a product winner from CTR alone.
 
-While product-result events remain unmeasured, use two separate labels:
+Use separate labels:
 
 1. **MEDIA LEADER** — based on real platform diagnostics such as CTR/CPC
-2. **ACCOUNT-ACQUISITION LEADER** — based on observed confirmed accounts and, once spend is reconciled, cost per confirmed account
+2. **PRODUCT-BEHAVIOR LEADER** — based on observed reviewed-UTM landing → action → recommendation-result behavior
+3. **ACCOUNT-ACQUISITION LEADER** — based on observed confirmed accounts and, once spend is reconciled, cost per confirmed account
 
-Do not call either one a **product-result winner** until recommendation-result behavior is actually measured.
+Do not call any of these a Premium or campaign-eligibility winner.
 
-When trustworthy product-event data later exists, preferred decision order becomes:
-1. cost per recommendation result
+Preferred decision order after a separately authorized paid run exists:
+1. cost per recommendation result, using real reconciled spend plus first-party result count
 2. recommendation-result rate from landing sessions
 3. quality/support signal (errors, bounce, misleading comments)
 4. account confirmation / downstream value
@@ -146,12 +150,14 @@ When trustworthy product-event data later exists, preferred decision order becom
 
 ## Minimum interpretation safeguards
 
-- High CTR + poor downstream account signal = not automatically useful acquisition.
+- High CTR + poor downstream product/account signal = not automatically useful acquisition.
 - Low CPM = not automatically better acquisition.
 - Signup = not proof a recommendation result was reached.
+- Product session = not authenticated account.
 - Account created = not Premium.
 - Checkout started = not payment success.
 - Premium entitlement = not automatically prize eligibility.
+- Product Event telemetry = not prize entry.
 - Interview willingness = not conversion.
 
 ## Creative stop conditions
@@ -178,8 +184,8 @@ Operational budget stop-loss thresholds remain **UNSET** until a real budget is 
 - [ ] no live Premium/prize claim
 - [ ] UTM naming generated/reviewed with `tools/marketing-url-builder.mjs`
 - [ ] genuine tagged signup attribution has been proven in production
-- [ ] Acquisition KPI dashboard is accessible to the Owner and returns observed data
-- [ ] recommendation-result event is explicitly `NOT MEASURED` unless newly instrumented/verified
+- [x] Product Event production ingestion has controlled synthetic verification; this does not replace real-user baseline evidence
+- [ ] Acquisition KPI dashboard is accessible to the Owner and returns observed real-user data for the intended test cohort
 - [ ] support owner identified for paid traffic
 - [ ] budget/account/billing approval recorded separately
 
@@ -196,19 +202,19 @@ When a real test runs, record only observed values:
 | Creative cells | A/B/C/D prepared |
 | Impressions | NOT RUN |
 | Clicks | NOT RUN |
+| Product landing sessions | NOT RUN |
+| Recommendation results | NOT RUN |
 | Signups | NOT RUN |
 | Confirmed accounts | NOT RUN |
 | Attribution coverage | NOT RUN |
-| Recommendation results | NOT MEASURED |
 | Decision | NOT RUN |
 
-Replace `NOT RUN` / `NOT MEASURED` only with traceable data from the appropriate source.
+Replace `NOT RUN` only with traceable data from the appropriate source. Use `NOT MEASURED` only where a metric is genuinely unavailable from the authoritative source.
 
 ## Phase 2
 
 Only after Phase 1 produces reliable product/account evidence should later tests consider:
 - account-value messaging
-- product-event instrumentation for recommendation-result optimization
 - Premium value proposition after product/payment readiness
 - prize-led incremental-lift test only after legal/payment/campaign GO
 
