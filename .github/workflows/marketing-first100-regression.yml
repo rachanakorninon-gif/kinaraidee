@@ -57,9 +57,11 @@ jobs:
           doc='MARKETING-FIRST-100-ORGANIC-TEST.md'
           grep -Fq 'READY FOR ORGANIC TEST / NO PAID SPEND AUTHORIZED' "$doc"
           grep -Fq '100 newly confirmed accounts' "$doc"
-          grep -Fq 'anonymous product usage is not yet counted' "$doc"
+          grep -Fq 'best-effort anonymous browser-session observations and are not authenticated account counts' "$doc"
+          grep -Fq 'Privacy-minimal Product Funnel measurement is deployed for reviewed UTM traffic' "$doc"
           grep -Fq 'recommendation result reached' "$doc"
-          grep -Fq 'not yet measured' "$doc"
+          grep -Fq 'does **not** establish any real-user funnel count, conversion rate or creative winner' "$doc"
+          grep -Fq 'Do not label a creative a product-behavior winner from deployment or synthetic-probe evidence alone.' "$doc"
           grep -Fq 'Campaign 3,000 eligibility' "$doc"
           if grep -Eq 'utm_medium=paid_social|utm_campaign=[^` ]*(prize|premium_3000)' "$doc"; then
             echo 'First-100 organic pack contains paid or blocked prize/Premium acquisition URL.'
@@ -71,4 +73,7 @@ jobs:
           set -euo pipefail
           grep -Fq 'CORE ACQUISITION MEASUREMENT DEPLOYED / PAID ACQUISITION NOT YET LAUNCHED' MARKETING-ACQUISITION-READINESS.md
           grep -Fq 'account acquisition measurement is deployed' MARKETING-FIRST-PAID-TEST-PLAN.md
-          grep -Fq 'Recommendation results | NOT MEASURED' MARKETING-FIRST-PAID-TEST-PLAN.md
+          grep -Fq 'Privacy-minimal Product Funnel measurement is also deployed for reviewed UTM traffic' MARKETING-FIRST-PAID-TEST-PLAN.md
+          grep -Fq 'Paid acquisition status: **NOT LAUNCHED**' MARKETING-FIRST-PAID-TEST-PLAN.md
+          grep -Fq 'Budget: **UNSET**' MARKETING-FIRST-PAID-TEST-PLAN.md
+          grep -Fq 'TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED' MARKETING-FIRST-PAID-TEST-PLAN.md
