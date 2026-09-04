@@ -1,34 +1,35 @@
 # Kinaraidee Group API — Deployment Evidence
 
-Evidence refreshed: 2026-08-23 (Asia/Bangkok)
+Evidence refreshed: 2026-09-05 (Asia/Bangkok)
 
 ## Current verified deployment/source parity
 
 - Supabase project: `cuspfvfzprlgtvtdyilh` (`Kinaraidee`).
 - Edge Function: `group-api`.
 - Observed deployed status at inspection time: `ACTIVE`.
-- Observed deployed version at inspection time: `6`.
+- Observed deployed version at inspection time: `7`.
 - Observed deployment setting: `verify_jwt=false`, preserved intentionally for accountless invited-friend voting.
-- Supabase-reported deployed bundle SHA-256 at inspection time: `e389ae3a6d5da19f81b909df6616524391825bdaef2ca568b522fbb3d8da2e52`.
-- The deployed `index.ts` payload retrieved from Supabase was inspected against repository `main` at `supabase/functions/group-api/index.ts` (repository blob `04e7f595ef73b9fdbdf377ba3b8936a818a109be`) and matched the PR #93 source payload.
+- Supabase-reported deployed bundle SHA-256 at inspection time: `363f7f547f8b773bec46e211a59c380e276f1fbf2fcc2852471dfd1608730887`.
+- The deployed `index.ts` payload retrieved from Supabase was inspected against repository `main` at `supabase/functions/group-api/index.ts` (repository blob `93d5d4afe9436e23ac5a9af3567349bedd8b73af`) and matched the PR #518 source candidate payload.
+- Production migration `20260904161702 / group_api_event_observability_v1` is applied.
 - Current deployed payload preserves the previous identifier/token/input hardening and uses `maxRequestBytes=8192` with `Content-Length` as a cheap early reject plus a bounded `ReadableStream` reader as the authoritative body-size guard.
 - The stream reader counts each incoming chunk's raw bytes, cancels the reader immediately when the total exceeds 8192 bytes, decodes UTF-8 with a fatal decoder and parses JSON only after the bounded read succeeds.
-- Direct `req.json()` and full-body `req.text()` parsing are absent from the current source and are rejected by the static Group API regression gate.
-- Operational event code remains bounded to fields such as `reason`, `size`, `voteCount`, and `isUpdate`; the inspected source does not directly log room IDs, host tokens, voter IDs, tags, IP addresses, request headers, request bodies or `rawBody` values.
+- Direct `req.json()` and full-body `req.text()` parsing remain absent and are rejected by the static Group API regression gate.
+- Operational console logging remains bounded to privacy-safe fields such as `reason`, `size`, `voteCount`, and `isUpdate`; the inspected source does not directly log room IDs, host tokens, voter IDs, tags, IP addresses, request headers, request bodies or `rawBody` values.
+- The new application-owned persistence copies only allowlisted `event_name` / `reason` presence into a UTC daily bucket. It stores no user/account identifier and no request/event counter.
+- `group_api_event_observations` has RLS enabled and only `bucket_date,event_name,reason`; `anon` and `authenticated` do not have table SELECT access. `observe_group_api_event(...)` is `SECURITY INVOKER`; execute is unavailable to `anon`/`authenticated` and available to `service_role`.
 
 ## Repository lineage
 
-PR #93 merged to `main` at `fefc29322ac13f7066038a663bfeb7091d218b8f` and is the current Group API source candidate. It changed `supabase/functions/group-api/index.ts` plus its static regression gate so oversized chunked/missing-length bodies are stopped while streaming rather than buffered in full before rejection.
+PR #518 merged to `main` at `8ab5fc9dd506740b48b245469421518381bbe079` and is the current Group API source candidate. It adds the privacy-minimal daily event/reason presence path plus source/schema regression guards while preserving accountless invited-friend voting and the existing bounded-body behavior.
 
-PR #95 merged at `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`; it changes only wording/comments in the non-mutating live probe workflow to describe the streamed v6 guard. It does not alter `supabase/functions/group-api/index.ts`, so PR #95 is a live-verification descendant, not a new backend source candidate.
+PR #93 merged at `fefc29322ac13f7066038a663bfeb7091d218b8f` and is the historical v6 source candidate that introduced the bounded streaming/cancel/fatal UTF-8 body guard. PR #95 merged at `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3` as a verification descendant without changing Group API source.
 
-Earlier v3/v4/v5 parity evidence is historical and has been superseded for current backend source/deployment parity by PR #93 / Supabase v6.
+Earlier v3/v4/v5/v6 deployment evidence remains historical/scoped; current backend source/deployment parity is PR #518 / Supabase v7.
 
 ## Live rejection-probe evidence
 
-Canonical `Group API Live Observability Probe` run `32632951668` completed `success` on exact `main` SHA `8eff6c10e9adb4bd78a2bd0526e4e03e7d4d06f3`.
-
-PR #94 was a temporary read-only deployed-v6 diagnostic and independently passed the same rejection contract before being closed without merge. PR #96 was a temporary read-only workflow-run metadata diagnostic; it traced canonical run `32632951668` as successful on the exact SHA above and was closed without merge after evidence capture.
+Canonical `Group API Live Observability Probe` run `32632951668` was re-run after the v7 deployment. Attempt-2 job `101112482238` completed `success` on 2026-09-05 Asia/Bangkok.
 
 The canonical probe is deliberately rejection-only and non-mutating. It verifies:
 
@@ -43,22 +44,35 @@ The oversized-body case forces `Transfer-Encoding: chunked`, so a useful `Conten
 
 The probe does not create a room, submit a successful vote, update a room, or close a room.
 
-Fresh Supabase Edge Function platform logs during the matching canonical run window show ACTIVE version 6 requests with expected status classes, including GET 405, POST 400/403 and POST 413. The visible canonical-run 413 entry occurred at `2026-08-23T10:08:47.714000` with deployment version `6`, providing matching platform invocation evidence for the streamed actual-body rejection path.
+The attempt-2 workflow source is historical because it is a rerun of the canonical run, while its HTTP target is the current production Edge Function. Therefore the rerun is used only for the live rejection behavior/application-ingestion observation; v7 source parity is established independently by retrieving the deployed payload from Supabase and comparing it with the PR #518 repository source.
 
-## Application structured-event evidence status
+## Application structured-event ingestion evidence
 
-The currently available Supabase log surface exposes request-level platform events such as method, status code, execution time, function/deployment ID and version. It still does not expose the function's application `console.log` JSON payload in the inspected result.
+After the successful rejection-only rerun, a read-only database query on UTC date `2026-09-04` found exactly six privacy-safe daily presence rows:
+
+- `request_rejected / method_not_allowed`;
+- `request_rejected / request_too_large`;
+- `get_room_rejected / invalid_room_id`;
+- `submit_vote_rejected / invalid_vote`;
+- `get_votes_rejected / forbidden`;
+- `close_room_rejected / forbidden`.
+
+The table contained 6 total rows and all 6 belonged to that UTC date at verification time. No room ID, host token, voter ID, tags, IP, request body, account/user identifier, request count or event count is stored in this evidence path.
 
 Therefore:
 
-- deployment/source parity for inspected v6 payload: **VERIFIED**
+- deployment/source parity for inspected v7 payload: **VERIFIED**
+- production observability migration application: **VERIFIED**
 - bounded-stream 8 KiB source contract: **VERIFIED IN SOURCE/REGRESSION GATE**
-- scoped live v6 rejection behavior including chunked >8 KiB body rejection: **VERIFIED**
-- request-level platform log ingestion for the controlled v6 probe: **VERIFIED**
-- exact application structured-event ingestion for `component=group-api`: **NOT VERIFIED IN THE AVAILABLE LOG SURFACE**
-- monitoring baseline / thresholds / alerts / owner / escalation: **NOT YET VERIFIED**
+- scoped live v7 rejection behavior including chunked >8 KiB body rejection: **VERIFIED**
+- privacy-safe application-owned event ingestion for the controlled rejection-only probe: **VERIFIED IN SCOPE**
+- request/error traffic baseline, thresholds, alert owner/channel/escalation and alert-delivery path: **NOT YET VERIFIED**
 
-Do not infer application-event ingestion from platform request logs alone.
+The daily presence rows prove that selected application event categories reached the server-owned persistence path. They intentionally do not measure request volume, error rate, unique users or traffic distribution and must not be promoted to monitoring-baseline evidence.
+
+## Post-deployment advisor status
+
+A post-v7 Supabase Security Advisor run reported no new WARN caused by the observability schema. `group_api_event_observations` appears as INFO `RLS Enabled No Policy`, consistent with deliberate deny-by-default/server-only access. `Leaked Password Protection Disabled` remains the visible security WARN. Performance Advisor findings are INFO-only and do not establish a Group monitoring baseline.
 
 ## Retention baseline observation
 
@@ -69,10 +83,12 @@ A separate read-only SQL baseline on 2026-08-23 observed:
 - orphan votes: 0;
 - expired-room ages at observation time ranged from roughly 1 day 12 hours 53 minutes to 2 days 7 hours 27 minutes.
 
-These are time-stamped operational observations only. They do not select a retention period, authorize deletion, or verify cleanup/cascade execution. The database default room expiry of roughly 24 hours is product availability behavior, not an approved retention period.
+A later read-only baseline recorded in Issue #45 observed 16 rooms total / 16 expired / 0 active, 14 votes linked to expired rooms / 0 active-room votes and 0 orphan votes. No cleanup/deletion was performed by these observations.
+
+These are time-stamped operational observations only. They do not select a retention period, authorize deletion, or verify cleanup/cascade execution. The database default room expiry of roughly 24 hours is product availability behavior, not an approved retention period. Operational/application-log retention is also **NOT APPROVED**; the v7 presence table does not invent a purge duration or automatic deletion policy.
 
 ## Evidence boundary
 
-This evidence verifies the inspected ACTIVE `group-api` v6 payload, repository/deployment source parity, bounded-stream request-size implementation and a scoped non-mutating live rejection contract with matching platform request logs. It does **not** prove application structured-event ingestion, alerting, load capacity, a complete anonymous rate-limit/quota strategy, approved retention/deletion policy, cleanup correctness, Privacy/PDPA approval, real-device Group final-result behavior, Public Beta completion, or Commercial GO readiness.
+This evidence verifies the inspected ACTIVE `group-api` v7 payload, repository/deployment source parity, production observability migration, bounded-stream request-size implementation, scoped non-mutating rejection behavior and privacy-safe application-owned daily event presence for the controlled rejection-only probe. It does **not** prove production traffic/error-rate baseline, alert thresholds, alert delivery, monitoring owner/SLA/escalation, load capacity, a complete anonymous rate-limit/quota strategy, approved retention/deletion policy, cleanup correctness, Privacy/PDPA approval, real-device Group final-result behavior, Public Beta completion, or Commercial GO readiness.
 
-Issue #45 remains open for application-event observability, monitoring baseline/operations, retention cleanup, complete anonymous abuse controls, related privacy decisions and remaining production-readiness evidence.
+Issue #45 remains open for monitoring baseline/operations, retention cleanup, complete anonymous abuse controls, related privacy decisions and remaining production-readiness evidence.

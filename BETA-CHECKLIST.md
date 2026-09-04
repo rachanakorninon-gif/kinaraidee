@@ -31,18 +31,18 @@
 - [ ] Supabase leaked-password protection ยังไม่ได้เปิด; Auth UX/runtime evidence ไม่แทน server-side rejection — Issue #372
 
 ## Verified browser/PWA deployment evidence — historical scope before PR #514
-- [x] Prior Product Event Measurement runtime candidate = PR #509 / `0bd5acfb9946e10ed5624205165123eabc8035b4`; historical deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`, Pages `33823701475`, main Live Smoke `33823746430`, Product Event API Live Smoke `33824058988` = SUCCESS in that scoped trace. The exact synthetic `landing` row was removed after capture; no Product Event real-device acceptance is inferred.
+- [x] Prior Product Event Measurement runtime candidate = PR #509 / `0bd5acfb9946e10ed5624205165123eabc8035b4`; historical deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`, Pages `33823701475`, main Live Smoke `33823746430`, Product Event API Live Smoke `33824058988` = SUCCESS in that scoped trace. The exact synthetic `landing` row was removed after capture; later scoped real-device Product Event acceptance is recorded separately and does not turn this deployment trace into real-user traction.
 - [x] Prior referral/acquisition runtime candidate = PR #499 / `f401ad758e40914a10245cfab08497f7cdb99f7d`; historical deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793` and Referral acquisition regression `33811512053` = SUCCESS in that scoped trace.
 - [x] Prior Auth browser/PWA runtime candidate = PR #373 / `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`; historical deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, main Live Smoke `33229548190` = SUCCESS in that scoped trace.
 - [x] Prior public-form browser/PWA runtime candidate = PR #201 / `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`
-- [x] Runtime merge/deployed SHA = `00bdcb7f432d542b732cf355336e9f08798e4320`
+- [x] Runtime merge/deployed SHA = `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`
 - [x] Pages run `32802440796` = SUCCESS for exact merged-main SHA
 - [x] Corresponding Live Smoke `32802473505` = SUCCESS after that Pages deployment
 - [x] Public Form Resilience Regression `32802440775` = SUCCESS for source recovery-state contracts; it does not submit a form
 - [x] Public `release-meta.json` / live Service Worker marker verified as `kinaraidee-beta-v16`
 - [x] Latest verified evidence-only deployed descendant PR #215 / `5489cbbdc9ff618f1d32fa438ef91476dd350768`: Pages `32843512340` + Live Smoke `32843553479` = SUCCESS without superseding the PR #201 browser/PWA runtime candidate at that time
 
-หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner, Auth interaction, referral interaction หรือ Product Event real-user interaction; scoped physical evidenceสำหรับพฤติกรรมที่ทดสอบจริงถูกบันทึกแยก ขณะที่ weak/leaked-password rejection, referral-summary physical `EDGE` acceptance และ Product Event physical acceptance ยัง OPEN
+หลักฐาน deployment/synthetic เหล่านี้ไม่ใช่ real-device, accessibility, payment, legal, partner หรือ Commercial PASS และไม่ใช่หลักฐานที่ใช้ปิด real Feedback/Partner, Auth interaction, referral interaction หรือ Product Event interaction; scoped physical evidence สำหรับพฤติกรรมที่ทดสอบจริงถูกบันทึกแยก ขณะที่ weak/leaked-password rejection และ referral-summary physical `EDGE` acceptance ยัง OPEN ส่วน Product Event มีเพียง scoped OPPO physical QA PASS ไม่ใช่ real-user traction หรือ full-matrix PASS
 
 ## Real-device evidence ที่มีแล้ว — scoped sessions เท่านั้น
 - [x] Android device/session #1: Home / Surprise / guided flow / reroll
@@ -64,11 +64,12 @@
 - [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: TC-11 Feedback + TC-12 Partner scoped physical PASS, including duplicate-submit, airplane-mode failure recovery, direct `aria-busy` recovery observation, restored-network retry success and backend/privacy corroboration. This is Beta QA evidence only and does not create commercial-partner evidence or full-matrix PASS.
 - [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: Auth account-flow scoped physical PASS for recovery request/mail/verification-link, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion and resulting signed-in Member state, with backend corroboration. Weak/leaked-password rejection remains NOT VERIFIED / OPEN.
 - [x] Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82: scoped Keyboard Focus physical PASS using the built-in notebook keyboard on 2026-09-04; trusted Tab/Shift+Tab forward/reverse order, visible focus and Space/Enter activation were verified in the Home → meal-selection → back flow. This is not full accessibility/device-matrix PASS.
+- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: NF-07 scoped physical v15 → v16 PASS on 2026-09-05; verified historical-v15 baseline, normal physical close, one normal online reopen without clearing site/app data, current v16 verifier, and post-upgrade Home + Surprise usability. This does not close the remaining device matrix.
+- [x] OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: Product Event scoped physical QA PASS on 2026-09-05; Surprise and Guided ran in separate fresh Incognito sessions, Nearby was physically exercised when exposed, production stages corroborated without duplicate session/event rows, and the exact controlled QA telemetry was deleted with follow-up count 0. This is not First-100 traction, conversion or full-matrix PASS.
 - [ ] PR #514 referral-summary changed signed-in interaction physical acceptance; deployment trace does not substitute for an actual signed-in run whose privacy-safe QA source label is `EDGE`. `FALLBACK` preserves continuity but is not Edge cutover PASS.
 - [ ] PR #499 referral/acquisition real-device interaction acceptance; deployment/schema evidence above does not substitute for an actual referral signup/attribution test.
-- [ ] PR #509 Product Event Measurement real-device interaction acceptance; Pages/Live Smoke and controlled production API smoke do not substitute for an actual user/device Product Funnel run.
 
-ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บาง historical รายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามขยาย scoped OPPO TC-11/TC-12/Auth/Reduced-Motion PASS หรือ scoped Lenovo Keyboard Focus PASS ไปเป็น PASS ของ referral-summary flow, Product Event flow, รุ่นอื่น, full device matrix, blanket Auth/Security PASS หรือ Commercial GO
+ขอบเขต: หลักฐานข้างต้นเป็น scoped physical sessions; exact model/OS/browser metadata บาง historical รายการไม่ได้ถูกบันทึกและห้ามเดา ห้ามขยาย scoped OPPO TC-11/TC-12/Auth/Reduced-Motion/NF-07/Product-Event PASS หรือ scoped Lenovo Keyboard Focus PASS ไปเป็น PASS ของ referral-summary flow, รุ่นอื่น, full device matrix, blanket Auth/Security PASS, real-user acquisition traction หรือ Commercial GO
 
 ## ต้องตรวจบนอุปกรณ์จริงก่อน Beta acceptance / เพิ่ม traffic ตาม gate
 - [ ] Android Chrome อย่างน้อย 3 device models — ปัจจุบันยังไม่ครบจำนวนรุ่นและ exact model ของ historical Android session ไม่ถูกบันทึก
@@ -79,7 +80,7 @@
 - [x] TC-08 Location allow มี scoped physical iPhone/Safari #1 PASS บน v16; ยังไม่ใช่ full-matrix PASS
 - [ ] NF-04 Android PWA update-specific path มีหลักฐานจริงถ้ากำหนดเป็น gate
 - [x] NF-05 iPhone install guidance + “เข้าใจแล้ว” suppression มี scoped physical iPhone/Safari #1 PASS บน v16; iPadOS/second-iPhone coverage ยังเปิด
-- [ ] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง; ห้ามนับการเปลี่ยน runtime ทั่วไปเป็น PASS หากไม่มี older-cache marker ที่จับไว้ก่อนอัปเกรด
+- [x] NF-07 upgrade จาก verifiable older-cache baseline ไป `kinaraidee-beta-v16` โดยไม่ต้องล้างข้อมูลเอง — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64, 2026-09-05; verified v15 baseline → physical close → 1 normal online reopen → v16 verifier → Home + Surprise usable; ไม่ใช่ full-matrix/Public-Beta PASS
 - [x] NF-09 มี scoped physical iPhone/VoiceOver #1 PASS บน deployed PR #201/v16; Android TalkBack follow-up ยังเป็น **INCONCLUSIVE / TEST ENVIRONMENT** และ second-device/full-matrix accessibility coverage ยังเปิด
 - [x] visible keyboard focus/navigation ผ่าน real interaction บน deployed pages — scoped PASS: Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82, built-in notebook keyboard, 2026-09-04; trusted Tab/Shift+Tab forward/reverse order, visible focus and keyboard activation verified. ไม่ใช่ full accessibility/device-matrix PASS
 - [x] reduced-motion behavior ผ่านบน real platform/browser ที่เปิด reduced-motion preference — scoped PASS: OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64, 2026-09-04; ไม่ใช่ full-matrix PASS
