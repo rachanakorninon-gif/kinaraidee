@@ -52,7 +52,7 @@ jobs:
           must(design.includes('Status: **SOURCE PREPARED / NOT APPLIED OR DEPLOYED**'),'design must remain explicitly source-only');
           must(design.includes('Require the Auth account to be no older than **1 hour**'),'signup claim-window contract missing');
           must(design.includes('service_role'),'service-role-only DB contract missing from design');
-          must(design.includes('provider-neutral confirmation rule'),'provider-neutral confirmation boundary missing');
+          must(design.includes('Provider-neutral confirmation rule'),'provider-neutral confirmation boundary missing');
 
           must(sql.includes('create or replace function public.claim_member_acquisition_internal'),'internal claim RPC missing');
           must(sql.includes('security invoker'),'claim RPC must remain SECURITY INVOKER');
