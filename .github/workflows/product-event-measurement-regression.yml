@@ -1,0 +1,111 @@
+name: Product Event Measurement Regression
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  product-event-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate browser telemetry helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check data/product-events.js
+          grep -Fq "kinaraideeProductEventSessionV1" data/product-events.js
+          grep -Fq "sessionStorage" data/product-events.js
+          grep -Fq "utm_source" data/product-events.js
+          grep -Fq "utm_medium" data/product-events.js
+          grep -Fq "utm_campaign" data/product-events.js
+          grep -Fq "utm_content" data/product-events.js
+          grep -Fq "recommendation_result" data/product-events.js
+          grep -Fq "nearby_tap" data/product-events.js
+          if grep -Eq "localStorage|document\.cookie|user_id|email|latitude|longitude|budget|food_name|menu_name" data/product-events.js; then
+            echo "Product telemetry helper contains a disallowed persistent/PII/product-detail field"
+            exit 1
+          fi
+
+      - name: Validate ingestion API boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=supabase/functions/product-event-api/index.ts
+          grep -Fq "@supabase/supabase-js@2.112.2" "$f"
+          grep -Fq "https://rachanakorninon-gif.github.io" "$f"
+          grep -Fq "req.headers.get('Origin')!==allowedOrigin" "$f"
+          grep -Fq "maxRequestBytes=4096" "$f"
+          grep -Fq "recommendation_result" "$f"
+          grep -Fq "campaign_not_live" "$f"
+          if grep -Fq "'Access-Control-Allow-Origin':'*'" "$f"; then
+            echo "Public product-event ingestion must not use wildcard CORS"
+            exit 1
+          fi
+
+      - name: Validate database privacy contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=supabase/product-acquisition-events-v1.sql
+          grep -Fq "unique (session_id, event_name)" "$f"
+          grep -Fq "enable row level security" "$f"
+          grep -Fq "revoke all on table public.product_acquisition_events from public, anon, authenticated" "$f"
+          grep -Fq "grant select, insert on table public.product_acquisition_events to service_role" "$f"
+          grep -Fq "product_measurement_meta" "$f"
+          grep -Fq "no email, account ID, menu, budget, or location" "$f"
+
+      - name: Validate runtime isolation and PWA cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "ensureProductEvents" data/home-surprise.js
+          grep -Fq "data/product-events.js" data/home-surprise.js
+          grep -Fq "kinaraidee-beta-v17" sw.js
+          grep -Fq "./data/acquisition.js" sw.js
+          grep -Fq "./data/product-events.js" sw.js
+          if grep -Fq "product-event-api" index.html; then
+            echo "Telemetry API must remain isolated from the core inline recommendation runtime"
+            exit 1
+          fi
+
+      - name: Validate owner aggregate surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=supabase/functions/acquisition-api/index.ts
+          grep -Fq "@supabase/supabase-js@2.112.2" "$f"
+          grep -Fq "product_acquisition_events" "$f"
+          grep -Fq "productMeasurement" "$f" || grep -Fq "productMetrics" "$f"
+          grep -Fq "productWindowAttributedRows" "$f"
+          grep -Fq "campaignEligibilityIncluded:false" "$f"
+          grep -Fq "Product Funnel" acquisition-dashboard.html
+          grep -Fq "productTrackingStartedAt" acquisition-dashboard.html
+          grep -Fq "Product Funnel เป็น telemetry แบบ best-effort" acquisition-dashboard.html
+
+      - name: Validate privacy disclosure
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "การวัด Product Funnel" privacy.html
+          grep -Fq "Session Storage" privacy.html
+          grep -Fq "ไม่เก็บอีเมล รหัสบัญชี ชื่อเมนู งบประมาณ หรือพิกัดตำแหน่ง" privacy.html
+
+      - name: Record boundary
+        shell: bash
+        run: |
+          {
+            echo '## Product event measurement boundary'
+            echo
+            echo '- Reviewed UTM traffic only; one row per session/event stage.'
+            echo '- No email, account ID, menu, budget or location in product telemetry.'
+            echo '- Browser has no direct read access to raw product-event rows.'
+            echo '- Product measurement remains separate from Campaign 3,000 eligibility and spend.'
+          } >> "$GITHUB_STEP_SUMMARY"
