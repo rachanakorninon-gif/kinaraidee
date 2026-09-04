@@ -6,6 +6,7 @@ on:
       - 'supabase/functions/member-referral-api/**'
       - 'member.html'
       - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/referral-summary-edge-cutover-20260904.sql'
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/member-referral-api-regression.yml'
   push:
@@ -14,6 +15,7 @@ on:
       - 'supabase/functions/member-referral-api/**'
       - 'member.html'
       - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/referral-summary-edge-cutover-20260904.sql'
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - '.github/workflows/member-referral-api-regression.yml'
   workflow_dispatch:
@@ -37,7 +39,8 @@ jobs:
           const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
           const api=fs.readFileSync('supabase/functions/member-referral-api/index.ts','utf8');
           const member=fs.readFileSync('member.html','utf8');
-          const sql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
+          const legacySql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
+          const cutoverSql=fs.readFileSync('supabase/referral-summary-edge-cutover-20260904.sql','utf8');
           const physical=fs.readFileSync('REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md','utf8');
 
           must(api.includes('@supabase/supabase-js@2.112.2'),'Supabase client version must stay pinned');
@@ -60,41 +63,45 @@ jobs:
           must(/return json\(\{\s*referral_code:String\(codeResult\.data\.code\),\s*total_referrals:Number\(totalResult\.count\)\|\|0,\s*confirmed_referrals:Number\(confirmedResult\.count\)\|\|0\s*\}\)/s.test(api),'Response must contain only referral code and aggregate counts');
 
           for(const table of ['member_referral_codes','member_referrals']){
-            must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} raw rows must stay unavailable to browser roles`);
+            must(legacySql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} raw rows must stay unavailable to browser roles`);
           }
-          must(sql.includes("where rc.user_id=(select auth.uid())"),'Fallback RPC must remain caller-scoped until physical cutover acceptance');
-          must(sql.includes('grant execute on function public.get_my_referral_summary() to authenticated'),'Fallback RPC must remain available until physical cutover acceptance');
+          must(legacySql.includes("where rc.user_id=(select auth.uid())"),'Historical RPC definition must remain caller-scoped for provenance/rollback review');
+          must(cutoverSql.includes('revoke execute on function public.get_my_referral_summary() from public, anon, authenticated;'),'Post-acceptance cutover must revoke the old RPC from all browser/public execute paths');
+          must(!/grant\s+execute[\s\S]*get_my_referral_summary/i.test(cutoverSql),'Cutover SQL must not re-grant the old RPC');
 
           const edge="sb.functions.invoke('member-referral-api',{body:{}})";
           const fallback="sb.rpc('get_my_referral_summary')";
-          must(member.includes(edge),'Member page must call authenticated Edge Function first');
-          must(member.includes(fallback),'Member page must retain caller-scoped RPC fallback until physical acceptance');
-          must(member.indexOf(edge)<member.indexOf(fallback),'Edge Function must be attempted before RPC fallback');
-          must(member.includes("source='edge'"),'Member referral path must default trace source to edge');
-          must(member.includes("source='fallback'"),'Member referral path must trace fallback without exposing errors');
+          must(member.includes(edge),'Member page must call the authenticated Edge Function');
+          must(!member.includes(fallback),'Accepted browser runtime must not retain the RPC fallback');
+          must(!member.includes("source='fallback'"),'Accepted browser runtime must not retain fallback trace state');
+          must(member.includes("setReferralTrace('edge')"),'Successful referral summary must trace EDGE');
+          must(member.includes("setReferralTrace('unavailable')"),'Failed Edge retrieval must trace UNAVAILABLE without exposing an error body');
           must(member.includes("has('qa_referral_trace')"),'QA trace switch must remain explicit and opt-in');
           must(member.includes("'Referral API: '+source.toUpperCase()"),'QA trace must expose only the source label');
           const serverRoleEnv='SUPABASE_'+'SERVICE_ROLE_KEY';
           must(!member.includes(serverRoleEnv),'Browser must never receive service-role credentials');
           must(!member.includes('access_token'),'Browser cutover must not manually render or expose access tokens');
 
-          must(physical.includes('Status: **NOT VERIFIED / PHYSICAL SIGNED-IN ACCEPTANCE REQUIRED**'),'Physical referral evidence must remain unverified before a traced signed-in run');
-          must(physical.includes('QA source label is exactly **`EDGE`**'),'Physical PASS must require the Edge path');
-          must(physical.includes('`FALLBACK` means user-facing continuity worked but the Edge cutover is **NOT PASS**'),'Fallback must not be promoted to Edge acceptance');
-          must(physical.includes('referral code')&&physical.includes('access/refresh token'),'Physical evidence privacy exclusions must cover referral identifiers and tokens');
+          must(physical.includes('Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP PENDING**'),'Physical referral evidence must record the accepted EDGE session while ordered security follow-up remains pending');
+          must(physical.includes('QA source label shown: **`EDGE`**'),'Physical evidence must contain the privacy-safe EDGE label');
+          must(physical.includes('Referral summary rendered without an unavailable message: **PASS**'),'Physical evidence must verify successful summary rendering');
+          must(physical.includes('Total-referral field rendered as a number: **PASS**'),'Physical evidence must verify total aggregate rendering without storing the value');
+          must(physical.includes('Confirmed-referral field rendered as a number: **PASS**'),'Physical evidence must verify confirmed aggregate rendering without storing the value');
+          must(physical.includes('Share button enabled after load: **PASS**')&&physical.includes('Copy button enabled after load: **PASS**'),'Physical evidence must verify both controls enabled');
+          must(physical.includes('No numeric aggregate values were retained.'),'Physical evidence must not retain referral aggregate values');
           must(physical.includes('does not prove referral conversion'),'Physical evidence must preserve downstream overclaim boundary');
           NODE
 
-      - name: Record staged evidence boundary
+      - name: Record post-acceptance evidence boundary
         shell: bash
         run: |
           {
-            echo '## Member referral API cutover boundary'
+            echo '## Member referral API post-acceptance boundary'
             echo
-            echo '- Browser attempts the authenticated Edge Function first and keeps the existing caller-scoped RPC only as a temporary fallback.'
+            echo '- A traced signed-in physical session has accepted the EDGE retrieval/render path under the canonical privacy-safe evidence contract.'
+            echo '- Browser source now uses the authenticated Edge Function only; the temporary RPC fallback is absent from member.html.'
+            echo '- Cutover SQL stages revocation of old RPC execute access from PUBLIC/anon/authenticated, but live revocation must wait for fresh Edge-only Pages + main Live Smoke deployment evidence.'
             echo '- Caller identity remains server-verified; service-role table access stays server-side and raw referral rows stay unavailable to browser roles.'
-            echo '- Optional QA trace exposes only EDGE/FALLBACK/UNAVAILABLE source state, never token/account/user payload.'
-            echo '- Physical evidence remains NOT VERIFIED until a traceable signed-in session reports EDGE and the referral summary renders correctly.'
-            echo '- RPC fallback must not be revoked until the changed signed-in referral interaction is physically accepted.'
-            echo '- CI/deployment does not create real-device referral interaction acceptance or Commercial GO.'
+            echo '- Optional QA trace exposes only EDGE/UNAVAILABLE source state, never token/account/user payload.'
+            echo '- Physical EDGE acceptance does not establish referral conversion, Product Event real-user acceptance, Public Beta completion or Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
