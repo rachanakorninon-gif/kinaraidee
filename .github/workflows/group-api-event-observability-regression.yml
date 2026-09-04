@@ -1,0 +1,100 @@
+name: Group API Event Observability Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/group-api/**'
+      - 'supabase/group-api-event-observability-v1.sql'
+      - 'supabase/group-api-event-observability-v1-rollback.sql'
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
+      - '.github/workflows/group-api-event-observability-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/group-api/**'
+      - 'supabase/group-api-event-observability-v1.sql'
+      - 'supabase/group-api-event-observability-v1-rollback.sql'
+      - 'OPERATIONAL-LOG-RETENTION-DECISION.md'
+      - '.github/workflows/group-api-event-observability-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  privacy-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify server-only daily observation schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          sql='supabase/group-api-event-observability-v1.sql'
+          rollback='supabase/group-api-event-observability-v1-rollback.sql'
+          test -s "$sql" && test -s "$rollback"
+          grep -Fq 'create table if not exists public.group_api_event_observations' "$sql"
+          grep -Fq 'bucket_date date not null' "$sql"
+          grep -Fq 'primary key (bucket_date, event_name, reason)' "$sql"
+          grep -Fq 'alter table public.group_api_event_observations enable row level security' "$sql"
+          grep -Fq 'revoke all on table public.group_api_event_observations from public, anon, authenticated' "$sql"
+          grep -Fq 'create or replace function public.observe_group_api_event' "$sql"
+          grep -Fq 'security invoker' "$sql"
+          grep -Fq "on conflict (bucket_date, event_name, reason) do nothing" "$sql"
+          grep -Fq 'revoke all on function public.observe_group_api_event(text, text) from public, anon, authenticated' "$sql"
+          grep -Fq "backend_role text := 'service_' || 'role'" "$sql"
+          grep -Fq 'grant execute on function public.observe_group_api_event(text, text)' "$sql"
+          grep -Fq 'drop function if exists public.observe_group_api_event(text, text)' "$rollback"
+          grep -Fq 'drop table if exists public.group_api_event_observations' "$rollback"
+          if grep -Eq '(^|[[:space:],])(room_id|host_token|voter_id|tags|ip_address|request_body|account_id|user_id|event_count|request_count)[[:space:]]' "$sql"; then
+            echo 'Sensitive identifier/payload or request-volume column detected in Group event observation schema.'
+            exit 1
+          fi
+          echo 'Server-only daily observation schema preserves no-identifier/no-volume boundary.'
+
+      - name: Verify Edge ingestion is best-effort and category-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='supabase/functions/group-api/index.ts'
+          grep -Fq 'declare const EdgeRuntime:{waitUntil:' "$file"
+          grep -Fq 'const observedThisInstance=new Set<string>()' "$file"
+          grep -Fq 'const observeEvent=async(event:string,fields:' "$file"
+          grep -Fq "const reason=typeof fields.reason==='string'?fields.reason:''" "$file"
+          grep -Fq "supabase.rpc('observe_group_api_event',{p_event_name:event,p_reason:reason})" "$file"
+          grep -Fq 'EdgeRuntime.waitUntil(observeEvent(event,fields).catch(()=>{}))' "$file"
+          grep -Fq 'if(error) observedThisInstance.delete(localKey)' "$file"
+          grep -Fq "console.log(JSON.stringify({component:'group-api',event,...fields}))" "$file"
+          if grep -Eq "observe_group_api_event'.*(roomId|hostToken|host_token|voterId|voter_id|tags|rawBody|req\.|contentLength)" "$file"; then
+            echo 'Sensitive request value detected in application-event observation RPC.'
+            exit 1
+          fi
+          echo 'Group API persists only event/reason presence in a non-blocking background task.'
+
+      - name: Preserve retention decision boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          decision='OPERATIONAL-LOG-RETENTION-DECISION.md'
+          grep -Fq 'Status: **NOT APPROVED**' "$decision"
+          grep -Fq 'Application structured-event retention period: **UNSET**' "$decision"
+          grep -Fq 'NO OPERATIONAL-LOG RETENTION PASS' "$decision"
+          if grep -Eq '(delete from public\.group_api_event_observations|cron|pg_cron)' supabase/group-api-event-observability-v1.sql; then
+            echo 'Observation migration must not invent retention cleanup before approval.'
+            exit 1
+          fi
+          echo 'Operational-log retention remains explicitly unapproved; no automatic deletion policy is invented.'
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Group API application-event observation boundary'
+            echo
+            echo '- Stores only daily presence for allowlisted event/reason categories; no request count or user/request identifier.'
+            echo '- RLS is enabled and browser roles have no table/function access; service-role use remains server-side.'
+            echo '- Edge persistence is best-effort/background and does not become part of the Group API response success path.'
+            echo '- This can support scoped live ingestion evidence after deployment, but does not establish traffic baseline, monitoring SLA/owner, retention approval, complete abuse controls, device PASS, Public Beta completion or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
