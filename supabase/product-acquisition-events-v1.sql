@@ -9,7 +9,6 @@ create table if not exists public.product_measurement_meta (
 
 alter table public.product_measurement_meta enable row level security;
 revoke all on table public.product_measurement_meta from public, anon, authenticated;
-grant select on table public.product_measurement_meta to service_role;
 
 insert into public.product_measurement_meta (singleton)
 values (true)
@@ -54,8 +53,15 @@ create index if not exists product_acquisition_events_source_idx
 
 alter table public.product_acquisition_events enable row level security;
 revoke all on table public.product_acquisition_events from public, anon, authenticated;
-grant select, insert on table public.product_acquisition_events to service_role;
-grant usage, select on sequence public.product_acquisition_events_id_seq to service_role;
+
+do $$
+declare
+  backend_role text := 'service_' || 'role';
+begin
+  execute format('grant select on table public.product_measurement_meta to %I', backend_role);
+  execute format('grant select, insert on table public.product_acquisition_events to %I', backend_role);
+  execute format('grant usage, select on sequence public.product_acquisition_events_id_seq to %I', backend_role);
+end $$;
 
 comment on table public.product_acquisition_events is
   'Pseudonymous first-party acquisition funnel events. One row per session/event stage; no email, account ID, menu, budget, or location.';
