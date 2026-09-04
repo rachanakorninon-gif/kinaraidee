@@ -1,86 +1,63 @@
 # Kinaraidee — Referral Summary Physical Evidence
 
-Status: **NOT VERIFIED / PHYSICAL SIGNED-IN ACCEPTANCE REQUIRED**
+Status: **PASS — PHYSICAL SIGNED-IN EDGE ACCEPTED / POST-CUTOVER SECURITY FOLLOW-UP PENDING**
 
-Purpose: record only the changed Member referral-summary interaction after the browser starts preferring the authenticated `member-referral-api` boundary. This record must not reopen or repeat already accepted OPPO Auth, TC-11, TC-12 or Reduced Motion flows.
+Purpose: canonical physical evidence for the changed signed-in Member referral-summary interaction. This record does not reopen or repeat already accepted OPPO Auth, TC-11, TC-12 or Reduced Motion flows.
 
-## Runtime under test
+## Accepted deployed runtime
 
-- Browser/PWA source candidate: `ea409cd02fc7744514b8c867a67f56ec0187de80`
+- Browser/PWA source candidate exercised physically: `ea409cd02fc7744514b8c867a67f56ec0187de80`
 - PWA cache marker: `kinaraidee-beta-v16`
-- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**.
-- Merged/deployed main descendant: `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`.
-- GitHub Pages run `33838629999`: **success** for the exact merged-main SHA.
-- Main `Kinaraidee Live Smoke Test` run `33838665915`: **success** for the same deployed runtime lineage.
-- This deployment trace does **not** create physical signed-in acceptance for the changed referral-summary path.
-- Backend prerequisite: `member-referral-api` ACTIVE v1 with `verify_jwt=true`; source/deployment parity and missing/malformed-JWT rejection-only smoke are already verified through PR #513.
-- Temporary fallback remains intentionally available: `get_my_referral_summary()` is still executable by `authenticated` until a physical session proves the Edge path. Direct browser-role SELECT on raw referral tables remains unavailable.
+- Merged/deployed main descendant: `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`
+- GitHub Pages run `33838629999`: **success**
+- Main `Kinaraidee Live Smoke Test` run `33838665915`: **success**
+- Backend prerequisite: `member-referral-api` ACTIVE v1 with `verify_jwt=true`; source/deployment parity and missing/malformed-JWT rejection-only smoke were already verified through PR #513.
 
-## Privacy-safe test contract
+## Privacy-safe physical session
 
-The test must never record or paste any of the following into GitHub/chat evidence:
+- Device manufacturer/model: OPPO Reno13 5G
+- OS/version: Android 16
+- Browser/version/context: Google Chrome 152.0.7977.64, normal browser tab
+- Test date/time + timezone: 2026-09-04 23:40–23:45 Asia/Bangkok
+- Session reference: `referral-edge-session-20260904-oppo-chrome`
+- Evidence location/reference: this canonical record plus the same physical QA conversation; Issue #511 is the security/cutover tracker
+- QA source label shown: **`EDGE`**
+- Referral summary rendered without an unavailable message: **PASS**
+- Total-referral field rendered as a number: **PASS**
+- Confirmed-referral field rendered as a number: **PASS**
+- Share button enabled after load: **PASS**
+- Copy button enabled after load: **PASS**
 
-- referral code
-- referral URL
-- email address
-- account/user identifier
-- access/refresh token
-- browser storage/session payload
-- raw authenticated request or response body
+No numeric aggregate values were retained. No referral code, referral URL, email address, account/user identifier, access/refresh token, browser storage/session payload, or raw authenticated request/response body was retained in repository/chat evidence.
 
-Permitted evidence fields are limited to device/platform/browser metadata, date/time, the non-sensitive QA source label (`EDGE`, `FALLBACK`, `UNAVAILABLE`), whether the referral summary rendered, whether aggregate count fields rendered as numbers, and whether share/copy controls became enabled.
+## PASS rule and result
 
-## Physical interaction to verify
+The same traceable signed-in physical session satisfied every acceptance requirement:
 
-Use a real signed-in Member session against deployed main descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a` or a later descendant that preserves the same `member.html` referral-summary runtime.
+- the exercised browser runtime had a verified Pages + main Live Smoke deployment trace;
+- the privacy-safe QA source label was exactly **`EDGE`**;
+- the referral summary rendered successfully;
+- both aggregate fields rendered as numbers;
+- Share and Copy controls became enabled;
+- no credential, PII, account identifier, referral identifier, token, or raw authenticated payload was captured in evidence.
 
-Open the deployed Member page with the opt-in query parameter `qa_referral_trace=1`. The trace is designed to reveal only the source path and no account/referral identifier.
+Result: **SCOPED PHYSICAL PASS** for the signed-in referral-summary Edge retrieval/render interaction on the recorded OPPO / Android / Chrome session.
 
-Record:
+## Ordered post-acceptance security cutover
 
-- Device manufacturer/model:
-- OS/version:
-- Browser/version/context:
-- Test date/time + timezone:
-- Deployed merged SHA:
-- Pages run:
-- Main Live Smoke run:
-- QA source label shown: `EDGE` / `FALLBACK` / `UNAVAILABLE`
-- Referral summary rendered without the unavailable message: PASS / FAIL
-- Total-referral field rendered as a number: PASS / FAIL
-- Confirmed-referral field rendered as a number: PASS / FAIL
-- Share button enabled after load: PASS / FAIL
-- Copy button enabled after load: PASS / FAIL
+Physical acceptance permits the old fallback to be removed, but security follow-up is not complete until the ordered deployment/revocation verification finishes.
 
-Do not record the numeric count values themselves unless a future evidence requirement explicitly needs them; for this acceptance, only numeric rendering is relevant.
+1. **SOURCE PREPARED:** browser source candidate `4e2e1789921aa6fd73b2677ac5def2bc35a8be73` removes the `get_my_referral_summary()` browser RPC fallback and retains only `member-referral-api` with privacy-safe `EDGE`/`UNAVAILABLE` QA trace states.
+2. **PENDING:** deploy that Edge-only browser source and obtain fresh Pages + corresponding main Live Smoke evidence.
+3. **PENDING UNTIL STEP 2:** revoke browser-role execute access on `public.get_my_referral_summary()`; do not revoke before the Edge-only browser runtime is live.
+4. **PENDING:** rerun Supabase Security Advisor and verify the authenticated-callable SECURITY DEFINER warning for `get_my_referral_summary()` is gone.
+5. **PENDING:** verify raw referral tables remain unavailable to `anon` and `authenticated` and verify the old RPC is not executable by those browser roles.
+6. **PENDING:** sync Issue #511 and canonical release/security evidence to the completed post-cutover state.
 
-## PASS rule
-
-Scoped physical PASS requires all of the following in the same traceable signed-in session:
-
-- deployed runtime lineage is verified through Pages + main Live Smoke
-- QA source label is exactly **`EDGE`**
-- referral summary renders successfully
-- both aggregate fields render as numbers
-- share and copy controls become enabled
-- no credential/PII/referral identifier is captured in evidence
-
-`FALLBACK` means user-facing continuity worked but the Edge cutover is **NOT PASS**. `UNAVAILABLE` is **FAIL / investigate** for the changed path.
-
-## Security follow-up after physical EDGE PASS
-
-Do **not** execute these steps before the physical PASS rule above is satisfied:
-
-1. remove the temporary browser RPC fallback;
-2. revoke/remediate `authenticated` execute access on `get_my_referral_summary()` or retire the function as appropriate;
-3. rerun Supabase Security Advisor and verify the authenticated-callable SECURITY DEFINER warning is gone;
-4. verify raw referral tables remain unavailable to browser roles;
-5. update Issue #511 and canonical release/security evidence from temporary-fallback state to the verified post-cutover state.
-
-The current Advisor warning is therefore intentional/open evidence, not permission to bypass the physical gate.
+The current Advisor warning is therefore an expected transitional state after physical acceptance and before the ordered runtime deployment + RPC privilege revocation.
 
 ## Evidence boundary
 
-A scoped PASS here proves only the signed-in referral-summary retrieval/render interaction for the recorded device/session. It does not prove referral conversion, successful referral signup, Campaign 3,000 eligibility, broader Auth lifecycle, leaked-password protection, NF-07, Keyboard Focus, Product Event real-user acceptance, full device matrix, Public Beta completion or Commercial GO.
+This PASS proves only the signed-in referral-summary retrieval/render interaction for the recorded device/session. It does not prove referral conversion, successful referred signup, Campaign 3,000 eligibility, user growth, broader Auth lifecycle, leaked-password protection, NF-07, Keyboard Focus on other platforms, Product Event real-user acceptance, the full device matrix, Public Beta completion or Commercial GO.
 
-Pages/Live Smoke, CI, source inspection, Edge rejection smoke and Supabase grant inspection cannot substitute for this physical signed-in acceptance.
+Pages/Live Smoke, CI, source inspection, Edge rejection smoke and Supabase grant inspection cannot substitute for this physical acceptance; conversely, this physical PASS does not substitute for the ordered post-cutover deployment and security verification.
