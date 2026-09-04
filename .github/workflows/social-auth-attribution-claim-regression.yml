@@ -57,7 +57,7 @@ jobs:
           must(sql.includes('create or replace function public.claim_member_acquisition_internal'),'internal claim RPC missing');
           must(sql.includes('security invoker'),'claim RPC must remain SECURITY INVOKER');
           must(sql.includes("p_auth_method not in ('oauth','phone')"),'claim RPC must reject unsupported auth methods');
-          must(sql.includes("interval '1 hour'"),'claim RPC must enforce immediate signup window');
+          must(!sql.includes('from auth.users'),'SECURITY INVOKER claim RPC must not rely on auth.users SELECT privileges');
           must(sql.includes('for update'),'claim RPC must lock attribution row for concurrent retries');
           must(sql.includes("return query select 'already_claimed'"),'claim RPC must preserve first-touch idempotency');
           must(sql.includes('v_referrer = p_user_id'),'claim RPC must reject self referral');
@@ -71,6 +71,9 @@ jobs:
 
           must(edge.includes("const allowedOrigin='https://rachanakorninon-gif.github.io'"),'Edge claim must be exact-origin bound');
           must(edge.includes('const maxRequestBytes=4096'),'Edge claim body limit missing');
+          must(edge.includes('const maxClaimAgeMs=60*60*1000'),'verified Auth edge must enforce one-hour signup claim window');
+          must(edge.includes("Date.parse(String(user.created_at||''))"),'claim window must derive from verified Auth user creation time');
+          must(edge.includes("result:'claim_window_expired'"),'old-account claim must fail closed');
           must(edge.includes("new Set(['utm_source','utm_medium','utm_campaign','utm_content','referral_code'])"),'Edge claim allowlist changed unexpectedly');
           must(!edge.includes("'user_id'"),'Edge request body must not accept user_id');
           must(!edge.includes("'provider'"),'Edge request body must not accept provider');
@@ -94,8 +97,8 @@ jobs:
             echo '## Social Auth attribution claim source'
             echo
             echo '- Database RPC + rollback + Edge source are prepared but not applied/deployed.'
-            echo '- Internal RPC remains SECURITY INVOKER and service-role-only.'
+            echo '- Internal RPC remains SECURITY INVOKER and service-role-only, with no auth.users dependency.'
             echo '- Edge source verifies the Auth bearer token, exact origin, request size, approved provider and acquisition allowlist.'
-            echo '- One-hour signup window + row lock + first-touch check + referral PK preserve retry/concurrency idempotency.'
+            echo '- Verified Auth created_at enforces the one-hour signup window; DB row lock + first-touch check + referral PK preserve retry/concurrency idempotency.'
             echo '- Production member page and Service Worker remain unwired; rollout flags remain disabled.'
           } >> "$GITHUB_STEP_SUMMARY"
