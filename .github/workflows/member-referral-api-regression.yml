@@ -1,0 +1,78 @@
+name: Member Referral API Boundary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/member-referral-api/**'
+      - 'member.html'
+      - 'supabase/referral-acquisition-v1.sql'
+      - '.github/workflows/member-referral-api-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/member-referral-api/**'
+      - 'member.html'
+      - 'supabase/referral-acquisition-v1.sql'
+      - '.github/workflows/member-referral-api-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  referral-summary-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preserve least-privilege referral summary contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          const api=fs.readFileSync('supabase/functions/member-referral-api/index.ts','utf8');
+          const member=fs.readFileSync('member.html','utf8');
+          const sql=fs.readFileSync('supabase/referral-acquisition-v1.sql','utf8');
+
+          must(api.includes('@supabase/supabase-js@2.112.2'),'Supabase client version must stay pinned');
+          must(api.includes("const allowedOrigin='https://rachanakorninon-gif.github.io'"),'Member referral API must restrict browser origin');
+          must(!api.includes("'Access-Control-Allow-Origin':'*'"),'Member referral API must not use wildcard CORS');
+          must(api.includes("'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type'"),'Authorization CORS header contract missing');
+          must(api.includes("const token=auth.startsWith('Bearer ')?auth.slice(7):''"),'Bearer token extraction missing');
+          must(api.includes('sb.auth.getUser(token)'),'API must verify the caller through Supabase Auth');
+          must(api.includes("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')"),'Raw referral access must remain server-side');
+          must(api.includes(".select('code')"),'API may read only the caller referral code from the code table');
+          must(api.includes(".eq('user_id',user.id)"),'Referral code lookup must scope to the verified user');
+          must((api.match(/\.eq\('referrer_user_id',user\.id\)/g)||[]).length===2,'Referral aggregate queries must scope to the verified user');
+          must((api.match(/\.select\('status',\{count:'exact',head:true\}\)/g)||[]).length===2,'Referral counts must use head-only aggregate queries');
+          must(api.includes(".eq('status','confirmed')"),'Confirmed referral count must remain status-scoped');
+          must(!api.includes('console.'),'Referral API must not log token/body/user data');
+          must(!api.includes('user_metadata'),'Referral API authorization must not use user metadata');
+          must(!api.includes('email'),'Referral summary server boundary must not query or emit email');
+          must(!api.includes(".select('referred_user_id"),'Referral summary must not project referred user identifiers');
+          must(!api.includes(".select('referrer_user_id"),'Referral summary must not project referrer identifiers');
+          must(/return json\(\{\s*referral_code:String\(codeResult\.data\.code\),\s*total_referrals:Number\(totalResult\.count\)\|\|0,\s*confirmed_referrals:Number\(confirmedResult\.count\)\|\|0\s*\}\)/s.test(api),'Response must contain only referral code and aggregate counts');
+
+          for(const table of ['member_referral_codes','member_referrals']){
+            must(sql.includes(`revoke all on public.${table} from anon, authenticated`),`${table} raw rows must stay unavailable to browser roles`);
+          }
+          must(sql.includes("where rc.user_id=(select auth.uid())"),'Existing RPC must remain caller-scoped during additive migration stage');
+          must(member.includes("sb.rpc('get_my_referral_summary')"),'Stage 1 must not switch the browser referral path before backend verification');
+          must(!member.includes('member-referral-api'),'Stage 1 must remain backend-additive and create no new physical-browser PASS claim');
+          NODE
+
+      - name: Record staged evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Member referral API staged boundary'
+            echo
+            echo '- Additive backend source only; current browser RPC remains unchanged in this stage.'
+            echo '- Caller identity must come from a verified Bearer token.'
+            echo '- Service-role table access remains server-side and raw referral rows stay unavailable to browser roles.'
+            echo '- Response is limited to the caller random referral code plus aggregate total/confirmed counts.'
+            echo '- CI or backend deployment does not create real-device referral interaction acceptance or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,64 @@
+name: Member Referral API Live Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/member-referral-api/**'
+      - '.github/workflows/member-referral-api-live-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/member-referral-api/**'
+      - '.github/workflows/member-referral-api-live-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MEMBER_REFERRAL_API_URL: https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/member-referral-api
+  ALLOWED_ORIGIN: https://rachanakorninon-gif.github.io
+
+jobs:
+  anonymous-rejection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify deployed endpoint rejects missing user JWT
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --request POST \
+            --header "Origin: ${ALLOWED_ORIGIN}" \
+            "${MEMBER_REFERRAL_API_URL}")
+          test "$status" = "401" || {
+            echo "Expected unauthenticated request to be rejected with HTTP 401; got $status"
+            exit 1
+          }
+
+      - name: Verify deployed endpoint rejects malformed bearer token
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --request POST \
+            --header "Origin: ${ALLOWED_ORIGIN}" \
+            --header 'Authorization: Bearer not-a-valid-jwt' \
+            "${MEMBER_REFERRAL_API_URL}")
+          test "$status" = "401" || {
+            echo "Expected malformed bearer token to be rejected with HTTP 401; got $status"
+            exit 1
+          }
+
+      - name: Record non-mutating evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Member referral API live rejection boundary'
+            echo
+            echo '- GitHub-hosted runner reached the deployed endpoint.'
+            echo '- Missing user JWT was rejected.'
+            echo '- Malformed bearer token was rejected.'
+            echo '- No valid account token, referral code, account identifier, email or user payload was used.'
+            echo '- This rejection-only smoke does not verify a successful signed-in referral summary interaction.'
+          } >> "$GITHUB_STEP_SUMMARY"
