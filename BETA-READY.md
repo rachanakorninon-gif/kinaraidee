@@ -29,8 +29,8 @@
 
 - Android Chrome ให้ครบอย่างน้อย 3 device models ตามเกณฑ์ปัจจุบัน
 - iPhone Safari ให้ครบอย่างน้อย 2 device models ตามเกณฑ์ปัจจุบัน; NF-05 มี PASS แบบ scoped แล้วเฉพาะ iPhone/Safari #1 และห้ามขยายผลเป็น iPadOS หรือ second-iPhone coverage
-- NF-07 old-cache → current-cache upgrade บนอุปกรณ์จริง
-- visible keyboard focus บน deployed pages ด้วย real keyboard/focus navigation
+- NF-07 old-cache → current-cache upgrade มี canonical scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `NF07-PHYSICAL-UPGRADE-EVIDENCE.md`; ยังไม่ใช่ full-device/full-browser upgrade matrix PASS
+- visible keyboard focus มี canonical scoped PASS แล้วบน Lenovo system model 83DV / Windows 11 25H2 / Chrome 152.0.7977.82 ด้วย built-in hardware keyboard ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ยังไม่ใช่ full-device/full-browser accessibility matrix PASS
 - Reduced Motion มี canonical scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ยังไม่ใช่ full-device/full-browser accessibility matrix PASS
 - current Auth acceptance เป็น **PARTIAL / OPEN**: recovery request/recovery mail-send/verification-link, replacement-password update, sign-in-after-reset และ new-account signup → confirmation-mail delivery → confirmation-link → signed-in Member flow มี scoped PASS/corroboration บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md`; weak/leaked-password rejection ยัง NOT VERIFIED / OPEN และห้ามขยายผล scoped PASS เป็น blanket Auth/Security PASS
 - TC-11/TC-12 Feedback/Partner physical acceptance มี scoped PASS แล้วบน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ยังต้องมี broader device-matrix coverage ตามเกณฑ์ Public Beta และห้ามขยายผล scoped PASS เป็น full-matrix PASS
@@ -47,7 +47,7 @@ NF-09 มี **PASS แบบ scoped สำหรับ tested physical iPhone/V
 - ไม่มี secret/service-role credential ถูกตั้งใจให้ฝังใน public browser runtime
 - public table access ใช้ RLS/deny-by-default ตาม schema ที่เกี่ยวข้อง
 - พิกัด demand ที่จัดเก็บลดความละเอียดก่อนบันทึก
-- Group API มี source/deployment parity และ input/request hardening ที่บันทึกไว้ใน `CURRENT-RELEASE.md`
+- Group API มี source/deployment parity, input/request hardening และ scoped privacy-safe application-owned rejection-event ingestion ที่บันทึกไว้ใน `CURRENT-RELEASE.md`; traffic/error baseline, alerting, approved retention และ complete abuse controls ยังไม่ครบ
 
 หัวข้อนี้ไม่เท่ากับ Production Security PASS
 
@@ -59,7 +59,7 @@ Gate ที่ยังเปิดอยู่ ได้แก่:
 
 - Public Beta technical/device/accessibility acceptance
 - Supabase leaked-password protection gate
-- Group API retention/deletion policy, abuse controls, application-event observability และ monitoring baseline
+- Group API retention/deletion policy, abuse controls, traffic/error monitoring baseline, alerting owner/channel/escalation และ alert-delivery evidence
 - Terms of Service / Privacy Policy / controller-contact / retention decisions ฉบับ Production
 - owner/on-call, monitoring, backup/recovery และ rollback/restore drill evidence
 - payment provider / merchant account และ subscription lifecycle evidence ก่อนรับค่าสมาชิกจริง
