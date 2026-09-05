@@ -8,7 +8,8 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - Runtime merge/deployed SHA: `d7dd3a550b9a0d583cd7f3269a357b0187377d50`.
 - GitHub Pages run `33975327442` completed **success** for exact merged-main SHA `d7dd3a550b9a0d583cd7f3269a357b0187377d50`.
-- Main Live Smoke run `33975353656` completed **success** for the same deployed SHA; Auth Password Security Live Smoke run `33975353718` also completed **success**.
+- main Live Smoke run `33975353656` completed **success** for the same deployed SHA; Auth Password Security Live Smoke run `33975353718` also completed **success**.
+- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.
 - Physical verification of this fix remains **PENDING**. The deployed retest reached the recovery-request UI, but the recovery email request was blocked by Supabase Auth with `429 / over_email_send_rate_limit` on the observed attempts. This rate-limit block is not classified as a regression PASS or FAIL for the recovery-initialization fix. The retest must resume after the email-send limit clears and a fresh recovery email can be issued.
 - The earlier physical evidence remains historical/scoped: the first observed Android recovery attempt reached the reset page but reported missing recovery authorization; a fresh recovery attempt then completed and the new password authenticated while the old password no longer did. This fix addresses the source-level initialization race but is not physically verified until a deployed retest confirms the erroneous first-attempt state no longer occurs.
 - Historical prior runtime source candidate: `4e2e1789921aa6fd73b2677ac5def2bc35a8be73`; verified deployed descendant: `aa470986589d83dd95b4efd6e4a4d68a9f55965d`, Pages `33898258213`, main Live Smoke `33898314400`.
