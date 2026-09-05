@@ -1,6 +1,6 @@
 # Kinaraidee — Multi-provider Auth Rollout
 
-Status: **FOUNDATION + CONTROLLED LINE CONFIG / PRODUCTION PROVIDERS NOT ENABLED**
+Status: **FOUNDATION + CONTROLLED LINE CONFIG + DEPLOYED ATTRIBUTION CLAIM / PRODUCTION PROVIDERS NOT ENABLED**
 
 Purpose: add safer, lower-friction member sign-in options for Thai users while preserving the existing email/password path, account identity boundaries, referral/acquisition attribution, and current Public Beta evidence rules.
 
@@ -11,7 +11,7 @@ Purpose: add safer, lower-friction member sign-in options for Thai users while p
 3. **Facebook Login** — secondary social option.
 4. **Email + password** — existing fallback and recovery path.
 
-No provider is considered production-ready merely because provider configuration or UI/client code exists.
+No provider is considered production-ready merely because provider configuration, server-side claim infrastructure or UI/client code exists.
 
 ## Current production facts
 
@@ -19,6 +19,8 @@ No provider is considered production-ready merely because provider configuration
 - Aggregate-only Auth read on 2026-09-05 after controlled LINE tests shows 7 `email` identities and 1 `custom:line` identity mapped to 1 Supabase user. No user identifiers, emails, phone numbers, tokens or social-provider subject IDs are retained in repository evidence.
 - The controlled LINE identity has no email address, matching the intentionally email-optional initial LINE test path.
 - Existing email/password signup, confirmation, recovery/password-update and sign-in have scoped physical evidence on OPPO Android Chrome. The separate leaked-password-protection gate remains OPEN and must not be reclassified by this work.
+- The reviewed server-side social/phone acquisition claim path from PR #531 is deployed as recorded by PR #532 / `SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md`: migration `20260905125841 / social_auth_attribution_claim_v1` is applied and Edge `member-acquisition-claim` is ACTIVE v1 with `verify_jwt=true`. Database EXECUTE remains restricted to `postgres` / `service_role`, and the reviewed RPC remains `SECURITY INVOKER` with empty `search_path`.
+- This deployment/configuration evidence does **not** establish live attribution acceptance. Negative authenticated tests, fresh LINE exactly-once first-touch attribution, returning-login immutability and the post-deployment email/password attribution regression remain OPEN under Issue #529.
 - The deployed member UI remains email/password only. The client prototype under `prototype/auth-multi-provider/` remains intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime.
 - Controlled LINE provider evidence is recorded in `LINE-AUTH-CONTROLLED-EVIDENCE.md` and does not authorize Production enablement.
 
@@ -81,14 +83,16 @@ Before exposing a user-facing "เชื่อมบัญชี" action:
 
 The existing email signup flow attaches reviewed acquisition/referral metadata during `signUp(...)`. Social and phone onboarding must not silently bypass referral attribution.
 
-Before LINE/Facebook/Phone are enabled for new account creation, add and verify an attribution-safe post-auth path that:
+The reviewed provider-neutral post-auth claim path is now deployed server-side, but Production provider rollout remains blocked until live acceptance proves that it:
 - consumes only reviewed allowlisted acquisition fields;
 - binds attribution to the authenticated Supabase user server-side;
 - does not trust a provider display name/email/subject from arbitrary browser payload;
 - remains separate from Campaign 3,000 eligibility truth;
-- prevents duplicate attribution on repeated login.
+- preserves first-touch attribution and prevents duplicate referral relationships on repeated login;
+- rejects forged/malformed/self-referral/invalid-referral cases according to the reviewed contract;
+- does not regress the existing email/password attribution path.
 
-Until that parity exists, new provider buttons may be implemented behind disabled rollout flags but must not be enabled in Production.
+Deployment/configuration alone is not attribution parity acceptance. Issue #529 remains OPEN until the recorded live acceptance gates close. New provider buttons may remain implemented behind disabled rollout flags but must not be enabled in Production before those gates and the remaining device/accessibility/account-isolation gates close.
 
 ## UI flow
 
@@ -142,7 +146,7 @@ For each provider independently:
 - network/failure retry does not trap the user;
 - logout works;
 - account/profile/history/favorite/referral access remains scoped to the authenticated user;
-- referral/acquisition attribution parity verified for new-account creation;
+- referral/acquisition attribution live acceptance verified for new-account creation and repeated login;
 - no provider access token, Auth token, OTP, phone number or provider subject identifier is stored in QA evidence;
 - accessibility labels/focus and busy/error states reviewed;
 - existing email/password/recovery flow regression still passes;
@@ -157,7 +161,7 @@ Additional Phone OTP gates:
 
 Additional LINE gates still OPEN:
 - physical cross-account profile/history/favorite/referral isolation acceptance;
-- referral/acquisition attribution parity for LINE-created accounts;
+- Issue #529 live attribution acceptance: negative authenticated cases, exactly-once first-touch on a fresh controlled LINE signup, returning-login immutability and email/password attribution regression;
 - network/provider failure retry;
 - accessibility review of the actual LINE button flow;
 - existing email/password/recovery regression after LINE UI integration;
