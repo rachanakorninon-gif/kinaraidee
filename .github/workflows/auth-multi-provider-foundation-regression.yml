@@ -58,9 +58,9 @@ jobs:
           must(!member.includes('custom:line'),'production member page must not directly enable LINE before remaining gates close');
           must(!sw.includes('member-auth-multi-provider.js'),'prototype must remain outside the production Service Worker cache');
 
-          must(doc.includes('Status: **FOUNDATION + CONTROLLED LINE CONFIG / PRODUCTION PROVIDERS NOT ENABLED**'),'rollout status must preserve disabled Production boundary');
-          must(doc.includes('referral/acquisition attribution parity'),'rollout must preserve acquisition/referral parity gate');
-          must(doc.includes('No provider is considered production-ready merely because provider configuration or UI/client code exists.'),'provider setup must not imply Production readiness');
+          must(doc.includes('PRODUCTION PROVIDERS NOT ENABLED'),'rollout status must preserve disabled Production boundary');
+          must(doc.includes('live attribution acceptance'),'rollout must preserve acquisition/referral live acceptance gate');
+          must(doc.includes('No provider is considered production-ready merely because provider configuration, server-side claim infrastructure or UI/client code exists.'),'provider setup or deployed claim infrastructure must not imply Production readiness');
           must(doc.includes('must not auto-merge two existing application accounts'),'account merge safety boundary missing');
           must(doc.includes('SMS spend/abuse controls'),'phone OTP cost/abuse boundary missing');
           must(doc.includes('intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime'),'non-deployed prototype boundary missing');
@@ -85,7 +85,7 @@ jobs:
             echo '- LINE / Phone / Facebook remain disabled in the deployed member UI.'
             echo '- Controlled LINE Manual OAuth2 setup and login evidence is documented separately without user identifiers or secrets.'
             echo '- LINE authorization, cancel/return, new login, returning login and user-initiated logout have scoped controlled evidence only.'
-            echo '- Referral/acquisition parity, physical cross-account isolation, network/failure UX, accessibility and broader device coverage remain open before Production enablement.'
+            echo '- Server-side attribution claim infrastructure is deployed, but live attribution acceptance, physical cross-account isolation, network/failure UX, accessibility and broader device coverage remain open before Production enablement.'
             echo '- Prototype client integration remains outside member.html and the Service Worker cache.'
             echo '- Existing email/password Auth remains the current Production path.'
           } >> "$GITHUB_STEP_SUMMARY"
