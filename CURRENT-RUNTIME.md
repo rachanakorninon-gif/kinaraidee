@@ -26,6 +26,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-This runtime candidate has source-side remediation only. Current runtime deployment evidence is pending. Deployment trace, live smoke and physical retests for Issues #524/#545 are all still **PENDING**. The new static guard requiring `maximumAge:0` proves only the source contract and must not be relabeled as TC-09 physical PASS.
+This runtime candidate has source-side remediation only. Current runtime deployment evidence is pending. Deployment trace, live smoke and physical retests for Issues #524/#545 are all still **PENDING**. The new static guard requiring `maximumAge:0` proves only the source contract and must not be relabeled as TC-09 physical PASS. This source result does not prove deployed or physical acceptance.
 
 Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. These source remediations do not prove Public Beta completion, Privacy/Legal approval or Commercial GO.
