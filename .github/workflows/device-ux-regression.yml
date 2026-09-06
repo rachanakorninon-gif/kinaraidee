@@ -35,9 +35,11 @@ jobs:
           grep -Fq "error.code===2" "$file"
           grep -Fq "error.code===3" "$file"
           grep -Fq "timeout:15000" "$file"
+          grep -Fq "maximumAge:0" "$file"
+          ! grep -Eq "maximumAge:[1-9][0-9]*" "$file"
           grep -Fq "role=\"status\" aria-live=\"polite\"" "$file"
           grep -Fq "Google Maps แทนได้ครับ" "$file"
-          echo 'Location UX contract preserved'
+          echo 'Location UX contract preserved with fresh geolocation request'
 
       - name: Verify Favorite and History differentiation
         shell: bash
