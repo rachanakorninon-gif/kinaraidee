@@ -5,7 +5,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Current browser/PWA runtime candidate: `e0523e6cab49b09e910ba66f2ad18351f491d19a`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Nearby iOS remediation for Issues #524 and #545. The Google Maps fallback keeps the natural nearby query (`<menu> ใกล้ฉัน`) without raw numeric coordinates in the external free-text query, and the explicit `ใช้ตำแหน่งปัจจุบัน` action now clears in-memory coordinates before requesting geolocation with `maximumAge:0` so a prior cached coordinate is not accepted as a fresh location result after permission/state changes. Partner search and privacy-scoped demand/search tracking contracts remain unchanged.
-- Deployment status: **DEPLOYED / LIVE-SMOKE VERIFIED**
+- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - Runtime merge/deployed SHA: `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`.
 - Verified deployment trace: GitHub Pages workflow `34013867862` completed **success** for exact main SHA `a6db511e0bbd6be9038bbc63a06fb5e1702006d3` on 2026-09-06; Kinaraidee Live Smoke Test `34013888880` and Auth Password Security Live Smoke `34013888842` both completed **success** for the same SHA.
 - Physical verification of the Issue #524 Maps fallback remediation remains **PENDING / NOT PASS / NOT FAIL** for the affected traced iPhone 15 Pro Max scope. A separate iPhone 17 Pro Max / iOS 26.6 session observed Maps fallback success, which is scoped NON-REPRO evidence only and does not close #524.
