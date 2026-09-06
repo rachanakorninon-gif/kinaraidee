@@ -26,6 +26,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current Nearby source remediation is now deployed and live-smoke verified for exact main SHA `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`. This proves deployment/runtime reachability only. Physical retests for Issues #524/#545 remain **PENDING**, and neither deployed/static/live-smoke evidence may be relabeled as TC-08/TC-09 physical PASS.
+The current Nearby source remediation is now deployed and live-smoke verified for exact main SHA `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`. This proves deployment/runtime reachability only. This deployment evidence does not prove or imply physical acceptance of Issues #524/#545, TC-08/TC-09 completion, Public Beta completion, Privacy/Legal approval, or Commercial GO. Physical retests for Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL**, and neither deployed/static/live-smoke evidence may be relabeled as TC-08/TC-09 physical PASS.
 
 Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. These deployment results do not prove Public Beta completion, Privacy/Legal approval or Commercial GO.
