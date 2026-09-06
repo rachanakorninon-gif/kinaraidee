@@ -11,7 +11,7 @@
   function roundCoord(v){return Number.isFinite(v)?Number(Number(v).toFixed(3)):null}
   function requestKey(lat,lon){return `${foodName()}|${Number.isFinite(lat)?Number(lat).toFixed(3):'na'}|${Number.isFinite(lon)?Number(lon).toFixed(3):'na'}`}
   async function saveRequest(lat,lon){const key=requestKey(lat,lon),now=Date.now();if(key===lastSaved.key&&now-lastSaved.at<DEDUP_MS)return{ok:true,deduped:true};try{const body={food_name:foodName(),search_radius_km:SEARCH_RADIUS_KM,status:'pending',source:'app'};const safeLat=roundCoord(lat),safeLon=roundCoord(lon);if(safeLat!==null)body.latitude=safeLat;if(safeLon!==null)body.longitude=safeLon;const r=await fetch(SUPABASE_URL+'/rest/v1/restaurant_requests',{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'},body:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status);lastSaved={key,at:now};return{ok:true,deduped:false}}catch(e){console.error('restaurant_requests:',e);return{ok:false,deduped:false}}}
-  function mapsUrl(name,lat,lon){const q=encodeURIComponent((name||'ร้านอาหาร')+(Number.isFinite(lat)&&Number.isFinite(lon)?` ${lat},${lon}`:' ใกล้ฉัน'));return `https://www.google.com/maps/search/?api=1&query=${q}`}
+  function mapsUrl(name,lat,lon){const q=encodeURIComponent(`${name||'ร้านอาหาร'} ใกล้ฉัน`);return `https://www.google.com/maps/search/?api=1&query=${q}`}
   function setBoxStatus(id,t,bad=false){const e=document.getElementById(id);if(!e)return;e.textContent=t;e.style.display='block';e.style.background=bad?'#fff1ef':'#edfaf8'}
   function setPartnerStatus(t,bad=false){setBoxStatus('nearbyStatus',t,bad)}
   function setLocationStatus(t,bad=false){setBoxStatus('nearbyLocationStatus',t,bad)}
