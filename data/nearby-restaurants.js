@@ -51,7 +51,7 @@
   async function loadPartners(lat,lon){try{const d=await api('find_partners',{food:foodName(),lat,lon,radiusKm:SEARCH_RADIUS_KM});renderPartners(d.partners||[]);setPartnerStatus(d.partners?.length?`พบร้านพาร์ตเนอร์ ${d.partners.length} ร้านสำหรับเมนูนี้`:'ยังไม่มีร้านพาร์ตเนอร์สำหรับเมนูนี้ — ค้นหาใน Google Maps ได้เลย')}catch(e){renderPartners([]);setPartnerStatus('ยังโหลดร้านพาร์ตเนอร์ไม่ได้ แต่ยังค้นหาใน Google Maps ได้ตามปกติ',true)}}
   function useLocation(){
     if(!navigator.geolocation)return setLocationStatus('อุปกรณ์นี้ไม่รองรับตำแหน่ง — เปิดค้นหาในแผนที่แทนได้ครับ',true);
-    setBusy(true);setLocationStatus('กำลังขอตำแหน่งของคุณ…');
+    lastCoords=null;setBusy(true);setLocationStatus('กำลังขอตำแหน่งของคุณ…');
     navigator.geolocation.getCurrentPosition(async p=>{
       lastCoords={lat:p.coords.latitude,lon:p.coords.longitude};
       const saved=await saveRequest(lastCoords.lat,lastCoords.lon);
@@ -65,7 +65,7 @@
       setLocationStatus(locationErrorMessage(error)+suffix,true);
       await loadPartners();
       setBusy(false);
-    },{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
+    },{enableHighAccuracy:false,timeout:15000,maximumAge:0});
   }
   function addUI(){if(document.getElementById('nearbyRestaurants'))return;const s=document.createElement('style');s.textContent='.nearbyHero,.nearbyCard,.fallbackCard{background:#fff;border:1px solid #eadfce;border-radius:18px;padding:14px;margin:10px 0}.nearbyStatus{border-radius:14px;padding:11px;margin:10px 0;font-weight:750}.nearbyLocationStatus{border-radius:14px;padding:11px;margin:10px 0;font-weight:750}.nearbyMuted{font-size:14px;color:#6b5b4e;margin-top:5px}.privacyNote{font-size:12px;color:#786a60;text-align:center;margin:8px 12px 2px;line-height:1.5}.privacyNote a{color:#0d716c}.partnerBadge{display:inline-block;background:#edfaf8;color:#0d716c;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:900}.partnerBtn{width:100%;border:0;border-radius:14px;padding:12px;margin-top:10px;font-weight:900;background:#ff8500;color:white}';document.head.appendChild(s);document.querySelector('main.app').insertAdjacentHTML('beforeend','<section id="nearbyRestaurants" class="screen"><div class="topbar"><button class="back" id="nearbyBack">‹</button><b>ร้านใกล้คุณ</b><span></span></div><div class="nearbyHero"><h2 id="nearbyTitle">หาร้านสำหรับเมนูนี้</h2><p>ใช้ตำแหน่งของคุณเพื่อค้นหาร้านใกล้เคียง</p></div><div id="nearbyLocationStatus" class="nearbyLocationStatus" style="display:none" role="status" aria-live="polite"></div><div id="nearbyStatus" class="nearbyStatus" style="display:none"></div><div id="nearbyPartners"></div><button class="primary" id="nearbyUseLocation">📍 ใช้ตำแหน่งปัจจุบัน</button><div class="privacyNote">ตำแหน่งจะถูกใช้เมื่อคุณกดปุ่มนี้เท่านั้น และพิกัดที่บันทึกเพื่อวิเคราะห์ความต้องการจะลดความละเอียดประมาณระดับย่าน • <a href="privacy.html">นโยบายความเป็นส่วนตัว</a></div><button class="secondary" id="nearbyOpenMaps">🗺️ ค้นหาใน Google Maps</button></section>');document.getElementById('nearbyBack').onclick=()=>show('result');document.getElementById('nearbyUseLocation').onclick=useLocation;document.getElementById('nearbyOpenMaps').onclick=()=>openMaps(lastCoords?.lat,lastCoords?.lon)}
   function loadScript(src){if(document.querySelector(`script[src="${src}"]`))return;const s=document.createElement('script');s.src=src;s.async=false;document.body.appendChild(s)}
