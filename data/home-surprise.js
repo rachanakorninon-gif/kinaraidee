@@ -91,6 +91,7 @@
       #home .home-v3-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:118px;height:118px;border-radius:50%;background:radial-gradient(circle at 50% 42%,#fff 0 35%,#e1f4ed 36% 100%);border:7px solid #fff;box-shadow:0 14px 34px rgba(40,102,82,.14)}
       #home+.stats,#home .stats{gap:10px}
       #home .stats>div{background:linear-gradient(180deg,#f4fbf7,#fff);border:1px solid #dce9e3;border-radius:17px;padding:12px}
+      .nav{z-index:20}
       @media(max-width:390px){#home .homeHero.home-v3 .brand{font-size:32px}#home .homeHero.home-v3 .heroTitle{font-size:30px}#home .home-v3-orbit{width:235px;height:178px}#home .home-v3-chip{width:72px;height:72px}}
     `;
     document.head.appendChild(style);
