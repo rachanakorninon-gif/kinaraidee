@@ -1,0 +1,61 @@
+name: Choice Rules Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "data/choice-rules.js"
+      - "data/foods-expanded.js"
+      - ".github/workflows/choice-rules-regression.yml"
+  pull_request:
+    paths:
+      - "data/choice-rules.js"
+      - "data/foods-expanded.js"
+      - ".github/workflows/choice-rules-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  soup-classification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify choice rules syntax
+        run: node --check data/choice-rules.js
+
+      - name: Prevent TC-03 soup false positives
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const source=fs.readFileSync('data/choice-rules.js','utf8');
+          const sandbox={};
+          vm.createContext(sandbox);
+          vm.runInContext(`${source}\n;globalThis.__rules=KINARAIDEE_CHOICE_RULES;`,sandbox);
+          const rules=sandbox.__rules;
+          if(!rules||typeof rules.derive!=='function')throw new Error('Choice rules unavailable');
+
+          const tagsFor=(name,tags='',category='กับข้าว')=>rules.derive([name,'',100,'','กลางวัน',tags,category]);
+          const expectSoup=(name)=>{
+            if(!tagsFor(name).includes('ซุป'))throw new Error(`Expected soup tag: ${name}`);
+          };
+          const expectNotSoup=(name)=>{
+            if(tagsFor(name).includes('ซุป'))throw new Error(`Unexpected soup tag: ${name}`);
+          };
+
+          expectNotSoup('ผัดพริกแกงหมู');
+          expectNotSoup('ผัดพริกแกงไก่');
+          expectSoup('แกงเขียวหวานไก่');
+          expectSoup('แกงมัสมั่นไก่');
+          expectSoup('แกงส้มชะอมกุ้ง');
+          expectSoup('ต้มยำกุ้ง');
+          expectSoup('ราเมนโชยุ');
+          expectSoup('ซุปไก่ใส');
+
+          console.log('TC-03 soup classification regression passed');
+          NODE
