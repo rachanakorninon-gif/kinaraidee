@@ -1,6 +1,6 @@
 # Kinaraidee — First Paid Acquisition Test Plan
 
-Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED / PREMIUM EXECUTION NOT LIVE**
+Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**
 
 Canonical Growth sequence: `BETA-GROWTH-EXPERIMENT-PLAN.md`  
 Business baseline: `BUSINESS-COMMERCIAL-BASELINE.md`
