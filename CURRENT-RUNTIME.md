@@ -8,7 +8,11 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - Runtime merge/deployed SHA: `46136f5ca6322847545289c18233320139147aa2`.
 - Last verified deployed browser/PWA descendant: `46136f5ca6322847545289c18233320139147aa2`.
-- Last verified deployed browser/PWA trace: GitHub Pages `34087987096`, main Live Smoke `34088055637`, Auth Password Security Live Smoke `34088055663`, and Campaign 3000 Premium Live Smoke `34088055657`, all successful for exact merged-main SHA `46136f5ca6322847545289c18233320139147aa2`.
+- Pages run `34087987096` = success for exact merged-main SHA `46136f5ca6322847545289c18233320139147aa2`.
+- Live Smoke run `34088055637` = success for the same deployed SHA.
+- Auth Password Security Live Smoke `34088055663` = SUCCESS for the same deployed SHA.
+- Campaign 3000 Premium Live Smoke `34088055657` = SUCCESS for the same deployed SHA.
+- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does **not** establish physical-device acceptance, Public Beta completion, user preference, conversion improvement, Privacy/Legal approval or Commercial GO.
 - Current Home V3 deployment evidence is verified in `HOME-V3-DEPLOYMENT-EVIDENCE.md`. The later main SHA `eb48b0c0600e112a82306e67e23dd4d7cf8851b8` is a documentation-only descendant from PR #549 and does not replace or broaden the verified browser/PWA runtime trace above.
 - Prior verified deployment evidence remains historical and is not reused as current PASS.
 - Physical verification of the Issue #524 Maps fallback remediation remains **PENDING / NOT PASS / NOT FAIL** for the affected traced iPhone 15 Pro Max scope. A separate iPhone 17 Pro Max / iOS 26.6 session observed Maps fallback success, which is scoped NON-REPRO evidence only and does not close #524.
@@ -27,6 +31,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-This runtime candidate contains a presentation-layer home-screen change plus the previously inherited runtime behavior. Deployment lineage for Home V3 is verified at exact merged SHA `46136f5ca6322847545289c18233320139147aa2`; source/CI/deployment success establishes structural and deployed-runtime evidence only. It does not establish deployed visual preference, physical-device acceptance, or Public Beta completion. The V3 preview/reference and automated checks must not be relabeled as user preference, conversion improvement, or real-device PASS.
+This runtime candidate contains a presentation-layer home-screen change plus the previously inherited runtime behavior. Deployment lineage for Home V3 is verified at exact merged SHA `46136f5ca6322847545289c18233320139147aa2`; source/CI/deployment success establishes structural and deployed-runtime evidence only. It does **not** prove deployed visual preference, physical-device acceptance, Public Beta completion, conversion improvement, or Commercial GO. The V3 preview/reference and automated checks must not be relabeled as user preference, conversion improvement, or real-device PASS.
 
 Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static/deployment test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. This UI change does not prove Public Beta completion, Privacy/Legal approval or Commercial GO.
