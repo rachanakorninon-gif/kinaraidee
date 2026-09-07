@@ -1,8 +1,11 @@
 # Kinaraidee — First Paid Acquisition Test Plan
 
-Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**
+Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED / PREMIUM EXECUTION NOT LIVE**
 
-Purpose: define the first small paid-media experiment before any billing or campaign launch is approved.
+Canonical Growth sequence: `BETA-GROWTH-EXPERIMENT-PLAN.md`  
+Business baseline: `BUSINESS-COMMERCIAL-BASELINE.md`
+
+Purpose: define the first small paid-media experiment before any media billing/spend or Premium execution is authorized.
 
 ## Hard boundary
 
@@ -10,12 +13,13 @@ Purpose: define the first small paid-media experiment before any billing or camp
 - Start date: **UNSET**
 - Media account/billing approval: **NOT RECORDED HERE**
 - Paid acquisition status: **NOT LAUNCHED**
+- Premium business price baseline: **THB 59/month approved, but purchase/payment execution is not live from that approval alone**
 - Premium conversion objective: **NOT AVAILABLE YET**
 - Prize-entry objective: **BLOCKED / NOT LIVE**
 
 This document never authorizes spend by itself.
 
-## Measurement status — 2026-09-04
+## Measurement status — 2026-09-07
 
 First-party account acquisition measurement is deployed and can observe:
 
@@ -40,9 +44,11 @@ Product Funnel telemetry uses a random browser-session UUID and coarse reviewed 
 
 Platform impressions/clicks/spend remain external platform truth. Do not write zero for an unavailable event.
 
+The approved THB 59 Premium business baseline does not backfill any Premium measurement. Until the payment/entitlement implementation exists, Premium conversion remains `NOT AVAILABLE` rather than zero.
+
 ## Phase 0 — organic baseline first
 
-Before spending, execute `MARKETING-FIRST-100-ORGANIC-TEST.md` far enough to prove genuine tagged signup attribution and obtain an initial source/creative baseline. Reviewed-UTM Product Funnel observations may now be used as a separate product-behavior baseline where denominator semantics are explicit.
+Before spending, execute `MARKETING-FIRST-100-ORGANIC-TEST.md` only after the canonical Public Beta/recruitment gate permits external tester acquisition and far enough to prove genuine tagged signup attribution plus an initial source/creative baseline. Reviewed-UTM Product Funnel observations may be used as a separate product-behavior baseline where denominator semantics are explicit.
 
 Organic completion does not authorize paid media. Budget/account/billing approval remains separate.
 
@@ -79,20 +85,22 @@ Use `utm_medium=paid_social` only for traffic that is actually paid. Do not re-l
 
 Generate URLs through `tools/marketing-url-builder.mjs`.
 
-## Platforms
+## Platform sequence
 
-Prepare for:
+Prepare compatible creative for:
+- Meta Reels/Feed
 - TikTok
-- Meta Reels
 - YouTube Shorts
 
-Do not assume all three must launch simultaneously. Platform selection, billing and budget require separate approval.
+For the first paid learning cycle, prefer **one platform at a time** so spend, creative, Product Funnel and account results remain interpretable. Current planning sequence may start with Meta, then TikTok, then YouTube, but this is not a permanent ranking and does not authorize any platform/account/billing/spend.
+
+A later experiment may deliberately compare platforms in parallel only after budget and measurement quality justify the added complexity.
 
 ## Allocation rule
 
-If a budget is later approved, start with a balanced exploratory allocation across active cells unless platform minimums or delivery constraints require otherwise.
+If a budget is later approved, start with a small exploratory allocation across the active creative cells on the selected platform unless platform minimums or delivery constraints require otherwise.
 
-Do not hard-code currency or amount before approval.
+Do not hard-code currency or amount before explicit budget approval. Any earlier idea such as THB 300–500/day for a few days remains a planning scenario, not authorized spend.
 
 ## KPI ladder
 
@@ -123,11 +131,21 @@ These are best-effort session-level product events. They are not authenticated u
 - confirmed accounts by source/campaign/content
 - referral signup / confirmed referral
 
-### Later outcomes
-Only after the relevant product/backend gates exist:
-- Premium entitlement active
-- renewal
-- campaign eligibility
+### Later Premium outcomes
+Only after the relevant Payment/Legal/Tracking/QA/Support/Security and backend gates exist:
+- `premium_offer_view`
+- `checkout_start`
+- provider/backend-authoritative `payment_success`
+- backend-authoritative `premium_activated`
+- renewal or next-period repurchase according to payment method
+- cancellation/expiry/refund/dispute
+
+Use `PREMIUM-EVENT-MEASUREMENT-SPEC.md` as the future Premium event/source contract.
+
+### Later campaign outcomes
+Only after Campaign gates exist:
+- technically eligible paid Premium member
+- trusted campaign eligibility/count
 
 ## Winner rule
 
@@ -138,8 +156,9 @@ Use separate labels:
 1. **MEDIA LEADER** — based on real platform diagnostics such as CTR/CPC
 2. **PRODUCT-BEHAVIOR LEADER** — based on observed reviewed-UTM landing → action → recommendation-result behavior
 3. **ACCOUNT-ACQUISITION LEADER** — based on observed confirmed accounts and, once spend is reconciled, cost per confirmed account
+4. **PAID-CUSTOMER LEADER** — future only, based on real provider-backed paid activation and reconciled spend
 
-Do not call any of these a Premium or campaign-eligibility winner.
+Do not call media/product/account leaders a Premium or campaign-eligibility winner.
 
 Preferred decision order after a separately authorized paid run exists:
 1. cost per recommendation result, using real reconciled spend plus first-party result count
@@ -147,6 +166,8 @@ Preferred decision order after a separately authorized paid run exists:
 3. quality/support signal (errors, bounce, misleading comments)
 4. account confirmation / downstream value
 5. CTR/CPC as diagnostics
+
+After paid Premium exists and cohorts mature, downstream paid conversion/retention/contribution may become a higher-order decision metric. Do not use hypothetical LTV as if observed.
 
 ## Minimum interpretation safeguards
 
@@ -156,6 +177,7 @@ Preferred decision order after a separately authorized paid run exists:
 - Product session = not authenticated account.
 - Account created = not Premium.
 - Checkout started = not payment success.
+- Provider-backed payment without matching entitlement is an incident, not a clean paid conversion.
 - Premium entitlement = not automatically prize eligibility.
 - Product Event telemetry = not prize entry.
 - Interview willingness = not conversion.
@@ -175,19 +197,23 @@ Operational budget stop-loss thresholds remain **UNSET** until a real budget is 
 
 ## Technical preflight before launch
 
+- [ ] canonical Public Beta/recruitment and external-traffic gate permits the intended cohort
 - [ ] root app destination returns successfully on mobile
 - [ ] no public ad uses a specific group invitation room URL
-- [ ] 9:16 creative preview checked on selected platform
+- [ ] selected-platform creative preview checked
 - [ ] safe zones checked
 - [ ] CTA is truthful for Web/PWA state
 - [ ] no app-store badge unless actual listing is verified
-- [ ] no live Premium/prize claim
+- [ ] no live Premium/prize claim unless the corresponding execution gate is actually LIVE
 - [ ] UTM naming generated/reviewed with `tools/marketing-url-builder.mjs`
 - [ ] genuine tagged signup attribution has been proven in production
 - [x] Product Event production ingestion has controlled synthetic verification; this does not replace real-user baseline evidence
 - [ ] Acquisition KPI dashboard is accessible to the Owner and returns observed real-user data for the intended test cohort
 - [ ] support owner identified for paid traffic
+- [ ] privacy/measurement basis is appropriate for the planned traffic
 - [ ] budget/account/billing approval recorded separately
+
+If the campaign optimizes or promotes Premium purchase, additionally require all applicable Payment/Legal/Tracking/QA/Support/Security gates and real purchasable Premium flow before launch.
 
 ## Test result template
 
@@ -196,7 +222,7 @@ When a real test runs, record only observed values:
 | Field | Value |
 |---|---|
 | Test date range | UNSET |
-| Platforms | UNSET |
+| Platform | UNSET |
 | Approved budget | UNSET |
 | Spend | NOT RUN |
 | Creative cells | A/B/C/D prepared |
@@ -207,15 +233,28 @@ When a real test runs, record only observed values:
 | Signups | NOT RUN |
 | Confirmed accounts | NOT RUN |
 | Attribution coverage | NOT RUN |
+| Paid customers | NOT AVAILABLE until Premium execution exists |
 | Decision | NOT RUN |
 
-Replace `NOT RUN` only with traceable data from the appropriate source. Use `NOT MEASURED` only where a metric is genuinely unavailable from the authoritative source.
+Replace `NOT RUN` only with traceable data from the appropriate source. Use `NOT MEASURED` only where a metric is genuinely unavailable from the authoritative source. Never change `NOT AVAILABLE` to zero simply because a capability is not implemented.
 
 ## Phase 2
 
 Only after Phase 1 produces reliable product/account evidence should later tests consider:
 - account-value messaging
 - Premium value proposition after product/payment readiness
+- Premium conversion only after real-money execution is legally/technically authorized
 - prize-led incremental-lift test only after legal/payment/campaign GO
 
 Keep a non-prize product-value control so giveaway-driven lift can be separated from genuine product demand.
+
+## Evidence boundary
+
+This plan records no spend and no performance result. At the time of this update:
+- paid campaign = NOT LAUNCHED
+- spend = NOT ESTABLISHED / no budget authorized by this file
+- Paid CAC = NOT ESTABLISHED
+- paid Premium conversion = NOT AVAILABLE / NOT ESTABLISHED
+- revenue = NOT ESTABLISHED
+
+Use `COMMERCIAL-COST-MODEL.md` only as a planning economics framework until actual costs, retention and paid conversion exist.
