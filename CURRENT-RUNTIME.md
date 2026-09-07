@@ -2,7 +2,7 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `84fd8d6fb1eb452d61c8e54e1dd951f742c69d6d`
+- Current browser/PWA runtime candidate: `d24824948c9df1808178b9bb5a78a8f885086fb4`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Home V3 primary CTA contrast remediation in `data/home-surprise.js`. The orange primary CTA now uses explicit dark text `#2f241c`; the green `ไม่รู้เลย` CTA remains explicitly white. This candidate also retains the previously merged Issue #552 / TC-03 soup-classification remediation from `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
@@ -10,7 +10,8 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Last verified deployed browser/PWA descendant: `0f96414295f2a5f5abd7da346aa8a58d47c10f63`.
 - Current runtime deployment evidence is pending. Source/CI evidence for this candidate must not be treated as deployment or Physical PASS.
 - Prior verified deployment evidence remains historical and is not reused as current PASS.
-- The source-origin commit for the prior TC-03 follow-up before squash merge was `fd456fb01c23e37e778a2dfc7266107ffa23290b`; the canonical merged-main TC-03 runtime commit remains `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`. The current candidate `84fd8d6fb1eb452d61c8e54e1dd951f742c69d6d` advances browser/PWA source only for the Home V3 CTA contrast change.
+- The reviewed Home V3 contrast source-origin commit before squash merge was `84fd8d6fb1eb452d61c8e54e1dd951f742c69d6d`; the canonical merged-main runtime candidate is now `d24824948c9df1808178b9bb5a78a8f885086fb4`.
+- The source-origin commit for the prior TC-03 follow-up before squash merge was `fd456fb01c23e37e778a2dfc7266107ffa23290b`; the canonical merged-main TC-03 runtime commit remains `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`.
 - Last verified deployment trace remains the prior Issue #551/#552 remediation runtime: source candidate `6f7d56f0b68551c731d88d69e34286a8f2ecca70`, merged-main descendant `0f96414295f2a5f5abd7da346aa8a58d47c10f63`, Pages `34137902178`, main Live Smoke `34137949343`, Auth Password Security Live Smoke `34137949293`, and Campaign 3000 Premium Live Smoke `34137949307` = SUCCESS.
 - Issue #551 has scoped **Physical PASS / CLOSED completed** for the recorded OPPO Reno13 5G / Android 16 / standalone-PWA retest after the last verified deployment. Home V3 bottom navigation rendered fully above Android system navigation. This remains scoped to that tested device/session.
 - Issue #552 remains **Physical FAIL / OPEN** for the recorded OPPO Reno13 5G / Android 16 / standalone-PWA TC-03 scope. Post-first-remediation retest produced intended `แกงส้มชะอมกุ้ง` and `คิมชีจีแก` results, then reproduced a second semantic false-positive with `ตำแตงไข่ต้ม` shown as `เลือกจากความชอบ: ซุป`. The merged TC-03 source remediation addresses that second boundary, but no source/CI result can create Physical PASS; exact deployment verification and a new OPPO physical retest are still required.
@@ -32,6 +33,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current source candidate `84fd8d6fb1eb452d61c8e54e1dd951f742c69d6d` is **not yet verified deployed**. It contains the Home V3 CTA contrast remediation on top of the already merged TC-03 source fix. The last verified deployed browser/PWA descendant remains `0f96414295f2a5f5abd7da346aa8a58d47c10f63`. The current candidate cannot become Deployment PASS until it is merged and an exact descendant Pages deployment with corresponding live checks succeeds. It cannot create TC-03 Physical PASS; Issue #552 still requires a fresh affected-OPPO retest after the verified deployment.
+The current runtime candidate `d24824948c9df1808178b9bb5a78a8f885086fb4` is **not yet verified deployed**. It is the merged-main descendant containing the Home V3 CTA contrast remediation on top of the already merged TC-03 source fix. The last verified deployed browser/PWA descendant remains `0f96414295f2a5f5abd7da346aa8a58d47c10f63`. The current candidate cannot become Deployment PASS until an exact descendant Pages deployment with corresponding live checks succeeds. It cannot create TC-03 Physical PASS; Issue #552 still requires a fresh affected-OPPO retest after the verified deployment.
 
 Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static/deployment test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. This runtime candidate does not prove Public Beta completion, Privacy/Legal approval or Commercial GO.
