@@ -9,15 +9,21 @@ const KINARAIDEE_CHOICE_RULES={
   ],
   foreignCategories:['ญี่ปุ่น','เกาหลี','ตะวันตก','ฟิวชัน','ฟาสต์ฟู้ด'],
   soupKeywords:['ต้ม','แกง','ซุป','สุกี้','แจ่วฮ้อน','โจ๊ก','ข้าวต้ม','เกาเหลา','ก๋วยเตี๋ยวน้ำ','ราเมน','รามยอน','จีแก'],
+  soupExcludedPatterns:[/^ผัด.*แกง/],
   proteinKeywords:['หมู','ไก่','ปลา','กุ้ง','ทะเล','เนื้อ','เป็ด','ปู','แซลมอน','ทูน่า','ไข่','หอย','เต้าหู้','ไส้กรอก'],
   lightKeywords:['สลัด','ผัก','น้ำพริก','ตำ','ลาบ','ยำ','โจ๊ก','ข้าวต้ม','เกาเหลา','ซุป','มิโสะ'],
   heavyKeywords:['หมูกระทะ','ชาบู','ปิ้งย่าง','บุฟเฟต์','พิซซ่า','เบอร์เกอร์','สเต๊ก','คาโบนารา'],
   friedKeywords:['ทอด','เฟรนช์ฟราย','คาราอาเกะ','ทงคัตสึ','เทมปุระ','ไข่เจียว'],
+  matchesSoup(name){
+    const normalized=String(name||'').trim();
+    if(this.soupExcludedPatterns.some(pattern=>pattern.test(normalized)))return false;
+    return this.soupKeywords.some(k=>normalized.includes(k));
+  },
   derive(row){
     const name=row[0]||'',category=row[6]||'';
     const tags=new Set((row[5]||'').split(',').filter(Boolean));
     if(this.foreignCategories.includes(category))tags.add('ต่างชาติ');
-    if(this.soupKeywords.some(k=>name.includes(k)))tags.add('ซุป');
+    if(this.matchesSoup(name))tags.add('ซุป');
     if(this.proteinKeywords.some(k=>name.includes(k)))tags.add('โปรตีน');
     if(this.heavyKeywords.some(k=>name.includes(k)))tags.add('หนัก');
     if(this.friedKeywords.some(k=>name.includes(k)))tags.add('ของทอด');
@@ -36,7 +42,7 @@ if(typeof EXPANDED_FOODS!=='undefined'){
     ['ซุปไก่ใส','🍲',50,'ไม่เผ็ด','เช้า,กลางวัน,เย็น,ดึก','ซุป,โปรตีน,เบา','ซุป/ต้ม'],
     ['ต้มจืดเต้าหู้หมูสับ','🍲',50,'ไม่เผ็ด','กลางวัน,เย็น,ดึก','ซุป,โปรตีน,เบา','กับข้าว'],
     ['ยำไข่ต้ม','🥚',50,'เผ็ดน้อย','กลางวัน,เย็น,ดึก','เผ็ด,โปรตีน,เบา','ยำ'],
-    ['สลัดไข่ต้ม','🥗',50,'ไม่เผ็ด','เช้า,กลางวัน,เย็น','โปรตีน,เบา','สลัด'],
+    ['สลัดไข่ต้ม','🥗',50,'ไม่เผ็ด','กลางวัน,เย็น,ดึก','โปรตีน,เบา','สลัด'],
     ['สลัดทูน่าไซซ์เล็ก','🥗',50,'ไม่เผ็ด','กลางวัน,เย็น','โปรตีน,เบา','สลัด'],
     ['มิโสะซุป','🍲',50,'ไม่เผ็ด','เช้า,กลางวัน,เย็น','ซุป,เบา,ต่างชาติ','ญี่ปุ่น'],
     ['ออนเซ็นทามาโกะ','🥚',50,'ไม่เผ็ด','เช้า,กลางวัน,เย็น','โปรตีน,เบา,ต่างชาติ','ญี่ปุ่น'],
