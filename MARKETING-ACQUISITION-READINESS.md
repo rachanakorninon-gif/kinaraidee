@@ -1,6 +1,6 @@
 # Kinaraidee — Acquisition Readiness Plan
 
-Status: **CORE ACQUISITION MEASUREMENT DEPLOYED / PREMIUM BUSINESS BASELINE APPROVED / PAID ACQUISITION NOT YET LAUNCHED**
+Status: **CORE ACQUISITION MEASUREMENT DEPLOYED / PAID ACQUISITION NOT YET LAUNCHED**
 
 Date checked: 2026-09-07
 
@@ -18,7 +18,8 @@ Prepare a truthful acquisition funnel for “กินอะไรดี” that
 - Do **not** use App Store / Google Play badges or “ดาวน์โหลดจาก App Store/Google Play” until actual store availability is verified.
 - Safe current CTA: **“ลองใช้เลย”**, **“เปิดกินอะไรดี”**, or, where the PWA install guidance is relevant, **“เพิ่มไว้ที่หน้าจอโฮม”**.
 - Public campaign page is PRE-LAUNCH only.
-- Premium **business baseline** is owner-approved at **THB 59/month**, but strict Payment/Privacy-Legal execution gates remain `NOT APPROVED`; no real-money Premium is active from that approval alone.
+- Paid Premium is not approved/active.
+- Separately, the product owner approved the **business planning baseline** for Premium at **THB 59/month** on 2026-09-07. That planning approval does not satisfy the repository's strict Payment/Privacy-Legal execution gates and does not make Premium purchasable.
 - Card auto-renew is only a target after provider/account-specific recurring-card validation; PromptPay is planned as customer-initiated THB 59 per paid period with no auto-renew.
 - Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.
 - Ordinary account signup/referral measurement and Product Funnel measurement are not prize entries.
