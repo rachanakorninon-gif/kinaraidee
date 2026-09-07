@@ -1,193 +1,112 @@
-# Kinaraidee — Premium Pricing & 3,000-Member Campaign Scenarios
+# Kinaraidee — Premium Pricing Scenarios / Approved Beta Price
 
-Research/model date: **2026-08-29**
+Original scenario-model date: **2026-08-29**  
+Owner price decision: **2026-09-07**
 
-Status: **SCENARIO MODEL ONLY / PRICE NOT APPROVED / PROVIDER NOT SELECTED**
+Status: **THB 59/MONTH BETA PRICE APPROVED / OTHER PRICES RETAINED AS RESEARCH ONLY / NO REVENUE EVIDENCE**
 
-This document estimates first-month campaign economics for planning. It does not set the real Premium price, approve a payment provider, predict conversion, prove subscriber counts, authorize ad spend, or open prize entries.
+Canonical business baseline: `BUSINESS-COMMERCIAL-BASELINE.md`.
 
-## Current public inputs used
+## Current owner-approved Beta price
 
-### Prize reference
+- Premium: **THB 59/month**.
+- Free trial: **none for the first Beta**.
+- Card: THB 59/month with auto-renew as a **target behavior only after provider/account-specific recurring-card validation passes**.
+- PromptPay: THB 59 per paid period; customer initiates payment again each period; **no auto-renew**.
 
-Apple Thailand currently lists **iPhone 17 Pro Max 256GB at THB 48,900**.
+The previous THB 69 / 79 / 99 values in pricing research are **not current launch prices**. They may be reused later as willingness-to-pay or packaging experiment anchors only if a new experiment is deliberately approved.
 
-Source:
-- https://www.apple.com/th/shop/buy-iphone/iphone-17-pro/
-- https://www.apple.com/th/newsroom/2025/09/apple-unveils-iphone-17-pro-and-iphone-17-pro-max-the-most-powerful-and-advanced-pro-models-ever/
+## Time-bounded payment-fee references
 
-### Tax sensitivity reserve
+Official Stripe Thailand public pricing checked 2026-09-07:
+- domestic cards: **3.65% + THB 10 per successful transaction**
+- PromptPay: **1.65% per successful transfer**
 
-The current Thai legal preflight records a Revenue Department **5% prize withholding-tax signal** for prize/sweepstakes categories. The actual organizer/winner cash handling and taxable basis must be confirmed for the final campaign.
-
-For a conservative sensitivity model only:
-- prize reference value: THB 48,900
-- 5% of reference value: THB 2,445
-- conservative `prize + possible organizer-funded withholding reserve`: **THB 51,345**
-
-This THB 51,345 figure is **not** a tax conclusion. If the approved tax treatment allocates withholding differently, the economics must be recalculated.
-
-### Payment-fee illustrations
-
-**Omise public example (Thailand):** 3.65% transaction fee, plus 7% VAT on the fee. The resulting illustrative effective deduction on the charge amount is approximately **3.9055%** before any account-specific terms or other costs.
-
-Source:
-- https://docs.omise.co/how-much-does-omise-cost
-
-**Stripe Thailand public standard domestic-card price:** 3.65% + THB 10 per successful domestic-card transaction.
-
-Source:
+References:
 - https://stripe.com/th/pricing
+- https://stripe.com/th/pricing/local-payment-methods
 
-Important:
-- these are public reference prices, not merchant quotes
-- Stripe Billing/subscription fees, if applicable to the actual Thai account, are not included here
-- 2C2P is not modeled because an account-specific comparable public fee was not established in the shortlist research
-- recurring-card/account-specific terms must be confirmed before provider selection
+Provider fees are public planning references, not merchant settlement evidence. Recheck immediately before Production acceptance.
 
-## First-month scenario at exactly 3,000 paying members
+## THB 59 unit-economics illustration
 
-Assumptions:
-- all 3,000 users pay the same monthly price once
-- no refunds/chargebacks/payment failures
-- domestic-card fee illustration only
-- one prize reserve of THB 51,345
-- no ad spend yet
-- no corporate/income/VAT/accounting effects except the stated Omise fee-VAT illustration
-- no hosting, support, legal, license, fulfillment, fraud, app-store, development or other operating costs
+These calculations are scenarios only and exclude refunds, disputes, tax/accounting effects, hosting, support, legal, fraud, development, advertising, partner costs, and all other operating costs.
 
-| Premium / month | Gross revenue | Omise-style processing | Net after processing + THB 51,345 prize reserve | Theoretical CAC headroom / member* | Stripe-card processing | Net after processing + THB 51,345 prize reserve | Theoretical CAC headroom / member* |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| THB 49 | 147,000 | ~5,741 | ~89,914 | ~29.97 | ~35,366 | ~60,290 | ~20.10 |
-| THB 59 | 177,000 | ~6,913 | ~118,742 | ~39.58 | ~36,461 | ~89,195 | ~29.73 |
-| THB 69 | 207,000 | ~8,084 | ~147,571 | ~49.19 | ~37,556 | ~118,100 | ~39.37 |
-| THB 79 | 237,000 | ~9,256 | ~176,399 | ~58.80 | ~38,651 | ~147,005 | ~49.00 |
-| THB 99 | 297,000 | ~11,599 | ~234,056 | ~78.02 | ~40,841 | ~204,815 | ~68.27 |
+### Domestic-card illustration
 
-\* `Theoretical CAC headroom / member` = remaining first-month amount divided by 3,000 after only the illustrated processing fee and conservative prize reserve. It is **not** a recommended ad CAC because all other business costs are still excluded.
+`THB 59 × 3.65% + THB 10 = THB 12.1535` processing reference.
 
-## What the table says
+Approximate remainder before other costs:
 
-### THB 49
+`THB 59 - THB 12.1535 = THB 46.8465`.
 
-Very price-accessible, but first-month economics are tight once a per-transaction fixed fee exists. Under the Stripe domestic-card illustration, THB 10 alone is more than 20% of a THB 49 charge before the percentage fee.
+The fixed THB 10 component makes a THB 59 card charge relatively fee-sensitive. This is an economics observation, not a reason to change the owner-approved Beta price without Production demand/retention evidence.
 
-This price could still work if:
-- retention is strong enough that lifetime value comes from multiple months
-- payment costs are lower than the Stripe-card illustration
-- organic acquisition is high
-- Premium operating/support costs stay low
+### PromptPay illustration
 
-It is not the safest price for a paid-acquisition launch tied to a THB 48,900 prize.
+`THB 59 × 1.65% = THB 0.9735` processing reference.
 
-### THB 59
+Approximate remainder before other costs:
 
-Improves headroom but remains sensitive to paid acquisition and fixed transaction fees. It may be useful as a low-price demand test, but should not be selected from campaign math alone.
+`THB 59 - THB 0.9735 = THB 58.0265`.
 
-### THB 69
+PromptPay has lower public processing cost in this illustration but is customer-initiated and non-recurring. Lower fee does not make it equivalent to an automatic monthly subscription.
 
-A plausible **lower test band**. At 3,000 first-month payments, the conservative prize reserve consumes roughly 24.8% of gross revenue before ads/operations. Under the Omise public-fee illustration, about THB 49/member remains for every other first-month cost; under the Stripe domestic-card illustration, about THB 39/member remains.
+## Historical price research
 
-### THB 79
+Earlier scenario work considered THB 49 / 59 / 69 / 79 / 99 and used THB 69 / 79 / 99 as research anchors to explore willingness-to-pay and campaign economics. That work remains useful only as historical sensitivity analysis.
 
-A plausible **middle test band** with more room for paid acquisition. The conservative prize reserve is roughly 21.7% of first-month gross revenue. Illustrative remaining first-month headroom is about THB 59/member (Omise-style) or THB 49/member (Stripe domestic-card) before all other costs.
+It is superseded for the first Beta launch decision by the approved **THB 59/month** baseline.
 
-### THB 99
+Future price changes should use Production evidence such as:
+- activated-user → Premium-interest behavior
+- checkout completion
+- paid conversion
+- renewal/retention
+- refund/dispute rate
+- contribution margin
+- paid acquisition CAC
+- qualitative value perception
 
-Produces the strongest campaign economics among the modeled values, but product-value willingness-to-pay may become the dominant risk. A higher price is not automatically better if conversion or retention falls materially.
+Do not change price merely because a higher scenario has better spreadsheet margin.
 
-## Current planning recommendation
+## LTV / CAC rule
 
-For **pricing research only**, prioritize testing the user-value proposition around:
+Use contribution economics, not gross price:
 
-- **THB 69/month** — lower test anchor
-- **THB 79/month** — primary economics test anchor
-- **THB 99/month** — upper willingness-to-pay / feature-bundle anchor
+`Contribution LTV = collected revenue - payment fees - refunds/chargebacks - variable Premium cost - support/operational variable cost - relevant tax/accounting effects`
 
-Do **not** publish these as real prices yet.
+Then evaluate paid acquisition with a safety margin rather than assuming the whole THB 59 is available for CAC.
 
-Why THB 79 is a useful center scenario:
-- materially better first-month CAC headroom than THB 49–59
-- stays below the psychological THB 100/month level
-- prize cost is not an overwhelming share of first-month gross at 3,000 members
-- leaves room to learn whether Premium benefits can justify the price before locking the product into a low-price ceiling
+Until real retention exists, LTV is **UNKNOWN**. Until real paid acquisition and real paid customers exist, CAC is **UNKNOWN**.
 
-This is a business-model hypothesis, not a validated willingness-to-pay result.
+## 3,000-member / prize-campaign boundary
 
-## Retention changes the campaign economics
+Any previous 3,000-member/iPhone scenario remains **campaign modeling only**. The Business baseline approval on 2026-09-07 did not launch or legally approve that campaign.
 
-The iPhone is a one-time campaign acquisition cost, while Premium revenue is recurring. If a real subscriber stays for multiple paid months, prize cost per paid month falls sharply.
-
-For example, before processor/other costs and assuming all 3,000 members stayed:
-
-| Price | 1 month gross | 3 months gross | 6 months gross | Prize reference / 6-month gross |
-|---:|---:|---:|---:|---:|
-| THB 69 | 207,000 | 621,000 | 1,242,000 | ~3.9% |
-| THB 79 | 237,000 | 711,000 | 1,422,000 | ~3.4% |
-| THB 99 | 297,000 | 891,000 | 1,782,000 | ~2.7% |
-
-These are not forecasts. Real churn means fewer than 3,000 may remain after month one.
-
-## Break-even logic for future ad planning
-
-Before approving an ad budget, the model should use:
-
-`Contribution LTV = collected subscription revenue - payment fees - refunds/chargebacks - variable Premium cost - support/operational variable cost - tax effects`
-
-Then:
-
-`Allowable CAC < Contribution LTV - allocated campaign prize/legal/fulfillment cost - safety margin`
-
-Do not set CAC from gross subscription price alone.
-
-### First-month safety check
-
-If management wants the campaign to be approximately first-month contribution-positive before fixed business costs, ad CAC must be **well below** the theoretical headroom in the table, not equal to it.
-
-A practical launch model should reserve additional margin for:
-- failed/declined payments
-- refunds/chargebacks
-- legal/license/accounting costs
-- prize shipping/fulfillment
-- customer support
-- hosting/backend/API usage
-- fraud/abuse
-- creative/media testing losses
-- taxes and bookkeeping
-
-## Feature-value gate before choosing price
-
-Price should be approved only after Free vs Premium benefits are decided. Users must be able to understand what recurring value they receive beyond the chance-based campaign.
-
-At minimum, the product decision should test whether Premium can credibly bundle recurring value such as:
-- richer preference/personalization memory
-- enhanced history/favorites insights
-- advanced group-planning features
-- convenience/priority features
-- future Premium-specific personalization or partner benefits
-
-The prize must not become the only reason to subscribe, because the business needs retention after the campaign ends.
-
-## Recommended validation sequence
-
-1. Finalize a proposed Free/Premium feature split.
-2. User-test the value proposition at THB 69 / 79 / 99 without charging money.
-3. Validate provider-specific real fees and recurring availability.
-4. Estimate organic vs paid acquisition mix and realistic CAC.
-5. Estimate 1-, 3- and 6-month retention scenarios.
-6. Add refund/chargeback/support/backend/legal/tax assumptions.
-7. Approve one real price in `PAYMENT-PREMIUM-DECISION.md` only after those inputs are reviewed.
-8. Run provider sandbox lifecycle tests before any real-money acceptance.
-
-## Boundary
-
-Nothing in this model means:
+Do not infer from this pricing decision that:
 - 3,000 Premium members exist
-- users will pay these prices
-- the campaign is licensed/approved
-- a provider/merchant account is ready
-- the prize tax treatment is finalized
-- a payment has occurred
-- revenue, MRR, conversion or CAC has been achieved
+- prize eligibility is open
+- a prize has been procured
+- campaign tax/legal treatment is approved
+- any user has paid
+- revenue, MRR, conversion, retention, LTV or CAC has been achieved
 
-The public campaign remains PRE-LAUNCH, `entries_open=false`, and `eligible_count=0` until the explicit launch gates pass.
+## Decision boundary
+
+Approved:
+- THB 59/month Beta price
+- no Free Trial
+- card-vs-PromptPay billing proposition direction
+
+Still evidence-gated:
+- provider/account recurring-card implementation
+- Production payment acceptance
+- exact fees/settlement on the real merchant account
+- user willingness to pay
+- retention/LTV
+- CAC
+- revenue
+- campaign economics/execution
+
+Commercial GO remains governed by `PAYMENT-PREMIUM-DECISION.md`, `PRODUCTION-PRIVACY-LEGAL-DECISION.md`, QA/security/release gates, and real provider-backed evidence.
