@@ -77,8 +77,8 @@
       #home .homeHero.home-v3 .heroTitle{font-size:34px;line-height:1.12;margin:17px 0 2px;letter-spacing:-1px}
       #home .homeHero.home-v3 .mascot{font-size:70px;margin:0;position:absolute!important;left:50%;top:50%;transform:translate(-50%,-50%)}
       #home .homeHero.home-v3 .primary,#home .homeHero.home-v3 .secondary{min-height:56px;border-radius:18px}
-      #home .homeHero.home-v3 .primary{background:linear-gradient(135deg,#ff8a23,#ff7310);box-shadow:0 10px 24px rgba(255,123,25,.2)}
-      #home .homeHero.home-v3 #homeSurpriseBtn{background:linear-gradient(135deg,#139987,#0d7f72)!important;box-shadow:0 10px 24px rgba(18,140,121,.18)}
+      #home .homeHero.home-v3 .primary{background:linear-gradient(135deg,#ff8a23,#ff7310);color:#2f241c;box-shadow:0 10px 24px rgba(255,123,25,.2)}
+      #home .homeHero.home-v3 #homeSurpriseBtn{background:linear-gradient(135deg,#139987,#0d7f72)!important;color:#fff!important;box-shadow:0 10px 24px rgba(18,140,121,.18)}
       #home .homeHero.home-v3 .secondary{background:#fff;border:1px solid #dce9e3;color:#17352f}
       #home .homeHero.home-v3 .quick{gap:10px}
       #home .homeHero.home-v3 .quick button{min-height:72px;border:1px solid #dce9e3;background:rgba(255,255,255,.96);border-radius:18px;font-weight:900;color:#17352f}
