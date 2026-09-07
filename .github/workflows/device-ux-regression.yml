@@ -22,6 +22,8 @@ jobs:
           node --check data/nearby-restaurants.js
           node --check data/history-ui.js
           node --check data/member-sync.js
+          node --check data/home-surprise.js
+          node --check data/choice-rules.js
 
       - name: Verify Location status is persistent and actionable
         shell: bash
@@ -40,6 +42,41 @@ jobs:
           grep -Fq "role=\"status\" aria-live=\"polite\"" "$file"
           grep -Fq "Google Maps แทนได้ครับ" "$file"
           echo 'Location UX contract preserved with fresh geolocation request'
+
+      - name: Verify Home V3 bottom navigation stays above decorated content
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='data/home-surprise.js'
+          grep -Fq '#home .homeHero.home-v3>*{position:relative;z-index:1}' "$file"
+          grep -Fq '.nav{z-index:20}' "$file"
+          echo 'Home V3 navigation stacking contract preserved'
+
+      - name: Verify soup preference classification boundaries
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const source=fs.readFileSync('data/choice-rules.js','utf8')+'\n;globalThis.__rules=KINARAIDEE_CHOICE_RULES;';
+          const context={console};
+          vm.createContext(context);
+          vm.runInContext(source,context);
+          const rules=context.__rules;
+          if(!rules)throw new Error('Choice rules were not exposed to regression fixture');
+          const hasSoup=(name,tags='',category='')=>rules.derive([name,'',100,'','กลางวัน',tags,category]).includes('ซุป');
+          const checks=[
+            ['ผัดพริกแกงหมู',false,'ข้าว,เผ็ด','อาหารตามสั่ง'],
+            ['ข้าวแกงกะหรี่ญี่ปุ่น',false,'ข้าว,หนัก','ญี่ปุ่น'],
+            ['แกงเขียวหวานไก่',true,'เผ็ด','กับข้าว'],
+            ['ต้มยำกุ้ง',true,'เผ็ด','กับข้าว']
+          ];
+          for(const [name,expected,tags,category] of checks){
+            const actual=hasSoup(name,tags,category);
+            if(actual!==expected)throw new Error(`${name}: expected soup=${expected}, got ${actual}`);
+          }
+          console.log('Soup preference classification boundary preserved');
+          NODE
 
       - name: Verify Favorite and History differentiation
         shell: bash
