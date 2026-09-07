@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eef9f4">
+<title>กินอะไรดี — Home V3 Preview</title>
+<style>
+*{box-sizing:border-box}
+:root{--ink:#17352f;--muted:#60766f;--green:#128c79;--green2:#0b7466;--orange:#ff7b19;--cream:#fff9ef;--line:#dce9e3;--card:#fff;--soft:#eef9f4}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:linear-gradient(180deg,#effaf6 0,#fffaf2 52%,#f8fbfa 100%);color:var(--ink)}
+.app{width:min(560px,100%);min-height:100vh;margin:auto;padding:14px 16px 104px;position:relative;overflow:hidden}
+.app:before,.app:after{content:"";position:absolute;border-radius:999px;filter:blur(2px);opacity:.55;pointer-events:none}.app:before{width:180px;height:180px;background:#c9f0de;right:-85px;top:95px}.app:after{width:140px;height:140px;background:#ffe7b7;left:-74px;top:355px}
+.preview{position:relative;z-index:3;text-align:center;font-size:12px;font-weight:850;color:#657b74;margin:2px 0 10px}.preview span{display:inline-block;background:#fff;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
+.hero{position:relative;z-index:2;background:rgba(255,255,255,.84);backdrop-filter:blur(10px);border:1px solid rgba(210,231,222,.9);border-radius:30px;padding:20px 16px 18px;box-shadow:0 18px 45px rgba(45,93,76,.08)}
+.brandRow{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left}.brandWrap{display:flex;align-items:center;gap:10px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#fff4df,#e9faf4);display:grid;place-items:center;font-size:29px;border:1px solid #e8eee8}.brand{font-size:30px;line-height:1;font-weight:950;letter-spacing:-1px}.brand .orange{color:var(--orange)}.tagline{font-size:12px;color:var(--muted);font-weight:750;margin-top:4px}.beta{font-size:11px;font-weight:950;letter-spacing:.6px;color:#087264;background:#e4f8f2;border:1px solid #c5eee3;padding:7px 10px;border-radius:999px}
+.heroTitle{font-size:34px;font-weight:950;line-height:1.12;margin:24px 0 6px;letter-spacing:-1px}.heroTitle .orange{color:var(--orange)}.sub{color:var(--muted);font-weight:700;font-size:14px}.foodOrbit{margin:18px auto 12px;position:relative;width:260px;height:190px}.centerBowl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:118px;height:118px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#fff 0 35%,#e1f4ed 36% 100%);font-size:64px;box-shadow:0 14px 34px rgba(40,102,82,.14);border:7px solid #fff}.foodChip{position:absolute;width:80px;height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);box-shadow:0 10px 25px rgba(40,102,82,.08);font-size:31px}.foodChip small{font-size:10px;font-weight:850;margin-top:2px;color:#526b63}.c1{left:0;top:6px}.c2{right:0;top:6px}.c3{left:4px;bottom:4px}.c4{right:4px;bottom:4px}
+.primary,.surprise,.secondary{width:100%;border:0;border-radius:18px;padding:16px 14px;font-size:18px;font-weight:950}.primary{background:linear-gradient(135deg,#ff8b25,#ff7310);color:#fff;box-shadow:0 10px 24px rgba(255,123,25,.22)}.surprise{margin-top:10px;background:linear-gradient(135deg,#139987,#0d7f72);color:#fff;box-shadow:0 10px 24px rgba(18,140,121,.18)}.primary small,.surprise small{display:block;font-size:11px;font-weight:750;opacity:.9;margin-top:2px}.secondary{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.quick button{border:1px solid var(--line);background:rgba(255,255,255,.9);border-radius:18px;padding:14px 8px;min-height:82px;font-weight:900;color:var(--ink);font-size:14px}.quick .ico{display:block;font-size:24px;margin-bottom:5px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 0}.stat{background:linear-gradient(180deg,#f4fbf7,#fff);border:1px solid var(--line);border-radius:17px;padding:12px;font-size:13px;color:var(--muted)}.stat b{display:block;color:var(--ink);font-size:22px;margin-top:3px}
+.quote{margin-top:12px;padding:13px 14px;border-radius:17px;background:linear-gradient(135deg,#f0f9f5,#fff7e8);font-size:13px;font-weight:800;color:#49645b}.betaLinks{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:15px 0 2px;font-size:12px}.betaLinks a{color:#5d746c;text-decoration:none;font-weight:750}
+.nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding:8px 14px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:10}.nav button{border:0;background:transparent;padding:7px;font-size:12px;font-weight:800;color:#587168}.nav .active{color:var(--green2)}.nav .navIco{display:block;font-size:23px;margin-bottom:2px}
+@media(max-width:390px){.heroTitle{font-size:30px}.foodOrbit{width:235px;height:180px}.foodChip{width:73px;height:73px}.brand{font-size:27px}.quick button{font-size:13px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="preview"><span>DESIGN PREVIEW · ไม่เปลี่ยน logic / data / QA evidence</span></div>
+<section class="hero" aria-label="ตัวอย่างหน้าแรกแบบที่ 3">
+  <div class="brandRow">
+    <div class="brandWrap">
+      <div class="logo" aria-hidden="true">🍲</div>
+      <div><div class="brand">กิน<span class="orange">อะไรดี?</span></div><div class="tagline">“ไม่ต้องคิด ให้เราช่วยเลือก”</div></div>
+    </div>
+    <span class="beta">BETA</span>
+  </div>
+
+  <div class="heroTitle">มื้อนี้ <span class="orange">ให้เราตัดสินใจ</span></div>
+  <div class="sub">อร่อย ครบทุกสไตล์ ในแบบคุณ</div>
+
+  <div class="foodOrbit" aria-hidden="true">
+    <div class="foodChip c1">🍳<small>จานเดียว</small></div>
+    <div class="foodChip c2">🌶️<small>อาหารไทย</small></div>
+    <div class="centerBowl">🍚</div>
+    <div class="foodChip c3">🥗<small>เบา ๆ</small></div>
+    <div class="foodChip c4">🍜<small>เส้น</small></div>
+  </div>
+
+  <button class="primary" type="button">🎯 ช่วยฉันเลือก ›<small>ใช้ขั้นตอนเลือกมื้อ → คน → งบ → ความชอบเหมือนเดิม</small></button>
+  <button class="surprise" type="button">🎲 ไม่รู้เลย — เลือกให้ฉันทันที<small>คง feature เด่นของแอปไว้ชัดที่สุด</small></button>
+
+  <div class="quick">
+    <button type="button"><span class="ico">👥</span>เลือกพร้อมกัน<br>(กลุ่ม)</button>
+    <button type="button"><span class="ico">👤</span>สมาชิก /<br>เข้าสู่ระบบ</button>
+    <button type="button"><span class="ico">❤️</span>เมนูโปรด/<br>ประวัติ</button>
+    <button type="button"><span class="ico">📊</span>สถิติ<br>การเลือก</button>
+  </div>
+
+  <div class="stats" aria-label="พื้นที่สถิติเดิม">
+    <div class="stat">เลือกกิน<b id="pickedCount">0</b></div>
+    <div class="stat">ชอบ<b id="likedCount">0</b></div>
+  </div>
+
+  <div class="quote">“เรื่องกินให้เป็นเรื่องง่าย แล้วไปสนุกกับสิ่งที่สำคัญกว่า”</div>
+  <div class="betaLinks"><a href="../feedback.html">💬 ส่งความคิดเห็น</a><a href="../privacy.html">🔒 ความเป็นส่วนตัว</a><a href="../partner.html">🏪 สมัครร้านพาร์ตเนอร์</a></div>
+</section>
+</main>
+<nav class="nav" aria-label="ตัวอย่างแถบนำทางเดิม"><button class="active" type="button"><span class="navIco">🏠</span>หน้าหลัก</button><button type="button"><span class="navIco">🎯</span>เลือกเมนู</button><button type="button"><span class="navIco">❤️</span>ประวัติ</button></nav>
+</body>
+</html>
