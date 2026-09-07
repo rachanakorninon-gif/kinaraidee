@@ -1,12 +1,16 @@
 # Kinaraidee — Acquisition Readiness Plan
 
-Status: **CORE ACQUISITION MEASUREMENT DEPLOYED / PAID ACQUISITION NOT YET LAUNCHED**
+Status: **CORE ACQUISITION MEASUREMENT DEPLOYED / PREMIUM BUSINESS BASELINE APPROVED / PAID ACQUISITION NOT YET LAUNCHED**
 
-Date checked: 2026-09-04
+Date checked: 2026-09-07
+
+Canonical Business baseline: `BUSINESS-COMMERCIAL-BASELINE.md`  
+Growth experiment sequence: `BETA-GROWTH-EXPERIMENT-PLAN.md`  
+Premium measurement contract: `PREMIUM-EVENT-MEASUREMENT-SPEC.md`
 
 ## Objective
 
-Prepare a truthful acquisition funnel for “กินอะไรดี” that can start with the free core product and later add Premium/campaign conversion only after the corresponding product, payment and legal gates are real.
+Prepare a truthful acquisition funnel for “กินอะไรดี” that can start with the free core product and later add Premium/campaign conversion only after the corresponding product, payment, legal, tracking, support and security gates are real.
 
 ## Current truth boundary
 
@@ -14,10 +18,11 @@ Prepare a truthful acquisition funnel for “กินอะไรดี” that
 - Do **not** use App Store / Google Play badges or “ดาวน์โหลดจาก App Store/Google Play” until actual store availability is verified.
 - Safe current CTA: **“ลองใช้เลย”**, **“เปิดกินอะไรดี”**, or, where the PWA install guidance is relevant, **“เพิ่มไว้ที่หน้าจอโฮม”**.
 - Public campaign page is PRE-LAUNCH only.
-- Paid Premium is not approved/active.
+- Premium **business baseline** is owner-approved at **THB 59/month**, but strict Payment/Privacy-Legal execution gates remain `NOT APPROVED`; no real-money Premium is active from that approval alone.
+- Card auto-renew is only a target after provider/account-specific recurring-card validation; PromptPay is planned as customer-initiated THB 59 per paid period with no auto-renew.
 - Prize entries are not open; do not report an eligible-user count until a trusted backend aggregate exists and the campaign gate permits publishing it.
 - Ordinary account signup/referral measurement and Product Funnel measurement are not prize entries.
-- Paid acquisition is not launched; measurement deployment is not spend authorization.
+- Paid acquisition is not launched; measurement deployment and Business approval do not authorize spend.
 
 ## Current measurement truth — deployed and production-ingress verified 2026-09-04
 
@@ -90,30 +95,35 @@ Current observed account KPIs may include:
 
 Product-session measurement and account measurement are separate evidence domains. Do not infer account identity from the random product-session UUID.
 
-### Stage C — Premium value research / validation
+### Stage C — Premium proposition/value validation
 
-Use the already published research preview and Round-1 interview protocol.
+The owner-approved first-Beta business price is now **THB 59/month** with no Free Trial. Earlier price anchors remain research-only and must not be presented as the current launch price.
 
-Required order:
-1. test meal-choice pain and Premium feature value
-2. ask open-ended price
-3. test research anchors
-4. ask “would you subscribe without the prize?”
-5. only then reveal the prize concept
+Research should now focus on whether users understand and value the approved package direction:
+- core `ไม่รู้เลย` remains useful on Free
+- Premium adds enhanced personalization
+- Favorites/History become more useful/richer where implemented
+- advanced capabilities must exist before being advertised as paid benefits
+- future ad-free value applies only if advertising is actually introduced
 
-No synthetic participant answers count as research.
+Use the existing research preview / interview evidence only within its stated research boundary. Open-ended price questions or old anchors may still be useful for future price-learning, but they do not change the THB 59 Beta baseline without a new explicit experiment/decision.
+
+No synthetic participant answer, CTA click, or checkout intent counts as paid conversion.
 
 ### Stage D — Paid Premium acquisition
 
-Blocked until:
-- real provider + merchant account selected
-- real monthly price approved
-- sandbox lifecycle passed
-- controlled production payment acceptance passed
+The Business baseline is approved, but paid Premium acquisition remains blocked until execution evidence exists, including:
+- strict Payment/Premium and Production Privacy/Legal gates satisfy their canonical approval contracts
+- real Stripe/provider merchant-account path is configured and eligible for the intended methods
+- card recurring/off-session path is provider/account-specific validated before auto-renew is claimed or enabled
+- PromptPay lifecycle is provider-backed validated and disclosed as no-auto-renew
+- sandbox/Test Mode lifecycle passes
+- controlled Production payment acceptance passes
 - backend-authoritative entitlement is deployed
-- cancellation/refund/support terms are ready
+- cancellation/refund/dispute/reconciliation/support operations are ready
+- Premium Tracking/QA/Security/Support gates pass
 
-Ads can then optimize toward a real Premium activation event, not checkout-page visits alone.
+Ads can then optimize toward a real backend-authoritative Premium activation event, not checkout-page visits alone. `PREMIUM-EVENT-MEASUREMENT-SPEC.md` defines the intended truth boundary.
 
 ### Stage E — iPhone prize campaign
 
@@ -155,15 +165,15 @@ Only claim budget behavior that is present in the actual UI.
 
 ### C4 — Premium value
 
-Blocked for paid conversion until Premium is real. Research creative can describe concept testing, not sell a subscription.
+The THB 59 business proposition may be prepared/researched, but **paid conversion creative remains gated until Premium execution is real**. Do not present sandbox, research preview, or owner Business approval as a live purchasable subscription.
 
 ### C5 — 3,000 Premium prize
 
 PRE-LAUNCH creative must not imply entry is open. LIVE creative requires final legal/rules approval.
 
-## Organic first-100 structure — ready without spend
+## Organic first-100 structure — ready without spend, still subject to canonical recruitment gate
 
-Use `MARKETING-FIRST-100-ORGANIC-TEST.md` as the current execution pack.
+Use `MARKETING-FIRST-100-ORGANIC-TEST.md` as the current execution pack only when the canonical Public Beta/recruitment gate permits external tester acquisition.
 
 Its operational account target may be 100 newly confirmed accounts, while Product Funnel stages may additionally be observed for reviewed-UTM traffic. The two numbers answer different questions and must not be substituted for each other.
 
@@ -174,6 +184,8 @@ Use campaign slug:
 Keep creative IDs aligned with `C001`–`C004` and use `organic_social` only for genuine owned/organic distribution.
 
 ## First paid-test structure — only after separate budget/account approval
+
+`BETA-GROWTH-EXPERIMENT-PLAN.md` is the sequencing contract: learn from controlled Product/Retention evidence first, then test paid acquisition one channel at a time unless a later approved experiment has a reason to do otherwise.
 
 Start with product-value ads before prize-led ads so conversion quality can be measured independently of the giveaway.
 
@@ -213,12 +225,15 @@ These are best-effort product telemetry stages, not authenticated identities. De
 - source/campaign/content attribution
 - referral signup / confirmation
 
-### Level 4 — Premium (future)
+### Level 4 — Premium (future execution/data)
+- Premium offer view / CTA after implementation
 - checkout initiated
 - payment confirmed by trusted provider/backend
 - Premium entitlement active
-- renewal retained
-- cancellation/refund/dispute
+- renewal retained where applicable
+- cancellation/expiry/refund/dispute
+
+The event/source contract is defined in `PREMIUM-EVENT-MEASUREMENT-SPEC.md`; none of these outcomes may be backfilled from Business approval or mock data.
 
 ### Level 5 — campaign (future)
 - technically eligible paid Premium member
@@ -256,11 +271,14 @@ When external paid-media data and separately authorized spend exist, add:
 
 Do not compute spend-based CAC/CPI from a missing or manually assumed spend value.
 
-After Premium/product/payment approval, add:
+After Premium execution/payment/tracking readiness, add:
 
 - Premium activation rate
-- first renewal / early cancellation signal
-- no-prize retention signal from research
+- first renewal / next-period repurchase signal by payment method
+- early cancellation/expiry signal
+- refund/dispute rate
+
+Do not report LTV or Paid CAC as established until real paid cohorts/spend exist. `COMMERCIAL-COST-MODEL.md` defines the planning/evidence boundary.
 
 Prize campaign should be evaluated as incremental lift vs a product-value control, not only by gross signup volume.
 
@@ -280,7 +298,7 @@ Platform UI/specs change over time. Re-check official platform creative guidance
 
 ## Launch gate
 
-Organic core-product distribution can be prepared/executed with reviewed truthful URLs and content without treating it as a paid-media or prize launch.
+Organic core-product distribution may be prepared, but actual tester/community acquisition must still respect the canonical Public Beta/recruitment gate; this document never opens that gate by itself.
 
 **Core-product paid acquisition GO** still requires:
 - public app runtime stable enough for intended traffic
@@ -288,9 +306,12 @@ Organic core-product distribution can be prepared/executed with reviewed truthfu
 - destination links and creative truthful
 - budget owner approved
 - media account/billing ready
+- trustworthy Product Funnel evidence for the objective being optimized
 
 Deployed Product Funnel measurement satisfies only part of the measurement-readiness work. It does not authorize spend.
 
-**Premium/prize acquisition GO** requires all additional payment and campaign legal gates.
+**Premium acquisition GO** requires all additional Payment/Legal/Tracking/QA/Support/Security gates and a real purchasable Premium flow.
+
+**Prize acquisition GO** additionally requires every Campaign legal/rules/eligibility/fulfillment gate.
 
 A Core-product GO must never be interpreted as Premium or prize-campaign GO.
