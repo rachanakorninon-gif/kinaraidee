@@ -2,7 +2,7 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `dc7775d8ffe032ea8a433eff31c175e72a9fabb8`
+- Current browser/PWA runtime candidate: `6eac2ce642a907414260518d0435263b3e54f425`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Home V3 presentation treatment on the existing Kinaraidee home shell. The implementation preserves the existing recommendation flow, instant “ไม่รู้เลย” behavior, group/member/history/stats entries, Supabase/Auth logic, location behavior, history persistence, service-worker code, accessibility focus contract, and reduced-motion contract. The change is limited to presentation-layer styling/decorative home composition in `data/home-surprise.js`; the decorative food orbit is hidden from accessibility APIs.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
