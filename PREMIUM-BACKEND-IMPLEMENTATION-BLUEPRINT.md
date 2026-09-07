@@ -1,366 +1,375 @@
 # Premium backend implementation blueprint
 
-Status: **DESIGN ONLY / NOT APPROVED FOR PAYMENT EXECUTION**
+Status: **DESIGN READY FROM OWNER-APPROVED BUSINESS BASELINE / NOT APPROVED FOR PAYMENT EXECUTION / COMMERCIAL NO-GO**
 
-This document turns the existing Premium/campaign eligibility contract into an implementation-ready backend shape without selecting a payment provider, applying a database migration, enabling a webhook endpoint, granting Premium, accepting money, or creating prize entries.
+Canonical business baseline: `BUSINESS-COMMERCIAL-BASELINE.md`  
+Strict Payment gate: `PAYMENT-PREMIUM-DECISION.md`  
+Architecture contract: `PREMIUM-SUBSCRIPTION-ARCHITECTURE.md`
 
-## 1. Hard preconditions before implementation authority
+This blueprint translates the owner-approved Web/PWA Premium Beta direction into an implementation-ready backend shape while preserving the repository's strict execution boundary. It does **not** apply a database migration, configure Stripe, enable a webhook, charge money, grant Premium, create campaign entries, or turn the strict Payment/Legal gates to APPROVED.
 
-Do not move this blueprint into executable production payment authority until all of the following are explicitly approved:
+## 1. Approved planning inputs vs execution authority
 
-- real payment provider and merchant account
-- monthly Premium price and billing cadence
-- actual recurring-payment methods available to that merchant account
-- webhook authentication/signature method
-- provider event identifiers and retry semantics
-- cancellation/refund/dispute policy
-- organizer-specific legal/tax path for the prize campaign
-- campaign rules and dates
+Owner-approved planning inputs from 2026-09-07:
 
-Until then, public campaign truth stays:
+- first commercial path: Web/PWA
+- Premium Beta: THB 59/month
+- no Free Trial
+- first provider baseline: Stripe Payments
+- merchant form: individual / natural person
+- Thailand / THB
+- card: THB 59/month with auto-renew as a target only after provider/account-specific recurring-card Test Mode validation
+- PromptPay: THB 59 per paid period; user initiates payment again each period; no auto-renew
+- cancel-at-period-end policy
+- failed payment does not extend entitlement
+- expiry returns to Free without immediate plan-triggered deletion of Favorites/History/Preferences
+- refund review path for duplicate/error/system-caused cases and rights required by applicable law/provider rules
+
+These inputs may guide design and sandbox preparation. They do **not** create Payment PASS because the strict canonical gate remains `NOT APPROVED` until its existing full approval contract is satisfied.
+
+## 2. Hard preconditions before real payment execution
+
+Do not enable Production charging until all applicable gates are satisfied:
+
+- strict Payment/Premium decision gate approved under its canonical contract
+- Production Privacy/Legal gate approved/published as required
+- real Stripe merchant account/path eligible for the intended payment methods
+- exact recurring-card setup/off-session/authentication model validated for the account if auto-renew is enabled
+- exact Stripe webhook/event contracts selected and signature verification implemented
+- cancellation/refund/dispute/chargeback operations defined
+- reconciliation/monitoring/support ownership operational
+- sandbox/Test Mode lifecycle acceptance passed
+- Security/QA/Tracking/Support gates passed
+- explicit controlled Production payment acceptance authorized
+
+Until then, Payment/Premium execution remains PENDING and Commercial remains NO-GO.
+
+## 3. Campaign separation boundary
+
+The iPhone / 3,000-member campaign is **not** part of the approved Premium launch baseline and remains PRE-LAUNCH under its own gates.
+
+Any campaign tables or eligibility logic must be treated as a separate downstream consumer of validated Premium entitlement only after campaign legal/rules/fulfillment approval exists.
+
+Current campaign truth remains fail-closed:
 
 - `status = PRE_LAUNCH`
 - `entries_open = false`
 - `eligible_count = 0`
 
-## 2. Trust boundary
+Premium payment success must never automatically open campaign entries or create legal prize eligibility.
 
-The browser must never be authoritative for payment, Premium, campaign eligibility or public counts.
+## 4. Trust boundary
 
-Authority chain:
+The browser must never be authoritative for payment, Premium, campaign eligibility, public counts, or revenue.
 
-1. payment provider sends a server-to-server notification
-2. backend verifies authenticity before accepting the event
-3. verified event is written idempotently to an event inbox
-4. backend normalizes provider-specific state into Kinaraidee subscription state
-5. backend derives Premium entitlement from normalized subscription state
-6. campaign eligibility is evaluated separately from Premium entitlement
-7. public endpoints expose only approved aggregate or the authenticated user's own backend-derived state
+Authority chain for Premium:
 
-No query string, local browser storage, client flag, UI button, signup event, analytics event or manually edited public counter may grant entitlement or prize eligibility.
+1. authenticated backend creates a provider-side payment/setup action under an approved flow
+2. Stripe/provider returns server-verifiable payment state and/or server-to-server event
+3. backend verifies authenticity before mutating authoritative state
+4. event/payment reference is persisted idempotently
+5. backend normalizes provider truth into Kinaraidee payment/subscription state
+6. backend derives Premium entitlement from a successful paid-period state
+7. browser reads only an approved projection of the user's backend-derived status
 
-## 3. Provider-neutral data model
+No query string, local storage flag, client analytics event, UI success page, signup event, or manually edited row may grant Premium.
 
-Names below are implementation proposals, not applied schema.
+## 5. Data model proposal
+
+Names below are implementation proposals only. Final migration requires backend/security review.
 
 ### `premium_payment_accounts`
 
-Purpose: map one Kinaraidee user to provider-side customer identity.
+Purpose: map one Kinaraidee user to provider-side customer identity without storing card data.
 
 Suggested fields:
 
-- `id` UUID primary key
-- `user_id` UUID, references authenticated user
-- `provider` text
-- `provider_customer_id` text
-- `created_at` timestamptz
-- `updated_at` timestamptz
+- `id uuid primary key`
+- `user_id uuid not null`
+- `provider text not null`
+- `provider_customer_id text not null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
 
 Constraints:
 
 - unique `(provider, provider_customer_id)`
-- one active provider customer mapping per user/provider unless migration policy explicitly allows otherwise
+- normal users cannot write provider identifiers directly
 
 ### `premium_subscriptions`
 
-Purpose: normalized subscription record.
+Purpose: internal Premium paid-period/lifecycle record. It must **not require a Stripe Billing subscription object** because the approved Thailand planning architecture is Stripe Payments + Kinaraidee-controlled lifecycle.
 
 Suggested fields:
 
-- `id` UUID primary key
-- `user_id` UUID
-- `provider` text
-- `provider_subscription_id` text
-- `provider_plan_or_price_id` text nullable
-- `normalized_status` enum/text
-- `current_period_start` timestamptz nullable
-- `current_period_end` timestamptz nullable
-- `cancel_at_period_end` boolean default false
-- `canceled_at` timestamptz nullable
-- `ended_at` timestamptz nullable
-- `last_provider_event_id` text nullable
-- `last_provider_event_at` timestamptz nullable
-- `created_at` timestamptz
-- `updated_at` timestamptz
+- `id uuid primary key`
+- `user_id uuid not null`
+- `provider text not null`
+- `plan_code text not null`
+- `payment_method_type text not null`
+- `normalized_status text not null`
+- `auto_renew boolean not null default false`
+- `current_period_start timestamptz`
+- `current_period_end timestamptz`
+- `cancel_at_period_end boolean not null default false`
+- `cancel_requested_at timestamptz`
+- `ended_at timestamptz`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
 
-Constraints:
+Optional provider reference fields may be added only if the actual Stripe object used by the implemented flow requires them. Do not invent a mandatory `provider_subscription_id` if no provider subscription object exists.
 
-- unique `(provider, provider_subscription_id)`
-- provider identifiers are data, never browser authority
+Business invariants:
 
-### `premium_webhook_events`
+- `payment_method_type = 'promptpay'` implies `auto_renew = false`
+- `auto_renew = true` for card is allowed only after the recurring-card validation gate passes
+- period extension occurs only after successful provider-backed next-period payment
 
-Purpose: immutable-ish idempotent event inbox and audit trail.
+### `premium_payment_attempts`
+
+Purpose: one record per intended payment/charge attempt, including first payment, card renewal attempt, PromptPay payment, retry, refund-related linkage where appropriate.
 
 Suggested fields:
 
-- `id` UUID primary key
-- `provider` text
-- `provider_event_id` text
-- `provider_event_type` text
-- `provider_occurred_at` timestamptz nullable
-- `received_at` timestamptz
-- `payload_sha256` text
-- `verification_status` text (`verified`, `rejected`)
-- `processing_status` text (`pending`, `processed`, `ignored`, `failed`)
-- `processed_at` timestamptz nullable
-- `processing_error_code` text nullable
-- `normalized_subscription_id` UUID nullable
+- `id uuid primary key`
+- `subscription_id uuid not null`
+- `provider text not null`
+- `provider_payment_id text`
+- `payment_method_type text not null`
+- `amount_minor integer not null`
+- `currency text not null`
+- `period_start timestamptz`
+- `period_end timestamptz`
+- `status text not null`
+- `requires_customer_action boolean not null default false`
+- `failure_code text` bounded/non-sensitive
+- `created_at timestamptz not null`
+- `confirmed_at timestamptz`
+- `updated_at timestamptz not null`
+
+Recommended invariants:
+
+- THB 59.00 is represented consistently according to the provider/internal minor-unit convention selected during implementation
+- provider payment reference is unique where provider guarantees uniqueness
+- locally-created attempt is never interpreted as successful collection without provider-backed confirmation
+
+### `premium_provider_events`
+
+Purpose: idempotent audit/event inbox for server-to-server provider events.
+
+Suggested fields:
+
+- `id uuid primary key`
+- `provider text not null`
+- `provider_event_id text not null`
+- `provider_event_type text not null`
+- `provider_occurred_at timestamptz`
+- `received_at timestamptz not null`
+- `payload_sha256 text`
+- `verification_status text not null`
+- `processing_status text not null`
+- `processing_error_code text`
+- `processed_at timestamptz`
+- `related_payment_attempt_id uuid`
+- `related_subscription_id uuid`
 
 Constraints:
 
-- unique `(provider, provider_event_id)` for idempotency
-- do not expose raw payload publicly
-- retention period must be approved before production
+- unique `(provider, provider_event_id)`
+- raw provider payload must not be exposed to browser users
+- retention period remains a separate approved data-governance decision
 
 ### `premium_entitlements`
 
-Purpose: backend-authoritative user access state.
+Purpose: backend-authoritative access state independent of payment-provider object shape.
 
 Suggested fields:
 
-- `user_id` UUID primary key
-- `entitlement_status` text
-- `valid_from` timestamptz nullable
-- `valid_until` timestamptz nullable
-- `source_subscription_id` UUID nullable
-- `entitlement_version` bigint
-- `revoked_reason` text nullable
-- `updated_at` timestamptz
+- `user_id uuid primary key`
+- `entitlement_status text not null`
+- `valid_from timestamptz`
+- `valid_until timestamptz`
+- `source_subscription_id uuid`
+- `entitlement_version bigint not null`
+- `revoked_reason text`
+- `updated_at timestamptz not null`
 
-Entitlement states:
+Suggested states for Beta v1:
 
 - `none`
 - `active`
-- `grace`
-- `revoked`
 - `expired`
+- `revoked` only when an approved refund/dispute/security rule requires it
 
-The exact meaning of `grace` requires provider/business approval. It must not be invented from generic assumptions.
+Do not introduce an undefined `grace` entitlement merely because some subscription products use grace periods. If grace is later desired, it requires an explicit business/operations decision and test contract.
 
-### `campaign_state`
+## 6. Internal lifecycle state machine
 
-Purpose: single backend source of truth for operational campaign state.
-
-Suggested fields:
-
-- singleton key
-- `status` (`PRE_LAUNCH`, `LIVE`, `PAUSED`, `CLOSED`)
-- `entries_open` boolean
-- `kill_switch` boolean
-- `eligibility_cutoff_at` timestamptz nullable
-- `campaign_start_at` timestamptz nullable
-- `campaign_end_at` timestamptz nullable
-- `updated_at` timestamptz
-- `updated_by` UUID/service identity
-
-Fail-closed invariant:
-
-`entries_open` must never become true when `status != LIVE` or `kill_switch = true`.
-
-### `campaign_eligibility`
-
-Purpose: technical eligibility derived from a valid Premium entitlement plus campaign rules.
-
-Suggested fields:
-
-- `user_id` UUID primary key
-- `eligible` boolean
-- `eligibility_reason_code` text
-- `entitlement_version` bigint
-- `evaluated_at` timestamptz
-- `eligible_since` timestamptz nullable
-- `ineligible_since` timestamptz nullable
-
-This is still not a declaration of final legal prize eligibility. Final winner validation remains a separate step under the published rules.
-
-### `campaign_admin_audit`
-
-Purpose: auditable record of manual campaign-state changes.
-
-Suggested fields:
-
-- `id` UUID primary key
-- `actor_id` UUID/service identity
-- `action` text
-- `before_state` jsonb
-- `after_state` jsonb
-- `reason` text
-- `created_at` timestamptz
-
-No silent direct edit of campaign status should be treated as acceptable production operations.
-
-## 4. Normalized subscription state machine
-
-Provider-specific states must map into a small Kinaraidee vocabulary. Proposed normalized states:
+Recommended normalized lifecycle states:
 
 - `pending`
 - `active`
-- `past_due`
-- `canceled_period_end`
-- `canceled_immediate`
+- `payment_action_required`
+- `payment_failed`
+- `cancel_at_period_end`
 - `expired`
 - `refunded`
 - `disputed`
 - `revoked`
 
-Important rules:
+Rules:
 
-- `active` may grant `premium_entitlements.active` only after a verified provider event or verified server-side reconciliation.
-- `pending` never grants Premium.
-- `past_due` behavior is a business decision: either immediate revoke or approved grace. Do not guess.
-- cancel-at-period-end can retain entitlement only until the provider-confirmed paid period end.
-- immediate cancellation/refund/dispute behavior must follow the approved provider/business policy.
-- a later out-of-order provider event must not incorrectly overwrite a newer authoritative state.
+- `pending` never grants Premium
+- first successful provider-backed payment may create an active paid period
+- next-period card attempt extends entitlement only after successful provider-backed collection
+- `payment_action_required` does not extend the next paid period until resolved successfully
+- `payment_failed` does not extend entitlement
+- `cancel_at_period_end` retains entitlement only through the already-paid `current_period_end`
+- actual period end without a successful next-period payment becomes `expired`
+- refund/dispute/revocation behavior follows the final approved operational/legal policy, not a generic provider default
 
-## 5. Webhook processing algorithm
+## 7. Card flow — validation-gated auto-renew
 
-Provider adapter responsibilities:
+Before Production `auto_renew=true`, prove in Stripe Test Mode/account-specific path:
 
-1. read raw request body exactly as required by provider verification
-2. authenticate signature/JWS/JWE/shared-secret mechanism
-3. reject unverifiable events before state mutation
-4. extract provider event ID, type, occurrence time and referenced customer/subscription IDs
-5. compute payload hash for audit without exposing raw payload publicly
-6. insert into `premium_webhook_events` using unique `(provider, provider_event_id)`
-7. if duplicate, return the provider-appropriate successful acknowledgement without reapplying state
-8. normalize event into Kinaraidee subscription transition
-9. perform subscription + entitlement update in one database transaction where practical
-10. evaluate campaign eligibility from the resulting entitlement and current campaign state
-11. mark event processed
+1. first card payment succeeds
+2. future-payment consent/setup is captured using the exact provider-supported flow
+3. Kinaraidee stores only provider references needed for future collection, not card number/CVC
+4. next-period server-side recurring/off-session attempt can be created under allowed provider/account terms
+5. successful attempt extends exactly one paid period
+6. authentication/action-required state returns the user to a safe recovery flow
+7. failed attempt does not extend Premium
+8. cancellation prevents future collection after the paid period
+9. duplicate retry/event cannot double-charge or extend twice
+10. reconciliation can recover from a missed event
 
-On processing failure after verification:
+If any required capability is unsupported for the actual account/path, keep card auto-renew disabled and reopen the payment architecture decision rather than silently simulating an unsupported subscription.
 
-- retain the verified event as `failed`
-- do not fabricate success state
-- rely on provider retry and/or controlled reconciliation
-- surface an operational alert without leaking payment secrets or personal data
+## 8. PromptPay flow — customer-initiated only
 
-## 6. Reconciliation path
+Contract:
 
-Webhooks are primary event delivery but should not be the only recovery mechanism.
+1. user explicitly selects PromptPay
+2. UI shows THB 59 and states there is no automatic renewal
+3. backend/provider creates the payment/QR under the approved flow
+4. browser may display pending status but cannot grant Premium
+5. provider-backed successful payment activates one paid period
+6. abandoned/expired QR remains unpaid and grants nothing
+7. near period end, UI may invite the user to pay again
+8. a new provider-backed successful payment activates/extends the next intended paid period
 
-After provider selection, implement a server-side reconciliation job capable of:
+Never set `auto_renew=true` for PromptPay and never describe a scheduled reminder as a recurring debit.
 
-- fetching the authoritative provider subscription state for known subscriptions
-- detecting missed/out-of-order events
-- repairing normalized state idempotently
-- recording reconciliation source and timestamp
-- never granting entitlement based solely on browser claims
+## 9. Webhook/event processing algorithm
 
-Frequency and API-rate assumptions require provider-specific approval.
+Provider adapter should:
 
-## 7. Access control / RLS intent
+1. read the request body exactly as required by Stripe/provider verification
+2. verify the signature/authenticity using the provider-supported method
+3. reject unverifiable events before authoritative mutation
+4. extract provider event/payment/customer references and occurrence time
+5. insert the event idempotently using unique provider event ID
+6. return safe acknowledgement for already-processed duplicate events without replaying side effects
+7. resolve the referenced payment attempt/current provider truth
+8. normalize state transition
+9. update payment/subscription/entitlement transactionally where practical
+10. record processed state and bounded failure codes
+
+For out-of-order events, compare provider timestamps/current authoritative payment state rather than trusting arrival order.
+
+Do not hard-code event names in this design document. The implementation PR must enumerate the exact Stripe events used and add regression tests for them.
+
+## 10. Reconciliation path
+
+Webhooks/events are not the only recovery mechanism. The backend must have a controlled reconciliation process that can compare:
+
+`provider payment truth`
+↔ `premium_payment_attempts`
+↔ `premium_subscriptions paid periods`
+↔ `premium_entitlements`
+
+Reconciliation must detect at least:
+
+- provider success with no entitlement
+- entitlement with no supporting successful payment
+- duplicate successful charges for one intended period
+- period extended twice from duplicate/replayed events
+- missed cancellation/expiry state
+
+Repair must be idempotent, auditable, and must never trust browser claims.
+
+## 11. Access control / RLS intent
 
 Production policy should enforce:
 
-- ordinary authenticated users cannot write payment accounts, subscriptions, webhook events, entitlements, campaign eligibility or campaign state
-- users may read only their own approved entitlement/eligibility projection
-- raw provider IDs and raw webhook payloads should not be exposed through normal client APIs unless strictly required
-- public campaign endpoint exposes aggregate fields only, e.g. status, entries-open flag, target and trusted eligible count
-- admin/service mutations require server-side privileged identity and audit logging
+- ordinary authenticated users cannot directly write payment accounts, payment attempts, provider events, subscription truth or entitlements
+- users may read only their own approved subscription/entitlement projection
+- provider IDs are exposed only when genuinely needed for user-facing support/management
+- server/webhook/reconciliation paths use controlled privileged access
+- cross-user reads/writes are denied
+- Premium-only server capabilities verify user identity + active entitlement at the controlled backend boundary
 
-Do not ship a service-role key or payment secret to browser code.
+## 12. Analytics separation
 
-## 8. Trusted eligible count
+Business analytics events do not create billing truth.
 
-Public `eligible_count` must be computed server-side from unique eligible users, not incremented by the client.
+Examples:
+- `premium_offer_view` = client interaction evidence
+- `checkout_start` = intent, not payment
+- `payment_success` = emitted only from provider/backend-authoritative state
+- `premium_activated` = emitted only after backend entitlement is active
 
-Conceptually:
+Canonical measurement design should live in `PREMIUM-EVENT-MEASUREMENT-SPEC.md`.
 
-`count(distinct user_id)` where all required technical conditions are true and exclusions are applied.
+## 13. Required sandbox / QA matrix before Payment PASS
 
-At minimum exclude:
+At minimum:
 
-- test/internal identities
-- revoked entitlements
-- refunded/disputed subscriptions when policy requires exclusion
-- duplicate provider subscriptions for one user
-- users outside campaign dates/cutoff
-- users excluded by the final approved rules
+- card first payment success
+- card recurring success if auto-renew will be enabled
+- card action/authentication-required recovery
+- card failure/decline
+- cancel-at-period-end
+- actual expiry → Free
+- PromptPay success
+- PromptPay expired/abandoned payment
+- browser closed after payment → relogin sees correct backend status
+- refresh/reopen does not duplicate payment or entitlement
+- duplicate provider event idempotency
+- out-of-order event safety
+- forged/invalid webhook rejection
+- normal user cannot mutate authoritative billing/entitlement state
+- cross-user reads blocked
+- refund/dispute behavior according to final runbook
+- controlled reconciliation detects a deliberately introduced mismatch
 
-Before LIVE, validate that the count is reproducible from an auditable backend query.
+Static CI success alone is not provider-backed Payment PASS or physical/Production PASS.
 
-## 9. Campaign kill switch
+## 14. Operations requirements
 
-Required behavior:
+Before Commercial GO, identify and verify:
 
-- kill switch is server-authoritative
-- when enabled, `entries_open` evaluates false immediately regardless of UI cache
-- no new eligibility should be created while kill switch is active
-- public status should communicate paused/prelaunch state truthfully
-- every manual toggle creates an audit record with actor/reason/timestamp
+- payment/incident owner
+- customer support path; current contact baseline is `rachanakorn.inon@gmail.com`
+- webhook/job failure monitoring and alert delivery
+- reconciliation procedure
+- refund/dispute procedure
+- emergency switch to stop new checkout/renewal attempts safely without corrupting existing paid entitlements
+- rollback procedure that does not overwrite billing truth
 
-## 10. Sandbox lifecycle test matrix
+## 15. Evidence boundary
 
-Do not mark the sandbox gate complete until the selected provider's real sandbox/test account passes all applicable cases.
+This blueprint does **not** prove:
 
-Required cases:
-
-1. first successful monthly subscription -> one active entitlement
-2. duplicate webhook -> no duplicate entitlement/count
-3. event delivered out of order -> final state remains correct
-4. renewal success -> period advances once
-5. renewal failure -> approved past-due/grace behavior
-6. retry success after failure -> entitlement recovers correctly
-7. cancel at period end -> access remains only through paid end date
-8. immediate cancellation -> approved behavior applied
-9. full refund -> entitlement/eligibility policy applied
-10. partial refund -> explicit approved policy, not guessed
-11. dispute/chargeback -> explicit approved policy
-12. webhook signature failure -> no state mutation
-13. unknown subscription/customer -> safely quarantined/ignored with evidence
-14. provider replay -> idempotent acknowledgement
-15. reconciliation repairs missed event
-16. user owns two provider subscriptions accidentally -> unique-user count stays one
-17. campaign PRE_LAUNCH -> eligible count remains public zero even with sandbox entitlement
-18. campaign kill switch -> no new eligibility
-19. revoked entitlement -> removed from technical eligible set according to approved rules
-20. no browser-only action can grant Premium or increment public count
-
-## 11. Production acceptance gate
-
-A production payment test must use the approved merchant account and approved low-risk test procedure. Evidence should include:
-
-- transaction/reference identifier stored privately
-- verified webhook receipt
-- normalized subscription transition
-- entitlement transition
-- cancellation/refund cleanup as applicable
-- reconciliation result
-- no secrets in repository or screenshots
-
-One successful payment does not by itself authorize campaign LIVE.
-
-## 12. Rollout sequence after approvals
-
-Recommended implementation order:
-
-1. approve provider/merchant facts in `PAYMENT-PREMIUM-DECISION.md`
-2. translate this blueprint into reviewed migration + rollback scripts
-3. implement provider adapter in sandbox only
-4. implement verified webhook inbox/idempotency
-5. implement normalized subscription state
-6. implement Premium entitlement projection
-7. implement authenticated self-status endpoint
-8. pass sandbox lifecycle matrix
-9. perform production payment acceptance test
-10. complete campaign legal/rules/operations gates
-11. implement campaign eligibility projection + trusted aggregate
-12. security/privacy review
-13. explicit PRE_LAUNCH -> LIVE approval
-
-## 13. Non-execution boundary
-
-This blueprint must not be cited as evidence that:
-
-- a payment provider has been selected
-- a merchant account is approved
-- Premium is purchasable
-- a user has paid
-- a user is Premium
+- a Stripe merchant account is Production-ready for the intended flows
+- card recurring/off-session charging works on the actual account
+- PromptPay has been integrated
+- a schema/migration has been applied
+- webhook signature handling is implemented
+- a payment occurred
+- Premium entitlement is active
+- a subscriber/conversion/revenue exists
 - campaign entries are open
-- `eligible_count` is non-zero
-- legal/tax approval exists
+- Legal/Payment/Commercial gates are approved
 
-It is implementation preparation only.
+All real business outcomes remain `NOT ESTABLISHED` until supported by the corresponding Production evidence.
