@@ -2,7 +2,7 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `fd456fb01c23e37e778a2dfc7266107ffa23290b`
+- Current browser/PWA runtime candidate: `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: follow-up physical-QA remediation for Issue #552 / TC-03. `data/choice-rules.js` no longer treats every occurrence of `ต้ม` as a soup match. True soup/stew names beginning with `ต้ม` remain eligible for `ซุป/ต้ม`, and explicit `ข้าวต้ม` remains eligible, while ingredient phrases such as `ตำแตงไข่ต้ม`, `ยำไข่ต้ม`, `สลัดไข่ต้ม`, and `ไข่ต้มข้าวสวย` no longer derive the soup tag merely because their names contain `ต้ม`. The previous `แกง` prefix boundary remains in force.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
@@ -31,6 +31,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current source candidate `fd456fb01c23e37e778a2dfc7266107ffa23290b` is **not yet verified deployed**. The last verified deployed browser/PWA descendant remains `0f96414295f2a5f5abd7da346aa8a58d47c10f63`. The current candidate cannot become Deployment PASS until it is merged and exact-SHA Pages/live checks succeed, and it cannot become TC-03 Physical PASS until the affected OPPO is physically retested after that verified deployment.
+The current source candidate `8fcb94f79957beb8d0e635c654b70957cb9a2c3c` is **not yet verified deployed**. It is the merged-main runtime commit containing the PR #557 recommendation-classification change; the prior branch candidate was not retained as an ancestor by the repository merge strategy. The last verified deployed browser/PWA descendant remains `0f96414295f2a5f5abd7da346aa8a58d47c10f63`. The current candidate cannot become Deployment PASS until a descendant deployment completes with exact-SHA Pages/live checks, and it cannot become TC-03 Physical PASS until the affected OPPO is physically retested after that verified deployment.
 
 Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static/deployment test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. This runtime candidate does not prove Public Beta completion, Privacy/Legal approval or Commercial GO.
