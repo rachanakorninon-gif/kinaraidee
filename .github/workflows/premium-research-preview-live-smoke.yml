@@ -21,7 +21,10 @@ jobs:
         run: |
           set -euo pipefail
           url='https://rachanakorninon-gif.github.io/kinaraidee/premium-research-preview.html'
-          html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url")"
+          file="${RUNNER_TEMP}/premium-research-preview.html"
+          curl --fail --silent --show-error --location --retry 5 --retry-delay 5 --max-time 30 "$url" > "$file"
+          html="$(cat "$file")"
+
           grep -Fq '<title>Premium Research Preview | กินอะไรดี</title>' <<<"$html"
           grep -Fq 'content="noindex,nofollow,noarchive"' <<<"$html"
           grep -Fq 'RESEARCH PROTOTYPE' <<<"$html"
@@ -31,8 +34,48 @@ jobs:
           grep -Fq 'Smart Taste Profile' <<<"$html"
           grep -Fq 'Smart No-Repeat' <<<"$html"
           grep -Fq '3-/7-day Meal Planner' <<<"$html"
+
+          # THB 59 Beta research protocol: open-ended first, then hidden 59 reveal,
+          # optional higher comparative anchors, no-prize retention, then campaign.
+          grep -Fq 'ถ้าฟีเจอร์ Premium ทำงานได้ตามนี้ คุณคิดว่าราคาต่อเดือนที่เหมาะสมควรประมาณเท่าไร?' <<<"$html"
+          grep -Fq 'id="revealPrice"' <<<"$html"
+          grep -Fq 'id="priceStage" class="priceStage hidden" aria-hidden="true"' <<<"$html"
+          grep -Fq 'data-price="59" data-kind="beta"' <<<"$html"
+          grep -Fq '59 บาทต่อเดือน และไม่มี Free Trial' <<<"$html"
+          grep -Fq 'id="compareStage" class="hidden" aria-hidden="true"' <<<"$html"
+          grep -Fq 'data-price="69" data-kind="compare"' <<<"$html"
+          grep -Fq 'data-price="79" data-kind="compare"' <<<"$html"
+          grep -Fq 'data-price="99" data-kind="compare"' <<<"$html"
+          grep -Fq 'ไม่ใช่ราคา Beta ปัจจุบัน' <<<"$html"
+          grep -Fq 'ถ้าไม่มีแคมเปญลุ้น iPhone เลย คุณยังมองว่า Premium แบบนี้น่าสมัครและน่าใช้ต่อทุกเดือนไหม? เพราะอะไร?' <<<"$html"
           grep -Fq 'id="campaignBox" class="campaign" aria-hidden="true"' <<<"$html"
           grep -Fq '0 / 3,000 · ยังไม่เริ่มนับสิทธิ์' <<<"$html"
+          grep -Fq 'entries_open=false' <<<"$html"
+          grep -Fq 'eligible_count=0' <<<"$html"
+
+          python - "$file" <<'PY'
+          from pathlib import Path
+          import sys
+
+          html = Path(sys.argv[1]).read_text(encoding='utf-8')
+          markers = [
+              ('open-ended price question', 'ถ้าฟีเจอร์ Premium ทำงานได้ตามนี้ คุณคิดว่าราคาต่อเดือนที่เหมาะสมควรประมาณเท่าไร?'),
+              ('THB 59 reveal control', 'id="revealPrice"'),
+              ('hidden THB 59 choice', 'id="price59"'),
+              ('mandatory no-prize question', 'ถ้าไม่มีแคมเปญลุ้น iPhone เลย คุณยังมองว่า Premium แบบนี้น่าสมัครและน่าใช้ต่อทุกเดือนไหม? เพราะอะไร?'),
+              ('hidden campaign', 'id="campaignBox" class="campaign" aria-hidden="true"'),
+          ]
+          positions = []
+          for label, marker in markers:
+              pos = html.find(marker)
+              if pos < 0:
+                  raise SystemExit(f'Missing research marker: {label}')
+              positions.append((label, pos))
+          if positions != sorted(positions, key=lambda item: item[1]):
+              raise SystemExit(f'Research sequence regressed: {positions}')
+          print('Premium research anti-bias sequence verified.')
+          PY
+
           if grep -Eqi '<form|fetch\(|XMLHttpRequest|localStorage|sessionStorage' <<<"$html"; then
             echo 'Research preview unexpectedly contains collection/storage behavior.'
             exit 1
@@ -47,7 +90,9 @@ jobs:
             echo '- Public research URL: https://rachanakorninon-gif.github.io/kinaraidee/premium-research-preview.html'
             echo '- noindex/noarchive: checked'
             echo '- no form/network response collection/local storage: checked'
-            echo '- campaign starts hidden and remains PRE-LAUNCH: checked'
+            echo '- open-ended price → hidden THB 59 Beta proposition → no-prize question → hidden campaign order: checked'
+            echo '- THB 69/79/99 remain optional comparative anchors, not the current Beta price: checked'
+            echo '- campaign starts hidden, PRE-LAUNCH, entries closed and eligible count zero: checked'
             echo
-            echo '> This proves only that the static research prototype is reachable and preserves the no-payment/no-entry/no-data-collection boundary. It does not prove user demand, willingness to pay, conversion, Premium entitlement, or campaign readiness.'
+            echo '> This proves only that the static research prototype is reachable and preserves the no-payment/no-entry/no-data-collection and anti-bias research boundaries. It does not prove user demand, willingness to pay, conversion, Premium entitlement, retention, Payment/Legal approval, or campaign readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
