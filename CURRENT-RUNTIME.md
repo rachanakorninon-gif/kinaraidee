@@ -9,6 +9,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Runtime merge/deployed SHA: `f6b8598597edd874e69cbfe1dae941c919aaa037`
 - Last verified deployed browser/PWA descendant: `f6b8598597edd874e69cbfe1dae941c919aaa037`.
 - Current runtime deployment evidence: Pages `34161708724` and main Live Smoke `34161744258` = SUCCESS for exact deployed descendant `f6b8598597edd874e69cbfe1dae941c919aaa037`.
+- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.
 - Deployment PASS does not create or broaden Physical PASS.
 - The reviewed Home V3 contrast source-origin commit before squash merge was `84fd8d6fb1eb452d61c8e54e1dd951f742c69d6d`; the canonical merged-main runtime candidate is now `d24824948c9df1808178b9bb5a78a8f885086fb4`.
 - The source-origin commit for the prior TC-03 follow-up before squash merge was `fd456fb01c23e37e778a2dfc7266107ffa23290b`; the canonical merged-main TC-03 runtime commit remains `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`.
