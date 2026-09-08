@@ -56,11 +56,11 @@ Historical verified deployment evidence remains valid for its original scope:
 - PR #509 source runtime `0bd5acfb9946e10ed5624205165123eabc8035b4` merged/deployed through descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`; Pages `33823701475` and main Live Smoke `33823746430` completed **success** for that historical Product Event trace. Product Event API Live Smoke `33824058988` separately completed **success** for controlled production ingestion; the exact synthetic `landing` row was deleted after evidence capture and a follow-up query confirmed 0 matching rows remain.
 - PR #499 source runtime `f401ad758e40914a10245cfab08497f7cdb99f7d` merged/deployed through descendant `02540bb61c3c62de4cfba34e92a876503765847d`; Pages `33811511793` and Referral acquisition regression `33811512053` completed **success** for that historical acquisition-measurement trace.
 - PR #373 source runtime `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387` was verified through descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`; Pages `33229525995`, Auth Password Security Live Smoke `33229548182` and main Live Smoke `33229548190` completed **success** for that historical scoped trace.
-- PR #201 merged as `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` source through deployed descendant `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`.
-- Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2`.
+- PR #201 merged as `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` source through deployed descendant `00bdcb7f432d542b732cf355336e9f08798e4320`.
+- Pages workflow run `32802440796` completed **success** for exact merged-main SHA `00bdcb7f432d542b732cf355336e9f08798e4320`.
 - Corresponding Live Smoke run `32802473505` completed **success** after that Pages deployment.
 - Public Form Resilience Regression run `32802440775` completed **success** on the exact merged-main SHA and validates source recovery-state contracts only; it does not submit a form.
-- Live public `release-meta.json` matched `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
+- Live public `release-meta.json` matched `00bdcb7f432d542b732cf355336e9f08798e4320` and `kinaraidee-beta-v16` for that historical PR #201 deployment trace.
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
