@@ -5,7 +5,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Current browser/PWA runtime candidate: `d24824948c9df1808178b9bb5a78a8f885086fb4`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Home V3 primary CTA contrast remediation in `data/home-surprise.js`. The orange primary CTA now uses explicit dark text `#2f241c`; the green `ไม่รู้เลย` CTA remains explicitly white. This candidate also retains the previously merged Issue #552 / TC-03 soup-classification remediation from `8fcb94f79957beb8d0e635c654b70957cb9a2c3c`.
-- Deployment status: **VERIFIED DEPLOYED**
+- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - Runtime merge/deployed SHA: `f6b8598597edd874e69cbfe1dae941c919aaa037`
 - Last verified deployed browser/PWA descendant: `f6b8598597edd874e69cbfe1dae941c919aaa037`.
 - Current runtime deployment evidence: Pages `34161708724` and main Live Smoke `34161744258` = SUCCESS for exact deployed descendant `f6b8598597edd874e69cbfe1dae941c919aaa037`.
