@@ -18,6 +18,7 @@ on:
       - 'qa-public-form-state.html'
       - 'qa-reduced-motion-state.html'
       - 'qa-auth-state.html'
+      - 'qa-line-attribution.html'
       - 'qa-nf07-old-cache.html'
       - 'qa-keyboard-focus-state.html'
       - 'qa-device-session-intake.html'
@@ -53,7 +54,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html qa-sw-v15.js manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
+          required=(index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-line-attribution.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html qa-sw-v15.js manifest.webmanifest sw.js icon.svg robots.txt sitemap.xml data/foods-expanded.js data/choice-rules.js data/nearby-restaurants.js data/group-mode.js data/group-sync.js data/group-remote.js data/member-sync.js data/pwa-install.js data/home-surprise.js CURRENT-RUNTIME.md)
           for file in "${required[@]}"; do test -s "$file" || { echo "Missing or empty: $file"; exit 1; }; done
       - name: Validate manifest and JavaScript syntax
         shell: bash
@@ -87,6 +88,24 @@ jobs:
           fi
           if grep -q "location.href='admin.html'" reset-password.html; then
             echo 'Member password reset must not redirect to the private owner dashboard.'
+            exit 1
+          fi
+      - name: Verify controlled LINE attribution QA boundary before deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'content="noindex,nofollow,noarchive"' qa-line-attribution.html
+          grep -Fq 'content="no-referrer"' qa-line-attribution.html
+          grep -Fq "provider:'custom:line'" qa-line-attribution.html
+          grep -Fq "sb.functions.invoke('member-acquisition-claim'" qa-line-attribution.html
+          grep -Fq "storageKey:'kinaraidee-qa-line-auth-v1'" qa-line-attribution.html
+          grep -Fq "second.result==='already_claimed'" qa-line-attribution.html
+          if grep -Fq 'qa-line-attribution.html' sw.js; then
+            echo 'Controlled LINE QA page must not enter the PWA cache.'
+            exit 1
+          fi
+          if grep -Fq 'custom:line' member.html || grep -Fq 'qa-line-attribution.html' member.html index.html; then
+            echo 'Controlled LINE QA must not be wired into Production UI.'
             exit 1
           fi
       - name: Verify acquisition owner login shell before deploy
@@ -240,7 +259,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html _site/
+          cp index.html 404.html privacy.html feedback.html partner.html member.html reset-password.html acquisition-dashboard.html campaign-3000-premium.html premium-research-preview.html deployment-check.html qa-public-form-state.html qa-reduced-motion-state.html qa-auth-state.html qa-line-attribution.html qa-nf07-old-cache.html qa-keyboard-focus-state.html qa-device-session-intake.html _site/
           cp manifest.webmanifest icon.svg sw.js qa-sw-v15.js robots.txt sitemap.xml _site/
           cp -R data _site/data
           marker="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" sw.js)"
@@ -256,6 +275,7 @@ jobs:
           test -s _site/qa-public-form-state.html
           test -s _site/qa-reduced-motion-state.html
           test -s _site/qa-auth-state.html
+          test -s _site/qa-line-attribution.html
           test -s _site/qa-nf07-old-cache.html
           test -s _site/qa-keyboard-focus-state.html
           test -s _site/qa-device-session-intake.html
@@ -264,6 +284,8 @@ jobs:
           grep -Fq "$GITHUB_SHA" _site/release-meta.json
           grep -Fq "$marker" _site/release-meta.json
           grep -Fq 'content="noindex,nofollow,noarchive"' _site/acquisition-dashboard.html
+          grep -Fq 'content="noindex,nofollow,noarchive"' _site/qa-line-attribution.html
+          grep -Fq 'content="no-referrer"' _site/qa-line-attribution.html
           test ! -e _site/.git
           test ! -e _site/.github
           test ! -e _site/supabase
