@@ -14,6 +14,7 @@ on:
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - '.github/workflows/referral-acquisition-regression.yml'
   push:
     branches: [main]
@@ -29,6 +30,7 @@ on:
       - 'REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - '.github/workflows/referral-acquisition-regression.yml'
 
 permissions:
@@ -62,6 +64,7 @@ jobs:
           const physical=fs.readFileSync('REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md','utf8');
           const socialDesign=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md','utf8');
           const socialDeployment=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md','utf8');
+          const socialAcceptance=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md','utf8');
 
           must(acquisition.includes('kinaraideeAcquisitionV1'),'missing acquisition storage key');
           must(acquisition.includes('kinaraidee_referral_code'),'missing referral signup metadata');
@@ -101,7 +104,7 @@ jobs:
           must(privacyFix.includes('20260903221043 / referral_code_privacy_fix_20260904'),'migration trace marker missing');
           must(rollback.includes('drop table if exists public.member_referrals'),'rollback must remove referral table');
 
-          must(socialDesign.includes('Status: **SERVER-SIDE DEPLOYED / LIVE ACCEPTANCE OPEN / PROVIDER UI DISABLED**'),'social attribution deployment/acceptance status drifted');
+          must(socialDesign.includes('Status: **SERVER-SIDE DEPLOYED / ATTRIBUTION LIVE ACCEPTED / PROVIDER UI DISABLED**'),'social attribution deployment/acceptance status drifted');
           must(socialDesign.includes('The server derives the target user from the verified Supabase bearer token'),'social claim must derive user server-side');
           must(socialDesign.includes('Exactly-once first touch'),'social claim must remain first-touch/idempotent');
           must(socialDesign.includes('No provider-profile trust'),'provider metadata must not become acquisition input');
@@ -116,5 +119,9 @@ jobs:
           must(socialDeployment.includes('Migration version: `20260905125841`'),'social attribution deployment migration evidence missing');
           must(socialDeployment.includes('Function: `member-acquisition-claim`'),'social attribution Edge deployment evidence missing');
           must(socialDeployment.includes('`verify_jwt`: true'),'social attribution deployed JWT-verification boundary missing');
+          must(socialAcceptance.includes('Status: **PASS — ATTRIBUTION / IDEMPOTENCY / NEGATIVE GUARDS / EMAIL REGRESSION ACCEPTED / PROVIDER UI STILL DISABLED**'),'social attribution live acceptance evidence missing');
+          must(socialAcceptance.includes('`claimed_self_referral_rejected`'),'social self-referral negative evidence missing');
+          must(socialAcceptance.includes('`claimed_referral_unresolved`'),'social unresolved-referral negative evidence missing');
+          must(socialAcceptance.includes('Production LINE remains disabled'),'social provider rollout boundary missing');
           must(!member.includes('member-acquisition-claim'),'production member page must not wire the social attribution endpoint while provider rollout is disabled');
           NODE

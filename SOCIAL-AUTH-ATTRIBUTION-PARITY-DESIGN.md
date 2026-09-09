@@ -1,24 +1,18 @@
 # Kinaraidee — Social Auth Attribution Parity Design
 
-Status: **SERVER-SIDE DEPLOYED / LIVE ACCEPTANCE OPEN / PROVIDER UI DISABLED**
+Status: **SERVER-SIDE DEPLOYED / ATTRIBUTION LIVE ACCEPTED / PROVIDER UI DISABLED**
 
-Related: Issue #529, Issue #526, PR #525, PR #528, PR #530, PR #531, PR #532.
+Related: Issue #529, Issue #526, PR #525, PR #528, PR #530, PR #531, PR #532, PR #572, PR #573, PR #574, PR #575, PR #576.
 
 Deployment evidence: `SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md`.
+
+Live acceptance evidence: `SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md`.
 
 ## Problem statement
 
 Email/password signup can attach the reviewed first-touch acquisition fields directly through Supabase `signUp(... data: metadata)`, so the existing `auth.users` insert trigger sees those fields when the account row is created.
 
-OAuth/social signup is different: the external provider callback creates the Supabase Auth user before Kinaraidee can attach the browser-captured first-touch metadata. Controlled LINE evidence demonstrates the resulting gap without retaining user-level data:
-
-- one `custom:line` identity / one Supabase user exists;
-- one `member_acquisition_attribution` row exists from the normal new-user trigger;
-- that row has no populated reviewed UTM/referral field;
-- one random referral-code row exists for the LINE user;
-- no referred-user relationship exists.
-
-Therefore a working provider login is not attribution parity.
+OAuth/social signup is different: the external provider callback creates the Supabase Auth user before Kinaraidee can attach the browser-captured first-touch metadata. Controlled LINE evidence originally demonstrated the resulting gap without retaining user-level data. The reviewed post-auth claim path now closes that gap for the controlled LINE acceptance flow while keeping provider rollout disabled.
 
 ## Required invariants
 
@@ -32,7 +26,7 @@ Any implementation must preserve all of these:
 6. **No raw growth-table browser access.** Existing RLS/revokes remain unchanged; the browser uses an authenticated Edge endpoint only.
 7. **Campaign boundary.** Acquisition/referral measurement remains separate from Campaign 3,000 eligibility truth.
 8. **No token/identity evidence.** QA evidence remains aggregate-only and excludes Auth/provider tokens, subject IDs, account IDs, email, phone and raw referral codes.
-9. **Provider rollout stays disabled.** The server-side claim path may be deployed behind a non-user-visible boundary, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
+9. **Provider rollout stays disabled.** The server-side claim path may be deployed and attribution-accepted behind a non-user-visible boundary, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
 10. **Signup-time claim only.** Social/phone attribution may be claimed only in the immediate post-auth signup handoff, not retroactively on an old account's later campaign login.
 
 ## Provider-neutral confirmation rule
@@ -57,8 +51,9 @@ Prepared in PR #531 and deployed/configuration-evidenced in PR #532:
 - rollback: `supabase/social-auth-attribution-claim-v1-rollback.sql`
 - Edge source: `supabase/functions/member-acquisition-claim/index.ts`
 - deployment evidence: `SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md`
+- controlled live acceptance evidence: `SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md`
 
-Current production read-back on 2026-09-09 confirms the reviewed server-side boundary remains deployed: `member-acquisition-claim` is ACTIVE v1 with `verify_jwt=true`; `public.claim_member_acquisition_internal(...)` is `SECURITY INVOKER` with empty `search_path`; browser roles have no EXECUTE on the internal RPC and no direct SELECT on the raw acquisition/referral tables. These are deployment/configuration facts only and do not establish authenticated live acceptance.
+Current production read-back on 2026-09-09 confirms the reviewed server-side boundary remains deployed: `member-acquisition-claim` is ACTIVE v1 with `verify_jwt=true`; `public.claim_member_acquisition_internal(...)` is `SECURITY INVOKER` with empty `search_path`; browser roles have no EXECUTE on the internal RPC and no direct access to the raw acquisition/referral tables. Deployment/configuration alone did not establish acceptance; the separate live evidence records the controlled fresh/returning LINE, negative and email/password regression acceptance.
 
 The database contract is an internal `public.claim_member_acquisition_internal(...)` RPC with `SECURITY INVOKER`; execute is revoked from `public`, `anon` and `authenticated` and granted only to `service_role`. The public schema placement is solely so the service-role Edge client can call the RPC through the configured PostgREST API surface; browser roles receive no execute grant.
 
@@ -126,26 +121,27 @@ Source/static checks must preserve these contracts:
 - existing email signup trigger behavior remains unchanged;
 - Production `member.html` and Service Worker remain unwired while provider UI rollout is disabled.
 
-A rejection-only live smoke may additionally prove that the deployed endpoint rejects missing and malformed bearer tokens without using a valid account token. That evidence remains non-mutating and must not be promoted to authenticated forged-field, idempotency, referral, LINE signup or returning-login acceptance.
+A rejection-only live smoke additionally proves that the deployed endpoint rejects missing and malformed bearer tokens without using a valid account token. That workflow remains non-mutating; the authenticated and rollback-only acceptance evidence is recorded separately in `SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md`.
 
-## Controlled live acceptance plan
+## Controlled live acceptance result
 
-The server-side migration and Edge function are already deployed behind the disabled provider UI. Remaining controlled acceptance requires authenticated/account-specific evidence:
+The Issue #529 attribution-specific acceptance work is now recorded as PASS for the controlled LINE path:
 
-1. Use a fresh controlled browser context with reviewed synthetic UTM/referral data that is isolated from marketing/campaign measurement.
-2. Complete one new LINE signup through the controlled direct provider path.
-3. Invoke the post-auth claim from the authenticated session.
-4. Verify aggregate-only backend evidence: one LINE identity, one populated acquisition row for that controlled account, at most one referral relation, no duplicate on repeat login/claim.
-5. Repeat returning-user login and claim; verify attribution does not change and no second referral relation appears.
-6. Exercise invalid referral, self referral, malformed field, old-account claim and retry/concurrent claim negatives without retaining PII in evidence.
-7. Re-run existing raw-table privilege checks and Security Advisor after any future migration/deployment change.
-8. Re-run existing email/password signup attribution regression.
-9. Update acquisition-dashboard confirmation calculation to the same provider-neutral definition before interpreting social-auth confirmation metrics as complete.
+1. A fresh controlled LINE signup produced exactly one isolated first-touch `qa_line` attribution row.
+2. The immediate post-auth claim was bound to the authenticated Supabase session server-side.
+3. A returning LINE login/claim returned `already_claimed` and did not create `qa_line_return` attribution.
+4. Authenticated Edge negatives rejected forged `user_id` and malformed acquisition input.
+5. Rollback-only live DB/RPC negatives rejected self-referral and unresolved referral without persistent mutation.
+6. Browser-role execute/direct raw growth-table access remained denied.
+7. The post-rollout email/password attribution regression preserved UTM/referral capture, random referral-code generation and pending-to-confirmed email semantics, with no persistent synthetic QA rows.
+8. The separate Supabase `Leaked Password Protection Disabled` warning remains open and is not reclassified by this acceptance.
+
+The acquisition-dashboard provider-neutral confirmation calculation remains a separate reporting task. Controlled attribution acceptance must not be generalized into complete social-auth dashboard metrics until that reporting path is updated and verified.
 
 ## Production enablement boundary
 
-Server-side deployment does not authorize Production provider UI wiring. Issue #529 remains OPEN until live controlled attribution/retry/negative evidence and email regression are verified.
+Attribution parity acceptance does **not** authorize Production provider UI wiring. Issue #529 remains OPEN because physical/account-isolation/failure/accessibility/device rollout gates are still unresolved even though its attribution-specific acceptance items are complete.
 
-Closing Issue #529 alone is still not sufficient to turn on LINE/Facebook/Phone buttons. The per-provider rollout document also requires physical account isolation, network/failure UX, accessibility, email-auth regression after UI integration and broader supported-device coverage.
+Turning on LINE/Facebook/Phone buttons still requires the per-provider rollout gates, including physical account isolation, network/failure UX, accessibility, email-auth regression after UI integration and broader supported-device coverage.
 
 Public Beta and Commercial readiness remain separate gates.
