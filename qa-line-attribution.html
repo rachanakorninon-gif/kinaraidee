@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>LINE Attribution QA | กินอะไรดี</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#fffaf0;color:#2f241c}.app{max-width:560px;margin:auto;min-height:100vh;padding:24px 18px}.card{background:#fff;border:1px solid #eee1cf;border-radius:24px;padding:22px;margin-top:18px}h1{font-size:26px}.note{font-size:14px;line-height:1.6;color:#6d6158}.warn{background:#fff4df;border-radius:14px;padding:12px;margin:12px 0}.status{white-space:pre-wrap;background:#f5f7f8;border-radius:14px;padding:14px;min-height:96px;font-size:14px;line-height:1.55}.primary,.secondary{width:100%;border-radius:16px;padding:14px 16px;font-size:16px;font-weight:850;margin-top:10px}.primary{border:0;background:#06c755;color:#08180d}.secondary{border:1px solid #ddd1c0;background:#fff;color:#2f241c}.primary:disabled,.secondary:disabled{opacity:.55}.ok{color:#087a70;font-weight:850}.bad{color:#a72b20;font-weight:850}
+  </style>
+</head>
+<body>
+<main class="app">
+  <div class="card">
+    <h1>LINE Login — Controlled QA</h1>
+    <p class="note">หน้านี้ใช้เฉพาะการทดสอบ Issue #529 ไม่ได้เชื่อมจากหน้า Production, ไม่เปิด LINE Login ให้ผู้ใช้ทั่วไป และไม่แสดง/บันทึก user id, email, provider subject หรือ token</p>
+    <div class="warn">รอบแรกต้องเป็นบัญชี LINE ที่เพิ่งถูกสร้างใหม่ใน Supabase ภายใน 1 ชั่วโมง เพื่อทดสอบ fresh attribution gate</div>
+    <button id="freshBtn" class="primary" type="button">1) เริ่ม Fresh LINE Login</button>
+    <button id="returnBtn" class="secondary" type="button" disabled>2) ทดสอบ Returning LINE Login</button>
+    <button id="logoutBtn" class="secondary" type="button">ออกจาก QA session</button>
+    <h2>ผลทดสอบ</h2>
+    <div id="status" class="status" role="status" aria-live="polite">พร้อมเริ่มทดสอบ</div>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script>
+(()=>{
+  'use strict';
+  const projectUrl='https://cuspfvfzprlgtvtdyilh.supabase.co';
+  const publishableKey='sb_publishable_PGmPJ6_8tNIWm7zfF6qEng_0emmWchx';
+  const redirectTo=new URL('qa-line-attribution.html',location.href).href.split('#')[0].split('?')[0];
+  const sb=supabase.createClient(projectUrl,publishableKey,{auth:{storageKey:'kinaraidee-qa-line-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  const status=document.getElementById('status');
+  const freshBtn=document.getElementById('freshBtn');
+  const returnBtn=document.getElementById('returnBtn');
+  const logoutBtn=document.getElementById('logoutBtn');
+  const freshClaim={utm_source:'qa_line',utm_medium:'controlled',utm_campaign:'line_attribution_20260909',utm_content:'fresh_signup'};
+  const returningClaim={utm_source:'qa_line_return',utm_medium:'controlled',utm_campaign:'line_attribution_20260909',utm_content:'returning_login'};
+  let busy=false;
+
+  const setStatus=(lines,ok=true)=>{status.textContent=Array.isArray(lines)?lines.join('\n'):String(lines);status.className='status '+(ok?'ok':'bad')};
+  const providersOf=(user)=>new Set([user?.app_metadata?.provider,...(Array.isArray(user?.app_metadata?.providers)?user.app_metadata.providers:[])].filter(Boolean));
+
+  async function begin(mode){
+    if(busy)return;
+    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
+    sessionStorage.setItem('kinaraidee_line_qa_mode',mode);
+    sessionStorage.removeItem('kinaraidee_line_qa_completed');
+    await sb.auth.signOut({scope:'local'});
+    setStatus('กำลังพาไป LINE…');
+    const {error}=await sb.auth.signInWithOAuth({provider:'custom:line',options:{redirectTo}});
+    if(error){busy=false;freshBtn.disabled=false;setStatus('เริ่ม LINE Login ไม่สำเร็จ: '+(error.message||'unknown_error'),false)}
+  }
+
+  async function invokeClaim(body){
+    const {data,error}=await sb.functions.invoke('member-acquisition-claim',{body});
+    if(error)return {ok:false,result:'edge_error'};
+    return {ok:true,result:String(data?.result||'missing_result'),referral_recorded:Boolean(data?.referral_recorded)};
+  }
+
+  async function runAfterLogin(){
+    if(sessionStorage.getItem('kinaraidee_line_qa_completed')==='1')return;
+    const mode=sessionStorage.getItem('kinaraidee_line_qa_mode');
+    if(mode!=='fresh'&&mode!=='returning')return;
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)return;
+    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
+    const {data:{user},error:userError}=await sb.auth.getUser();
+    if(userError||!user){setStatus('ตรวจสอบ Supabase user ไม่สำเร็จ',false);busy=false;return}
+    if(!providersOf(user).has('custom:line')){setStatus('session นี้ไม่ใช่ custom:line — ยุติการทดสอบ',false);busy=false;return}
+
+    if(mode==='fresh'){
+      const first=await invokeClaim(freshClaim);
+      const second=await invokeClaim(freshClaim);
+      sessionStorage.setItem('kinaraidee_line_qa_completed','1');
+      const expectedFirst=new Set(['claimed','claimed_referral_unresolved','claimed_self_referral_rejected','claimed_referral_recorded','claimed_referral_existing']);
+      const pass=first.ok&&second.ok&&expectedFirst.has(first.result)&&second.result==='already_claimed';
+      setStatus([
+        'LINE session: VERIFIED',
+        'Fresh claim #1: '+first.result,
+        'Repeat claim #2: '+second.result,
+        pass?'FRESH + EXACTLY-ONCE: PASS':'FRESH + EXACTLY-ONCE: REVIEW REQUIRED'
+      ],pass);
+      returnBtn.disabled=false;
+    }else{
+      const result=await invokeClaim(returningClaim);
+      sessionStorage.setItem('kinaraidee_line_qa_completed','1');
+      const pass=result.ok&&result.result==='already_claimed';
+      setStatus([
+        'Returning LINE session: VERIFIED',
+        'Returning claim: '+result.result,
+        pass?'RETURNING FIRST-TOUCH PRESERVATION: CANDIDATE PASS':'RETURNING FIRST-TOUCH: REVIEW REQUIRED',
+        'Backend aggregate verification is still required before final PASS.'
+      ],pass);
+      returnBtn.disabled=false;
+    }
+    busy=false;freshBtn.disabled=false;
+  }
+
+  freshBtn.addEventListener('click',()=>begin('fresh'));
+  returnBtn.addEventListener('click',()=>begin('returning'));
+  logoutBtn.addEventListener('click',async()=>{await sb.auth.signOut({scope:'local'});sessionStorage.removeItem('kinaraidee_line_qa_mode');sessionStorage.removeItem('kinaraidee_line_qa_completed');returnBtn.disabled=true;freshBtn.disabled=false;setStatus('ออกจาก QA session แล้ว')});
+  sb.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(runAfterLogin)});
+  sb.auth.getSession().then(({data})=>{if(data?.session)runAfterLogin()});
+})();
+</script>
+</body>
+</html>
