@@ -2,7 +2,16 @@
 
 Status: **TEMPLATE / NO CHANNEL OR POST EVIDENCE RECORDED**
 
-Purpose: keep real channel setup, publishing and performance evidence separate from prepared copy.
+Purpose: keep real channel setup, publishing and performance evidence separate from prepared copy, repository readiness, QA/synthetic activity and first-party measurement capability.
+
+## Current gate boundary
+
+- Public Beta recruitment remains closed until the canonical recruitment gate explicitly opens.
+- Prepared social copy/channel setup does not authorize external acquisition publishing.
+- First-party acquisition/referral measurement is deployed for its documented account scope.
+- Privacy-minimal Product Funnel measurement is deployed for reviewed UTM traffic.
+- Measurement capability does **not** mean a social post has been published, a campaign has run, or a real organic conversion exists.
+- Internal/admin/QA/synthetic activity must never be copied into real social users, conversion, traction, retention or creative-performance totals.
 
 ## Security rule
 
@@ -60,6 +69,7 @@ Rules:
 - `NOT MEASURED` means unavailable/not collected.
 - Never convert a view, reach or click into a user/signup/Premium count.
 - Preserve platform metric definitions; metrics across platforms may not be directly comparable.
+- Platform-native metrics are the authority for platform impressions/reach/views/clicks/spend; first-party telemetry is not a substitute for those metrics.
 
 ## Paid-media linkage — future only
 
@@ -71,13 +81,20 @@ When a real ad exists, record separately:
 
 Do not store card/bank/payment instrument details.
 
-## First-party conversion linkage — future only
+## First-party conversion linkage — measurement deployed, no social result recorded here
 
-Only after approved measurement is implemented:
+Current measurement authority is split by source:
 
-| Reporting period | Measurement source | Landing sessions | Recommendation results | Signups | Premium entitlements | Campaign eligible users | Evidence boundary |
-|---|---|---:|---:|---:|---:|---:|---|
-| NONE | NOT IMPLEMENTED | NOT MEASURED | NOT MEASURED | NOT MEASURED | NOT AVAILABLE | 0 / ENTRIES CLOSED | No production attribution implemented |
+- Supabase/Auth + acquisition backend: account signup/confirmation and acquisition/referral attribution.
+- Product Event backend: privacy-minimal reviewed-UTM browser-session Product Funnel stages.
+- Payment provider/backend entitlement: future Premium payment/entitlement truth only after implementation.
+- Campaign backend: future prize eligibility truth only after the campaign gate is lawfully LIVE.
+
+Current first-party linkage template:
+
+| Reporting period | Traffic/campaign scope | Measurement source | Landing sessions | Recommendation results | Signups | Confirmed accounts | Premium entitlements | Campaign eligible users | Evidence boundary |
+|---|---|---|---:|---:|---:|---:|---:|---:|---|
+| NONE | NO EXTERNAL SOCIAL CAMPAIGN RECORDED | Account acquisition + reviewed-UTM Product Funnel are deployed | NOT MEASURED | NOT MEASURED | NOT MEASURED | NOT MEASURED | NOT AVAILABLE | 0 / ENTRIES CLOSED | Measurement exists, but no published social campaign cohort/result is recorded in this tracker |
 
 Truth hierarchy remains:
 1. payment provider/backend entitlement for Premium
@@ -85,6 +102,16 @@ Truth hierarchy remains:
 3. Supabase Auth/account truth for signup/account
 4. approved first-party product events for product actions
 5. platform reporting for media delivery/clicks
+
+Important interpretation rules:
+- Deployed measurement is a **capability**, not a result.
+- A controlled synthetic ingress/QA probe is not a real social landing/session/conversion.
+- Product browser-session telemetry is not authenticated account identity.
+- Signup is not proof of a recommendation result.
+- Recommendation result is not signup.
+- Confirmed account is not Premium.
+- Premium planning/offer view/checkout start is not payment success.
+- Premium entitlement is not automatically prize eligibility.
 
 ## Incident/correction log
 
@@ -104,6 +131,9 @@ Examples of reasons:
 
 ## Launch readiness checklist per channel
 
+These items may be completed only from real platform evidence and only when the canonical recruitment gate permits the intended external acquisition action.
+
+- [ ] Public Beta/recruitment gate permits external acquisition publishing
 - [ ] real account/channel exists
 - [ ] final handle/public URL captured from platform
 - [ ] ownership/admin/recovery reviewed privately
@@ -114,7 +144,8 @@ Examples of reasons:
 - [ ] no Premium/prize LIVE claim
 - [ ] first post published and public URL recorded
 - [ ] comments/replies have a moderation owner before higher traffic
+- [ ] first-party account/Product Funnel measurement is checked for the intended UTM cohort without using synthetic/internal data as real results
 
 ## Evidence boundary
 
-This template itself creates no channel, ownership, followers, publishing, paid media, traffic, conversion, Premium, partner or prize-entry evidence. Replace placeholders only from real platform/backend records.
+This template itself creates no channel, ownership, followers, publishing, paid media, traffic, conversion, Premium, partner or prize-entry evidence. Measurement deployment creates no social result by itself. Replace placeholders only from real platform/backend records after the corresponding gate permits the activity.
