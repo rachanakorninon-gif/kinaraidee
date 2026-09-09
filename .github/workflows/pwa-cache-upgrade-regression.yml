@@ -31,6 +31,7 @@ jobs:
           if(version<3) throw new Error('fixture needs at least two older cache generations');
           const old1=`kinaraidee-beta-v${version-1}`;
           const old2=`kinaraidee-beta-v${version-2}`;
+          const unrelated='shared-origin-cache-v1';
           const deleted=[];
           let claimed=false;
           const listeners={};
@@ -44,7 +45,7 @@ jobs:
               location:{origin:'https://example.invalid'}
             },
             caches:{
-              keys:()=>Promise.resolve([old2,old1,current]),
+              keys:()=>Promise.resolve([old2,unrelated,old1,current]),
               delete:(key)=>{deleted.push(key);return Promise.resolve(true)},
               open:()=>Promise.resolve({addAll:()=>Promise.resolve(),put:()=>Promise.resolve()}),
               match:()=>Promise.resolve(undefined)
@@ -61,8 +62,9 @@ jobs:
               if(!deleted.includes(key)) throw new Error(`older cache was not deleted: ${key}`);
             }
             if(deleted.includes(current)) throw new Error(`current cache was deleted: ${current}`);
+            if(deleted.includes(unrelated)) throw new Error(`unrelated cache was deleted: ${unrelated}`);
             if(!claimed) throw new Error('clients.claim() was not reached after cache cleanup');
-            console.log(`Synthetic activation PASS: ${old2}, ${old1} -> ${current}`);
+            console.log(`Synthetic activation PASS: ${old2}, ${old1} -> ${current}; preserved ${unrelated}`);
           }).catch(error=>{console.error(error);process.exit(1)});
           NODE
 
@@ -70,3 +72,4 @@ jobs:
         run: |
           echo 'Synthetic Service Worker activation regression passed.'
           echo 'This guards cache cleanup logic but does not constitute NF-07 real-device upgrade PASS.'
+          echo 'The same synthetic activation also verifies that unrelated origin caches are preserved.'

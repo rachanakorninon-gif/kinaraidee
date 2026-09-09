@@ -1,4 +1,5 @@
 const CACHE='kinaraidee-beta-v16';
+const APP_CACHE_PREFIX='kinaraidee-beta-v';
 const SHELL=[
   './','./index.html','./404.html','./manifest.webmanifest','./icon.svg',
   './feedback.html','./privacy.html','./partner.html','./robots.txt','./sitemap.xml',
@@ -16,7 +17,7 @@ self.addEventListener('install',event=>event.waitUntil(
 
 self.addEventListener('activate',event=>event.waitUntil(
   caches.keys()
-    .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+    .then(keys=>Promise.all(keys.filter(key=>key.startsWith(APP_CACHE_PREFIX)&&key!==CACHE).map(key=>caches.delete(key))))
     .then(()=>self.clients.claim())
 ));
 
