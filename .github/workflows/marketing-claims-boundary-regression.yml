@@ -54,8 +54,8 @@ jobs:
           grep -Fq 'Status: **PREPARED / CHANNEL CREATION & PUBLISHING NOT VERIFIED**' "$social" || {
             echo 'Social launch pack must not imply channels were created/published'; exit 1;
           }
-          grep -Fq 'Status: **CONTENT PREP / NOT PUBLISHED**' "$calendar" || {
-            echo 'Organic content calendar must remain not-published preparation'; exit 1;
+          grep -Fq 'Status: **CONTENT PREP / NOT PUBLISHED / RECRUITMENT GATE NOT OPEN**' "$calendar" || {
+            echo 'Organic content calendar must remain not-published and recruitment-gated preparation'; exit 1;
           }
           grep -Fq 'Status: **PREPARED / NOT PUBLISHED**' "$community" || {
             echo 'Community reply macros must remain not-published preparation'; exit 1;
@@ -110,6 +110,18 @@ jobs:
           grep -Fq 'No prize-entry wording while campaign status remains PRE-LAUNCH.' "$calendar" || {
             echo 'Organic calendar prize pre-launch boundary is missing'; exit 1;
           }
+          grep -Fq 'Do not publish this acquisition sequence to external audiences while Issue #3 Public Beta recruitment gate remains NOT OPEN.' "$calendar" || {
+            echo 'Organic calendar recruitment gate boundary is missing'; exit 1;
+          }
+          grep -Fq 'Internal/admin/QA/synthetic activity must not be counted as organic users, conversion, traction, retention or creative performance.' "$calendar" || {
+            echo 'Organic calendar internal/synthetic evidence boundary is missing'; exit 1;
+          }
+          grep -Fq 'That technical measurement readiness does **not** mean this 14-day sequence has been published or that any real organic campaign result exists.' "$calendar" || {
+            echo 'Organic calendar measurement-vs-result boundary is missing'; exit 1;
+          }
+          grep -Fq 'Until genuine external publishing occurs, this document contains **plan/copy only** and creates no actual users, conversions, retention, referrals, Premium customers, revenue or campaign entries.' "$calendar" || {
+            echo 'Organic calendar no-actual-results boundary is missing'; exit 1;
+          }
           grep -Fq 'Do not reply “แก้แล้ว” until the exact fix/deployment is verified.' "$community" || {
             echo 'Community reply verification boundary is missing'; exit 1;
           }
@@ -133,6 +145,8 @@ jobs:
             echo '## Marketing claims boundary'
             echo
             echo '- Confirms core acquisition measurement may be deployed while scripts, paid tests, social content, community replies and publishing remain pre-launch/prepared only.'
+            echo '- Requires the organic social calendar to remain blocked by the Public Beta recruitment gate until external acquisition is explicitly allowed.'
+            echo '- Requires internal/admin/QA/synthetic activity to remain excluded from real organic users, conversion, traction, retention and creative-performance claims.'
             echo '- Requires deployed Product Funnel truth to remain separate from paid-media launch and Campaign 3,000 eligibility.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
             echo '- Requires prize eligible-user counts to remain unreported until backed by a trusted aggregate and campaign-gate approval.'
