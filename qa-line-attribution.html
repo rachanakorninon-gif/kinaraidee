@@ -35,6 +35,7 @@
   const freshBtn=document.getElementById('freshBtn');
   const returnBtn=document.getElementById('returnBtn');
   const logoutBtn=document.getElementById('logoutBtn');
+  const modeKey='kinaraidee_line_qa_mode';
   const freshClaim={utm_source:'qa_line',utm_medium:'controlled',utm_campaign:'line_attribution_20260909',utm_content:'fresh_signup'};
   const returningClaim={utm_source:'qa_line_return',utm_medium:'controlled',utm_campaign:'line_attribution_20260909',utm_content:'returning_login'};
   let busy=false;
@@ -45,12 +46,17 @@
   async function begin(mode){
     if(busy)return;
     busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
-    sessionStorage.setItem('kinaraidee_line_qa_mode',mode);
-    sessionStorage.removeItem('kinaraidee_line_qa_completed');
+    localStorage.setItem(modeKey,mode);
     await sb.auth.signOut({scope:'local'});
     setStatus('กำลังพาไป LINE…');
     const {error}=await sb.auth.signInWithOAuth({provider:'custom:line',options:{redirectTo}});
-    if(error){busy=false;freshBtn.disabled=false;setStatus('เริ่ม LINE Login ไม่สำเร็จ: '+(error.message||'unknown_error'),false)}
+    if(error){
+      localStorage.removeItem(modeKey);
+      busy=false;
+      freshBtn.disabled=mode!=='fresh';
+      returnBtn.disabled=mode!=='returning';
+      setStatus('เริ่ม LINE Login ไม่สำเร็จ: '+(error.message||'unknown_error'),false);
+    }
   }
 
   async function invokeClaim(body){
@@ -60,9 +66,7 @@
   }
 
   async function runAfterLogin(){
-    if(sessionStorage.getItem('kinaraidee_line_qa_completed')==='1')return;
-    const mode=sessionStorage.getItem('kinaraidee_line_qa_mode');
-    if(mode!=='fresh'&&mode!=='returning')return;
+    if(busy)return;
     const {data:{session}}=await sb.auth.getSession();
     if(!session)return;
     busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
@@ -70,10 +74,24 @@
     if(userError||!user){setStatus('ตรวจสอบ Supabase user ไม่สำเร็จ',false);busy=false;return}
     if(!providersOf(user).has('custom:line')){setStatus('session นี้ไม่ใช่ custom:line — ยุติการทดสอบ',false);busy=false;return}
 
+    const mode=localStorage.getItem(modeKey);
+    if(mode!=='fresh'&&mode!=='returning'){
+      setStatus([
+        'LINE session: VERIFIED',
+        'พบ LINE session จากรอบก่อนหน้าแล้ว',
+        'Fresh attribution ถูกตรวจสอบฝั่ง Backend แล้ว — ห้ามเริ่ม Fresh ซ้ำ',
+        'พร้อมทดสอบ Returning LINE Login'
+      ],true);
+      returnBtn.disabled=false;
+      freshBtn.disabled=true;
+      busy=false;
+      return;
+    }
+
     if(mode==='fresh'){
       const first=await invokeClaim(freshClaim);
       const second=await invokeClaim(freshClaim);
-      sessionStorage.setItem('kinaraidee_line_qa_completed','1');
+      localStorage.removeItem(modeKey);
       const expectedFirst=new Set(['claimed','claimed_referral_unresolved','claimed_self_referral_rejected','claimed_referral_recorded','claimed_referral_existing']);
       const pass=first.ok&&second.ok&&expectedFirst.has(first.result)&&second.result==='already_claimed';
       setStatus([
@@ -85,7 +103,7 @@
       returnBtn.disabled=false;
     }else{
       const result=await invokeClaim(returningClaim);
-      sessionStorage.setItem('kinaraidee_line_qa_completed','1');
+      localStorage.removeItem(modeKey);
       const pass=result.ok&&result.result==='already_claimed';
       setStatus([
         'Returning LINE session: VERIFIED',
@@ -95,12 +113,13 @@
       ],pass);
       returnBtn.disabled=false;
     }
-    busy=false;freshBtn.disabled=false;
+    busy=false;
+    freshBtn.disabled=true;
   }
 
   freshBtn.addEventListener('click',()=>begin('fresh'));
   returnBtn.addEventListener('click',()=>begin('returning'));
-  logoutBtn.addEventListener('click',async()=>{await sb.auth.signOut({scope:'local'});sessionStorage.removeItem('kinaraidee_line_qa_mode');sessionStorage.removeItem('kinaraidee_line_qa_completed');returnBtn.disabled=true;freshBtn.disabled=false;setStatus('ออกจาก QA session แล้ว')});
+  logoutBtn.addEventListener('click',async()=>{await sb.auth.signOut({scope:'local'});localStorage.removeItem(modeKey);returnBtn.disabled=true;freshBtn.disabled=false;setStatus('ออกจาก QA session แล้ว')});
   sb.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(runAfterLogin)});
   sb.auth.getSession().then(({data})=>{if(data?.session)runAfterLogin()});
 })();
