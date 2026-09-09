@@ -50,12 +50,16 @@ jobs:
           done
           test "$count" -eq 16
           echo "Validated $count builder-approved First-100 URLs"
-      - name: Guard truth and spend boundaries
+      - name: Guard recruitment, truth and spend boundaries
         shell: bash
         run: |
           set -euo pipefail
           doc='MARKETING-FIRST-100-ORGANIC-TEST.md'
-          grep -Fq 'READY FOR ORGANIC TEST / NO PAID SPEND AUTHORIZED' "$doc"
+          grep -Fq 'PREPARED / EXECUTION BLOCKED BY PUBLIC BETA RECRUITMENT GATE / NO PAID SPEND AUTHORIZED' "$doc"
+          grep -Fq 'This pack is prepared, but **external recruitment/distribution must not start yet**.' "$doc"
+          grep -Fq 'Issue #3 — Public Beta recruitment gate remains **NOT OPEN**.' "$doc"
+          grep -Fq 'do not count internal/admin/QA sessions as First-100 users, confirmed accounts, conversion or traction' "$doc"
+          grep -Fq 'only after Issue #3 opens the recruitment gate' "$doc"
           grep -Fq '100 newly confirmed accounts' "$doc"
           grep -Fq 'best-effort anonymous browser-session observations and are not authenticated account counts' "$doc"
           grep -Fq 'Privacy-minimal Product Funnel measurement is deployed for reviewed UTM traffic' "$doc"
