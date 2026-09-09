@@ -43,6 +43,22 @@ jobs:
           grep -Fq "Google Maps แทนได้ครับ" "$file"
           echo 'Location UX contract preserved with fresh geolocation request'
 
+      - name: Verify core icon controls have accessible names
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='index.html'
+          grep -Fq 'onclick="show('\''mealStep'\'')" aria-label="กลับไปเลือกมื้ออาหาร">‹</button>' "$file"
+          grep -Fq 'onclick="changePeople(-1)" aria-label="ลดจำนวนคน">−</button>' "$file"
+          grep -Fq 'onclick="changePeople(1)" aria-label="เพิ่มจำนวนคน">+</button>' "$file"
+          grep -Fq 'id="peopleNum" role="status" aria-live="polite" aria-atomic="true"' "$file"
+          grep -Fq 'onclick="show('\''peopleStep'\'')" aria-label="กลับไปเลือกจำนวนคน">‹</button>' "$file"
+          grep -Fq 'onclick="show('\''budgetStep'\'')" aria-label="กลับไปเลือกงบประมาณ">‹</button>' "$file"
+          grep -Fq 'onclick="show('\''typeStep'\'')" aria-label="กลับไปเลือกความชอบ">‹</button>' "$file"
+          grep -Fq 'onclick="shareFood()" aria-label="แชร์เมนูนี้">↗</button>' "$file"
+          test "$(grep -o 'aria-label="กลับหน้าหลัก">‹</button>' "$file" | wc -l | tr -d ' ')" -eq 2
+          echo 'Core icon-only control accessible-name contract preserved'
+
       - name: Verify Home V3 bottom navigation stays above decorated content
         shell: bash
         run: |
