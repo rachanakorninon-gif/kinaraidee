@@ -51,8 +51,8 @@ jobs:
           grep -Fq 'Status: **TEST DESIGN ONLY / BUDGET UNSET / NO SPEND AUTHORIZED**' "$testplan" || {
             echo 'Paid-test plan must keep budget/spend authorization unset'; exit 1;
           }
-          grep -Fq 'Status: **PREPARED / CHANNEL CREATION & PUBLISHING NOT VERIFIED**' "$social" || {
-            echo 'Social launch pack must not imply channels were created/published'; exit 1;
+          grep -Fq 'Status: **PREPARED / CHANNEL CREATION & PUBLISHING NOT VERIFIED / RECRUITMENT GATE NOT OPEN**' "$social" || {
+            echo 'Social launch pack must remain unverified and recruitment-gated preparation'; exit 1;
           }
           grep -Fq 'Status: **CONTENT PREP / NOT PUBLISHED / RECRUITMENT GATE NOT OPEN**' "$calendar" || {
             echo 'Organic content calendar must remain not-published and recruitment-gated preparation'; exit 1;
@@ -107,6 +107,15 @@ jobs:
           grep -Fq 'Do not claim App Store or Google Play availability until actual listings are verified.' "$social" || {
             echo 'Social channel store-availability boundary is missing'; exit 1;
           }
+          grep -Fq 'Public Beta recruitment gate (Issue #3) remains NOT OPEN; this pack does not authorize external acquisition publishing or community seeding.' "$social" || {
+            echo 'Social launch pack recruitment-gate boundary is missing'; exit 1;
+          }
+          grep -Fq 'Internal/admin/QA/synthetic activity must not be counted as users, conversion, traction, retention, followers or creative performance.' "$social" || {
+            echo 'Social launch pack synthetic/internal evidence boundary is missing'; exit 1;
+          }
+          grep -Fq 'Technical readiness of first-party acquisition/referral or Product Funnel measurement does not prove a social channel/post exists and does not create any actual user, conversion, retention, referral, Premium, revenue or campaign-entry result.' "$social" || {
+            echo 'Social launch pack technical-vs-actual boundary is missing'; exit 1;
+          }
           grep -Fq 'No prize-entry wording while campaign status remains PRE-LAUNCH.' "$calendar" || {
             echo 'Organic calendar prize pre-launch boundary is missing'; exit 1;
           }
@@ -145,8 +154,8 @@ jobs:
             echo '## Marketing claims boundary'
             echo
             echo '- Confirms core acquisition measurement may be deployed while scripts, paid tests, social content, community replies and publishing remain pre-launch/prepared only.'
-            echo '- Requires the organic social calendar to remain blocked by the Public Beta recruitment gate until external acquisition is explicitly allowed.'
-            echo '- Requires internal/admin/QA/synthetic activity to remain excluded from real organic users, conversion, traction, retention and creative-performance claims.'
+            echo '- Requires the social channel pack and organic social calendar to remain blocked by the Public Beta recruitment gate until external acquisition is explicitly allowed.'
+            echo '- Requires internal/admin/QA/synthetic activity to remain excluded from real social/organic users, conversion, traction, retention, followers and creative-performance claims.'
             echo '- Requires deployed Product Funnel truth to remain separate from paid-media launch and Campaign 3,000 eligibility.'
             echo '- Requires current Web/PWA CTA and no-store-badge/no-live-prize claims.'
             echo '- Requires prize eligible-user counts to remain unreported until backed by a trusted aggregate and campaign-gate approval.'
