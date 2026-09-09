@@ -1,6 +1,6 @@
 # กินอะไรดี — Community Reply Macros (TH)
 
-Status: **PREPARED / NOT PUBLISHED / RECRUITMENT GATE NOT OPEN**
+Status: **PREPARED / NOT PUBLISHED**
 
 Use these as starting points for public replies only after real social channels exist and the canonical Public Beta recruitment gate permits the intended external interaction. Adapt to the actual question and current verified product/commercial status before posting.
 
