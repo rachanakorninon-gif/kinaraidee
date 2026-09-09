@@ -1,0 +1,69 @@
+name: Social Auth Attribution Claim Live Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/member-acquisition-claim/**'
+      - '.github/workflows/social-auth-attribution-claim-live-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/member-acquisition-claim/**'
+      - '.github/workflows/social-auth-attribution-claim-live-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MEMBER_ACQUISITION_CLAIM_URL: https://cuspfvfzprlgtvtdyilh.supabase.co/functions/v1/member-acquisition-claim
+  ALLOWED_ORIGIN: https://rachanakorninon-gif.github.io
+
+jobs:
+  anonymous-rejection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify deployed endpoint rejects missing user JWT
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --request POST \
+            --header "Origin: ${ALLOWED_ORIGIN}" \
+            --header 'Content-Type: application/json' \
+            --data '{"utm_source":"ci_rejection_probe"}' \
+            "${MEMBER_ACQUISITION_CLAIM_URL}")
+          test "$status" = "401" || {
+            echo "Expected missing user JWT to be rejected with HTTP 401; got $status"
+            exit 1
+          }
+
+      - name: Verify deployed endpoint rejects malformed bearer token
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --request POST \
+            --header "Origin: ${ALLOWED_ORIGIN}" \
+            --header 'Content-Type: application/json' \
+            --header 'Authorization: Bearer not-a-valid-jwt' \
+            --data '{"utm_source":"ci_rejection_probe"}' \
+            "${MEMBER_ACQUISITION_CLAIM_URL}")
+          test "$status" = "401" || {
+            echo "Expected malformed bearer token to be rejected with HTTP 401; got $status"
+            exit 1
+          }
+
+      - name: Record non-mutating evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Social Auth attribution claim live rejection boundary'
+            echo
+            echo '- GitHub-hosted runner reached the deployed member-acquisition-claim endpoint.'
+            echo '- Missing user JWT was rejected.'
+            echo '- Malformed bearer token was rejected.'
+            echo '- No valid account token, user ID, email, phone, referral code or provider subject was used.'
+            echo '- The requests cannot reach the authenticated claim mutation path and do not create attribution/referral acceptance evidence.'
+            echo '- This smoke does not satisfy authenticated forged-field, idempotency, self-referral, invalid-referral, LINE signup, returning-login or email/password regression acceptance.'
+          } >> "$GITHUB_STEP_SUMMARY"
