@@ -36,8 +36,15 @@
     b.textContent=text;
     b.disabled=!enabled;
     b.setAttribute('aria-disabled',enabled?'false':'true');
+    b.setAttribute('aria-busy','false');
     if(enabled)b.addEventListener('click',onClick);
     return b;
+  }
+
+  function setBusy(button,busy){
+    if(!button)return;
+    button.disabled=Boolean(busy);
+    button.setAttribute('aria-busy',busy?'true':'false');
   }
 
   function init(client,options={}){
@@ -52,6 +59,8 @@
       if(!msg)return;
       msg.textContent=text;
       msg.className='msg'+(text?(ok?' ok':' err'):'');
+      msg.setAttribute('role','status');
+      msg.setAttribute('aria-live',ok?'polite':'assertive');
     };
 
     const redirectTo=options.redirectTo||new URL('member.html',location.href).href;
@@ -78,25 +87,44 @@
     title.textContent='เลือกวิธีสมัครสมาชิกหรือเข้าสู่ระบบ';
     box.appendChild(title);
 
-    async function oauthLogin(provider,label){
+    async function oauthLogin(provider,label,button){
+      setBusy(button,true);
       setMessage('กำลังพาไปยัง '+label+'...',true);
-      const {error}=await client.auth.signInWithOAuth({provider,options:{redirectTo}});
-      if(error)setMessage('ยังไม่สามารถเข้าสู่ระบบด้วย '+label+' ได้ กรุณาใช้อีเมลก่อนครับ');
+      try{
+        const {error}=await client.auth.signInWithOAuth({provider,options:{redirectTo}});
+        if(error)setMessage('ยังไม่สามารถเข้าสู่ระบบด้วย '+label+' ได้ กรุณาลองใหม่หรือใช้อีเมลก่อนครับ');
+      }catch{
+        setMessage('เชื่อมต่อ '+label+' ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือใช้อีเมลก่อนครับ');
+      }finally{
+        setBusy(button,false);
+      }
     }
 
-    const lineBtn=createButton('LINE  ดำเนินการต่อด้วย LINE','authProvider authLine',rollout.line,()=>oauthLogin(LINE_PROVIDER,'LINE'));
+    let lineBtn;
+    lineBtn=createButton('LINE  ดำเนินการต่อด้วย LINE','authProvider authLine',rollout.line,()=>oauthLogin(LINE_PROVIDER,'LINE',lineBtn));
     const lineMeta=document.createElement('span');lineMeta.className='authProviderMeta';lineMeta.textContent=rollout.line?'เข้าสู่ระบบผ่าน LINE':'กำลังเตรียมเปิด — ยังไม่เชื่อม Production';lineBtn.appendChild(lineMeta);
     box.appendChild(lineBtn);
 
     const phoneBox=document.createElement('div');
     phoneBox.id='phoneAuthBox';phoneBox.className='phoneAuthBox';
+    phoneBox.setAttribute('role','group');
+    phoneBox.setAttribute('aria-label','เข้าสู่ระบบด้วยเบอร์โทร');
     phoneBox.innerHTML='<label for="authPhone">เบอร์โทรศัพท์</label><input id="authPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="เช่น 0812345678"><div id="phoneOtpStep" style="display:none"><label for="authOtp">รหัส OTP 6 หลัก</label><input id="authOtp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456"></div><div class="phoneActions"><button type="button" id="sendPhoneOtp" class="secondary">ส่ง OTP</button><button type="button" id="verifyPhoneOtp" class="primary" style="display:none">ยืนยัน OTP</button></div>';
 
-    const phoneBtn=createButton('📱  ดำเนินการต่อด้วยเบอร์โทร','authProvider authPhone',rollout.phone,()=>phoneBox.classList.toggle('on'));
+    let phoneBtn;
+    phoneBtn=createButton('📱  ดำเนินการต่อด้วยเบอร์โทร','authProvider authPhone',rollout.phone,()=>{
+      const open=!phoneBox.classList.contains('on');
+      phoneBox.classList.toggle('on',open);
+      phoneBtn.setAttribute('aria-expanded',open?'true':'false');
+      if(open)queueMicrotask(()=>phoneBox.querySelector('#authPhone')?.focus());
+    });
+    phoneBtn.setAttribute('aria-controls','phoneAuthBox');
+    phoneBtn.setAttribute('aria-expanded','false');
     const phoneMeta=document.createElement('span');phoneMeta.className='authProviderMeta';phoneMeta.textContent=rollout.phone?'รับรหัส OTP ทาง SMS':'กำลังเตรียมเปิด — ต้องตั้งค่า SMS provider ก่อน';phoneBtn.appendChild(phoneMeta);
     box.appendChild(phoneBtn);
 
-    const facebookBtn=createButton('f  ดำเนินการต่อด้วย Facebook','authProvider authFacebook',rollout.facebook,()=>oauthLogin('facebook','Facebook'));
+    let facebookBtn;
+    facebookBtn=createButton('f  ดำเนินการต่อด้วย Facebook','authProvider authFacebook',rollout.facebook,()=>oauthLogin('facebook','Facebook',facebookBtn));
     const facebookMeta=document.createElement('span');facebookMeta.className='authProviderMeta';facebookMeta.textContent=rollout.facebook?'เข้าสู่ระบบผ่าน Facebook':'กำลังเตรียมเปิด — ยังไม่เชื่อม Production';facebookBtn.appendChild(facebookMeta);
     box.appendChild(facebookBtn);
     box.appendChild(phoneBox);
@@ -108,28 +136,39 @@
     sendPhoneOtp.addEventListener('click',async()=>{
       const phone=normalizeThaiPhone(phoneBox.querySelector('#authPhone').value);
       if(!phone)return setMessage('กรุณากรอกเบอร์มือถือไทยให้ถูกต้อง เช่น 0812345678');
-      sendPhoneOtp.disabled=true;
+      setBusy(sendPhoneOtp,true);
       setMessage('กำลังส่ง OTP...',true);
-      const {error}=await client.auth.signInWithOtp({phone});
-      sendPhoneOtp.disabled=false;
-      if(error)return setMessage('ส่ง OTP ไม่สำเร็จ กรุณาลองใหม่ภายหลังหรือใช้อีเมลก่อนครับ');
-      pendingPhone=phone;
-      phoneOtpStep.style.display='block';
-      verifyPhoneOtp.style.display='block';
-      setMessage('ส่ง OTP ไปที่ '+maskPhone(phone)+' แล้วครับ',true);
+      try{
+        const {error}=await client.auth.signInWithOtp({phone});
+        if(error)return setMessage('ส่ง OTP ไม่สำเร็จ กรุณาลองใหม่ภายหลังหรือใช้อีเมลก่อนครับ');
+        pendingPhone=phone;
+        phoneOtpStep.style.display='block';
+        verifyPhoneOtp.style.display='block';
+        setMessage('ส่ง OTP ไปที่ '+maskPhone(phone)+' แล้วครับ',true);
+        queueMicrotask(()=>phoneBox.querySelector('#authOtp')?.focus());
+      }catch{
+        setMessage('ส่ง OTP ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือใช้อีเมลก่อนครับ');
+      }finally{
+        setBusy(sendPhoneOtp,false);
+      }
     });
 
     verifyPhoneOtp.addEventListener('click',async()=>{
       const token=String(phoneBox.querySelector('#authOtp').value||'').trim();
       if(!pendingPhone)return setMessage('กรุณาส่ง OTP ก่อนครับ');
       if(!/^\d{6}$/.test(token))return setMessage('กรุณากรอกรหัส OTP 6 หลัก');
-      verifyPhoneOtp.disabled=true;
+      setBusy(verifyPhoneOtp,true);
       setMessage('กำลังยืนยัน OTP...',true);
-      const {error}=await client.auth.verifyOtp({phone:pendingPhone,token,type:'sms'});
-      verifyPhoneOtp.disabled=false;
-      if(error)return setMessage('รหัส OTP ไม่ถูกต้องหรือหมดอายุ กรุณาลองใหม่ครับ');
-      pendingPhone='';
-      setMessage('เข้าสู่ระบบสำเร็จครับ',true);
+      try{
+        const {error}=await client.auth.verifyOtp({phone:pendingPhone,token,type:'sms'});
+        if(error)return setMessage('รหัส OTP ไม่ถูกต้องหรือหมดอายุ กรุณาลองใหม่ครับ');
+        pendingPhone='';
+        setMessage('เข้าสู่ระบบสำเร็จครับ',true);
+      }catch{
+        setMessage('ยืนยัน OTP ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ครับ');
+      }finally{
+        setBusy(verifyPhoneOtp,false);
+      }
     });
 
     const divider=document.createElement('div');divider.className='authDivider';divider.textContent='หรือใช้อีเมล';box.appendChild(divider);
@@ -148,14 +187,18 @@
     async function renderMethods(){
       const chips=document.getElementById('methodChips');
       if(!chips)return;
-      const {data,error}=await client.auth.getUserIdentities();
-      if(error||!data?.identities?.length){chips.innerHTML='<span class="methodChip">ยังไม่พบข้อมูลวิธีเข้าสู่ระบบ</span>';return}
-      const providers=[...new Set(data.identities.map(x=>x.provider).filter(Boolean))];
-      chips.replaceChildren(...providers.map(p=>{const s=document.createElement('span');s.className='methodChip';s.textContent=providerLabel(p)+' • เชื่อมแล้ว';return s}));
+      try{
+        const {data,error}=await client.auth.getUserIdentities();
+        if(error||!data?.identities?.length){chips.innerHTML='<span class="methodChip">ยังไม่พบข้อมูลวิธีเข้าสู่ระบบ</span>';return}
+        const providers=[...new Set(data.identities.map(x=>x.provider).filter(Boolean))];
+        chips.replaceChildren(...providers.map(p=>{const s=document.createElement('span');s.className='methodChip';s.textContent=providerLabel(p)+' • เชื่อมแล้ว';return s}));
+      }catch{
+        chips.innerHTML='<span class="methodChip">ตรวจสอบวิธีเข้าสู่ระบบไม่สำเร็จ • ลองใหม่ภายหลัง</span>';
+      }
     }
 
     client.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(renderMethods)});
-    client.auth.getSession().then(({data})=>{if(data?.session)renderMethods()});
+    client.auth.getSession().then(({data})=>{if(data?.session)renderMethods()}).catch(()=>{});
 
     return {rollout:{...rollout},renderMethods};
   }
