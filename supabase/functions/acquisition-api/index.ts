@@ -12,6 +12,7 @@ const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{
 
 const maxRequestBytes=8192
 const trackingStartedAt='2026-09-03T22:08:32.000Z'
+const approvedSocialConfirmationProviders=new Set(['custom:line','facebook'])
 
 const readBodyLimited=async(req:Request)=>{
   if(!req.body)return {ok:true as const,text:''}
@@ -32,6 +33,11 @@ const readBodyLimited=async(req:Request)=>{
 }
 
 const pct=(n:number,d:number)=>d>0?Number((n*100/d).toFixed(1)):0
+const isProviderNeutralConfirmed=(u:any)=>{
+  if(Boolean(u?.email_confirmed_at)||Boolean(u?.phone_confirmed_at))return true
+  const identities=Array.isArray(u?.identities)?u.identities:[]
+  return identities.some((identity:any)=>approvedSocialConfirmationProviders.has(String(identity?.provider||'')))
+}
 
 Deno.serve(async(req)=>{
   if(req.method==='OPTIONS')return new Response('ok',{headers:{...cors,'Cache-Control':'no-store'}})
@@ -80,10 +86,10 @@ Deno.serve(async(req)=>{
 
   const measuredUsers=users.filter((u:any)=>new Date(u.created_at).getTime()>=measuredSinceMs)
   const measuredIds=new Set(measuredUsers.map((u:any)=>u.id))
-  const confirmedIds=new Set(measuredUsers.filter((u:any)=>Boolean(u.email_confirmed_at)).map((u:any)=>u.id))
+  const confirmedIds=new Set(measuredUsers.filter(isProviderNeutralConfirmed).map((u:any)=>u.id))
   const productWindowUsers=users.filter((u:any)=>new Date(u.created_at).getTime()>=productMeasuredSinceMs)
   const productWindowIds=new Set(productWindowUsers.map((u:any)=>u.id))
-  const productWindowConfirmedIds=new Set(productWindowUsers.filter((u:any)=>Boolean(u.email_confirmed_at)).map((u:any)=>u.id))
+  const productWindowConfirmedIds=new Set(productWindowUsers.filter(isProviderNeutralConfirmed).map((u:any)=>u.id))
 
   const fetchPaged=async(table:string,select:string,dateColumn:string,since:string,limit=20000)=>{
     const all:any[]=[]
@@ -180,6 +186,7 @@ Deno.serve(async(req)=>{
   return json({
     observed:true,
     sourceOfTruth:'Supabase Auth + first-party acquisition/referral/product-event tables',
+    confirmationDefinition:'verified auth method: confirmed email/phone or approved OAuth identity',
     campaignEligibilityIncluded:false,
     spendIncluded:false,
     days,
