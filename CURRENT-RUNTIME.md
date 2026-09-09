@@ -2,9 +2,9 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `062f8b08403918a9766995f814c0f9e99a06dc67`
+- Current browser/PWA runtime candidate: `443be601c36ab89b14c8bf05e226bd1c2ca04c23`
 - PWA cache marker: `kinaraidee-beta-v16`
-- Runtime change: core-control accessibility remediation in `index.html`. Icon-only Back and Share controls now have explicit Thai accessible names, the people counter +/- controls have explicit accessible names, and the current people count is exposed as a polite atomic status update. This candidate retains the previously verified Home V3 CTA contrast and Issue #552 / TC-03 classification fixes.
+- Runtime change: Service Worker cache-cleanup hardening in `sw.js` on top of the newly merged core-control accessibility remediation. Activation now removes only older Kinaraidee-owned `kinaraidee-beta-v*` caches and preserves unrelated Cache Storage entries on the same origin. The cache generation remains v16. This candidate also retains the accessible names/status improvements, previously verified Home V3 CTA contrast, and Issue #552 / TC-03 classification fixes.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Runtime merge/deployed SHA: **PENDING**
 - Last verified deployed browser/PWA descendant: `f6b8598597edd874e69cbfe1dae941c919aaa037`.
@@ -35,6 +35,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current browser/PWA runtime candidate `062f8b08403918a9766995f814c0f9e99a06dc67` is **not yet verified deployed**. It adds accessible names for icon-only Back/Share and people-counter controls plus a polite atomic people-count status. The last verified deployed browser/PWA descendant remains `f6b8598597edd874e69cbfe1dae941c919aaa037`. This candidate cannot become Deployment PASS until it is merged and an exact descendant Pages deployment with corresponding live checks succeeds, and source/CI evidence cannot substitute for any required assistive-technology or physical-device acceptance.
+The current browser/PWA runtime candidate `443be601c36ab89b14c8bf05e226bd1c2ca04c23` is **not yet verified deployed**. It retains the newly merged core-control accessibility remediation and adds Service Worker cache-namespace hardening so activation deletes only older Kinaraidee-owned `kinaraidee-beta-v*` caches while unrelated same-origin Cache Storage entries remain untouched. The cache marker remains `kinaraidee-beta-v16`; this change does not create a new NF-07 cache-generation PASS. The last verified deployed browser/PWA descendant remains `f6b8598597edd874e69cbfe1dae941c919aaa037`. This candidate cannot become Deployment PASS until it is merged and an exact descendant Pages deployment with corresponding live checks succeeds, and source/CI evidence cannot substitute for any required assistive-technology or physical-device acceptance.
 
 The previously recorded OPPO results remain valid only for their recorded scope and do not satisfy the remaining distinct-device matrix, do not close affected-iPhone Issues #524/#545, and do not replace other platform-specific TC/NF or assistive-technology requirements. Historical referral/security/device evidence remains valid only for its recorded scope. No synthetic/backend/static/deployment test substitutes for remaining physical-device requirements, Product Event real-user acceptance, or Commercial evidence. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. This pending runtime candidate does not prove Public Beta completion, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.
