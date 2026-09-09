@@ -18,6 +18,7 @@
     <div class="warn">รอบแรกต้องเป็นบัญชี LINE ที่เพิ่งถูกสร้างใหม่ใน Supabase ภายใน 1 ชั่วโมง เพื่อทดสอบ fresh attribution gate</div>
     <button id="freshBtn" class="primary" type="button">1) เริ่ม Fresh LINE Login</button>
     <button id="returnBtn" class="secondary" type="button" disabled>2) ทดสอบ Returning LINE Login</button>
+    <button id="negativeBtn" class="secondary" type="button" disabled>3) ทดสอบ Negative Edge Guards</button>
     <button id="logoutBtn" class="secondary" type="button">ออกจาก QA session</button>
     <h2>ผลทดสอบ</h2>
     <div id="status" class="status" role="status" aria-live="polite">พร้อมเริ่มทดสอบ</div>
@@ -34,6 +35,7 @@
   const status=document.getElementById('status');
   const freshBtn=document.getElementById('freshBtn');
   const returnBtn=document.getElementById('returnBtn');
+  const negativeBtn=document.getElementById('negativeBtn');
   const logoutBtn=document.getElementById('logoutBtn');
   const modeKey='kinaraidee_line_qa_mode';
   const freshClaim={utm_source:'qa_line',utm_medium:'controlled',utm_campaign:'line_attribution_20260909',utm_content:'fresh_signup'};
@@ -45,7 +47,7 @@
 
   async function begin(mode){
     if(busy)return;
-    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
+    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;negativeBtn.disabled=true;
     localStorage.setItem(modeKey,mode);
     await sb.auth.signOut({scope:'local'});
     setStatus('กำลังพาไป LINE…');
@@ -65,11 +67,51 @@
     return {ok:true,result:String(data?.result||'missing_result'),referral_recorded:Boolean(data?.referral_recorded)};
   }
 
+  async function invokeExpectedError(body){
+    const {data,error}=await sb.functions.invoke('member-acquisition-claim',{body});
+    if(!error)return {status:200,errorCode:String(data?.error||''),unexpectedResult:String(data?.result||'')};
+    const response=error?.context;
+    const responseStatus=Number(response?.status||0);
+    let errorCode='';
+    try{
+      const copy=typeof response?.clone==='function'?response.clone():response;
+      const payload=await copy?.json?.();
+      errorCode=String(payload?.error||'');
+    }catch{}
+    return {status:responseStatus,errorCode};
+  }
+
+  async function runNegativeGuards(){
+    if(busy)return;
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){setStatus('ไม่พบ LINE session สำหรับ Negative Edge test',false);return}
+    const {data:{user},error:userError}=await sb.auth.getUser();
+    if(userError||!user||!providersOf(user).has('custom:line')){setStatus('session นี้ไม่ใช่ LINE session ที่ยืนยันแล้ว — ยุติ Negative Edge test',false);return}
+
+    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;negativeBtn.disabled=true;
+    setStatus('กำลังทดสอบ Edge request guards…');
+
+    const forged=await invokeExpectedError({utm_source:'qa_negative',user_id:'00000000-0000-0000-0000-000000000000'});
+    const malformed=await invokeExpectedError({utm_source:'bad value!'});
+    const forgedPass=forged.status===400&&forged.errorCode==='unknown_field';
+    const malformedPass=malformed.status===400&&malformed.errorCode==='invalid_input';
+    const pass=forgedPass&&malformedPass;
+
+    setStatus([
+      'LINE session: VERIFIED',
+      'Forged user_id body: '+(forgedPass?'REJECTED (unknown_field)':'REVIEW REQUIRED'),
+      'Malformed acquisition field: '+(malformedPass?'REJECTED (invalid_input)':'REVIEW REQUIRED'),
+      pass?'NEGATIVE EDGE GUARDS: PASS':'NEGATIVE EDGE GUARDS: REVIEW REQUIRED',
+      'ไม่มีการส่งหรือแสดง user id จริง, email, provider subject หรือ token'
+    ],pass);
+    busy=false;freshBtn.disabled=true;returnBtn.disabled=false;negativeBtn.disabled=false;
+  }
+
   async function runAfterLogin(){
     if(busy)return;
     const {data:{session}}=await sb.auth.getSession();
     if(!session)return;
-    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;
+    busy=true;freshBtn.disabled=true;returnBtn.disabled=true;negativeBtn.disabled=true;
     const {data:{user},error:userError}=await sb.auth.getUser();
     if(userError||!user){setStatus('ตรวจสอบ Supabase user ไม่สำเร็จ',false);busy=false;return}
     if(!providersOf(user).has('custom:line')){setStatus('session นี้ไม่ใช่ custom:line — ยุติการทดสอบ',false);busy=false;return}
@@ -80,9 +122,10 @@
         'LINE session: VERIFIED',
         'พบ LINE session จากรอบก่อนหน้าแล้ว',
         'Fresh attribution ถูกตรวจสอบฝั่ง Backend แล้ว — ห้ามเริ่ม Fresh ซ้ำ',
-        'พร้อมทดสอบ Returning LINE Login'
+        'พร้อมทดสอบ Returning LINE Login / Negative Edge Guards'
       ],true);
       returnBtn.disabled=false;
+      negativeBtn.disabled=false;
       freshBtn.disabled=true;
       busy=false;
       return;
@@ -100,7 +143,7 @@
         'Repeat claim #2: '+second.result,
         pass?'FRESH + EXACTLY-ONCE: PASS':'FRESH + EXACTLY-ONCE: REVIEW REQUIRED'
       ],pass);
-      returnBtn.disabled=false;
+      returnBtn.disabled=false;negativeBtn.disabled=false;
     }else{
       const result=await invokeClaim(returningClaim);
       localStorage.removeItem(modeKey);
@@ -111,7 +154,7 @@
         pass?'RETURNING FIRST-TOUCH PRESERVATION: CANDIDATE PASS':'RETURNING FIRST-TOUCH: REVIEW REQUIRED',
         'Backend aggregate verification is still required before final PASS.'
       ],pass);
-      returnBtn.disabled=false;
+      returnBtn.disabled=false;negativeBtn.disabled=false;
     }
     busy=false;
     freshBtn.disabled=true;
@@ -119,7 +162,8 @@
 
   freshBtn.addEventListener('click',()=>begin('fresh'));
   returnBtn.addEventListener('click',()=>begin('returning'));
-  logoutBtn.addEventListener('click',async()=>{await sb.auth.signOut({scope:'local'});localStorage.removeItem(modeKey);returnBtn.disabled=true;freshBtn.disabled=false;setStatus('ออกจาก QA session แล้ว')});
+  negativeBtn.addEventListener('click',runNegativeGuards);
+  logoutBtn.addEventListener('click',async()=>{await sb.auth.signOut({scope:'local'});localStorage.removeItem(modeKey);returnBtn.disabled=true;negativeBtn.disabled=true;freshBtn.disabled=false;setStatus('ออกจาก QA session แล้ว')});
   sb.auth.onAuthStateChange((_event,session)=>{if(session)queueMicrotask(runAfterLogin)});
   sb.auth.getSession().then(({data})=>{if(data?.session)runAfterLogin()});
 })();
