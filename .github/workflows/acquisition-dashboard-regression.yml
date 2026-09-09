@@ -5,6 +5,7 @@ on:
     paths:
       - 'acquisition-dashboard.html'
       - 'supabase/functions/acquisition-api/**'
+      - 'ACQUISITION-PROVIDER-NEUTRAL-CONFIRMATION-EVIDENCE.md'
       - '.github/workflows/pages.yml'
       - '.github/workflows/acquisition-dashboard-regression.yml'
   push:
@@ -12,6 +13,7 @@ on:
     paths:
       - 'acquisition-dashboard.html'
       - 'supabase/functions/acquisition-api/**'
+      - 'ACQUISITION-PROVIDER-NEUTRAL-CONFIRMATION-EVIDENCE.md'
       - '.github/workflows/pages.yml'
       - '.github/workflows/acquisition-dashboard-regression.yml'
 
@@ -29,6 +31,7 @@ jobs:
           from pathlib import Path
           api = Path('supabase/functions/acquisition-api/index.ts').read_text()
           ui = Path('acquisition-dashboard.html').read_text()
+          evidence = Path('ACQUISITION-PROVIDER-NEUTRAL-CONFIRMATION-EVIDENCE.md').read_text()
           pages = Path('.github/workflows/pages.yml').read_text()
           required_api = [
               "admin_dashboard_owners",
@@ -41,12 +44,19 @@ jobs:
               "bySource:rank",
               "byCampaign:rank",
               "byContent:rank",
+              "approvedSocialConfirmationProviders=new Set(['custom:line','facebook'])",
+              "Boolean(u?.email_confirmed_at)||Boolean(u?.phone_confirmed_at)",
+              "Array.isArray(u?.identities)?u.identities:[]",
+              "filter(isProviderNeutralConfirmed)",
+              "confirmationDefinition:'verified auth method: confirmed email/phone or approved OAuth identity'",
           ]
           required_ui = [
               "/functions/v1/acquisition-api",
               "ไม่ใช่ Campaign 3,000 eligibility",
               "ยังไม่รวมค่าโฆษณา",
               "ยังระบุแหล่งไม่ได้",
+              "ยืนยันวิธีเข้าสู่ระบบ",
+              "Confirmed = ยืนยันอีเมล/เบอร์โทร หรือ OAuth provider ที่อนุมัติแล้ว",
               'content="noindex,nofollow,noarchive"',
               'content="no-referrer"',
           ]
@@ -54,6 +64,8 @@ jobs:
               assert token in api, f'missing API contract: {token}'
           for token in required_ui:
               assert token in ui, f'missing UI contract: {token}'
+          assert "filter((u:any)=>Boolean(u.email_confirmed_at))" not in api, 'dashboard must not regress to email-only confirmation'
+          assert '<div class="muted">ยืนยันอีเมล</div>' not in ui, 'account KPI label must not imply email-only confirmation'
           private_key_name = "SUPABASE_" + "SERVICE_ROLE_KEY"
           assert private_key_name not in ui, 'service role key must never enter browser HTML'
           assert "sourceOfTruth:'Supabase Auth + first-party acquisition/referral/product-event tables'" in api
@@ -61,5 +73,7 @@ jobs:
           assert "acquisition-dashboard.html" in pages, 'Pages must explicitly publish the noindex acquisition login shell'
           assert "test ! -e _site/admin.html" in pages, 'private admin.html must remain excluded from Pages artifact'
           assert 'href="admin.html"' not in ui, 'public acquisition shell must not link to private admin page'
-          print('Acquisition dashboard contract OK')
+          assert 'Status: **SOURCE PREPARED / DEPLOYMENT EVIDENCE PENDING**' in evidence or 'Status: **DEPLOYED / PROVIDER-NEUTRAL CONFIRMATION VERIFIED**' in evidence, 'provider-neutral evidence status missing'
+          assert 'Production LINE remains disabled' in evidence, 'reporting change must not imply LINE rollout approval'
+          print('Acquisition dashboard provider-neutral confirmation contract OK')
           PY
