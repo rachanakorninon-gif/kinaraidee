@@ -1,8 +1,10 @@
 # Kinaraidee — Social Auth Attribution Parity Design
 
-Status: **SOURCE PREPARED / NOT APPLIED OR DEPLOYED**
+Status: **SERVER-SIDE DEPLOYED / LIVE ACCEPTANCE OPEN / PROVIDER UI DISABLED**
 
-Related: Issue #529, Issue #526, PR #525, PR #528, PR #530.
+Related: Issue #529, Issue #526, PR #525, PR #528, PR #530, PR #531, PR #532.
+
+Deployment evidence: `SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md`.
 
 ## Problem statement
 
@@ -30,7 +32,7 @@ Any implementation must preserve all of these:
 6. **No raw growth-table browser access.** Existing RLS/revokes remain unchanged; the browser uses an authenticated Edge endpoint only.
 7. **Campaign boundary.** Acquisition/referral measurement remains separate from Campaign 3,000 eligibility truth.
 8. **No token/identity evidence.** QA evidence remains aggregate-only and excludes Auth/provider tokens, subject IDs, account IDs, email, phone and raw referral codes.
-9. **Provider rollout stays disabled.** Source may be prepared and later deployed behind a non-user-visible path, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
+9. **Provider rollout stays disabled.** The server-side claim path may be deployed behind a non-user-visible boundary, but the Production LINE/Facebook/Phone buttons remain disabled until the full provider acceptance gate closes.
 10. **Signup-time claim only.** Social/phone attribution may be claimed only in the immediate post-auth signup handoff, not retroactively on an old account's later campaign login.
 
 ## Provider-neutral confirmation rule
@@ -47,13 +49,16 @@ This rule is narrower than “any `auth.users` row is confirmed” and avoids re
 
 The acquisition dashboard must eventually use the same provider-neutral definition when reporting confirmed signups. Until that change is implemented and verified, existing dashboard confirmation metrics must not be interpreted as complete social-auth confirmation metrics.
 
-## Prepared source contract
+## Deployed server-side contract
 
-Prepared but not applied/deployed:
+Prepared in PR #531 and deployed/configuration-evidenced in PR #532:
 
 - database source: `supabase/social-auth-attribution-claim-v1.sql`
 - rollback: `supabase/social-auth-attribution-claim-v1-rollback.sql`
 - Edge source: `supabase/functions/member-acquisition-claim/index.ts`
+- deployment evidence: `SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md`
+
+Current production read-back on 2026-09-09 confirms the reviewed server-side boundary remains deployed: `member-acquisition-claim` is ACTIVE v1 with `verify_jwt=true`; `public.claim_member_acquisition_internal(...)` is `SECURITY INVOKER` with empty `search_path`; browser roles have no EXECUTE on the internal RPC and no direct SELECT on the raw acquisition/referral tables. These are deployment/configuration facts only and do not establish authenticated live acceptance.
 
 The database contract is an internal `public.claim_member_acquisition_internal(...)` RPC with `SECURITY INVOKER`; execute is revoked from `public`, `anon` and `authenticated` and granted only to `service_role`. The public schema placement is solely so the service-role Edge client can call the RPC through the configured PostgREST API surface; browser roles receive no execute grant.
 
@@ -94,7 +99,7 @@ The endpoint rejects unknown action/user/provider fields rather than silently st
 
 ## Concurrency and idempotency
 
-A simple read-then-update is not sufficient because two callback tabs can race. The prepared database function therefore performs the row lock, first-touch update, referral resolution and referral insert in one database transaction.
+A simple read-then-update is not sufficient because two callback tabs can race. The deployed database function therefore performs the row lock, first-touch update, referral resolution and referral insert in one database transaction.
 
 The implementation is designed to be safe to retry after a network interruption:
 
@@ -102,9 +107,9 @@ The implementation is designed to be safe to retry after a network interruption:
 - later/repeated claim observes a populated row and returns `already_claimed`;
 - the referral table primary key on `referred_user_id` plus `ON CONFLICT DO NOTHING` prevents duplicate referred-user relationships.
 
-## Negative acceptance cases
+## Acceptance cases and evidence boundary
 
-Before deployment, automated/source checks must prove:
+Source/static checks must preserve these contracts:
 
 - forged `user_id` in the JSON body cannot target another account because `user_id` is not an accepted body key;
 - unknown fields are rejected;
@@ -119,11 +124,13 @@ Before deployment, automated/source checks must prove:
 - the internal RPC is executable only by `service_role`;
 - the endpoint does not log request body, token, user ID or referral code;
 - existing email signup trigger behavior remains unchanged;
-- Production `member.html` and Service Worker remain unwired from this source during the source-only phase.
+- Production `member.html` and Service Worker remain unwired while provider UI rollout is disabled.
+
+A rejection-only live smoke may additionally prove that the deployed endpoint rejects missing and malformed bearer tokens without using a valid account token. That evidence remains non-mutating and must not be promoted to authenticated forged-field, idempotency, referral, LINE signup or returning-login acceptance.
 
 ## Controlled live acceptance plan
 
-After source review, explicit migration application and Edge deployment behind the disabled provider UI:
+The server-side migration and Edge function are already deployed behind the disabled provider UI. Remaining controlled acceptance requires authenticated/account-specific evidence:
 
 1. Use a fresh controlled browser context with reviewed synthetic UTM/referral data that is isolated from marketing/campaign measurement.
 2. Complete one new LINE signup through the controlled direct provider path.
@@ -131,13 +138,13 @@ After source review, explicit migration application and Edge deployment behind t
 4. Verify aggregate-only backend evidence: one LINE identity, one populated acquisition row for that controlled account, at most one referral relation, no duplicate on repeat login/claim.
 5. Repeat returning-user login and claim; verify attribution does not change and no second referral relation appears.
 6. Exercise invalid referral, self referral, malformed field, old-account claim and retry/concurrent claim negatives without retaining PII in evidence.
-7. Re-run existing raw-table privilege checks and Security Advisor after migration/deployment.
+7. Re-run existing raw-table privilege checks and Security Advisor after any future migration/deployment change.
 8. Re-run existing email/password signup attribution regression.
 9. Update acquisition-dashboard confirmation calculation to the same provider-neutral definition before interpreting social-auth confirmation metrics as complete.
 
 ## Production enablement boundary
 
-Source preparation does not authorize migration application, Edge deployment or Production provider UI wiring. Issue #529 remains OPEN until live controlled attribution/retry/negative evidence and email regression are verified.
+Server-side deployment does not authorize Production provider UI wiring. Issue #529 remains OPEN until live controlled attribution/retry/negative evidence and email regression are verified.
 
 Closing Issue #529 alone is still not sufficient to turn on LINE/Facebook/Phone buttons. The per-provider rollout document also requires physical account isolation, network/failure UX, accessibility, email-auth regression after UI integration and broader supported-device coverage.
 
