@@ -1,0 +1,165 @@
+name: Physical FAIL Remediation Regression
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-oppo-fail-remediations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Syntax-check changed browser helpers
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check data/home-surprise.js
+          node --check data/nearby-restaurants.js
+
+      - name: Verify Preference Surprise tap starts exactly one recommendation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+
+          function extractFunction(source,name){
+            const start=source.indexOf(`function ${name}(`);
+            if(start<0)throw new Error(`Missing function ${name}`);
+            const brace=source.indexOf('{',start);
+            if(brace<0)throw new Error(`Missing body for ${name}`);
+            let depth=0;
+            for(let i=brace;i<source.length;i++){
+              if(source[i]==='{')depth++;
+              else if(source[i]==='}'){
+                depth--;
+                if(depth===0)return source.slice(start,i+1);
+              }
+            }
+            throw new Error(`Unterminated function ${name}`);
+          }
+
+          const source=fs.readFileSync('data/home-surprise.js','utf8');
+          const fn=extractFunction(source,'bindPreferenceSurprise');
+          let selected=0;
+          let recommended=0;
+          const button={
+            dataset:{surprise:'1'},
+            onclick(){selected++}
+          };
+          const context={
+            document:{
+              querySelector(selector){
+                if(selector==='#typeChips .chip[data-surprise]')return button;
+                throw new Error(`Unexpected selector: ${selector}`);
+              }
+            },
+            startRecommend(){recommended++}
+          };
+          vm.createContext(context);
+          vm.runInContext(`${fn}\n;globalThis.__bindPreferenceSurprise=bindPreferenceSurprise;`,context);
+
+          context.__bindPreferenceSurprise();
+          const firstWrappedHandler=button.onclick;
+          context.__bindPreferenceSurprise();
+          if(button.onclick!==firstWrappedHandler)throw new Error('Preference Surprise handler was wrapped more than once');
+
+          button.onclick({type:'click'});
+          if(selected!==1)throw new Error(`Expected original selection handler once, got ${selected}`);
+          if(recommended!==1)throw new Error(`Expected exactly one recommendation action, got ${recommended}`);
+          if(button.dataset.kinaraideeInstantAction!=='1')throw new Error('Preference Surprise bind marker missing');
+
+          console.log('Preference Surprise behavioral regression PASS: selection preserved, exactly one recommendation action fired');
+          NODE
+
+      - name: Verify Nearby Location loading state settles after partner lookup
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+
+          function extractFunction(source,name){
+            const start=source.indexOf(`function ${name}(`);
+            if(start<0)throw new Error(`Missing function ${name}`);
+            const brace=source.indexOf('{',start);
+            if(brace<0)throw new Error(`Missing body for ${name}`);
+            let depth=0;
+            for(let i=brace;i<source.length;i++){
+              if(source[i]==='{')depth++;
+              else if(source[i]==='}'){
+                depth--;
+                if(depth===0)return source.slice(start,i+1);
+              }
+            }
+            throw new Error(`Unterminated function ${name}`);
+          }
+
+          const source=fs.readFileSync('data/nearby-restaurants.js','utf8');
+          const settledFn=extractFunction(source,'locationSettledMessage');
+          const useLocationFn=extractFunction(source,'useLocation');
+
+          async function runScenario(saved){
+            const events=[];
+            let pending=null;
+            let geoOptions=null;
+            const context={
+              navigator:{
+                geolocation:{
+                  getCurrentPosition(success,error,options){
+                    geoOptions=options;
+                    pending=Promise.resolve(success({coords:{latitude:13.7563,longitude:100.5018}}));
+                  }
+                }
+              },
+              saveRequest:async()=>saved,
+              loadPartners:async(lat,lon)=>{events.push({type:'partners',lat,lon})},
+              setLocationStatus:(text,bad=false)=>events.push({type:'status',text,bad}),
+              setBusy:on=>events.push({type:'busy',on}),
+              locationErrorMessage:()=>{throw new Error('Error path should not run in success regression')}
+            };
+            vm.createContext(context);
+            vm.runInContext(`let lastCoords=null;\n${settledFn}\n${useLocationFn}\n;globalThis.__useLocation=useLocation;`,context);
+            context.__useLocation();
+            if(!pending)throw new Error('Geolocation success callback was not invoked');
+            await pending;
+
+            if(!geoOptions||geoOptions.maximumAge!==0)throw new Error('Fresh Location request must preserve maximumAge:0');
+            const busyEvents=events.filter(x=>x.type==='busy').map(x=>x.on);
+            if(busyEvents[0]!==true||busyEvents.at(-1)!==false)throw new Error(`Busy cleanup mismatch: ${JSON.stringify(busyEvents)}`);
+
+            const statusEvents=events.filter(x=>x.type==='status');
+            const finalStatus=statusEvents.at(-1);
+            if(!finalStatus)throw new Error('No Location status emitted');
+            if(finalStatus.text.includes('กำลังหาร้านใกล้คุณ'))throw new Error(`Stale loading status remained: ${finalStatus.text}`);
+            if(!finalStatus.text.includes('ใช้ตำแหน่งปัจจุบันแล้ว'))throw new Error(`Terminal Location status missing success confirmation: ${finalStatus.text}`);
+            if(saved.ok===false&&!finalStatus.text.includes('บันทึกคำขอไม่สำเร็จ'))throw new Error('Save-failure terminal status lost its warning');
+
+            const partnerIndex=events.findIndex(x=>x.type==='partners');
+            const finalStatusIndex=events.lastIndexOf(finalStatus);
+            if(partnerIndex<0||finalStatusIndex<=partnerIndex)throw new Error('Terminal Location status must be written after partner lookup settles');
+
+            return finalStatus.text;
+          }
+
+          (async()=>{
+            const ok=await runScenario({ok:true,deduped:false});
+            const saveFailed=await runScenario({ok:false,deduped:false});
+            console.log('Nearby Location lifecycle PASS:',{ok,saveFailed});
+          })().catch(error=>{console.error(error);process.exit(1)});
+          NODE
+
+      - name: Preserve evidence boundary
+        run: |
+          echo 'Synthetic regressions cover the exact source behaviors behind Issues #592 and #593.'
+          echo 'CI PASS does not close the recorded OPPO/PWA Physical FAIL.'
+          echo 'Fresh post-deployment OPPO/PWA Physical Regression is required before either defect can be accepted closed.'

@@ -16,6 +16,7 @@
   function setPartnerStatus(t,bad=false){setBoxStatus('nearbyStatus',t,bad)}
   function setLocationStatus(t,bad=false){setBoxStatus('nearbyLocationStatus',t,bad)}
   function hideStatus(id){const e=document.getElementById(id);if(e)e.style.display='none'}
+  function locationSettledMessage(saved){return saved?.ok?'✅ ใช้ตำแหน่งปัจจุบันแล้ว':'✅ ใช้ตำแหน่งปัจจุบันแล้ว แต่บันทึกคำขอไม่สำเร็จ — ยังค้นหาร้านใกล้คุณได้ครับ'}
   function locationErrorMessage(error){
     if(!error)return'ยังหาตำแหน่งไม่ได้ — ลองอีกครั้ง หรือใช้ Google Maps แทนได้ครับ';
     if(error.code===1)return'ยังไม่ได้รับสิทธิ์ตำแหน่งจาก Safari/เบราว์เซอร์ — ตรวจ Location ของเว็บไซต์แล้วลองอีกครั้ง หรือใช้ Google Maps แทนได้ครับ';
@@ -57,6 +58,7 @@
       const saved=await saveRequest(lastCoords.lat,lastCoords.lon);
       setLocationStatus(saved.ok?(saved.deduped?'✅ ใช้ตำแหน่งปัจจุบันแล้ว — กำลังหาร้านใกล้คุณ…':'✅ ได้ตำแหน่งแล้วและบันทึกคำขอเรียบร้อย — กำลังหาร้านใกล้คุณ…'):'✅ ได้ตำแหน่งแล้ว แต่บันทึกคำขอไม่สำเร็จ — ยังค้นหาร้านใกล้คุณได้ครับ',!saved.ok);
       await loadPartners(lastCoords.lat,lastCoords.lon);
+      setLocationStatus(locationSettledMessage(saved),!saved.ok);
       setBusy(false);
     },async error=>{
       lastCoords=null;
