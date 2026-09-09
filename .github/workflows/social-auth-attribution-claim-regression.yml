@@ -5,6 +5,7 @@ on:
     paths:
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - 'supabase/social-auth-attribution-claim-v1.sql'
       - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
       - 'supabase/functions/member-acquisition-claim/**'
@@ -17,6 +18,7 @@ on:
     paths:
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
       - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - 'supabase/social-auth-attribution-claim-v1.sql'
       - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
       - 'supabase/functions/member-acquisition-claim/**'
@@ -48,13 +50,15 @@ jobs:
           const edge=fs.readFileSync('supabase/functions/member-acquisition-claim/index.ts','utf8');
           const design=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md','utf8');
           const deployment=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md','utf8');
+          const acceptance=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md','utf8');
           const member=fs.readFileSync('member.html','utf8');
           const sw=fs.readFileSync('sw.js','utf8');
           const prototype=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
           const privilegedRole='service'+'_role';
 
-          must(design.includes('Status: **SERVER-SIDE DEPLOYED / LIVE ACCEPTANCE OPEN / PROVIDER UI DISABLED**'),'design deployment/acceptance status drifted');
+          must(design.includes('Status: **SERVER-SIDE DEPLOYED / ATTRIBUTION LIVE ACCEPTED / PROVIDER UI DISABLED**'),'design deployment/acceptance status drifted');
           must(design.includes('SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'),'design must route to deployment evidence');
+          must(design.includes('SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'),'design must route to live acceptance evidence');
           must(design.includes('Require the Auth account to be no older than **1 hour**'),'signup claim-window contract missing');
           must(design.includes(privilegedRole),'privileged DB role contract missing from design');
           must(design.includes('Provider-neutral confirmation rule'),'provider-neutral confirmation boundary missing');
@@ -62,6 +66,14 @@ jobs:
           must(deployment.includes('Function: `member-acquisition-claim`'),'Edge deployment evidence missing');
           must(deployment.includes('`verify_jwt`: true'),'deployed JWT-verification evidence missing');
           must(deployment.includes('Production `member.html` remains unwired'),'provider UI deployment boundary missing');
+
+          must(acceptance.includes('Status: **PASS — ATTRIBUTION / IDEMPOTENCY / NEGATIVE GUARDS / EMAIL REGRESSION ACCEPTED / PROVIDER UI STILL DISABLED**'),'live acceptance status missing');
+          must(acceptance.includes('`qa_line_return`'),'returning first-touch evidence boundary missing');
+          must(acceptance.includes('`claimed_self_referral_rejected`'),'self-referral negative acceptance missing');
+          must(acceptance.includes('`claimed_referral_unresolved`'),'unresolved-referral negative acceptance missing');
+          must(acceptance.includes('Email/password attribution regression PASS'),'email/password regression acceptance missing');
+          must(acceptance.includes('Leaked Password Protection Disabled'),'separate leaked-password blocker boundary missing');
+          must(acceptance.includes('Production LINE remains disabled'),'provider rollout boundary missing from live acceptance evidence');
 
           must(sql.includes('create or replace function public.claim_member_acquisition_internal'),'internal claim RPC missing');
           must(sql.includes('security invoker'),'claim RPC must remain SECURITY INVOKER');
@@ -104,13 +116,14 @@ jobs:
         shell: bash
         run: |
           {
-            echo '## Social Auth attribution claim source/deployment boundary'
+            echo '## Social Auth attribution claim source/deployment/acceptance boundary'
             echo
             echo '- Database RPC + rollback + Edge source remain guarded against privilege and attribution-contract drift.'
             echo '- Canonical deployment evidence records the server-side migration and ACTIVE JWT-verified Edge deployment.'
+            echo '- Canonical controlled live evidence records fresh/returning attribution, negative acceptance and email/password regression acceptance.'
             echo '- Internal RPC remains SECURITY INVOKER and privileged-role-only, with no auth.users dependency.'
             echo '- Edge source verifies the Auth bearer token, exact origin, request size, approved provider and acquisition allowlist.'
             echo '- Verified Auth created_at enforces the one-hour signup window; DB row lock + first-touch check + referral PK preserve retry/concurrency idempotency.'
             echo '- Production member page and Service Worker remain unwired; rollout flags remain disabled.'
-            echo '- Deployment/static success does not establish authenticated live acceptance or provider rollout readiness.'
+            echo '- Controlled attribution acceptance does not establish provider rollout, Public Beta or Commercial readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
