@@ -5,6 +5,7 @@ on:
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
       - 'LINE-AUTH-CONTROLLED-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   push:
@@ -12,6 +13,7 @@ on:
     paths:
       - 'AUTH-MULTI-PROVIDER-ROLLOUT.md'
       - 'LINE-AUTH-CONTROLLED-EVIDENCE.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'
       - 'prototype/auth-multi-provider/**'
       - '.github/workflows/auth-multi-provider-foundation-regression.yml'
   workflow_dispatch:
@@ -40,6 +42,7 @@ jobs:
           const js=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
           const doc=fs.readFileSync('AUTH-MULTI-PROVIDER-ROLLOUT.md','utf8');
           const evidence=fs.readFileSync('LINE-AUTH-CONTROLLED-EVIDENCE.md','utf8');
+          const acceptance=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md','utf8');
           const member=fs.readFileSync('member.html','utf8');
           const sw=fs.readFileSync('sw.js','utf8');
           const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
@@ -58,22 +61,29 @@ jobs:
           must(!member.includes('custom:line'),'production member page must not directly enable LINE before remaining gates close');
           must(!sw.includes('member-auth-multi-provider.js'),'prototype must remain outside the production Service Worker cache');
 
-          must(doc.includes('PRODUCTION PROVIDERS NOT ENABLED'),'rollout status must preserve disabled Production boundary');
-          must(doc.includes('live attribution acceptance'),'rollout must preserve acquisition/referral live acceptance gate');
-          must(doc.includes('No provider is considered production-ready merely because provider configuration, server-side claim infrastructure or UI/client code exists.'),'provider setup or deployed claim infrastructure must not imply Production readiness');
+          must(doc.includes('Status: **FOUNDATION + CONTROLLED LINE CONFIG + ATTRIBUTION LIVE ACCEPTED / PRODUCTION PROVIDERS NOT ENABLED**'),'rollout status must preserve accepted-attribution plus disabled-Production boundary');
+          must(doc.includes('SOCIAL-AUTH-ATTRIBUTION-LIVE-ACCEPTANCE-EVIDENCE.md'),'rollout must route to canonical live attribution acceptance evidence');
+          must(doc.includes('No provider is considered production-ready merely because provider configuration, server-side claim infrastructure, controlled attribution acceptance or UI/client code exists.'),'provider setup or controlled attribution acceptance must not imply Production readiness');
           must(doc.includes('must not auto-merge two existing application accounts'),'account merge safety boundary missing');
           must(doc.includes('SMS spend/abuse controls'),'phone OTP cost/abuse boundary missing');
           must(doc.includes('intentionally **not** wired into `member.html`, `data/`, the Service Worker cache or the deployed Pages runtime'),'non-deployed prototype boundary missing');
           must(doc.includes('https://access.line.me/oauth2/v2.1/authorize'),'reviewed LINE authorization endpoint missing');
           must(doc.includes('https://api.line.me/oauth2/v2.1/token'),'reviewed LINE token endpoint missing');
           must(doc.includes('https://api.line.me/oauth2/v2.1/userinfo'),'reviewed LINE userinfo endpoint missing');
+          must(doc.includes('physical cross-account profile/history/favorite/referral isolation acceptance'),'remaining isolation blocker must stay explicit');
+          must(doc.includes('network/provider failure retry'),'remaining provider failure gate must stay explicit');
+          must(doc.includes('accessibility review of the actual LINE button flow'),'remaining accessibility gate must stay explicit');
 
-          must(evidence.includes('Status: **CONTROLLED CONFIGURATION VERIFIED / PRODUCTION BUTTON DISABLED**'),'LINE evidence must not imply Production enablement');
+          must(evidence.includes('Status: **CONTROLLED CONFIGURATION VERIFIED / PRODUCTION BUTTON DISABLED**'),'LINE setup evidence must not imply Production enablement');
           must(evidence.includes('Manual OAuth2'),'LINE evidence must record the successful provider mode');
-          must(evidence.includes('Returning LINE login PASS'),'returning-user controlled evidence missing');
-          must(evidence.includes('referral/acquisition attribution parity for a LINE-created account'),'remaining attribution blocker must stay explicit');
-          must(evidence.includes('physical cross-account profile/history/favorite/referral isolation acceptance'),'remaining isolation blocker must stay explicit');
+          must(evidence.includes('Returning LINE login PASS'),'returning-user controlled setup evidence missing');
           must(!evidence.match(/client secret\s*[:=]\s*[A-Za-z0-9_-]{16,}/i),'evidence must not contain a client secret value');
+
+          must(acceptance.includes('Status: **PASS — ATTRIBUTION / IDEMPOTENCY / NEGATIVE GUARDS / EMAIL REGRESSION ACCEPTED / PROVIDER UI STILL DISABLED**'),'canonical attribution acceptance status missing');
+          must(acceptance.includes('Fresh exactly-once attribution PASS / Returning first-touch preservation PASS'),'fresh/returning attribution acceptance missing');
+          must(acceptance.includes('Negative acceptance PASS'),'negative attribution acceptance missing');
+          must(acceptance.includes('Email/password attribution regression PASS'),'email/password attribution regression acceptance missing');
+          must(acceptance.includes('Production LINE remains disabled'),'live acceptance evidence must preserve disabled Production LINE boundary');
           NODE
 
       - name: Summary
@@ -84,8 +94,8 @@ jobs:
             echo
             echo '- LINE / Phone / Facebook remain disabled in the deployed member UI.'
             echo '- Controlled LINE Manual OAuth2 setup and login evidence is documented separately without user identifiers or secrets.'
-            echo '- LINE authorization, cancel/return, new login, returning login and user-initiated logout have scoped controlled evidence only.'
-            echo '- Server-side attribution claim infrastructure is deployed, but live attribution acceptance, physical cross-account isolation, network/failure UX, accessibility and broader device coverage remain open before Production enablement.'
+            echo '- Controlled LINE attribution now has scoped fresh/returning, negative and email/password-regression acceptance evidence.'
+            echo '- Physical cross-account isolation, network/failure UX, accessibility, post-UI email/recovery regression and broader device coverage remain open before Production enablement.'
             echo '- Prototype client integration remains outside member.html and the Service Worker cache.'
             echo '- Existing email/password Auth remains the current Production path.'
           } >> "$GITHUB_STEP_SUMMARY"
