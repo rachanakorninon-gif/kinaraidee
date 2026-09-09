@@ -1,8 +1,9 @@
 # Kinaraidee — First 100 Organic Acquisition Test
 
-Status: **READY FOR ORGANIC TEST / NO PAID SPEND AUTHORIZED**
+Status: **PREPARED / EXECUTION BLOCKED BY PUBLIC BETA RECRUITMENT GATE / NO PAID SPEND AUTHORIZED**
 
-Prepared: 2026-09-04
+Prepared: 2026-09-04  
+Gate rechecked: 2026-09-09
 
 ## Objective
 
@@ -24,6 +25,28 @@ This pack is core-product acquisition only.
 - Ordinary signup/referral measurement is not prize eligibility.
 - Product Funnel measurement is not authenticated identity, Premium/payment truth or Campaign 3,000 eligibility.
 - Do not invent landing sessions, recommendation-result counts, installs, spend, CAC or CPI.
+
+## Execution gate — current as of 2026-09-09
+
+This pack is prepared, but **external recruitment/distribution must not start yet**.
+
+Canonical gate authority remains:
+
+- Issue #5 — required real-device / TC/NF coverage and distinct-device matrix are not complete.
+- Issue #1 — final Beta launch acceptance is not complete.
+- Issue #3 — Public Beta recruitment gate remains **NOT OPEN**.
+- Issue #372 — leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / NOT PASS**.
+
+Social Auth acquisition/referral attribution has improved materially since this pack was first prepared: Issue #529 now records successful negative runtime guards, fresh controlled LINE attribution, returning-login first-touch preservation and existing email/password attribution regression. Production LINE UI is still disabled pending the independent physical/account-isolation/failure/accessibility/device rollout gates. That scoped attribution progress **does not open Issue #3 or authorize recruitment**.
+
+Until Issue #3 explicitly opens:
+
+- do not seed the First-100 links to external testers, communities or public social posts as a recruitment campaign;
+- do not count internal/admin/QA sessions as First-100 users, confirmed accounts, conversion or traction;
+- do not start Wave 0 with synthetic or owner-created accounts just to create a baseline;
+- keep creative, URLs, scripts and measurement checks in preparation-only state.
+
+Once Issue #3 explicitly opens, begin with **Wave 0 — instrumentation sanity check** using genuine tester activity, then progress through Waves 1–3 only from observed evidence.
 
 ## Measurement that is available now
 
@@ -148,7 +171,7 @@ All future variants should be generated through `tools/marketing-url-builder.mjs
 
 ### Wave 0 — instrumentation sanity check
 
-Before public distribution:
+Before public distribution, and only after Issue #3 opens the recruitment gate:
 
 1. Open one reviewed UTM URL in a fresh browser profile/private session.
 2. Use the core product before signup.
