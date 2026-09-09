@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
       - 'supabase/social-auth-attribution-claim-v1.sql'
       - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
       - 'supabase/functions/member-acquisition-claim/**'
@@ -15,6 +16,7 @@ on:
     branches: [main]
     paths:
       - 'SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md'
+      - 'SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'
       - 'supabase/social-auth-attribution-claim-v1.sql'
       - 'supabase/social-auth-attribution-claim-v1-rollback.sql'
       - 'supabase/functions/member-acquisition-claim/**'
@@ -34,7 +36,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Source-only security and rollout contract
+      - name: Source security and disabled-rollout contract
         shell: bash
         run: |
           set -euo pipefail
@@ -45,15 +47,21 @@ jobs:
           const rollback=fs.readFileSync('supabase/social-auth-attribution-claim-v1-rollback.sql','utf8');
           const edge=fs.readFileSync('supabase/functions/member-acquisition-claim/index.ts','utf8');
           const design=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-PARITY-DESIGN.md','utf8');
+          const deployment=fs.readFileSync('SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md','utf8');
           const member=fs.readFileSync('member.html','utf8');
           const sw=fs.readFileSync('sw.js','utf8');
           const prototype=fs.readFileSync('prototype/auth-multi-provider/member-auth-multi-provider.js','utf8');
           const privilegedRole='service'+'_role';
 
-          must(design.includes('Status: **SOURCE PREPARED / NOT APPLIED OR DEPLOYED**'),'design must remain explicitly source-only');
+          must(design.includes('Status: **SERVER-SIDE DEPLOYED / LIVE ACCEPTANCE OPEN / PROVIDER UI DISABLED**'),'design deployment/acceptance status drifted');
+          must(design.includes('SOCIAL-AUTH-ATTRIBUTION-DEPLOYMENT-EVIDENCE.md'),'design must route to deployment evidence');
           must(design.includes('Require the Auth account to be no older than **1 hour**'),'signup claim-window contract missing');
           must(design.includes(privilegedRole),'privileged DB role contract missing from design');
           must(design.includes('Provider-neutral confirmation rule'),'provider-neutral confirmation boundary missing');
+          must(deployment.includes('Migration version: `20260905125841`'),'deployment migration evidence missing');
+          must(deployment.includes('Function: `member-acquisition-claim`'),'Edge deployment evidence missing');
+          must(deployment.includes('`verify_jwt`: true'),'deployed JWT-verification evidence missing');
+          must(deployment.includes('Production `member.html` remains unwired'),'provider UI deployment boundary missing');
 
           must(sql.includes('create or replace function public.claim_member_acquisition_internal'),'internal claim RPC missing');
           must(sql.includes('security invoker'),'claim RPC must remain SECURITY INVOKER');
@@ -88,19 +96,21 @@ jobs:
           must(!edge.includes("from('member_acquisition_attribution')")&&!edge.includes("from('member_referrals')")&&!edge.includes("from('member_referral_codes')"),'Edge claim should not bypass the atomic RPC with raw table writes');
 
           must(prototype.includes('Object.freeze({line:false,phone:false,facebook:false})'),'provider rollout flags must remain disabled');
-          must(!member.includes('member-acquisition-claim'),'Production member page must remain unwired during source-only phase');
+          must(!member.includes('member-acquisition-claim'),'Production member page must remain unwired while provider rollout is disabled');
           must(!member.includes('claim_member_acquisition_internal'),'Production member page must not call internal RPC');
-          must(!sw.includes('member-acquisition-claim'),'Service Worker must not cache/wire source-only claim endpoint');
+          must(!sw.includes('member-acquisition-claim'),'Service Worker must not cache/wire claim endpoint');
           NODE
       - name: Summary
         shell: bash
         run: |
           {
-            echo '## Social Auth attribution claim source'
+            echo '## Social Auth attribution claim source/deployment boundary'
             echo
-            echo '- Database RPC + rollback + Edge source are prepared but not applied/deployed.'
+            echo '- Database RPC + rollback + Edge source remain guarded against privilege and attribution-contract drift.'
+            echo '- Canonical deployment evidence records the server-side migration and ACTIVE JWT-verified Edge deployment.'
             echo '- Internal RPC remains SECURITY INVOKER and privileged-role-only, with no auth.users dependency.'
             echo '- Edge source verifies the Auth bearer token, exact origin, request size, approved provider and acquisition allowlist.'
             echo '- Verified Auth created_at enforces the one-hour signup window; DB row lock + first-touch check + referral PK preserve retry/concurrency idempotency.'
             echo '- Production member page and Service Worker remain unwired; rollout flags remain disabled.'
+            echo '- Deployment/static success does not establish authenticated live acceptance or provider rollout readiness.'
           } >> "$GITHUB_STEP_SUMMARY"
