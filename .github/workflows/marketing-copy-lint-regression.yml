@@ -65,6 +65,41 @@ jobs:
             --campaign th_acq_surprise_202609 \
             --content v15_todayeat_a >/dev/null
 
+      - name: Guard prepared community Premium truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          community='SOCIAL-COMMUNITY-REPLY-MACROS-TH.md'
+          test -s "$community" || { echo 'Missing community reply macros'; exit 1; }
+
+          grep -Fq 'Status: **PREPARED / NOT PUBLISHED**' "$community" || {
+            echo 'Community macros must remain prepared/not-published copy'; exit 1;
+          }
+          grep -Fq 'Premium Beta business price is **THB 59/month**, but paid Premium is **not live**' "$community" || {
+            echo 'Community macros must preserve approved THB 59 price while keeping paid Premium not live'; exit 1;
+          }
+          grep -Fq 'ราคา Premium Beta ที่เจ้าของโครงการอนุมัติไว้คือ 59 บาท/เดือนครับ แต่ตอนนี้ยังไม่ได้เปิดขายหรือรับชำระเงินจริง' "$community" || {
+            echo 'Community Premium-price answer is missing the approved-price/no-live-payment boundary'; exit 1;
+          }
+          grep -Fq 'PromptPay ในแผนนี้ไม่ใช่การหักอัตโนมัติ' "$community" || {
+            echo 'Community PromptPay answer must remain non-auto-renew'; exit 1;
+          }
+          grep -Fq 'ฟังก์ชันนี้ยังต้องผ่านการยืนยันกับ Payment provider และการทดสอบจริงก่อน' "$community" || {
+            echo 'Community card recurring answer must remain provider/test gated'; exit 1;
+          }
+          grep -Fq 'ช่องทางติดต่อที่กำหนดไว้สำหรับ Privacy / Legal / Customer Support คือ rachanakorn.inon@gmail.com' "$community" || {
+            echo 'Community support answer must preserve the owner-approved public contact'; exit 1;
+          }
+          grep -Fq 'Public Beta recruitment gate permits the intended external interaction' "$community" || {
+            echo 'Community macros must stay recruitment-gated before external use'; exit 1;
+          }
+          grep -Fq 'Internal/admin/QA/synthetic activity is not real user traction' "$community" || {
+            echo 'Community macros must not allow synthetic/internal social proof'; exit 1;
+          }
+          grep -Fq 'Do not reply “แก้แล้ว” until the exact fix/deployment is verified.' "$community" || {
+            echo 'Community fix-verification boundary is missing'; exit 1;
+          }
+
       - name: Record evidence boundary
         shell: bash
         run: |
@@ -72,6 +107,8 @@ jobs:
             echo '## Marketing approved-copy lint'
             echo
             echo '- Validates machine-readable Thai core-product copy and canonical destination.'
-            echo '- Negative tests reject Store/download/Premium/prize/group-room claims.'
-            echo '- Does not publish content, authorize spend, verify Store distribution, activate Premium or create prize eligibility.'
+            echo '- Negative tests reject Store/download/Premium/prize/group-room claims in core acquisition copy.'
+            echo '- Guards prepared community replies so THB 59 is described as the approved Beta price while paid Premium remains not live.'
+            echo '- Guards card recurring/provider validation, PromptPay no-auto-renew, recruitment gating, support-contact and synthetic-social-proof boundaries.'
+            echo '- Does not publish content, authorize spend, verify Store distribution, activate Premium/payment, create users/conversion/revenue or create prize eligibility.'
           } >> "$GITHUB_STEP_SUMMARY"
