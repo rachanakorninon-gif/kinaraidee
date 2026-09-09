@@ -130,6 +130,16 @@
       if(!busy)status.textContent='';
     },1200);
   }
+  function bindPreferenceSurprise(){
+    const b=document.querySelector('#typeChips .chip[data-surprise]');
+    if(!b||b.dataset.kinaraideeInstantAction==='1')return;
+    const selectOnly=b.onclick;
+    b.dataset.kinaraideeInstantAction='1';
+    b.onclick=event=>{
+      if(typeof selectOnly==='function')selectOnly.call(b,event);
+      if(typeof startRecommend==='function')startRecommend();
+    };
+  }
   function setBusy(on){
     busy=on;
     const b=document.getElementById('homeSurpriseBtn');
@@ -182,6 +192,7 @@
     ensureProductEvents();
     ensureMemberSync();
     ensurePwaInstallHelper();
+    bindPreferenceSurprise();
     const home=document.querySelector('#home .homeHero');
     if(!home)return;
     decorateHome(home);
