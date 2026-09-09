@@ -38,6 +38,7 @@
     <section class="card scope">
       <b>ช่วงวัดผลบัญชี</b>
       <div id="scopeText" class="muted">กำลังโหลด…</div>
+      <div class="muted">Confirmed = ยืนยันอีเมล/เบอร์โทร หรือ OAuth provider ที่อนุมัติแล้ว • ไม่ใช่สิทธิ์ Campaign 3,000</div>
       <div class="muted">ค่า 0 หมายถึง query จริงพบ 0 รายการ ส่วนข้อมูลก่อนเริ่ม account attribution จะไม่ถูกตีความว่าเป็น Direct/Organic</div>
     </section>
 
@@ -56,7 +57,7 @@
       <div class="metric"><div class="muted">ดูร้านใกล้เคียง</div><div id="nearby" class="big">—</div></div>
       <div class="metric"><div class="muted">Sessions ที่มี event</div><div id="productSessions" class="big">—</div></div>
       <div class="metric"><div class="muted">Signup / Landing</div><div id="productSignupRate" class="big">—</div></div>
-      <div class="metric"><div class="muted">Confirmed / Landing</div><div id="productConfirmedRate" class="big">—</div></div>
+      <div class="metric"><div class="muted">Verified auth / Landing</div><div id="productConfirmedRate" class="big">—</div></div>
     </div>
 
     <section class="card"><h2 class="section-title">📱 Product Funnel by Source</h2><div id="productSources"></div></section>
@@ -66,7 +67,7 @@
     <h2 class="divider">👤 Account Acquisition</h2>
     <div class="cards">
       <div class="metric"><div class="muted">สมัครใหม่ (ช่วงวัดผล)</div><div id="signups" class="big">—</div></div>
-      <div class="metric"><div class="muted">ยืนยันอีเมล</div><div id="confirmed" class="big">—</div><div id="confirmRate" class="muted"></div></div>
+      <div class="metric"><div class="muted">ยืนยันวิธีเข้าสู่ระบบ</div><div id="confirmed" class="big">—</div><div id="confirmRate" class="muted"></div></div>
       <div class="metric"><div class="muted">มี Tracking Row</div><div id="tracked" class="big">—</div><div id="coverage" class="muted"></div></div>
       <div class="metric"><div class="muted">ระบุแหล่งที่มาได้</div><div id="attributed" class="big">—</div></div>
       <div class="metric"><div class="muted">Paid Social</div><div id="paid" class="big">—</div></div>
@@ -93,7 +94,7 @@ const supabase=createClient(SB,KEY),$=id=>document.getElementById(id),esc=s=>Str
 function msg(t){$('loginMsg').textContent=t;$('loginMsg').classList.remove('hidden')}
 async function api(payload={}){const{data:{session}}=await supabase.auth.getSession();if(!session)throw Error('กรุณาเข้าสู่ระบบ Owner');const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'summary',...payload})});const d=await r.json();if(!r.ok)throw Error(d.error||'โหลดข้อมูลไม่สำเร็จ');return d}
 const list=rows=>rows?.length?rows.map((x,i)=>`<div class="row"><span>${i+1}. <b>${esc(x.name)}</b><br><span class="muted">ยืนยัน ${x.confirmed}/${x.count} (${Number(x.confirmationRate||0).toFixed(1)}%)</span></span><b>${x.count} คน</b></div>`).join(''):'<div class="muted">ยังไม่มีข้อมูลที่วัดได้</div>';
-const productList=rows=>rows?.length?rows.map((x,i)=>`<div class="row"><span>${i+1}. <b>${esc(x.name)}</b><br><span class="muted">Landing ${x.landing} • ไม่รู้เลย ${x.surprise} • Result ${x.result} (${Number(x.resultRate||0).toFixed(1)}%) • Signup ${x.signups} • Confirmed ${x.confirmed}</span></span><b>${x.result} ผล</b></div>`).join(''):'<div class="muted">ยังไม่มี Product Funnel ที่วัดได้</div>';
+const productList=rows=>rows?.length?rows.map((x,i)=>`<div class="row"><span>${i+1}. <b>${esc(x.name)}</b><br><span class="muted">Landing ${x.landing} • ไม่รู้เลย ${x.surprise} • Result ${x.result} (${Number(x.resultRate||0).toFixed(1)}%) • Signup ${x.signups} • Verified ${x.confirmed}</span></span><b>${x.result} ผล</b></div>`).join(''):'<div class="muted">ยังไม่มี Product Funnel ที่วัดได้</div>';
 const dt=s=>new Date(s).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
 async function load(){const{data:{session}}=await supabase.auth.getSession();if(!session){$('dash').classList.add('hidden');$('loginBox').classList.remove('hidden');return}try{const d=await api({days:30}),m=d.metrics||{},p=d.productMetrics||{};$('loginBox').classList.add('hidden');$('dash').classList.remove('hidden');$('scopeText').textContent=`${dt(d.measuredSince)} → ${dt(d.generatedAt)} • Account tracking เริ่ม ${dt(d.trackingStartedAt)}`;$('productScopeText').textContent=`${dt(d.productMeasuredSince)} → ${dt(d.generatedAt)} • Product tracking เริ่ม ${dt(d.productTrackingStartedAt)}`;$('landing').textContent=p.landingSessions??0;$('guided').textContent=p.guidedStarts??0;$('surprise').textContent=p.surpriseTaps??0;$('results').textContent=p.recommendationResults??0;$('resultRate').textContent=`${Number(p.resultRate||0).toFixed(1)}% ของ Landing`;$('nearby').textContent=p.nearbyTaps??0;$('productSessions').textContent=p.measuredSessions??0;$('productSignupRate').textContent=`${Number(p.signupRate||0).toFixed(1)}%`;$('productConfirmedRate').textContent=`${Number(p.confirmedRate||0).toFixed(1)}%`;$('productSources').innerHTML=productList(d.productBySource);$('productCampaigns').innerHTML=productList(d.productByCampaign);$('productContents').innerHTML=productList(d.productByContent);$('signups').textContent=m.measuredSignups??0;$('confirmed').textContent=m.confirmedSignups??0;$('confirmRate').textContent=`${Number(m.confirmationRate||0).toFixed(1)}% ของผู้สมัคร`;$('tracked').textContent=m.trackedSignups??0;$('coverage').textContent=`Coverage ${Number(m.attributionCoverage||0).toFixed(1)}%`;$('attributed').textContent=m.attributedSignups??0;$('paid').textContent=m.paidSocialSignups??0;$('referrals').textContent=m.referralSignups??0;$('referralRate').textContent=`${Number(m.referralRate||0).toFixed(1)}% ของผู้สมัคร`;$('confirmedRefs').textContent=m.confirmedReferrals??0;$('refConfirmRate').textContent=`ยืนยัน ${Number(m.referralConfirmationRate||0).toFixed(1)}%`;$('unattributed').textContent=m.unattributedSignups??0;$('sources').innerHTML=list(d.bySource);$('campaigns').innerHTML=list(d.byCampaign);$('contents').innerHTML=list(d.byContent)}catch(e){msg('โหลด Acquisition KPI ไม่สำเร็จ: '+e.message)}}
 $('passwordBtn').onclick=async()=>{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('กรุณาใส่อีเมลและรหัสผ่าน');$('passwordBtn').disabled=true;const{error}=await supabase.auth.signInWithPassword({email,password});$('passwordBtn').disabled=false;if(error)return msg('เข้าสู่ระบบไม่สำเร็จ: '+error.message);$('password').value='';await load()};
