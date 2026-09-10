@@ -226,3 +226,29 @@
   window.addEventListener('online',recover);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 })();
+
+// Keep the existing visual `.on` selection state programmatically exposed to AT.
+(function(){
+  const SELECTOR='#mealChips .option,#peopleChips .pill,#budgetChips .budget,#typeChips .chip';
+  function syncButton(button){
+    button.setAttribute('aria-pressed',button.classList.contains('on')?'true':'false');
+  }
+  function syncSelectionPressedState(){
+    document.querySelectorAll(SELECTOR).forEach(syncButton);
+  }
+  function installSelectionPressedState(){
+    const root=document.querySelector('main.app')||document.body;
+    if(!root||root.dataset.kinaraideeSelectionPressed==='1')return;
+    root.dataset.kinaraideeSelectionPressed='1';
+    syncSelectionPressedState();
+    const observer=new MutationObserver(records=>{
+      for(const record of records){
+        if(record.type==='attributes'&&record.attributeName==='class'&&record.target.matches?.(SELECTOR)){
+          syncButton(record.target);
+        }
+      }
+    });
+    observer.observe(root,{subtree:true,attributes:true,attributeFilter:['class']});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSelectionPressedState);else installSelectionPressedState();
+})();
