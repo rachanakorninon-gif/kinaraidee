@@ -5,7 +5,7 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Current browser/PWA runtime candidate: `de18711695bb94617c3cffa7767cb3943c0d2c05`
 - PWA cache marker: `kinaraidee-beta-v16`
 - Runtime change: Issues #592/#593 OPPO/PWA QA remediation on top of the deployed Service Worker cache-namespace hardening and prior core-control accessibility work. The Preference-screen `🎲 ไม่รู้เลย — เลือกให้ฉัน` control now promotes its existing selection-state handler into an immediate recommendation action instead of returning without starting the recommendation pipeline. The Nearby Location-success path now writes a terminal Location status after the awaited partner lookup settles, so `กำลังหาร้านใกล้คุณ...` cannot remain stale after partner/fallback state is already rendered. The cache generation remains v16.
-- Deployment status: **PASS FOR CURRENT RUNTIME DEPLOYMENT**
+- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 - Runtime merge/deployed SHA: `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`
 - GitHub Pages run `34382130901` completed **success** on exact deployed SHA `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`.
 - Kinaraidee Live Smoke run `34382207087` completed **success** on the same exact deployed SHA.
