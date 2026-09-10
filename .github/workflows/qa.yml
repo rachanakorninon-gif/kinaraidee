@@ -35,6 +35,64 @@ jobs:
       - name: Validate web manifest JSON
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"
 
+      - name: Verify PWA manifest and local app-shell contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const path=require('path');
+          const manifest=JSON.parse(fs.readFileSync('manifest.webmanifest','utf8'));
+          const fail=(message)=>{throw new Error(message)};
+          const assert=(condition,message)=>{if(!condition)fail(message)};
+
+          assert(typeof manifest.name==='string'&&manifest.name.trim(),'manifest.name must be non-empty');
+          assert(typeof manifest.short_name==='string'&&manifest.short_name.trim(),'manifest.short_name must be non-empty');
+          assert(manifest.lang==='th','manifest.lang must remain th');
+          assert(manifest.start_url==='./','manifest.start_url must remain ./');
+          assert(manifest.scope==='./','manifest.scope must remain ./');
+          assert(manifest.display==='standalone','manifest.display must remain standalone');
+          assert(/^#[0-9a-f]{6}$/i.test(manifest.background_color||''),'manifest.background_color must be a 6-digit hex color');
+          assert(/^#[0-9a-f]{6}$/i.test(manifest.theme_color||''),'manifest.theme_color must be a 6-digit hex color');
+          assert(Array.isArray(manifest.icons)&&manifest.icons.length>0,'manifest.icons must contain at least one icon');
+
+          const localIcons=[];
+          for(const [index,icon] of manifest.icons.entries()){
+            assert(icon&&typeof icon.src==='string'&&icon.src.trim(),`manifest icon ${index} needs src`);
+            assert(!/^(?:https?:|data:)/i.test(icon.src),`manifest icon ${index} must be a local asset`);
+            const local=icon.src.replace(/^\.\//,'');
+            assert(local&&!local.startsWith('../')&&!path.isAbsolute(local),`manifest icon ${index} escapes app scope`);
+            assert(fs.existsSync(local)&&fs.statSync(local).isFile(),`manifest icon missing: ${local}`);
+            localIcons.push('./'+local);
+            const purposes=new Set(String(icon.purpose||'').trim().split(/\s+/).filter(Boolean));
+            assert(purposes.has('any'),`manifest icon ${index} must support purpose any`);
+            assert(purposes.has('maskable'),`manifest icon ${index} must support purpose maskable`);
+          }
+
+          const indexHtml=fs.readFileSync('index.html','utf8');
+          const linkTags=indexHtml.match(/<link\b[^>]*>/gi)||[];
+          const manifestLink=linkTags.find(tag=>/\brel=["']manifest["']/i.test(tag));
+          assert(manifestLink&&/\bhref=["'](?:\.\/)?manifest\.webmanifest["']/i.test(manifestLink),'index.html must link manifest.webmanifest as rel=manifest');
+
+          const sw=fs.readFileSync('sw.js','utf8');
+          const shellMatch=sw.match(/const SHELL=\[([\s\S]*?)\];/);
+          assert(shellMatch,'sw.js must declare a static SHELL array');
+          const shell=[...shellMatch[1].matchAll(/['"]([^'"]+)['"]/g)].map(match=>match[1]);
+          assert(shell.includes('./manifest.webmanifest'),'Service Worker shell must include manifest.webmanifest');
+          for(const icon of localIcons){
+            assert(shell.includes(icon),`Service Worker shell must include manifest icon: ${icon}`);
+          }
+          for(const entry of shell){
+            if(entry==='./')continue;
+            assert(entry.startsWith('./'),`Service Worker shell entry must stay app-relative: ${entry}`);
+            const local=entry.slice(2);
+            assert(local&&!local.startsWith('../')&&!path.isAbsolute(local),`Service Worker shell entry escapes app scope: ${entry}`);
+            assert(fs.existsSync(local)&&fs.statSync(local).isFile(),`Service Worker shell asset missing: ${entry}`);
+          }
+
+          console.log(`PWA manifest/app-shell contract PASS: ${manifest.icons.length} manifest icon(s), ${shell.length} shell entries`);
+          NODE
+
       - name: Check JavaScript syntax
         shell: bash
         run: |
