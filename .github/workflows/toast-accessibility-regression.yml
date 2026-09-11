@@ -1,0 +1,122 @@
+name: Toast Accessibility Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'index.html'
+      - 'data/toast-accessibility.js'
+      - 'data/home-surprise.js'
+      - '.github/workflows/toast-accessibility-regression.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'data/toast-accessibility.js'
+      - 'data/home-surprise.js'
+      - '.github/workflows/toast-accessibility-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-toast-accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify polite live-region and repeated-message contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const assert=require('assert');
+          const html=fs.readFileSync('index.html','utf8');
+          const controller=fs.readFileSync('data/toast-accessibility.js','utf8');
+          const surprise=fs.readFileSync('data/home-surprise.js','utf8');
+
+          assert(html.includes('<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>'),'toast markup must be a polite atomic status region');
+          assert(html.includes('</script><script src="data/toast-accessibility.js"></script><script src="data/home-surprise.js"></script>'),'toast controller must load after the base toast function and before home-surprise');
+          assert(!html.includes('id="toast" class="toast" role="alert"'),'ordinary toast must not become an interruptive alert');
+          assert(controller.includes("node.setAttribute('role','status')"));
+          assert(controller.includes("node.setAttribute('aria-live','polite')"));
+          assert(controller.includes("node.setAttribute('aria-atomic','true')"));
+          assert(controller.includes("node.textContent=''"),'controller must clear live-region text before re-announcing');
+          assert(controller.includes('2200'),'visible toast duration must remain 2200 ms');
+          assert(!controller.includes('.focus('),'toast feedback must not move keyboard focus');
+
+          const attrs={};
+          const classes=new Set();
+          const node={
+            dataset:{},
+            textContent:'previous',
+            setAttribute(name,value){attrs[name]=value},
+            classList:{add(name){classes.add(name)},remove(name){classes.delete(name)}}
+          };
+          let nextFrame=0,nextTimer=0;
+          const frames=new Map(),timers=new Map();
+          const context={
+            window:{toast(){throw new Error('base toast must be replaced')}},
+            document:{getElementById(id){assert.strictEqual(id,'toast');return node}},
+            requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id},
+            cancelAnimationFrame(id){frames.delete(id)},
+            setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,ms});return id},
+            clearTimeout(id){timers.delete(id)},
+            console
+          };
+          context.window.window=context.window;
+          context.window.document=context.document;
+          context.window.setTimeout=context.setTimeout;
+          context.window.clearTimeout=context.clearTimeout;
+          context.window.requestAnimationFrame=context.requestAnimationFrame;
+          context.window.cancelAnimationFrame=context.cancelAnimationFrame;
+          vm.createContext(context);
+          vm.runInContext(controller,context);
+
+          assert.strictEqual(attrs.role,'status');
+          assert.strictEqual(attrs['aria-live'],'polite');
+          assert.strictEqual(attrs['aria-atomic'],'true');
+          assert.strictEqual(node.dataset.kinaraideeToastA11y,'1');
+
+          context.window.toast('เลือกมื้อก่อนนะครับ');
+          assert.strictEqual(node.textContent,'','toast must clear before announcing');
+          assert.strictEqual(frames.size,1,'toast must schedule one fresh announcement frame');
+          let [frameId,frame]=[...frames.entries()][0];
+          frames.delete(frameId);frame();
+          assert.strictEqual(node.textContent,'เลือกมื้อก่อนนะครับ');
+          assert(classes.has('show'));
+          assert.strictEqual(timers.size,1);
+          let [timerId,timer]=[...timers.entries()][0];
+          assert.strictEqual(timer.ms,2200);
+
+          context.window.toast('เลือกมื้อก่อนนะครับ');
+          assert(!timers.has(timerId),'repeated message must cancel the prior hide timer');
+          assert.strictEqual(node.textContent,'','repeated identical text must clear before re-announcing');
+          assert.strictEqual(frames.size,1);
+          [frameId,frame]=[...frames.entries()][0];
+          frames.delete(frameId);frame();
+          assert.strictEqual(node.textContent,'เลือกมื้อก่อนนะครับ');
+          assert(classes.has('show'));
+
+          for(const text of ['เลือกมื้อก่อนนะครับ','เลือกงบประมาณก่อนนะครับ','บันทึกเมนูโปรดแล้ว ❤️','คัดลอกสำหรับแชร์แล้ว','กำลังเปิดร้านใกล้คุณ…']) {
+            assert(html.includes(text),`expected existing toast purpose to remain: ${text}`);
+          }
+          assert(surprise.includes("status.id='homeSurpriseStatus'"),'Surprise must retain its own live region');
+          assert(surprise.includes("status.setAttribute('role','status')"),'Surprise live-region semantics missing');
+          assert(!controller.includes('homeSurpriseStatus'),'ordinary toast must stay separate from Surprise announcements');
+          console.log('Toast accessibility contract preserved');
+          NODE
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Toast accessibility evidence boundary'
+            echo
+            echo '- Verifies source/runtime semantics and repeated-message behavior only.'
+            echo '- Does not establish VoiceOver/TalkBack Physical PASS or full accessibility conformance.'
+            echo '- Surprise busy announcements remain a separate live-region contract.'
+          } >> "$GITHUB_STEP_SUMMARY"
