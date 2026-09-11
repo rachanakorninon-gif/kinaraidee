@@ -9,6 +9,8 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 - Runtime merge/deployed SHA: **PENDING**
 - Last verified deployed browser/PWA descendant: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.
 - Current runtime deployment evidence is pending for source candidate `e2cb05c41705112721fa33308a5e4f5578a8820c`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.
+- Prior verified deployment evidence remains historical and is not reused as current PASS.
+- Source/CI completion does not prove deployment, Physical PASS, Public Beta completion, or Commercial GO.
 - The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current Issue #585 candidate is merged and independently deployed/verified.
 - Deployment PASS does not create or broaden Physical PASS.
 - The previous verified Issue #583 runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` was merged/deployed as `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; GitHub Pages run `34559056400`, Kinaraidee Live Smoke run `34559096757`, Auth Password Security Live Smoke run `34559096658`, and Campaign 3000 Premium Live Smoke run `34559096690` completed successfully on that exact deployed SHA. That trace remains historical deployment evidence.
