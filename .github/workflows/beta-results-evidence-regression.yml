@@ -1,0 +1,85 @@
+name: Beta Results Evidence Boundary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'BETA-RESULTS-TEMPLATE.md'
+      - '.github/workflows/beta-results-evidence-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'BETA-RESULTS-TEMPLATE.md'
+      - '.github/workflows/beta-results-evidence-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  results-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard real-data reporting semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-RESULTS-TEMPLATE.md'
+          test -s "$doc"
+
+          grep -Fq 'Status: **TEMPLATE ONLY / USE AFTER PUBLIC BETA RECRUITMENT GATE OPENS / REAL DATA ONLY**' "$doc"
+          grep -Fq '`0` = ตรวจจากแหล่ง authoritative แล้วพบศูนย์จริง' "$doc"
+          grep -Fq '`NOT MEASURED` = ระบบ/แหล่งข้อมูลไม่ได้วัด metric นั้น' "$doc"
+          grep -Fq '`NOT AVAILABLE` = capability ยังไม่มี' "$doc"
+          grep -Fq '`PENDING` = ต้องรอหลักฐาน/ระยะเวลา cohort/การทดสอบจริง' "$doc"
+          grep -Fq 'QA / synthetic / owner / admin traffic ต้องแยกออกจาก real-user metrics เสมอ' "$doc"
+
+      - name: Guard funnel and retention interpretation
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-RESULTS-TEMPLATE.md'
+          grep -Fq 'กำหนด denominator ให้ชัดก่อนคำนวณเปอร์เซ็นต์' "$doc"
+          grep -Fq 'ห้ามตีความ `dont_know_click` เพียงอย่างเดียวว่าแก้ปัญหาให้ผู้ใช้สำเร็จ' "$doc"
+          grep -Fq 'Reroll เป็นสัญญาณกำกวม' "$doc"
+          grep -Fq 'ห้ามรายงาน D7/D30 เป็น `0%` ถ้า cohort ยังมีอายุไม่ถึง 7/30 วัน ให้ใช้ `PENDING`' "$doc"
+          grep -Fq 'CI/Deployment PASS ไม่เท่ากับ Physical PASS' "$doc"
+
+      - name: Guard monetization truth hierarchy
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-RESULTS-TEMPLATE.md'
+          grep -Fq '`restaurant click ≠ transaction ≠ commission ≠ revenue`' "$doc"
+          grep -Fq 'ไม่ใช่ paid conversion, subscriber, MRR หรือ revenue' "$doc"
+          grep -Fq 'browser success redirect ไม่ใช่ payment truth' "$doc"
+          grep -Fq 'payment success ต้องมาจาก provider/backend authority' "$doc"
+          grep -Fq 'Premium entitlement ต้องมาจาก backend authority' "$doc"
+          grep -Fq 'Test Mode / sandbox ห้ามนับเป็น Production payment หรือ revenue' "$doc"
+          grep -Fq 'ห้ามคำนวณ revenue จาก `THB 59 × Premium CTA clicks/checkouts`' "$doc"
+          grep -Fq 'CAC = actual spend / actual paying customers' "$doc"
+
+      - name: Guard data-quality and scale gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-RESULTS-TEMPLATE.md'
+          grep -Fq '## 16. Data Quality Gate' "$doc"
+          grep -Fq 'ถ้า tracking/data quality ไม่น่าเชื่อถือ ให้สถานะรายงานเป็น `INCONCLUSIVE` และห้ามใช้เพื่อ SCALE' "$doc"
+          grep -Fq 'ห้ามเลือก `SCALE` จาก CTR, views, signup หรือ stated intent เพียงอย่างเดียว' "$doc"
+          grep -Fq 'พร้อม Payment/Legal/Tracking/QA/Support/Security gates ที่เกี่ยวข้องผ่านจริง' "$doc"
+          grep -Fq 'Template นี้ไม่สร้างหรือพิสูจน์ tester, user, session, conversion, retention, payment, subscriber, partner, affiliate transaction, commission, revenue, CAC, LTV, Public Beta PASS หรือ Commercial GO ใด ๆ' "$doc"
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Beta results evidence boundary'
+            echo
+            echo '- Preserves zero vs unmeasured vs unavailable vs pending semantics.'
+            echo '- Keeps QA/admin/synthetic observations separate from real-user business metrics.'
+            echo '- Keeps research intent, checkout, provider payment, Premium entitlement, affiliate commission and revenue as distinct evidence stages.'
+            echo '- Prevents immature retention cohorts or media diagnostics from being presented as SCALE evidence.'
+            echo '- Does not open recruitment, create users, authorize payment/ad spend, or create Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
