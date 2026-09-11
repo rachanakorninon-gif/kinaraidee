@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   repair:
-    if: ${{ github.event.head_commit.message == 'chore(ci): trigger Issue 585 runtime boundary sync' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -23,6 +22,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          helper='.github/workflows/issue-585-runtime-boundary-one-shot.yml'
+          if [ ! -f "$helper" ]; then
+            echo 'Helper already removed; nothing to do.'
+            exit 0
+          fi
           python <<'PY'
           from pathlib import Path
           p=Path('CURRENT-RUNTIME.md')
@@ -43,7 +47,7 @@ jobs:
           grep -Fq 'Source/CI completion does not prove deployment, Physical PASS, Public Beta completion, or Commercial GO.' CURRENT-RUNTIME.md
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/issue-585-runtime-boundary-one-shot.yml
+          git rm "$helper"
           git add CURRENT-RUNTIME.md
           git commit -m 'docs(runtime): preserve Issue 585 pending evidence boundaries'
           git push origin HEAD:fix/a11y-toast-live-region-585-v2
