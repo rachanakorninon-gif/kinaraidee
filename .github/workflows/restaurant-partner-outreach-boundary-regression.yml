@@ -1,0 +1,107 @@
+name: Restaurant Partner Outreach Boundary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'RESTAURANT-PARTNER-OUTREACH-PACK.md'
+      - 'RESTAURANT-AFFILIATE-COMMERCIAL-EVIDENCE-TEMPLATE.md'
+      - 'MONETIZATION-PLAN.md'
+      - '.github/workflows/restaurant-partner-outreach-boundary-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'RESTAURANT-PARTNER-OUTREACH-PACK.md'
+      - 'RESTAURANT-AFFILIATE-COMMERCIAL-EVIDENCE-TEMPLATE.md'
+      - 'MONETIZATION-PLAN.md'
+      - '.github/workflows/restaurant-partner-outreach-boundary-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  partner-outreach-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard outreach authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          test -s "$doc"
+          grep -Fq 'PREPARATION ONLY — NO OUTREACH AUTHORIZED — NO COMMERCIAL PARTNER ESTABLISHED' "$doc"
+          grep -Fq 'การส่งข้อความ โทร ติดต่อร้าน ตกลงราคา เซ็นสัญญา หรือยืนยัน partner ต้องได้รับ owner authorization' "$doc"
+          grep -Fq '**ใช้หลัง owner อนุมัติ outreach จริงเท่านั้น**' "$doc"
+          grep -Fq 'อย่าใส่ราคา commission, traffic forecast หรือ commitment ที่ยังไม่ได้รับอนุมัติ' "$doc"
+
+      - name: Guard prospect partner and revenue stages
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          grep -Fq '**PROSPECT**' "$doc"
+          grep -Fq '**QUALIFIED**' "$doc"
+          grep -Fq '**AGREED**' "$doc"
+          grep -Fq '**LIVE PARTNER**' "$doc"
+          grep -Fq '**CONFIRMED TRANSACTION**' "$doc"
+          grep -Fq '**PAID COMMISSION**' "$doc"
+          grep -Fq 'ห้ามเปลี่ยน PROSPECT / form submission / click / QA fixture เป็น partner หรือ revenue โดยอัตโนมัติ' "$doc"
+          grep -Fq 'คำว่า `QUALIFY` ไม่เท่ากับ partner และไม่เพิ่ม Partner count' "$doc"
+
+      - name: Guard evidence-safe partner proposition
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          grep -Fq 'ไม่อ้าง traffic/conversion ที่ยังไม่มี' "$doc"
+          grep -Fq 'ตอนนี้เป็นช่วง validation จึงยังไม่ขอรับรองจำนวนผู้ใช้ ยอดขาย หรือ conversion จนกว่าจะมีข้อมูลจริงรองรับ' "$doc"
+          grep -Fq 'คำตอบจาก discovery เป็น **research evidence** จนกว่าจะมี agreement/acceptance จริง' "$doc"
+
+      - name: Guard commercial verification and pilot gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          grep -Fq 'conversion ยืนยันได้เฉพาะจาก client/browser claim' "$doc"
+          grep -Fq 'conversion source of truth is provider/backend-verifiable' "$doc"
+          grep -Fq 'duplicate/idempotency strategy exists' "$doc"
+          grep -Fq 'cancel/refund/dispute semantics defined' "$doc"
+          grep -Fq 'reconciliation process repeatable' "$doc"
+          grep -Fq 'NO LIVE PARTNER PILOT' "$doc"
+
+      - name: Guard commission truth hierarchy
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          canonical='RESTAURANT-AFFILIATE-COMMERCIAL-EVIDENCE-TEMPLATE.md'
+          test -s "$canonical"
+          grep -Fq 'confirmed transactions:' "$doc"
+          grep -Fq 'approved commission count/value:' "$doc"
+          grep -Fq 'paid commission:' "$doc"
+          grep -Fq 'ห้ามใช้ `restaurant clicks × assumed conversion × assumed commission` เป็น actual revenue' "$doc"
+          grep -Fq '`restaurant click`' "$canonical"
+          grep -Fq '`confirmed transaction`' "$canonical"
+          grep -Fq '`paid commission`' "$canonical"
+
+      - name: Guard no commercial result created
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='RESTAURANT-PARTNER-OUTREACH-PACK.md'
+          grep -Fq 'outreach launched by this file: **NO**' "$doc"
+          grep -Fq 'Outreach copy, prospect list, research interview, Partner form submission, API integration, click, QA fixture หรือ proposed commercial term ไม่ใช่หลักฐานของ live commercial partner' "$doc"
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Restaurant partner outreach evidence boundary'
+            echo
+            echo '- Outreach remains owner-authorized external work; this pack only prepares qualification, copy and handoff.'
+            echo '- Prospect, contacted, qualified, agreed, live, transaction and paid-commission stages remain distinct.'
+            echo '- Affiliate conversion requires provider/backend-verifiable truth plus reconciliation and refund/cancel/dispute semantics.'
+            echo '- No prospect, partner, transaction, commission or revenue is created by this workflow.'
+          } >> "$GITHUB_STEP_SUMMARY"
