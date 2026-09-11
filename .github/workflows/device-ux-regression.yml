@@ -70,6 +70,44 @@ jobs:
           grep -Fq 'installSelectedStateA11y();' "$file"
           echo 'Selected-state visual/programmatic synchronization contract preserved'
 
+      - name: Verify SPA screen focus management
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='data/home-surprise.js'
+          grep -Fq 'function installScreenFocusA11y(){' "$file"
+          grep -Fq "home:'.heroTitle'" "$file"
+          grep -Fq "mealStep:'.stepHead h1'" "$file"
+          grep -Fq "peopleStep:'.topbar b'" "$file"
+          grep -Fq "budgetStep:'.topbar b'" "$file"
+          grep -Fq "typeStep:'.stepHead h1'" "$file"
+          grep -Fq "loading:'.loading h2'" "$file"
+          grep -Fq "result:'.topbar b'" "$file"
+          grep -Fq "history:'.topbar b'" "$file"
+          grep -Fq "target.setAttribute('tabindex','-1')" "$file"
+          grep -Fq "target.setAttribute('role','heading')" "$file"
+          grep -Fq "if(id==='loading')return;" "$file"
+          grep -Fq "target.focus({preventScroll:true})" "$file"
+          grep -Fq 'installScreenFocusA11y();' "$file"
+          node <<'NODE'
+          const fs=require('fs');
+          const source=fs.readFileSync('data/home-surprise.js','utf8');
+          const installStart=source.indexOf('function installScreenFocusA11y(){');
+          const installEnd=source.indexOf('function ensurePremiumHomeStyles(){',installStart);
+          if(installStart<0||installEnd<0)throw new Error('screen-focus helper boundary missing');
+          const helper=source.slice(installStart,installEnd);
+          const wrapper=helper.match(/window\.show=function\(id\)\{([\s\S]*?)\n    \};/);
+          if(!wrapper)throw new Error('show wrapper missing');
+          const body=wrapper[1];
+          const activate=body.indexOf('originalShow(id);');
+          const focus=body.indexOf('focusDestination(id);');
+          if(activate<0||focus<0||activate>=focus)throw new Error('destination focus must run after screen activation');
+          if(!helper.includes("if(!screen||!screen.classList.contains('active'))return;"))throw new Error('active-screen focus guard missing');
+          if(!helper.includes("if(!screen.classList.contains('active'))return;"))throw new Error('scheduled stale-screen focus guard missing');
+          console.log('SPA screen focus ordering and stale-screen guards preserved');
+          NODE
+          echo 'SPA screen focus accessibility contract preserved'
+
       - name: Verify Home V3 bottom navigation stays above decorated content
         shell: bash
         run: |
