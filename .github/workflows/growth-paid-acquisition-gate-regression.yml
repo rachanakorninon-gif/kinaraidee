@@ -1,0 +1,117 @@
+name: Growth Paid Acquisition Gate Regression
+
+on:
+  pull_request:
+    paths:
+      - 'GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - 'BETA-METRICS.md'
+      - 'BETA-RESULTS-TEMPLATE.md'
+      - '.github/workflows/growth-paid-acquisition-gate-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - 'BETA-METRICS.md'
+      - 'BETA-RESULTS-TEMPLATE.md'
+      - '.github/workflows/growth-paid-acquisition-gate-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  growth-paid-acquisition-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard current spend authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          matrix='COMMERCIAL-READINESS-MATRIX.md'
+          test -s "$doc"
+          test -s "$matrix"
+
+          grep -Fq 'PLAN / TEMPLATE ONLY — NO AD SPEND AUTHORIZED — PAID ACQUISITION LOCKED FROM SCALE' "$doc"
+          grep -Fq 'Public Beta recruitment: **NOT OPEN**' "$doc"
+          grep -Fq 'Paid acquisition: **NO LAUNCH AUTHORITY / LOCKED FROM SCALE**' "$doc"
+          grep -Fq 'Commercial GO: **NO-GO**' "$doc"
+          grep -Fq 'owner explicit approval' "$doc"
+          grep -Fq 'Paid acquisition / ads | **LOCKED FROM SCALE**' "$matrix"
+
+      - name: Guard plan hypothesis actual separation
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          grep -Fq '**PLAN** — สิ่งที่เตรียมจะทำเมื่อ gate เปิด' "$doc"
+          grep -Fq '**HYPOTHESIS** — สิ่งที่ต้องทดลอง' "$doc"
+          grep -Fq '**ACTUAL** — ค่าที่มาจาก Production/platform/provider source of truth จริง' "$doc"
+          grep -Fq 'ห้ามนำ PLAN หรือ HYPOTHESIS ไปกรอกเป็น ACTUAL' "$doc"
+          grep -Fq 'planning ranges / hypotheses' "$doc"
+          grep -Fq 'planning example / hypothesis เท่านั้น' "$doc"
+
+      - name: Guard paid experiment prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          grep -Fq 'release-scoped defect evidence' "$doc"
+          grep -Fq '`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`' "$doc"
+          grep -Fq 'QA/admin/synthetic/owner traffic แยกจาก real-user metrics' "$doc"
+          grep -Fq 'D1/D7/D30 ใช้เฉพาะ cohort ที่ mature' "$doc"
+          grep -Fq 'ถ้า Premium gate ยังไม่ผ่าน' "$doc"
+          grep -Fq 'ถ้าข้อใดที่จำเป็นยัง FAIL / PENDING / INCONCLUSIVE → **NO PAID LAUNCH**' "$doc"
+
+      - name: Guard media product and economics truth hierarchy
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          grep -Fq 'Level 1 — Media diagnostics' "$doc"
+          grep -Fq 'Level 2 — Product / funnel' "$doc"
+          grep -Fq 'Level 3 — Retention' "$doc"
+          grep -Fq 'Level 4 — Premium monetization' "$doc"
+          grep -Fq 'Level 5 — Unit economics' "$doc"
+          grep -Fq 'CAC = **actual paid acquisition spend / actual paying customers attributed under the declared rule**' "$doc"
+          grep -Fq '`checkout_start` ไม่ใช่ paying customer' "$doc"
+          grep -Fq 'observed LTV ต้องใช้ paid lifetime/retention/cost evidence จริง' "$doc"
+
+      - name: Guard scale decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          grep -Fq '### STOP' "$doc"
+          grep -Fq '### CONTINUE' "$doc"
+          grep -Fq '### SCALE' "$doc"
+          grep -Fq '**ห้ามเลือก SCALE จาก CTR, CPC, views, likes, signup หรือ checkout อย่างเดียว**' "$doc"
+          grep -Fq 'owner ให้ explicit approval สำหรับ budget ใหม่' "$doc"
+          grep -Fq 'การผ่าน first paid-cycle acceptance ยัง **ไม่ใช่ SCALE approval**' "$doc"
+
+      - name: Guard no fabricated business result
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='GROWTH-PAID-ACQUISITION-RUNBOOK.md'
+          grep -Fq 'Actual CAC: **NOT AVAILABLE**' "$doc"
+          grep -Fq 'Observed LTV: **NOT AVAILABLE / PENDING real paid lifetime evidence**' "$doc"
+          grep -Fq 'User/conversion/payment/revenue result from this runbook: **NONE CREATED**' "$doc"
+          grep -Fq 'ไม่สร้าง user, conversion, CAC, LTV, payment หรือ revenue ใด ๆ' "$doc"
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Growth / paid acquisition evidence boundary'
+            echo
+            echo '- Keeps campaign planning and budget examples distinct from owner-authorized spend.'
+            echo '- Keeps platform diagnostics distinct from Product funnel, retention, payment and unit economics.'
+            echo '- Requires real attributed paying customers for CAC and real paid-lifetime/cost evidence for observed LTV.'
+            echo '- Keeps paid launch and SCALE closed until the declared gates and owner approvals are satisfied.'
+            echo '- Creates no ad spend, users, conversions, payments, revenue, CAC or LTV.'
+          } >> "$GITHUB_STEP_SUMMARY"
