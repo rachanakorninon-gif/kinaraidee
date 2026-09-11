@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - 'BETA-RESULTS-TEMPLATE.md'
+      - 'BETA-METRICS.md'
+      - 'BETA-DAILY-LOG.md'
       - '.github/workflows/beta-results-evidence-regression.yml'
   push:
     branches: ['main']
     paths:
       - 'BETA-RESULTS-TEMPLATE.md'
+      - 'BETA-METRICS.md'
+      - 'BETA-DAILY-LOG.md'
       - '.github/workflows/beta-results-evidence-regression.yml'
   workflow_dispatch:
 
@@ -21,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Guard real-data reporting semantics
+      - name: Guard results real-data reporting semantics
         shell: bash
         run: |
           set -euo pipefail
@@ -35,7 +39,7 @@ jobs:
           grep -Fq '`PENDING` = ต้องรอหลักฐาน/ระยะเวลา cohort/การทดสอบจริง' "$doc"
           grep -Fq 'QA / synthetic / owner / admin traffic ต้องแยกออกจาก real-user metrics เสมอ' "$doc"
 
-      - name: Guard funnel and retention interpretation
+      - name: Guard results funnel and retention interpretation
         shell: bash
         run: |
           set -euo pipefail
@@ -46,7 +50,7 @@ jobs:
           grep -Fq 'ห้ามรายงาน D7/D30 เป็น `0%` ถ้า cohort ยังมีอายุไม่ถึง 7/30 วัน ให้ใช้ `PENDING`' "$doc"
           grep -Fq 'CI/Deployment PASS ไม่เท่ากับ Physical PASS' "$doc"
 
-      - name: Guard monetization truth hierarchy
+      - name: Guard results monetization truth hierarchy
         shell: bash
         run: |
           set -euo pipefail
@@ -60,7 +64,7 @@ jobs:
           grep -Fq 'ห้ามคำนวณ revenue จาก `THB 59 × Premium CTA clicks/checkouts`' "$doc"
           grep -Fq 'CAC = actual spend / actual paying customers' "$doc"
 
-      - name: Guard data-quality and scale gate
+      - name: Guard results data-quality and scale gate
         shell: bash
         run: |
           set -euo pipefail
@@ -71,15 +75,52 @@ jobs:
           grep -Fq 'พร้อม Payment/Legal/Tracking/QA/Support/Security gates ที่เกี่ยวข้องผ่านจริง' "$doc"
           grep -Fq 'Template นี้ไม่สร้างหรือพิสูจน์ tester, user, session, conversion, retention, payment, subscriber, partner, affiliate transaction, commission, revenue, CAC, LTV, Public Beta PASS หรือ Commercial GO ใด ๆ' "$doc"
 
+      - name: Guard Beta metrics authority and business truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-METRICS.md'
+          test -s "$doc"
+          grep -Fq 'Status: **METRIC DEFINITIONS READY / RECRUITMENT GATE REQUIRED / NO REAL BETA RESULT IMPLIED**' "$doc"
+          grep -Fq 'QA / owner / admin / synthetic traffic ต้องแยกออกจาก real-user business metrics' "$doc"
+          grep -Fq 'Product Funnel สำหรับ reviewed UTM traffic = best-effort anonymous browser-session observations' "$doc"
+          grep -Fq 'Supabase Auth/account truth = signup / confirmed account' "$doc"
+          grep -Fq 'Future payment provider + backend entitlement = payment success และ Premium activation' "$doc"
+          grep -Fq 'ถ้า cohort ยังไม่ครบ 7/30 วัน ห้ามรายงาน D7/D30 เป็น `0%`; ให้ใช้ `PENDING`' "$doc"
+          grep -Fq '`restaurant click ≠ transaction ≠ commission ≠ revenue`' "$doc"
+          grep -Fq 'Premium Beta **THB 59/month** และ no Free Trial แล้ว' "$doc"
+          grep -Fq 'Research answer, CTA click หรือ checkout intent **ไม่ใช่ paid conversion, subscriber, MRR หรือ revenue**' "$doc"
+          grep -Fq '`CAC = actual reconciled acquisition spend / actual paying customers`' "$doc"
+          grep -Fq 'ถ้า data quality ไม่น่าเชื่อถือ ให้ผลรอบนั้นเป็น `INCONCLUSIVE` และห้ามใช้เพื่อ SCALE' "$doc"
+
+      - name: Guard daily log real-observation discipline
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='BETA-DAILY-LOG.md'
+          test -s "$doc"
+          grep -Fq 'Status: **TEMPLATE ONLY / USE AFTER RECRUITMENT GATE OPENS / REAL OBSERVATIONS ONLY**' "$doc"
+          grep -Fq '`0` = ตรวจ authoritative source แล้วพบศูนย์จริง' "$doc"
+          grep -Fq 'QA / owner / admin / synthetic traffic ต้องแยกออกจาก real-user metrics' "$doc"
+          grep -Fq 'ถ้า cohort ยังไม่ครบช่วงเวลา ให้ใช้ `PENDING` ไม่ใช่ `0%`' "$doc"
+          grep -Fq 'CI/Deployment PASS ไม่เท่ากับ Physical PASS' "$doc"
+          grep -Fq '`restaurant click ≠ transaction ≠ commission ≠ revenue`' "$doc"
+          grep -Fq 'Intent at owner-approved THB 59/month' "$doc"
+          grep -Fq 'Browser redirect/checkout ไม่ใช่ payment truth และ Test Mode/sandbox ไม่ใช่ Production payment/revenue' "$doc"
+          grep -Fq 'CAC = actual spend / actual paying customers' "$doc"
+          grep -Fq 'ถ้า data quality ไม่น่าเชื่อถือ ให้ระบุ `INCONCLUSIVE` และห้ามใช้รอบนั้นเพื่อ SCALE' "$doc"
+          grep -Fq 'ห้ามเลือก `SCALE` จาก CTR, views, signup หรือ stated intent เพียงอย่างเดียว' "$doc"
+
       - name: Record evidence boundary
         shell: bash
         run: |
           {
-            echo '## Beta results evidence boundary'
+            echo '## Beta business evidence boundary'
             echo
-            echo '- Preserves zero vs unmeasured vs unavailable vs pending semantics.'
+            echo '- Preserves zero vs unmeasured vs unavailable vs pending semantics across metrics, daily logs and final results.'
             echo '- Keeps QA/admin/synthetic observations separate from real-user business metrics.'
-            echo '- Keeps research intent, checkout, provider payment, Premium entitlement, affiliate commission and revenue as distinct evidence stages.'
+            echo '- Keeps anonymous Product Funnel sessions, authenticated accounts, research intent, payment, Premium entitlement, affiliate commission and revenue as distinct evidence stages.'
             echo '- Prevents immature retention cohorts or media diagnostics from being presented as SCALE evidence.'
+            echo '- Preserves the owner-approved THB 59 Premium proposition while keeping payment/revenue evidence future-gated.'
             echo '- Does not open recruitment, create users, authorize payment/ad spend, or create Commercial GO.'
           } >> "$GITHUB_STEP_SUMMARY"
