@@ -54,8 +54,15 @@ jobs:
             'PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE')
               deployed="$(sed -n 's/^- Runtime merge\/deployed SHA: `\([0-9a-f]\{40\}\)`.*/\1/p' "$file" | head -n1)"
               test -n "$deployed" || { echo 'Missing deployed SHA evidence'; exit 1; }
-              grep -Eq 'Pages run `?[0-9]+`? completed \*\*success\*\*|Pages `?[0-9]+`?.*= SUCCESS|Pages run `?[0-9]+`? = success' "$file" || { echo 'Missing current successful Pages run evidence'; exit 1; }
-              grep -Eq 'main Live Smoke run `?[0-9]+`? completed \*\*success\*\*|main Live Smoke `?[0-9]+`?.*= SUCCESS|Live Smoke run `?[0-9]+`? = success' "$file" || { echo 'Missing current successful Live Smoke evidence'; exit 1; }
+
+              grouped_evidence='GitHub Pages run `?[0-9]+`?, Kinaraidee Live Smoke `?[0-9]+`?, Auth Password Security Live Smoke `?[0-9]+`?, and Campaign 3000 Premium Live Smoke `?[0-9]+`? completed successfully'
+
+              if ! grep -Eq 'Pages run `?[0-9]+`? completed \*\*success\*\*|Pages `?[0-9]+`?.*= SUCCESS|Pages run `?[0-9]+`? = success' "$file"; then
+                grep -Eq "$grouped_evidence" "$file" || { echo 'Missing current successful Pages run evidence'; exit 1; }
+              fi
+              if ! grep -Eq 'main Live Smoke run `?[0-9]+`? completed \*\*success\*\*|main Live Smoke `?[0-9]+`?.*= SUCCESS|Live Smoke run `?[0-9]+`? = success' "$file"; then
+                grep -Eq "$grouped_evidence" "$file" || { echo 'Missing current successful Live Smoke evidence'; exit 1; }
+              fi
               grep -Fq 'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' "$file" || { echo 'Current deployment PASS scope boundary is missing'; exit 1; }
               ;;
             *)
