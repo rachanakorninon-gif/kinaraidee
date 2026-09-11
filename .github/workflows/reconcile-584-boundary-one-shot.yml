@@ -1,0 +1,48 @@
+name: Reconcile 584 boundary one-shot
+
+on:
+  push:
+    branches: ["docs/reconcile-584-deployment-20260911"]
+    paths:
+      - '.github/workflows/reconcile-584-boundary-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message == 'chore(ci): stage #584 boundary repair'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-584-deployment-20260911
+          fetch-depth: 0
+      - name: Repair verified deployment wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='- Deployment PASS does not create or broaden Physical PASS.'
+          new='- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.\n- Deployment PASS does not create or broaden Physical PASS.'
+          if old not in text:
+              raise SystemExit('deployment scope insertion target missing')
+          text=text.replace(old,new,1)
+          stale='That trace remains the last verified browser/PWA deployment while Issue #584 is pending deployment.'
+          text=text.replace(stale,'That trace remains historical verified deployment evidence for Issue #583 and does not replace the current Issue #584 deployment trace.',1)
+          stale2='Public Beta remains NOT COMPLETE, and this pending accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.'
+          text=text.replace(stale2,'Public Beta remains NOT COMPLETE, and this deployed accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.',1)
+          p.write_text(text)
+          PY
+          grep -Fq 'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' CURRENT-RUNTIME.md
+          if grep -Fq 'Issue #584 is pending deployment' CURRENT-RUNTIME.md; then echo 'stale pending wording remains'; exit 1; fi
+          if grep -Fq 'this pending accessibility runtime' CURRENT-RUNTIME.md; then echo 'stale pending boundary remains'; exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): fix #584 verified deployment boundary'
+          git push origin HEAD:docs/reconcile-584-deployment-20260911
