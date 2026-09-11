@@ -71,6 +71,33 @@
     });
     controls.forEach(control=>observer.observe(control,{attributes:true,attributeFilter:['class']}));
   }
+  function installToastA11y(){
+    const node=document.getElementById('toast');
+    if(!node||node.dataset.kinaraideeToastA11y==='1')return;
+    node.dataset.kinaraideeToastA11y='1';
+    node.setAttribute('role','status');
+    node.setAttribute('aria-live','polite');
+    node.setAttribute('aria-atomic','true');
+    if(typeof window.toast!=='function')return;
+    let announceTimer=null;
+    let hideTimer=null;
+    window.toast=message=>{
+      const text=String(message??'');
+      if(announceTimer)clearTimeout(announceTimer);
+      if(hideTimer)clearTimeout(hideTimer);
+      node.classList.remove('show');
+      node.textContent='';
+      announceTimer=setTimeout(()=>{
+        announceTimer=null;
+        node.textContent=text;
+        node.classList.add('show');
+        hideTimer=setTimeout(()=>{
+          hideTimer=null;
+          node.classList.remove('show');
+        },2200);
+      },40);
+    };
+  }
   function ensurePremiumHomeStyles(){
     if(document.getElementById('kinaraideeHomeV3Styles'))return;
     const style=document.createElement('style');
@@ -205,6 +232,7 @@
   function install(){
     ensureAccessibilityStyles();
     installSelectedStateA11y();
+    installToastA11y();
     ensureAcquisition();
     ensureProductEvents();
     ensureMemberSync();
