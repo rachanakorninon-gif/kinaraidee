@@ -1,0 +1,58 @@
+name: Patch 585 runtime boundary one-shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-live-region-585-v3"]
+    paths:
+      - '.github/workflows/patch-585-runtime-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ github.event.head_commit.message == 'chore(ci): patch 585 runtime boundary once' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-live-region-585-v3
+          fetch-depth: 0
+      - name: Advance current candidate while preserving verified #584 deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old_candidate='- Current browser/PWA runtime candidate: `bde1bfed79696f6982852ca67d3ee4c8120c0c54`'
+          new_candidate='- Current browser/PWA runtime candidate: `f9b5f137375e9d30d1053d9cad814d636cb88821`'
+          old_change='- Runtime change: Issue #584 accessibility remediation on top of the verified Issue #583 selected-state runtime. Core SPA destinations now receive deterministic programmatic focus targets and the existing `show(id)` navigation path is wrapped so Home, Meal, People, Budget, Preference, Result and History move focus into the newly activated screen. The transient Loading screen intentionally keeps focus in place so the existing Surprise live region owns the busy announcement; Result receives destination focus when it replaces Loading. Non-interactive focus targets use `tabindex="-1"`, and visual/top-of-screen behavior remains unchanged. The cache generation remains v16.'
+          new_change='- Runtime change: Issue #585 accessibility remediation on top of the verified Issue #584 focus-management runtime. Ordinary `#toast` validation/confirmation feedback is exposed as a polite atomic status live region through dedicated `data/toast-accessibility.js`. Repeated identical toast text is cleared and re-announced across a fresh animation frame while preserving the existing visible 2200 ms duration and without moving keyboard focus. The Surprise-specific busy live region remains separate and unchanged. The cache generation remains v16.'
+          old_status='- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**'
+          new_status='- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**'
+          old_merge='- Runtime merge/deployed SHA: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.'
+          new_merge='- Runtime merge/deployed SHA: **PENDING**'
+          old_evidence='- Current runtime deployment evidence: PR #614 source candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remains `kinaraidee-beta-v16`.'
+          new_evidence='- Current runtime deployment evidence is pending for source candidate `f9b5f137375e9d30d1053d9cad814d636cb88821`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.\n- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current Issue #585 candidate is merged and independently deployed/verified.'
+          old_scope='- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.'
+          new_scope='- Prior verified deployment evidence remains historical and is not reused as current PASS.'
+          old_boundary='The current browser/PWA runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` is verified deployed through exact merged-main descendant `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully for that deployment trace while preserving `kinaraidee-beta-v16`. This establishes the browser/PWA deployment trace for the Issue #584 focus-management remediation only. It does not prove VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          new_boundary='The current browser/PWA runtime candidate `f9b5f137375e9d30d1053d9cad814d636cb88821` contains the source/static remediation and dedicated regression guard for Issue #585, but current-runtime deployment evidence is still pending. The last verified deployed browser/PWA descendant is `2896748584a1058e9ba1bbc939f49f3b6faf4baf` for the prior Issue #584 source candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54`; GitHub Pages `34560369925`, Kinaraidee Live Smoke `34560396807`, Auth Password Security Live Smoke `34560396831`, and Campaign 3000 Premium Live Smoke `34560396804` completed successfully on that exact deployed SHA. No source/static/CI result for Issue #585 proves deployment, VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          replacements=[(old_candidate,new_candidate),(old_change,new_change),(old_status,new_status),(old_merge,new_merge),(old_evidence,new_evidence),(old_scope,new_scope),(old_boundary,new_boundary),('this deployed accessibility runtime does not establish','this pending accessibility runtime does not establish')]
+          for old,new in replacements:
+              if old not in text:
+                  raise SystemExit(f'missing expected runtime text: {old[:80]}')
+              text=text.replace(old,new,1)
+          p.write_text(text)
+          PY
+          grep -Fq 'Current browser/PWA runtime candidate: `f9b5f137375e9d30d1053d9cad814d636cb88821`' CURRENT-RUNTIME.md
+          grep -Fq 'Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**' CURRENT-RUNTIME.md
+          grep -Fq 'Last verified deployed browser/PWA descendant: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`' CURRENT-RUNTIME.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/patch-585-runtime-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare Issue 585 pending candidate'
+          git push origin HEAD:fix/a11y-toast-live-region-585-v3
