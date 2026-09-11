@@ -1,0 +1,44 @@
+name: Issue 585 candidate sync one-shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-live-region-585-v2"]
+    paths:
+      - '.github/workflows/issue-585-candidate-sync-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-live-region-585-v2
+          fetch-depth: 0
+      - name: Advance canonical source candidate and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          old='e2cb05c41705112721fa33308a5e4f5578a8820c'
+          new='d98288933cb104b62d759ccbe9615b3da15a197e'
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='e2cb05c41705112721fa33308a5e4f5578a8820c'
+          new='d98288933cb104b62d759ccbe9615b3da15a197e'
+          if old not in text:
+              raise SystemExit('old Issue #585 candidate missing')
+          text=text.replace(old,new)
+          p.write_text(text)
+          PY
+          grep -Fq 'Current browser/PWA runtime candidate: `d98288933cb104b62d759ccbe9615b3da15a197e`' CURRENT-RUNTIME.md
+          if grep -Fq "$old" CURRENT-RUNTIME.md; then echo 'stale Issue #585 candidate remains'; exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-585-candidate-sync-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): advance Issue 585 candidate after app-shell fix'
+          git push origin HEAD:fix/a11y-toast-live-region-585-v2
