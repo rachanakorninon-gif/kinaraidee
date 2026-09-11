@@ -1,0 +1,49 @@
+name: Issue 585 runtime boundary one-shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-live-region-585-v2"]
+    paths:
+      - '.github/workflows/issue-585-runtime-boundary-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ github.event.head_commit.message == 'chore(ci): trigger Issue 585 runtime boundary sync' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-live-region-585-v2
+          fetch-depth: 0
+      - name: Preserve pending runtime evidence boundaries and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          anchor='- Current runtime deployment evidence is pending for source candidate `e2cb05c41705112721fa33308a5e4f5578a8820c`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.'
+          prior='- Prior verified deployment evidence remains historical and is not reused as current PASS.'
+          proof='- Source/CI completion does not prove deployment, Physical PASS, Public Beta completion, or Commercial GO.'
+          if anchor not in text:
+              raise SystemExit('Issue #585 pending evidence anchor missing')
+          additions=[]
+          if prior not in text: additions.append(prior)
+          if proof not in text: additions.append(proof)
+          if additions:
+              text=text.replace(anchor,anchor+'\n'+'\n'.join(additions),1)
+          p.write_text(text)
+          PY
+          grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS.' CURRENT-RUNTIME.md
+          grep -Fq 'Source/CI completion does not prove deployment, Physical PASS, Public Beta completion, or Commercial GO.' CURRENT-RUNTIME.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-585-runtime-boundary-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): preserve Issue 585 pending evidence boundaries'
+          git push origin HEAD:fix/a11y-toast-live-region-585-v2
