@@ -1,0 +1,41 @@
+name: Issue 585 deployment reconciliation helper v2
+
+on:
+  push:
+    branches: ["docs/reconcile-585-deployment-20260911"]
+    paths:
+      - '.github/workflows/issue-585-deployment-sync-one-shot-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout reconciliation branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-585-deployment-20260911
+          fetch-depth: 0
+      - name: Execute reviewed reconciliation payload and remove helpers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import textwrap
+          source=Path('.github/workflows/issue-585-deployment-sync-one-shot.yml').read_text()
+          marker='        run: |\n'
+          if source.count(marker)!=1:
+              raise SystemExit(f'expected one payload marker, got {source.count(marker)}')
+          payload=source.split(marker,1)[1]
+          payload=textwrap.dedent(payload)
+          old='git rm .github/workflows/issue-585-deployment-sync-one-shot.yml'
+          new='git rm .github/workflows/issue-585-deployment-sync-one-shot.yml .github/workflows/issue-585-deployment-sync-one-shot-v2.yml'
+          if payload.count(old)!=1:
+              raise SystemExit(f'expected one helper cleanup command, got {payload.count(old)}')
+          payload=payload.replace(old,new,1)
+          Path('/tmp/reconcile-585.sh').write_text(payload)
+          PY
+          bash /tmp/reconcile-585.sh
