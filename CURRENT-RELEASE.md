@@ -72,7 +72,7 @@ Historical verified deployment evidence remains valid for its original scope:
 
 Prior verified PR #179 v16 deployment evidence remains historical/scoped support: Pages `32752667752`, Live Smoke `32752716631` and diagnostic `32752782165` for merge `1d21613c3c7d3e62ed8f7e5c3f00700606129c58`.
 
-Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish VoiceOver/TalkBack Physical PASS, Product Event real-user interaction/traction, referral conversion, weak/leaked-password rejection or any new real-device account-flow acceptance. Separate physical evidence records scoped #592/#593 regression acceptance, referral-summary `EDGE`, Product Event QA, recovery/password-update/sign-in/new-signup/email-confirmation and other behavior-specific passes; those results remain documented independently and must not be generalized.
+Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish Product Event real-user interaction/traction, referral conversion, weak/leaked-password rejection or any new real-device account-flow acceptance. VoiceOver/TalkBack Physical PASS for the Issue #583 selected-state remediation remains a separate assistive-technology gate. Separate physical evidence records scoped #592/#593 regression acceptance, referral-summary `EDGE`, Product Event QA, recovery/password-update/sign-in/new-signup/email-confirmation and other behavior-specific passes; those results remain documented independently and must not be generalized.
 
 ## Supabase security evidence
 
