@@ -1,0 +1,144 @@
+name: Issue 585 deployment reconciliation one-shot
+
+on:
+  push:
+    branches: ["docs/reconcile-585-deployment-20260911"]
+    paths:
+      - '.github/workflows/issue-585-deployment-sync-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.event.head_commit.message == 'chore: prepare Issue #585 deployment reconciliation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout reconciliation branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-585-deployment-20260911
+          fetch-depth: 0
+
+      - name: Reconcile canonical Issue 585 deployment evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          candidate='f9b5f137375e9d30d1053d9cad814d636cb88821'
+          deployed='11c27167965c63ba60218d6ec216e503b334b4ca'
+          pages='34571331729'
+          live='34571373301'
+          auth='34571373282'
+          campaign='34571373303'
+
+          def replace_once(text, old, new, label):
+              n=text.count(old)
+              if n!=1:
+                  raise SystemExit(f'{label}: expected exactly one literal target, got {n}')
+              return text.replace(old,new,1)
+
+          def sub1(text, pattern, repl, label, flags=re.M):
+              out,n=re.subn(pattern,repl,text,count=1,flags=flags)
+              if n!=1:
+                  raise SystemExit(f'{label}: expected exactly one regex target, got {n}')
+              return out
+
+          # CURRENT-RUNTIME.md
+          p=Path('CURRENT-RUNTIME.md'); text=p.read_text()
+          text=replace_once(text,'- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**','- Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**','runtime status')
+          text=replace_once(text,'- Runtime merge/deployed SHA: **PENDING**',f'- Runtime merge/deployed SHA: `{deployed}`.','runtime merge sha')
+          text=replace_once(text,'- Last verified deployed browser/PWA descendant: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.',f'- Last verified deployed browser/PWA descendant: `{deployed}`.','runtime descendant')
+          text=replace_once(text,f'- Current runtime deployment evidence is pending for source candidate `{candidate}`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.',f'- Current runtime deployment evidence: PR #623 source candidate `{candidate}` merged/deployed as `{deployed}`; GitHub Pages run `{pages}`, Kinaraidee Live Smoke run `{live}`, Auth Password Security Live Smoke run `{auth}`, and Campaign 3000 Premium Live Smoke run `{campaign}` completed successfully on that exact deployed SHA. The cache generation remains `kinaraidee-beta-v16`. This deployment trace does not establish screen-reader Physical PASS.','runtime deployment evidence')
+          old_prev='- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current Issue #585 candidate is merged and independently deployed/verified.'
+          new_prev='- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace remains historical verified deployment evidence superseded by the current Issue #585 deployment trace.'
+          text=replace_once(text,old_prev,new_prev,'runtime prior 584')
+          if '- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.' not in text:
+              text=replace_once(text,'- Deployment PASS does not create or broaden Physical PASS.','- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.\n- Deployment PASS does not create or broaden Physical PASS.','runtime scoped pass')
+          boundary=(
+              f'The current browser/PWA runtime candidate `{candidate}` is verified deployed through exact merged-main descendant `{deployed}`; '
+              f'GitHub Pages run `{pages}`, Kinaraidee Live Smoke run `{live}`, Auth Password Security Live Smoke run `{auth}`, and Campaign 3000 Premium Live Smoke run `{campaign}` completed successfully for that deployment trace while preserving `kinaraidee-beta-v16`. '
+              'This establishes the browser/PWA source/deployment trace for the Issue #585 ordinary-toast accessibility remediation only. It does not prove VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          )
+          text=sub1(text,r'## Evidence boundary\n\n.*?\n\nIssues #592','## Evidence boundary\n\n'+boundary+'\n\nIssues #592','runtime evidence boundary',flags=re.S)
+          text=text.replace('Public Beta remains NOT COMPLETE, and this pending toast accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.','Public Beta remains NOT COMPLETE, and this deployed toast accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.',1)
+          p.write_text(text)
+
+          # CURRENT-RELEASE.md
+          p=Path('CURRENT-RELEASE.md'); text=p.read_text()
+          text=sub1(text,r'^- Current browser/PWA runtime candidate: .*$',f'- Current browser/PWA runtime candidate: `{candidate}` (Issue #585 ordinary-toast accessibility remediation merged through PR #623).','release candidate')
+          text=sub1(text,r'^- Current runtime deployment status: .*$', '- Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**.','release status')
+          text=sub1(text,r'^- Runtime merge/deployed SHA: .*$',f'- Runtime merge/deployed SHA: `{deployed}`.','release sha')
+          old_para=re.compile(r'^The current Issue #584 accessibility runtime candidate .*?(?=\n\nThe prior Issues #592/#593)',re.M|re.S)
+          new_para=(
+              f'The current Issue #585 accessibility runtime candidate `{candidate}` is verified through exact deployed descendant `{deployed}`; '
+              f'GitHub Pages run `{pages}`, Kinaraidee Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, and Campaign 3000 Premium Live Smoke `{campaign}` completed successfully for that deployment trace while preserving `kinaraidee-beta-v16`. '
+              'This establishes source/deployment evidence for the ordinary toast live-region and repeat-announcement contract only. It does not establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion or Commercial GO. The prior Issue #584 focus-management deployment remains historical verified evidence in its recorded scope.'
+          )
+          text,n=old_para.subn(new_para,text,count=1)
+          if n!=1: raise SystemExit(f'release current paragraph: expected one, got {n}')
+          text=sub1(text,r'^- Current source runtime candidate is `[^`]+`\.$',f'- Current source runtime candidate is `{candidate}`.','release evidence candidate')
+          text=sub1(text,r'^- It is verified through exact deployed descendant `[^`]+`\.$',f'- It is verified through exact deployed descendant `{deployed}`.','release evidence descendant')
+          text=sub1(text,r'^- GitHub Pages run `[^`]+` completed \*\*success\*\* for exact deployed SHA `[^`]+`\.$',f'- GitHub Pages run `{pages}` completed **success** for exact deployed SHA `{deployed}`.','release pages')
+          text=sub1(text,r'^- Kinaraidee Live Smoke run `[^`]+`, Auth Password Security Live Smoke `[^`]+`, and Campaign 3000 Premium Live Smoke `[^`]+` completed \*\*success\*\* for the same deployed SHA/trace\.$',f'- Kinaraidee Live Smoke run `{live}`, Auth Password Security Live Smoke `{auth}`, and Campaign 3000 Premium Live Smoke `{campaign}` completed **success** for the same deployed SHA/trace.','release smokes')
+          text=text.replace('- The Service Worker cache marker remains `kinaraidee-beta-v16`; Issue #584 does not create a new cache generation.','- The Service Worker cache marker remains `kinaraidee-beta-v16`; Issue #585 does not create a new cache generation.',1)
+          text=text.replace('does not supersede the current Issue #584 browser runtime candidate','does not supersede the current Issue #585 browser runtime candidate',1)
+          p.write_text(text)
+
+          # RELEASE-CHECKLIST.md
+          p=Path('RELEASE-CHECKLIST.md'); text=p.read_text()
+          text=sub1(text,r'^- Current browser/PWA runtime candidate: .*$',f'- Current browser/PWA runtime candidate: `{candidate}` (Issue #585 ordinary-toast accessibility remediation merged through PR #623)','checklist candidate')
+          text=sub1(text,r'^- Current runtime deployment status: .*$', '- Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**','checklist status')
+          text=sub1(text,r'^- Runtime merge/deployed SHA: .*$',f'- Runtime merge/deployed SHA: `{deployed}`.','checklist sha')
+          text=sub1(text,r'^- Last verified deployed browser/PWA descendant: .*$',f'- Last verified deployed browser/PWA descendant: `{deployed}`.','checklist descendant')
+          checklist=(
+              f'- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: Issue #585 runtime candidate `{candidate}` is verified through exact deployed descendant `{deployed}`; Pages run `{pages}`, Kinaraidee Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, and Campaign 3000 Premium Live Smoke `{campaign}` completed successfully for the PR #623 trace. The cache remains `kinaraidee-beta-v16`. This deployment PASS does not itself establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval or Commercial GO. Issues #592/#593 retain separate scoped **Physical PASS / CLOSED** from the fresh 2026-09-10 OPPO installed-PWA regression; Issues #524/#545 remain affected-iPhone physical PENDING. Historical Issue #584 / PR #614 deployment remains prior verified evidence only.'
+          )
+          text=sub1(text,r'^- Current browser/PWA deployment evidence is \*\*PASS for the deployment trace only\*\*:.*$',checklist,'checklist evidence')
+          text=text.replace('current PR #614 runtime','current PR #623 runtime')
+          p.write_text(text)
+
+          # BETA-CHECKLIST.md
+          p=Path('BETA-CHECKLIST.md'); text=p.read_text()
+          current=(
+              f'- [x] Current browser/PWA runtime candidate: `{candidate}` (Issue #585 ordinary-toast accessibility remediation merged through PR #623); deployment status is **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**. Runtime merge/deployed SHA = `{deployed}`; GitHub Pages `{pages}`, main Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, and Campaign 3000 Premium Live Smoke `{campaign}` completed successfully for the exact deployed SHA. The PWA cache marker remains `kinaraidee-beta-v16`. This deployment PASS is scoped to browser/PWA source/deployment lineage and live markers only; it does not by itself establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, conversion improvement, Privacy/Legal approval or Commercial GO. Issues #592/#593 retain separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO installed-PWA regression; Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for their affected iPhone scopes.'
+          )
+          text=sub1(text,r'^- \[x\] Current browser/PWA runtime candidate:.*$',current,'beta current')
+          text=text.replace('current Issue #584 assistive-technology acceptance','current Issue #585 assistive-technology acceptance')
+          text=text.replace('does not replace current Issue #584','does not replace current Issue #585')
+          text=text.replace('before current Issue #584 candidate','before current Issue #585 candidate')
+          p.write_text(text)
+
+          # BETA-DEVICE-MATRIX.md
+          p=Path('BETA-DEVICE-MATRIX.md'); text=p.read_text()
+          text=sub1(text,r'^- Current browser/PWA runtime candidate: .*$',f'- Current browser/PWA runtime candidate: PR #623 / `{candidate}` — `kinaraidee-beta-v16`; deployment status is **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; Runtime merge/deployed SHA is `{deployed}`.','matrix candidate')
+          matrix=(
+              f'- Verified current deployment evidence: **PASS** for exact deployed descendant `{deployed}`; Pages `{pages}`, main Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, and Campaign 3000 Premium Live Smoke `{campaign}` completed successfully. This is deployment evidence only and does not establish VoiceOver/TalkBack/keyboard Physical PASS for Issue #585. Issues #592/#593 retain separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO Reno13 5G / Android 16 installed-PWA regression. Issue #551 Home-nav and Issue #552 / TC-03 retain their separate scoped **Physical PASS / CLOSED** evidence; TC-08 allow retains scoped **Physical PASS** for the traced OPPO fresh-permission test. Public Beta remains incomplete.'
+          )
+          text=sub1(text,r'^- Verified current deployment evidence: .*$',matrix,'matrix evidence')
+          text=text.replace('Issue #584 assistive-technology acceptance','Issue #585 assistive-technology acceptance')
+          text=text.replace('current PR #614 deployment','current PR #623 deployment')
+          text=text.replace('current PR #614','current PR #623')
+          p.write_text(text)
+
+          # dedicated deployment evidence
+          Path('TOAST-ACCESSIBILITY-DEPLOYMENT-EVIDENCE.md').write_text(f'''# Toast Accessibility — Deployment Evidence\n\n## Scope\n\nThis record reconciles the deployed browser/PWA lineage for Issue #585 / PR #623. It is deployment evidence only and must not be promoted to assistive-technology Physical PASS.\n\n## Source and deployment lineage\n\n- Issue: #585 — `A11y: announce toast validation and confirmation messages`\n- PR: #623 — `fix(a11y): announce ordinary toast feedback reliably`\n- Source candidate: `{candidate}`\n- Merged/deployed main SHA: `{deployed}`\n- PWA cache marker: `kinaraidee-beta-v16`\n\n## Exact deployment checks\n\n- GitHub Pages run `{pages}`: **SUCCESS**\n- Kinaraidee Live Smoke run `{live}`: **SUCCESS**\n- Auth Password Security Live Smoke run `{auth}`: **SUCCESS**\n- Campaign 3000 Premium Live Smoke run `{campaign}`: **SUCCESS**\n\n## Implemented source contract\n\n- Ordinary `#toast` feedback exposes `role="status"`, `aria-live="polite"`, and `aria-atomic="true"`.\n- Identical repeated messages are cleared and republished on a fresh animation frame so a screen reader has a programmatic text transition to announce.\n- Toast feedback does not move keyboard focus.\n- The visible toast duration remains 2200 ms.\n- Meal/Budget validation and existing Favorite/share/Nearby confirmation paths continue using the ordinary toast surface.\n- The existing Surprise busy live region remains separate and unchanged.\n- Dedicated regression coverage guards semantics, repeat-announcement behavior, timing, focus boundary, message paths and Surprise separation.\n\n## Evidence boundary\n\nThis deployment trace proves only that the reviewed Issue #585 source reached the live browser/PWA deployment and the listed exact-lineage checks succeeded. It does **not** prove VoiceOver, TalkBack, hardware-keyboard Physical PASS, another-device PASS, complete accessibility conformance, Issues #524/#545, Public Beta completion, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO. Any required assistive-technology acceptance must be captured separately on the deployed runtime and scoped to the tested device/session.\n''')
+          PY
+
+          # Fail closed if stale current-runtime declarations remain in canonical header sections.
+          grep -Fq 'Current browser/PWA runtime candidate: `f9b5f137375e9d30d1053d9cad814d636cb88821`' CURRENT-RUNTIME.md
+          grep -Fq 'Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**' CURRENT-RUNTIME.md
+          grep -Fq 'Runtime merge/deployed SHA: `11c27167965c63ba60218d6ec216e503b334b4ca`.' CURRENT-RUNTIME.md
+          grep -Fq 'Current browser/PWA runtime candidate: `f9b5f137375e9d30d1053d9cad814d636cb88821`' CURRENT-RELEASE.md
+          if grep -Fq 'PENDING FOR CURRENT RUNTIME DEPLOYMENT' CURRENT-RUNTIME.md; then echo 'stale runtime pending status remains'; exit 1; fi
+          if grep -Fq 'current Issue #584 browser runtime candidate' CURRENT-RELEASE.md; then echo 'stale current release runtime wording remains'; exit 1; fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-585-deployment-sync-one-shot.yml
+          git add CURRENT-RUNTIME.md CURRENT-RELEASE.md RELEASE-CHECKLIST.md BETA-CHECKLIST.md BETA-DEVICE-MATRIX.md TOAST-ACCESSIBILITY-DEPLOYMENT-EVIDENCE.md
+          git commit -m 'docs(release): reconcile Issue #585 deployed toast runtime'
+          git push origin HEAD:docs/reconcile-585-deployment-20260911
