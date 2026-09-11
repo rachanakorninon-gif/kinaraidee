@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   repair:
-    if: github.event.head_commit.message == 'chore(ci): stage #584 boundary repair'
+    if: github.event.head_commit.message == 'chore(ci): repair 584 boundary trigger'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -44,5 +44,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add CURRENT-RUNTIME.md
-          git commit -m 'docs(runtime): fix #584 verified deployment boundary'
+          git commit -m 'docs(runtime): fix Issue 584 verified deployment boundary'
           git push origin HEAD:docs/reconcile-584-deployment-20260911
