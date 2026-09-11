@@ -49,7 +49,7 @@ Current runtime evidence boundary:
 - Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke `34560396831`, and Campaign 3000 Premium Live Smoke `34560396804` completed **success** for the same deployed SHA/trace.
 - The Service Worker cache marker remains `kinaraidee-beta-v16`; Issue #584 does not create a new cache generation.
 - Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does **not by itself** establish VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Issues #524/#545, Public Beta completion, Production policy/legal approval or Commercial GO. Issues #592 and #593 retain separate fresh **Physical PASS / CLOSED** evidence from the affected OPPO installed-PWA retest on 2026-09-10; those are not inferred from deployment. Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for their affected iPhone scopes.
-- PR #607 / current-main descendant `f119537219d3eb885e64783a1775486798cd813c` is CI/release-guard wording alignment and does not change the browser runtime candidate, deployed runtime SHA, cache generation, or physical evidence scope.
+- Historical PR #607 / descendant `f119537219d3eb885e64783a1775486798cd813c` is CI/release-guard wording alignment and does not supersede the current Issue #584 browser runtime candidate, deployed runtime SHA, cache generation, or physical evidence scope.
 
 Historical verified deployment evidence remains valid for its original scope:
 
