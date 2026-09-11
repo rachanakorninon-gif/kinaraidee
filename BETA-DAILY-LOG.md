@@ -74,7 +74,8 @@ Status: **TEMPLATE ONLY / USE AFTER RECRUITMENT GATE OPENS / REAL OBSERVATIONS O
 - Minor:
 - Physical FAIL Issue/defect reference:
 
-CI/Deployment PASS ไม่เท่ากับ Physical PASS และการไม่มี defect report ไม่ใช่ `Blocker = 0` / `Critical = 0`
+CI/Deployment PASS ไม่เท่ากับ Physical PASS และการไม่มี defect report ไม่ใช่ `Blocker = 0` / `Critical = 0`  
+`Blocker = 0` / `Critical = 0` ต้องมาจาก **release-scoped defect evidence** จริงเท่านั้น
 
 **PWA / Mobile**
 - install / Add to Home Screen:
