@@ -1,0 +1,89 @@
+name: Commercial Readiness Matrix Regression
+
+on:
+  pull_request:
+    paths:
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - '.github/workflows/commercial-readiness-matrix-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+      - '.github/workflows/commercial-readiness-matrix-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  commercial-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard approved business baseline routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='COMMERCIAL-READINESS-MATRIX.md'
+          baseline='BUSINESS-COMMERCIAL-BASELINE.md'
+          test -s "$matrix"
+          test -s "$baseline"
+
+          grep -Fq 'COMMERCIAL NO-GO / BUSINESS BASELINE APPROVED / EXECUTION EVIDENCE INCOMPLETE' "$matrix"
+          grep -Fq 'Web/PWA first' "$matrix"
+          grep -Fq 'THB 59/month' "$matrix"
+          grep -Fq 'Stripe Payments' "$matrix"
+          grep -Fq 'individual / natural person' "$matrix"
+          grep -Fq 'PromptPay' "$matrix"
+          grep -Fq 'no auto-renew' "$matrix"
+
+          grep -Fq 'Beta Premium price: **THB 59 per month**' "$baseline"
+          grep -Fq 'Selected first provider baseline: **Stripe Payments**' "$baseline"
+          grep -Fq 'Merchant form: **individual / natural person**' "$baseline"
+
+      - name: Guard planning vs execution truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='COMMERCIAL-READINESS-MATRIX.md'
+          grep -Fq 'These are **plans/decisions**, not successful execution or business results.' "$matrix"
+          grep -Fq 'checkout is not payment' "$matrix"
+          grep -Fq 'browser redirect is not payment truth' "$matrix"
+          grep -Fq 'Test Mode/sandbox is not Production revenue' "$matrix"
+          grep -Fq 'A click/search does not establish a transaction, partner revenue or commission.' "$matrix"
+          grep -Fq 'Paid acquisition / ads' "$matrix"
+          grep -Fq 'LOCKED FROM SCALE' "$matrix"
+          grep -Fq 'Commercial GO: **NO-GO**' "$matrix"
+
+      - name: Guard strict payment and legal gates remain separate
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix='COMMERCIAL-READINESS-MATRIX.md'
+          payment='PAYMENT-PREMIUM-DECISION.md'
+          legal='PRODUCTION-PRIVACY-LEGAL-DECISION.md'
+
+          grep -Fq 'Strict payment gate: `PAYMENT-PREMIUM-DECISION.md`' "$matrix"
+          grep -Fq 'Strict legal gate: `PRODUCTION-PRIVACY-LEGAL-DECISION.md`' "$matrix"
+          grep -Fq 'Status: **NOT APPROVED**' "$payment"
+          grep -Fq 'Status: **NOT APPROVED**' "$legal"
+          grep -Fq 'Commercial GO | **NO-GO**' "$matrix"
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Commercial readiness matrix boundary'
+            echo
+            echo '- Owner-approved business inputs remain distinct from strict payment/legal execution approval.'
+            echo '- Payment, entitlement, partner revenue, CAC/LTV and Commercial GO require their own real evidence.'
+            echo '- Paid acquisition remains locked from SCALE while critical Product/Funnel/Tracking/Retention/economics gates are unresolved.'
+            echo '- This workflow does not create Public Beta, Payment, Legal, Security or Commercial PASS.'
+          } >> "$GITHUB_STEP_SUMMARY"
