@@ -55,6 +55,22 @@
     `;
     document.head.appendChild(style);
   }
+  function installSelectedStateA11y(){
+    const selector='#mealChips .option,#peopleChips .pill,#budgetChips .budget,#typeChips .chip';
+    const controls=[...document.querySelectorAll(selector)];
+    if(!controls.length)return;
+    const sync=control=>control.setAttribute('aria-pressed',control.classList.contains('on')?'true':'false');
+    controls.forEach(sync);
+    if(document.documentElement.dataset.kinaraideeSelectedStateA11y==='1')return;
+    document.documentElement.dataset.kinaraideeSelectedStateA11y='1';
+    const observer=new MutationObserver(records=>{
+      records.forEach(record=>{
+        const control=record.target;
+        if(control instanceof Element&&control.matches(selector))sync(control);
+      });
+    });
+    controls.forEach(control=>observer.observe(control,{attributes:true,attributeFilter:['class']}));
+  }
   function ensurePremiumHomeStyles(){
     if(document.getElementById('kinaraideeHomeV3Styles'))return;
     const style=document.createElement('style');
@@ -188,6 +204,7 @@
   }
   function install(){
     ensureAccessibilityStyles();
+    installSelectedStateA11y();
     ensureAcquisition();
     ensureProductEvents();
     ensureMemberSync();

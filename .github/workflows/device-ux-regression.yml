@@ -59,6 +59,17 @@ jobs:
           test "$(grep -o 'aria-label="กลับหน้าหลัก">‹</button>' "$file" | wc -l | tr -d ' ')" -eq 2
           echo 'Core icon-only control accessible-name contract preserved'
 
+      - name: Verify selected visual state is exposed programmatically
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='data/home-surprise.js'
+          grep -Fq "const selector='#mealChips .option,#peopleChips .pill,#budgetChips .budget,#typeChips .chip';" "$file"
+          grep -Fq "setAttribute('aria-pressed',control.classList.contains('on')?'true':'false')" "$file"
+          grep -Fq "attributeFilter:['class']" "$file"
+          grep -Fq 'installSelectedStateA11y();' "$file"
+          echo 'Selected-state visual/programmatic synchronization contract preserved'
+
       - name: Verify Home V3 bottom navigation stays above decorated content
         shell: bash
         run: |
