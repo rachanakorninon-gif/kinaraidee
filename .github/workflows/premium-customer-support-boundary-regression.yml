@@ -1,0 +1,115 @@
+name: Premium Customer Support Boundary Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - '.github/workflows/premium-customer-support-boundary-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'COMMERCIAL-READINESS-MATRIX.md'
+      - '.github/workflows/premium-customer-support-boundary-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  support-evidence-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard support readiness status
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          matrix='COMMERCIAL-READINESS-MATRIX.md'
+          test -s "$doc"
+          grep -Fq 'PREPARATION ONLY — SUPPORT PASS NOT ESTABLISHED — REAL-MONEY PREMIUM NOT OPENED BY THIS FILE' "$doc"
+          grep -Fq 'rachanakorn.inon@gmail.com' "$doc"
+          grep -Fq 'Support = PARTIAL / PENDING' "$doc"
+          grep -Fq 'Support | **PARTIAL / PENDING**' "$matrix"
+          grep -Fq 'Support PASS: **NOT ESTABLISHED / PENDING OPERATIONAL EVIDENCE**' "$doc"
+
+      - name: Guard payment truth and privacy boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          grep -Fq 'provider-authoritative payment / refund / dispute record' "$doc"
+          grep -Fq 'backend-authoritative transaction/subscription/entitlement state' "$doc"
+          grep -Fq 'browser/client message or screenshot as supporting context only' "$doc"
+          grep -Fq 'full card number' "$doc"
+          grep -Fq 'CVV/CVC' "$doc"
+          grep -Fq 'password' "$doc"
+          grep -Fq 'OTP' "$doc"
+          grep -Fq 'อย่านำข้อมูล payment/customer PII ที่ไม่จำเป็นไปใส่ GitHub issue สาธารณะ' "$doc"
+
+      - name: Guard payment entitlement incident handling
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          grep -Fq 'provider says successful payment but Premium not activated' "$doc"
+          grep -Fq 'Premium activated without trusted payment' "$doc"
+          grep -Fq 'duplicate confirmed charge' "$doc"
+          grep -Fq 'provider successful payment' "$doc"
+          grep -Fq 'backend Premium entitlement' "$doc"
+          grep -Fq 'do not create a second charge to “fix” missing entitlement' "$doc"
+          grep -Fq 'do not count affected account as paying customer' "$doc"
+
+      - name: Guard cancellation refund and PromptPay policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          grep -Fq 'cancellation stops future renewal' "$doc"
+          grep -Fq 'already-paid Premium continues to paid-period end' "$doc"
+          grep -Fq 'failed payment must not extend Premium' "$doc"
+          grep -Fq 'no automatic refund merely because a billing period has already begun/been used' "$doc"
+          grep -Fq 'no blanket “no refund under any circumstance” claim' "$doc"
+          grep -Fq 'PromptPay = customer-initiated payment per paid period' "$doc"
+          grep -Fq 'no automatic next-period renewal' "$doc"
+
+      - name: Guard incident stop reopen and operational PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          grep -Fq 'Incident stop conditions' "$doc"
+          grep -Fq 'Recovery / reopen conditions' "$doc"
+          grep -Fq 'Do not reopen normal payment traffic merely because code was changed or CI passed.' "$doc"
+          grep -Fq 'support path physically/operationally exercised on launched scope' "$doc"
+          grep -Fq 'Commercial GO: **NO-GO remains until all required gates pass**' "$doc"
+
+      - name: Guard no fabricated support metrics
+        shell: bash
+        run: |
+          set -euo pipefail
+          doc='PREMIUM-CUSTOMER-SUPPORT-RUNBOOK.md'
+          grep -Fq 'Do not pre-fill SLA or support performance numbers.' "$doc"
+          grep -Fq 'use `NOT MEASURED`, not an invented zero' "$doc"
+          grep -Fq 'staffed support operation: **NOT ESTABLISHED BY THIS FILE**' "$doc"
+          grep -Fq 'This runbook is preparation/governance only.' "$doc"
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Premium support evidence boundary'
+            echo
+            echo '- Preserves provider payment and backend entitlement as authoritative support truth.'
+            echo '- Keeps sensitive card/password/OTP/KYC data out of ordinary support/GitHub workflows.'
+            echo '- Defines cancellation, refund, dispute, reconciliation and stop/reopen procedures without performing them.'
+            echo '- Support PASS still requires operational exercise and real launched-scope evidence.'
+            echo '- Creates no payment, refund, dispute, subscriber, revenue, SLA or Commercial PASS evidence.'
+          } >> "$GITHUB_STEP_SUMMARY"
