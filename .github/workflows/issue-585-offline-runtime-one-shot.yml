@@ -1,0 +1,55 @@
+name: Issue 585 offline runtime one shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-offline-shell-585"]
+    paths:
+      - '.github/workflows/issue-585-offline-runtime-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-offline-shell-585
+          fetch-depth: 0
+      - name: Declare offline app-shell candidate and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='f9b5f137375e9d30d1053d9cad814d636cb88821'
+          new='9809a1b269d529f9e6c8778898d9f075bbce21b0'
+          text=text.replace(f'- Current browser/PWA runtime candidate: `{old}`',f'- Current browser/PWA runtime candidate: `{new}`',1)
+          old_change='- Runtime change: Issue #585 accessibility remediation on top of the verified Issue #584 focus-management runtime. Ordinary `#toast` validation/confirmation feedback is exposed as a polite atomic status live region through dedicated `data/toast-accessibility.js`. Repeated identical toast text is cleared and re-announced across a fresh animation frame while preserving the existing visible 2200 ms duration and without moving keyboard focus. The Surprise-specific busy live region remains separate and unchanged. The cache generation remains v16.'
+          new_change='- Runtime change: Issue #585 offline/PWA parity follow-up on top of the verified Issue #585 toast live-region deployment. `data/toast-accessibility.js` is now included in the Service Worker app shell so the polite atomic toast controller remains available after installation/offline shell startup. Repeated-message behavior, focus behavior, Surprise live-region separation, and cache generation `kinaraidee-beta-v16` remain unchanged.'
+          if old_change not in text: raise SystemExit('runtime change anchor missing')
+          text=text.replace(old_change,new_change,1)
+          text=text.replace('- Last verified deployed browser/PWA descendant: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.','- Last verified deployed browser/PWA descendant: `11c27167965c63ba60218d6ec216e503b334b4ca`.',1)
+          text=text.replace(f'- Current runtime deployment evidence is pending for source candidate `{old}`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.',f'- Current runtime deployment evidence is pending for source candidate `{new}`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.',1)
+          anchor='- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current Issue #585 candidate is merged and independently deployed/verified.'
+          replacement='- The previous verified Issue #585 toast runtime candidate `f9b5f137375e9d30d1053d9cad814d636cb88821` was merged/deployed as `11c27167965c63ba60218d6ec216e503b334b4ca`; GitHub Pages run `34571331729`, Kinaraidee Live Smoke run `34571373301`, Auth Password Security Live Smoke run `34571373282`, Campaign 3000 Premium Live Smoke run `34571373303`, and Premium Research Preview Live Smoke run `34571373350` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current offline app-shell parity candidate is merged and independently deployed/verified.\n- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` was merged/deployed as `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke run `34560396831`, and Campaign 3000 Premium Live Smoke run `34560396804` completed successfully. That trace remains historical deployment evidence.'
+          if anchor not in text: raise SystemExit('previous deployment anchor missing')
+          text=text.replace(anchor,replacement,1)
+          old_boundary=f'The current browser/PWA runtime candidate `{old}` contains the source/static remediation and dedicated regression guard for Issue #585, but current-runtime deployment evidence is still pending. The last verified deployed browser/PWA descendant is `2896748584a1058e9ba1bbc939f49f3b6faf4baf` for the prior Issue #584 source candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54`; GitHub Pages `34560369925`, Kinaraidee Live Smoke `34560396807`, Auth Password Security Live Smoke `34560396831`, and Campaign 3000 Premium Live Smoke `34560396804` completed successfully on that exact deployed SHA. This source/CI state does not prove deployment or any Physical PASS.'
+          new_boundary=f'The current browser/PWA runtime candidate `{new}` contains the offline/PWA app-shell parity follow-up for Issue #585, but current-runtime deployment evidence is still pending. The last verified deployed browser/PWA descendant is `11c27167965c63ba60218d6ec216e503b334b4ca` for the prior Issue #585 toast source candidate `f9b5f137375e9d30d1053d9cad814d636cb88821`; GitHub Pages `34571331729`, Kinaraidee Live Smoke `34571373301`, Auth Password Security Live Smoke `34571373282`, Campaign 3000 Premium Live Smoke `34571373303`, and Premium Research Preview Live Smoke `34571373350` completed successfully on that exact deployed SHA. This source/CI state for the offline follow-up does not prove its deployment or any Physical PASS.'
+          if old_boundary not in text: raise SystemExit('evidence boundary anchor missing')
+          text=text.replace(old_boundary,new_boundary,1)
+          p.write_text(text)
+          PY
+          grep -Fq 'Current browser/PWA runtime candidate: `9809a1b269d529f9e6c8778898d9f075bbce21b0`' CURRENT-RUNTIME.md
+          grep -Fq 'Last verified deployed browser/PWA descendant: `11c27167965c63ba60218d6ec216e503b334b4ca`' CURRENT-RUNTIME.md
+          grep -Fq 'Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**' CURRENT-RUNTIME.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-585-offline-runtime-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare Issue 585 offline app-shell candidate'
+          git push origin HEAD:fix/a11y-toast-offline-shell-585
