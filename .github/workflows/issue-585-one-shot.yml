@@ -1,0 +1,187 @@
+name: Issue 585 one-shot source prep
+
+on:
+  push:
+    branches: ["fix/a11y-toast-live-region-585"]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-live-region-585
+          fetch-depth: 0
+
+      - name: Apply toast live-region remediation and regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          path=Path('index.html')
+          text=path.read_text()
+          old_markup='<div id="toast" class="toast"></div>'
+          new_markup='<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>'
+          old_fn="function toast(t){let x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200)}"
+          new_fn="function toast(t){let x=document.getElementById('toast'),run=(toast.run=(toast.run||0)+1);if(toast.timer)clearTimeout(toast.timer);x.classList.remove('show');x.textContent='';requestAnimationFrame(()=>{if(run!==toast.run)return;x.textContent=t;x.classList.add('show');toast.timer=setTimeout(()=>{if(run!==toast.run)return;x.classList.remove('show');x.textContent=''},2200)})}"
+          if text.count(old_markup)!=1:
+              raise SystemExit(f'Expected one toast markup target, found {text.count(old_markup)}')
+          if text.count(old_fn)!=1:
+              raise SystemExit(f'Expected one toast function target, found {text.count(old_fn)}')
+          text=text.replace(old_markup,new_markup).replace(old_fn,new_fn)
+          path.write_text(text)
+          PY
+
+          cat > .github/workflows/toast-live-region-regression.yml <<'YAML'
+          name: Toast Live Region Regression
+
+          on:
+            pull_request:
+            push:
+              branches: ["main"]
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            toast-live-region:
+              runs-on: ubuntu-latest
+              steps:
+                - name: Checkout
+                  uses: actions/checkout@v4
+
+                - name: Verify toast semantics and repeat-announcement lifecycle
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    node <<'NODE'
+                    const fs=require('fs');
+                    const vm=require('vm');
+                    const html=fs.readFileSync('index.html','utf8');
+
+                    const markup=html.match(/<div id="toast"[^>]*><\/div>/)?.[0]||'';
+                    for(const required of ['class="toast"','role="status"','aria-live="polite"','aria-atomic="true"']){
+                      if(!markup.includes(required))throw new Error(`Missing toast semantic contract: ${required}`);
+                    }
+
+                    function extractFunction(source,name){
+                      const start=source.indexOf(`function ${name}(`);
+                      if(start<0)throw new Error(`Missing function ${name}`);
+                      const brace=source.indexOf('{',start);
+                      let depth=0;
+                      for(let i=brace;i<source.length;i++){
+                        if(source[i]==='{')depth++;
+                        else if(source[i]==='}'){
+                          depth--;
+                          if(depth===0)return source.slice(start,i+1);
+                        }
+                      }
+                      throw new Error(`Unterminated function ${name}`);
+                    }
+
+                    const fn=extractFunction(html,'toast');
+                    if(/\.focus\s*\(/.test(fn))throw new Error('Toast must not move focus');
+                    if(/\bshow\s*\(/.test(fn))throw new Error('Toast must not navigate screens');
+
+                    const classes=new Set();
+                    const node={
+                      textContent:'',
+                      classList:{
+                        add(value){classes.add(value)},
+                        remove(value){classes.delete(value)},
+                        contains(value){return classes.has(value)}
+                      }
+                    };
+                    let rafs=[];
+                    let nextTimer=0;
+                    const timers=new Map();
+                    const context={
+                      document:{getElementById(id){if(id!=='toast')throw new Error(`Unexpected id ${id}`);return node}},
+                      requestAnimationFrame(cb){rafs.push(cb);return rafs.length},
+                      setTimeout(cb,ms){const id=++nextTimer;timers.set(id,{cb,ms});return id},
+                      clearTimeout(id){timers.delete(id)}
+                    };
+                    vm.createContext(context);
+                    vm.runInContext(`${fn};globalThis.__toast=toast;`,context);
+                    const flushRaf=()=>{const pending=rafs;rafs=[];pending.forEach(cb=>cb())};
+                    const fireOnlyTimer=()=>{
+                      if(timers.size!==1)throw new Error(`Expected one active timer, got ${timers.size}`);
+                      const [id,item]=[...timers.entries()][0];
+                      timers.delete(id);
+                      if(item.ms!==2200)throw new Error(`Toast timing changed: ${item.ms}`);
+                      item.cb();
+                    };
+
+                    context.__toast('เลือกมื้อก่อนนะครับ');
+                    if(node.textContent!==''||node.classList.contains('show'))throw new Error('Toast must reset stale announcement state before publishing');
+                    flushRaf();
+                    if(node.textContent!=='เลือกมื้อก่อนนะครับ'||!node.classList.contains('show'))throw new Error('First toast did not publish visibly/programmatically');
+                    fireOnlyTimer();
+                    if(node.textContent!==''||node.classList.contains('show'))throw new Error('Dismissed toast must clear text and visual state');
+
+                    context.__toast('เลือกมื้อก่อนนะครับ');
+                    flushRaf();
+                    if(node.textContent!=='เลือกมื้อก่อนนะครับ'||!node.classList.contains('show'))throw new Error('Same toast text was not republished after prior dismissal');
+                    fireOnlyTimer();
+
+                    context.__toast('ข้อความเก่า');
+                    context.__toast('ข้อความใหม่');
+                    flushRaf();
+                    if(node.textContent!=='ข้อความใหม่'||!node.classList.contains('show'))throw new Error('Rapid toast replacement published stale text');
+                    fireOnlyTimer();
+
+                    console.log('Toast live-region behavioral regression PASS');
+                    NODE
+
+                - name: Preserve Surprise-specific live-region separation
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    grep -Fq "status.setAttribute('aria-live','assertive')" data/home-surprise.js
+                    if grep -Fq "getElementById('toast')" data/home-surprise.js; then
+                      echo 'Surprise helper must not reuse the ordinary toast live region'
+                      exit 1
+                    fi
+          YAML
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-585-one-shot.yml
+          git add index.html .github/workflows/toast-live-region-regression.yml
+          git commit -m 'fix(a11y): announce ordinary toast messages reliably'
+          source_sha="$(git rev-parse HEAD)"
+
+          python - "$source_sha" <<'PY'
+          from pathlib import Path
+          import re,sys
+
+          source=sys.argv[1]
+          path=Path('CURRENT-RUNTIME.md')
+          text=path.read_text()
+
+          replacements=[
+            (r'- Current browser/PWA runtime candidate: `[0-9a-f]{40}`', f'- Current browser/PWA runtime candidate: `{source}`'),
+            (r'- Runtime change: .*', '- Runtime change: Issue #585 toast accessibility remediation. The ordinary `#toast` feedback surface now exposes a polite atomic status live region and clears/re-publishes announcement text so the same validation/confirmation can be announced again, while preserving visual timing, navigation, recommendation, History/Favorites, share, Nearby, analytics and PWA behavior. The Surprise-specific assertive live region remains separate. The cache generation remains v16.'),
+            (r'- Deployment status: .*', '- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**'),
+            (r'- Runtime merge/deployed SHA: .*', '- Runtime merge/deployed SHA: **PENDING**'),
+            (r'- Current runtime deployment evidence: .*', f'- Current runtime deployment evidence is pending. Source/CI evidence for Issue #585 candidate `{source}` must not be treated as deployment or Physical PASS.'),
+            (r'- Current GitHub Pages run .*', '- Last verified browser/PWA deployment remains Issue #583 / PR #602 source candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a`, deployed as `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; Pages `34559056400`, main Live Smoke `34559096757`, Auth Password Security Live Smoke `34559096658`, and Campaign 3000 Premium Live Smoke `34559096690` completed successfully.'),
+            (r'- Current deployment PASS is scoped .*', '- The last verified deployment PASS remains scoped to its recorded browser/PWA static deployment trace and live source markers only; it does not prove the pending Issue #585 candidate.')
+          ]
+          for pattern,repl in replacements:
+            text,n=re.subn(pattern,repl,text,count=1,flags=re.M)
+            if n!=1:
+              raise SystemExit(f'Expected exactly one CURRENT-RUNTIME replacement for {pattern!r}, got {n}')
+          path.write_text(text)
+          PY
+
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare Issue #585 candidate pending deployment'
+          git push origin HEAD:fix/a11y-toast-live-region-585
