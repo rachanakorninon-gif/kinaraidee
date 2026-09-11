@@ -1,0 +1,78 @@
+name: Toast Live Region Regression
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  toast-live-region-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify ordinary toast accessibility contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const home=fs.readFileSync('data/home-surprise.js','utf8');
+          const index=fs.readFileSync('index.html','utf8');
+          const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+
+          assert(index.includes('<div id="toast" class="toast"></div>'),
+            'ordinary toast container contract drifted');
+          assert(home.includes("const node=document.getElementById('toast')"),
+            'toast accessibility installer must target #toast');
+          assert(home.includes("node.setAttribute('role','status')"),
+            '#toast must expose status semantics');
+          assert(home.includes("node.setAttribute('aria-live','polite')"),
+            '#toast must remain a polite live region');
+          assert(home.includes("node.setAttribute('aria-atomic','true')"),
+            '#toast must announce the complete current message');
+
+          assert(home.includes("node.textContent=''"),
+            'repeated identical toast messages must clear the live region before re-announcing');
+          assert(home.includes('announceTimer=setTimeout(()=>{'),
+            'toast re-announcement must cross an asynchronous boundary');
+          assert(home.includes('},40);'),
+            'toast re-announcement delay contract drifted');
+          assert(home.includes('},2200);'),
+            'visible toast duration must remain 2200ms');
+          assert(home.includes("node.classList.add('show')")&&home.includes("node.classList.remove('show')"),
+            'visible toast show/hide behavior must remain wired');
+
+          assert(index.includes("toast('เลือกมื้อก่อนนะครับ')"),
+            'meal validation toast source disappeared');
+          assert(index.includes("toast('เลือกงบประมาณก่อนนะครับ')"),
+            'budget validation toast source disappeared');
+          assert(index.includes("toast('บันทึกเมนูโปรดแล้ว ❤️')"),
+            'favorite confirmation toast source disappeared');
+          assert(index.includes("toast('คัดลอกสำหรับแชร์แล้ว')"),
+            'share fallback confirmation toast source disappeared');
+
+          assert(home.includes("status.id='homeSurpriseStatus'"),
+            'Surprise busy live region must remain separate');
+          assert(home.includes("status.setAttribute('aria-live','assertive')"),
+            'existing Surprise busy announcement contract drifted');
+          assert(!home.includes("document.getElementById('homeSurpriseStatus').setAttribute('aria-live','polite')"),
+            'ordinary toast work must not overwrite Surprise live-region semantics');
+
+          assert(!home.includes('.focus('),
+            'toast accessibility must not move keyboard focus');
+
+          console.log('Toast live-region contract PASS');
+          NODE
+
+      - name: Preserve release evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RUNTIME.md
+          grep -Fq 'Deployment PASS does not create or broaden Physical PASS.' CURRENT-RUNTIME.md
