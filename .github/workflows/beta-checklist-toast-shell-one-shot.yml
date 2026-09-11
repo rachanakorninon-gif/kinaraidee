@@ -1,0 +1,42 @@
+name: Beta checklist toast shell one shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-offline-shell-585"]
+    paths:
+      - '.github/workflows/beta-checklist-toast-shell-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-offline-shell-585
+          fetch-depth: 0
+      - name: Sync pending runtime evidence and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('BETA-CHECKLIST.md')
+          text=p.read_text()
+          replacement='- [x] Current browser/PWA runtime candidate: `9809a1b269d529f9e6c8778898d9f075bbce21b0` (Issue #585 offline/PWA app-shell parity follow-up); deployment status is **PENDING FOR CURRENT RUNTIME DEPLOYMENT** and Runtime merge/deployed SHA remains **PENDING**. The last verified deployed browser/PWA descendant is `11c27167965c63ba60218d6ec216e503b334b4ca` from the prior Issue #585 toast runtime; GitHub Pages `34571331729`, main Live Smoke `34571373301`, Auth Password Security Live Smoke `34571373282`, Campaign 3000 Premium Live Smoke `34571373303`, and Premium Research Preview Live Smoke `34571373350` completed successfully on that exact deployed SHA. The PWA cache marker remains `kinaraidee-beta-v16`. Prior verified deployment evidence remains historical and is not reused as current PASS. Source/CI completion for the offline-shell candidate does not establish its deployment, VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, Public Beta completion, conversion improvement, Privacy/Legal approval or Commercial GO. Issues #592/#593 retain separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO installed-PWA regression; Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for their affected iPhone scopes.'
+          text,n=re.subn(r'^- \[x\] Current browser/PWA runtime candidate: .*$',replacement,text,count=1,flags=re.M)
+          if n!=1: raise SystemExit(f'current runtime checklist replacement count={n}')
+          p.write_text(text)
+          PY
+          grep -Fq 'Current browser/PWA runtime candidate: `9809a1b269d529f9e6c8778898d9f075bbce21b0`' BETA-CHECKLIST.md
+          grep -Fq 'last verified deployed browser/PWA descendant is `11c27167965c63ba60218d6ec216e503b334b4ca`' BETA-CHECKLIST.md
+          grep -Fq 'Prior verified deployment evidence remains historical and is not reused as current PASS.' BETA-CHECKLIST.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/beta-checklist-toast-shell-one-shot.yml
+          git add BETA-CHECKLIST.md
+          git commit -m 'docs(beta): sync toast offline-shell pending runtime'
+          git push origin HEAD:fix/a11y-toast-offline-shell-585
