@@ -1,0 +1,64 @@
+name: Issue 584 reconciliation cleanup one-shot
+
+on:
+  push:
+    branches: ["docs/reconcile-584-deployment-20260911"]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-584-deployment-20260911
+          fetch-depth: 0
+      - name: Remove stale pending wording and assert canonical state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          candidate='bde1bfed79696f6982852ca67d3ee4c8120c0c54'
+          deployed='2896748584a1058e9ba1bbc939f49f3b6faf4baf'
+
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='- The previous verified Issue #583 runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` was merged/deployed as `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; GitHub Pages run `34559056400`, Kinaraidee Live Smoke run `34559096757`, Auth Password Security Live Smoke run `34559096658`, and Campaign 3000 Premium Live Smoke run `34559096690` completed successfully on that exact deployed SHA. That trace remains the last verified browser/PWA deployment while Issue #584 is pending deployment.'
+          new='- The previous verified Issue #583 runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` was merged/deployed as `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; GitHub Pages run `34559056400`, Kinaraidee Live Smoke run `34559096757`, Auth Password Security Live Smoke run `34559096658`, and Campaign 3000 Premium Live Smoke run `34559096690` completed successfully on that exact deployed SHA. That trace remains historical verified deployment evidence superseded by the current Issue #584 deployment trace.'
+          if old not in text:
+              raise SystemExit('stale Issue #584 pending line not found exactly once')
+          text=text.replace(old,new,1)
+          p.write_text(text)
+
+          p=Path('CURRENT-RELEASE.md')
+          text=p.read_text()
+          stale='- PR #607 / current-main descendant `f119537219d3eb885e64783a1775486798cd813c` is CI/release-guard wording alignment and does not change the browser runtime candidate, deployed runtime SHA, cache generation, or physical evidence scope.'
+          corrected='- Historical PR #607 / descendant `f119537219d3eb885e64783a1775486798cd813c` is CI/release-guard wording alignment and does not supersede the current Issue #584 browser runtime candidate, deployed runtime SHA, cache generation, or physical evidence scope.'
+          if stale in text:
+              text=text.replace(stale,corrected,1)
+              p.write_text(text)
+
+          checks={
+            'CURRENT-RUNTIME.md':[f'Current browser/PWA runtime candidate: `{candidate}`',f'Runtime merge/deployed SHA: `{deployed}`','Deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**'],
+            'CURRENT-RELEASE.md':[f'Current browser/PWA runtime candidate: `{candidate}`',f'Runtime merge/deployed SHA: `{deployed}`'],
+            'RELEASE-CHECKLIST.md':[f'Current browser/PWA runtime candidate: `{candidate}`',f'Runtime merge/deployed SHA: `{deployed}`'],
+            'BETA-CHECKLIST.md':[f'Current browser/PWA runtime candidate: `{candidate}`',f'Runtime merge/deployed SHA = `{deployed}`'],
+            'BETA-DEVICE-MATRIX.md':[f'Current browser/PWA runtime candidate: PR #614 / `{candidate}`',f'Runtime merge/deployed SHA is `{deployed}`'],
+          }
+          for filename, needles in checks.items():
+              body=Path(filename).read_text()
+              for needle in needles:
+                  if needle not in body:
+                      raise SystemExit(f'{filename}: missing canonical marker: {needle}')
+          if 'Issue #584 is pending deployment' in Path('CURRENT-RUNTIME.md').read_text():
+              raise SystemExit('CURRENT-RUNTIME still says Issue #584 pending deployment')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/issue-584-reconciliation-cleanup-one-shot.yml
+          git add CURRENT-RUNTIME.md CURRENT-RELEASE.md
+          git commit -m 'docs(release): remove stale Issue #584 pending wording'
+          git push origin HEAD:docs/reconcile-584-deployment-20260911
