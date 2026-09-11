@@ -1,0 +1,100 @@
+name: Temporary Reconcile 583 Docs
+
+on:
+  push:
+    branches: ["docs/reconcile-583-deployment-20260911"]
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-583-deployment-20260911
+      - name: Reconcile guarded release documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p=Path(path)
+              s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'missing expected text in {path}: {old[:120]!r}')
+              if s.count(old) != 1:
+                  raise SystemExit(f'expected exactly one match in {path}, found {s.count(old)}')
+              p.write_text(s.replace(old,new,1))
+
+          # Preserve the exact historical Auth evidence-boundary sentence required by CI,
+          # while keeping the new Issue #583 assistive-technology boundary explicit.
+          replace_once(
+              'CURRENT-RELEASE.md',
+              'Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish VoiceOver/TalkBack Physical PASS, Product Event real-user interaction/traction, referral conversion, weak/leaked-password rejection or any new real-device account-flow acceptance. Separate physical evidence records scoped #592/#593 regression acceptance, referral-summary `EDGE`, Product Event QA, recovery/password-update/sign-in/new-signup/email-confirmation and other behavior-specific passes; those results remain documented independently and must not be generalized.',
+              'Current deployment PASS is scoped to exact runtime lineage and checks identified above. It does **not by itself** establish Product Event real-user interaction/traction, referral conversion, weak/leaked-password rejection or any new real-device account-flow acceptance. VoiceOver/TalkBack Physical PASS for the Issue #583 selected-state remediation remains a separate assistive-technology gate. Separate physical evidence records scoped #592/#593 regression acceptance, referral-summary `EDGE`, Product Event QA, recovery/password-update/sign-in/new-signup/email-confirmation and other behavior-specific passes; those results remain documented independently and must not be generalized.'
+          )
+
+          # Commercial checklist: advance only the current browser/PWA deployment trace.
+          replace_once(
+              'RELEASE-CHECKLIST.md',
+              '- Current browser/PWA runtime candidate: `de18711695bb94617c3cffa7767cb3943c0d2c05` (Issues #592/#593 remediation source candidate merged through PR #596)',
+              '- Current browser/PWA runtime candidate: `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` (Issue #583 selected-state accessibility remediation merged through PR #602)'
+          )
+          replace_once(
+              'RELEASE-CHECKLIST.md',
+              '- Runtime merge/deployed SHA: `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`.',
+              '- Runtime merge/deployed SHA: `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.'
+          )
+          replace_once(
+              'RELEASE-CHECKLIST.md',
+              '- Last verified deployed browser/PWA descendant: `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`.',
+              '- Last verified deployed browser/PWA descendant: `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.'
+          )
+          old_prefix='- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: runtime candidate `de18711695bb94617c3cffa7767cb3943c0d2c05` is verified through exact deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`; Pages run `34382130901`, Kinaraidee Live Smoke `34382207087`, Auth Password Security Live Smoke `34382130901`'
+          # The historic line uses the four verified run ids; replace by line rather than overfitting punctuation.
+          p=Path('RELEASE-CHECKLIST.md'); s=p.read_text(); lines=s.splitlines()
+          found=[i for i,l in enumerate(lines) if l.startswith('- Current browser/PWA deployment evidence is **PASS for the deployment trace only**:')]
+          if len(found)!=1: raise SystemExit(f'expected one current deployment evidence line in RELEASE-CHECKLIST.md, found {len(found)}')
+          lines[found[0]]='- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: Issue #583 runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` is verified through exact deployed descendant `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; Pages run `34559056400`, Kinaraidee Live Smoke `34559096757`, Auth Password Security Live Smoke `34559096658`, and Campaign 3000 Premium Live Smoke `34559096690` completed successfully for the PR #602 trace. The cache remains `kinaraidee-beta-v16`. This deployment PASS does not itself establish VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval or Commercial GO. Issues #592/#593 retain separate scoped **Physical PASS / CLOSED** from the fresh 2026-09-10 OPPO installed-PWA regression; Issues #524/#545 remain affected-iPhone physical PENDING. Historical PR #596 / `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793` remains prior deployment evidence only.'
+          p.write_text('\n'.join(lines)+'\n')
+          p=Path('RELEASE-CHECKLIST.md'); s=p.read_text().replace('does not replace current PR #596 runtime','does not replace current PR #602 runtime').replace('does not replace the current PR #596 runtime','does not replace the current PR #602 runtime')
+          p.write_text(s)
+
+          # Device matrix: advance current deployment trace, retain PR #596 as historical and all physical results scoped.
+          replace_once(
+              'BETA-DEVICE-MATRIX.md',
+              '- Current browser/PWA runtime candidate: PR #596 / `de18711695bb94617c3cffa7767cb3943c0d2c05` — `kinaraidee-beta-v16`; deployment status is **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; Runtime merge/deployed SHA is `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`.',
+              '- Current browser/PWA runtime candidate: PR #602 / `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` — `kinaraidee-beta-v16`; deployment status is **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**; Runtime merge/deployed SHA is `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.'
+          )
+          replace_once(
+              'BETA-DEVICE-MATRIX.md',
+              '- Verified current deployment evidence: **PASS** for exact deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`; Pages `34382130901`, main Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, and Campaign 3000 Premium Live Smoke `34382207209` completed successfully. This is deployment evidence only. Issues #592/#593 have separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO Reno13 5G / Android 16 installed-PWA regression. Issue #551 Home-nav and Issue #552 / TC-03 retain their separate scoped **Physical PASS / CLOSED** evidence; TC-08 allow retains scoped **Physical PASS** for the traced OPPO fresh-permission test. Public Beta remains incomplete.',
+              '- Verified current deployment evidence: **PASS** for exact deployed descendant `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; Pages `34559056400`, main Live Smoke `34559096757`, Auth Password Security Live Smoke `34559096658`, and Campaign 3000 Premium Live Smoke `34559096690` completed successfully. This is deployment evidence only and does not establish VoiceOver/TalkBack Physical PASS for Issue #583. Issues #592/#593 retain separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO Reno13 5G / Android 16 installed-PWA regression. Issue #551 Home-nav and Issue #552 / TC-03 retain their separate scoped **Physical PASS / CLOSED** evidence; TC-08 allow retains scoped **Physical PASS** for the traced OPPO fresh-permission test. Public Beta remains incomplete.'
+          )
+          # Insert PR #596 as historical immediately before the existing Home V3 history.
+          p=Path('BETA-DEVICE-MATRIX.md'); s=p.read_text()
+          anchor='- Historical current Home V3 contrast runtime: PR #564 / `d24824948c9df1808178b9bb5a78a8f885086fb4`;'
+          hist='- Historical PR #596 OPPO/PWA remediation runtime: source `de18711695bb94617c3cffa7767cb3943c0d2c05`; verified deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793` with Pages `34382130901`, main Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, and Campaign 3000 Premium Live Smoke `34382207209`. Issues #592/#593 have separate scoped Physical PASS; this historical deployment does not establish Issue #583 assistive-technology acceptance.\n'
+          if anchor not in s: raise SystemExit('missing Home V3 historical anchor in matrix')
+          s=s.replace(anchor,hist+anchor,1)
+          s=s.replace('superseded by the current PR #596 deployment','superseded by the current PR #602 deployment')
+          s=s.replace('superseded as current runtime deployment lineage by PR #596','superseded as current runtime deployment lineage by PR #602')
+          old=[l for l in s.splitlines() if l.startswith('- Current browser/PWA runtime candidate `de18711695bb94617c3cffa7767cb3943c0d2c05` has **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**')]
+          if len(old)!=1: raise SystemExit(f'expected one beta-rule current runtime line, found {len(old)}')
+          new='- Current browser/PWA runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` has **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE** through exact deployed descendant `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; Pages `34559056400` and main Live Smoke `34559096757` are successful deployment evidence only. This Issue #583 source/deployment PASS does not establish VoiceOver/TalkBack Physical PASS or full accessibility conformance. Issues #592/#593 retain separate scoped **Physical PASS / CLOSED** from the 2026-09-10 affected OPPO regression; Issues #551/#552 retain scoped **Physical PASS / CLOSED**, and TC-08 allow retains scoped **Physical PASS** from the 2026-09-08 fresh-permission retest. Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for affected iPhone scopes, and historical PR #537 password-recovery initialization physical retest remains PENDING because recovery-email issuance was rate-limited. Historical PR #520 referral-summary signed-in `EDGE` interaction and post-cutover RPC execute revocation/Advisor recheck retain their scoped evidence. Historical PR #509 Product Event deployment/controlled-ingress evidence remains scoped; separate OPPO Product Event physical QA PASS is not real-user traction. Historical PR #499 referral/acquisition deployment/schema/privacy-fix evidence remains scoped and no referred-signup/referral-conversion PASS is inferred.'
+          s=s.replace(old[0],new,1)
+          p.write_text(s)
+
+          # Remove this temporary workflow in the same commit so no automation remains behind.
+          Path('.github/workflows/tmp-reconcile-583-docs.yml').unlink()
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CURRENT-RELEASE.md RELEASE-CHECKLIST.md BETA-DEVICE-MATRIX.md .github/workflows/tmp-reconcile-583-docs.yml
+          git diff --cached --check
+          git commit -m "docs(release): complete #583 canonical deployment sync"
+          git push origin HEAD:docs/reconcile-583-deployment-20260911
