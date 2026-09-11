@@ -1,0 +1,78 @@
+name: A11y Selection State Regression
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selection-state-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify visual selection state is exposed to assistive technology
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const home=fs.readFileSync('data/home-surprise.js','utf8');
+          const index=fs.readFileSync('index.html','utf8');
+          const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+
+          const selectors=[
+            '#mealChips .option',
+            '#peopleChips .pill',
+            '#budgetChips .budget',
+            '#typeChips .chip'
+          ];
+          for(const selector of selectors){
+            assert(home.includes(selector),`missing AT state selector: ${selector}`);
+          }
+
+          assert(home.includes("button.setAttribute('aria-pressed',button.classList.contains('on')?'true':'false')"),
+            'aria-pressed must be derived from the same visual .on state');
+          assert(home.includes('syncSelectionPressedState();'),
+            'initial selected state must be synchronized');
+          assert(home.includes("attributeFilter:['class']"),
+            'selection-state observer must track class changes');
+          assert(home.includes('subtree:true')&&home.includes('attributes:true'),
+            'selection-state observer must cover descendant attribute changes');
+
+          assert(/id="mealChips"[\s\S]*class="option"[\s\S]*data-v="เช้า"/.test(index),
+            'meal controls are no longer represented by the guarded option buttons');
+          assert(/id="peopleChips"[\s\S]*class="pill on" data-v="1"/.test(index),
+            'people default visual selection drifted');
+          assert(/id="budgetChips"[\s\S]*class="budget"/.test(index),
+            'budget controls are no longer represented by the guarded budget buttons');
+          assert(/id="typeChips"[\s\S]*class="chip surprise" data-surprise="1"/.test(index),
+            'surprise preference control is no longer represented by the guarded chip');
+
+          assert(index.includes("document.querySelectorAll('#mealChips .option').forEach(x=>x.classList.remove('on'))"),
+            'meal single-select visual-state contract drifted');
+          assert(index.includes("document.querySelectorAll('#peopleChips .pill').forEach(x=>x.classList.toggle('on',+x.dataset.v===prefs.people))"),
+            'people visual-state synchronization contract drifted');
+          assert(index.includes("document.querySelectorAll('#budgetChips .budget').forEach(x=>x.classList.remove('on'))"),
+            'budget single-select visual-state contract drifted');
+          assert(index.includes("document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.remove('on'))"),
+            'surprise must still clear ordinary preference visual state');
+          assert(index.includes("document.querySelector('[data-surprise]')?.classList.remove('on')"),
+            'ordinary preference selection must still clear surprise visual state');
+          assert(index.includes("document.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));setPeople(1)"),
+            'resetPrefs must still reset visual selection and restore people=1');
+
+          console.log('A11y selection-state contract PASS');
+          NODE
+
+      - name: Preserve evidence boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Public Beta is still **NOT COMPLETE**' CURRENT-RUNTIME.md
+          grep -Fq 'Deployment PASS does not create or broaden Physical PASS.' CURRENT-RUNTIME.md
