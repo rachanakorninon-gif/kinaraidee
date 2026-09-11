@@ -6,7 +6,7 @@ const SHELL=[
   './data/foods-expanded.js','./data/choice-rules.js',
   './data/group-mode.js','./data/group-sync.js','./data/group-remote.js',
   './data/member-sync.js','./data/nearby-restaurants.js','./data/pwa-install.js',
-  './data/home-surprise.js','./data/history-ui.js'
+  './data/home-surprise.js','./data/toast-accessibility.js','./data/history-ui.js'
 ];
 
 self.addEventListener('install',event=>event.waitUntil(
