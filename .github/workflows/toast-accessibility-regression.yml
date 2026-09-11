@@ -5,12 +5,14 @@ on:
     branches: ["main"]
     paths:
       - 'index.html'
+      - 'sw.js'
       - 'data/toast-accessibility.js'
       - 'data/home-surprise.js'
       - '.github/workflows/toast-accessibility-regression.yml'
   pull_request:
     paths:
       - 'index.html'
+      - 'sw.js'
       - 'data/toast-accessibility.js'
       - 'data/home-surprise.js'
       - '.github/workflows/toast-accessibility-regression.yml'
@@ -35,11 +37,13 @@ jobs:
           const vm=require('vm');
           const assert=require('assert');
           const html=fs.readFileSync('index.html','utf8');
+          const sw=fs.readFileSync('sw.js','utf8');
           const controller=fs.readFileSync('data/toast-accessibility.js','utf8');
           const surprise=fs.readFileSync('data/home-surprise.js','utf8');
 
           assert(html.includes('<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>'),'toast markup must be a polite atomic status region');
           assert(html.includes('</script><script src="data/toast-accessibility.js"></script><script src="data/home-surprise.js"></script>'),'toast controller must load after the base toast function and before home-surprise');
+          assert(sw.includes("'./data/toast-accessibility.js'"),'toast controller must be retained in the Service Worker app shell for fresh offline launches');
           assert(!html.includes('id="toast" class="toast" role="alert"'),'ordinary toast must not become an interruptive alert');
           assert(controller.includes("node.setAttribute('role','status')"));
           assert(controller.includes("node.setAttribute('aria-live','polite')"));
@@ -116,7 +120,7 @@ jobs:
           {
             echo '## Toast accessibility evidence boundary'
             echo
-            echo '- Verifies source/runtime semantics and repeated-message behavior only.'
+            echo '- Verifies source/runtime semantics, repeated-message behavior, and Service Worker app-shell inclusion only.'
             echo '- Does not establish VoiceOver/TalkBack Physical PASS or full accessibility conformance.'
             echo '- Surprise busy announcements remain a separate live-region contract.'
           } >> "$GITHUB_STEP_SUMMARY"
