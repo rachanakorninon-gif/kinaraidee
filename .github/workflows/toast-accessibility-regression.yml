@@ -1,0 +1,122 @@
+name: Toast Accessibility Regression
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'index.html'
+      - 'data/home-surprise.js'
+      - '.github/workflows/toast-accessibility-regression.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'data/home-surprise.js'
+      - '.github/workflows/toast-accessibility-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-toast-accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify toast live-region and repeated-message contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const assert=require('assert');
+          const html=fs.readFileSync('index.html','utf8');
+          const surprise=fs.readFileSync('data/home-surprise.js','utf8');
+
+          assert(html.includes('<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>'),'toast must be a polite atomic status region');
+          assert(!html.includes('id="toast" class="toast" role="alert"'),'ordinary toast must not become interruptive alert');
+
+          const start=html.indexOf('function toast(t){');
+          const end=html.indexOf('function stopVoice(){',start);
+          assert(start>=0&&end>start,'toast implementation not found');
+          const toastSource=html.slice(start,end);
+          assert(!toastSource.includes('.focus('),'toast feedback must not move focus');
+          assert(toastSource.includes("x.textContent=''"),'same-message path must create an observable text transition');
+          assert(toastSource.includes('requestAnimationFrame(reveal)'),'same-message reset must wait for a browser frame');
+          assert(toastSource.includes('clearTimeout(toastTimer)'),'new toast must cancel prior hide timer');
+          assert(toastSource.includes('cancelAnimationFrame(toastFrame)'),'new toast must cancel stale announcement frame');
+          assert(toastSource.includes('2200'),'existing toast visibility duration must remain 2200 ms');
+
+          const classes=new Set();
+          const toastNode={
+            textContent:'',
+            classList:{
+              add(name){classes.add(name)},
+              remove(name){classes.delete(name)}
+            }
+          };
+          let nextTimer=0,nextFrame=0;
+          const timers=new Map(),frames=new Map();
+          const context={
+            document:{getElementById(id){assert.strictEqual(id,'toast');return toastNode}},
+            setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,ms});return id},
+            clearTimeout(id){timers.delete(id)},
+            requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id},
+            cancelAnimationFrame(id){frames.delete(id)},
+            console
+          };
+          vm.createContext(context);
+          vm.runInContext(`let toastTimer=null,toastFrame=0;${toastSource};globalThis.__toast=toast;`,context);
+
+          context.__toast('เลือกมื้อก่อนนะครับ');
+          assert.strictEqual(toastNode.textContent,'เลือกมื้อก่อนนะครับ');
+          assert(classes.has('show'),'first toast should be visible');
+          assert.strictEqual(timers.size,1,'first toast should own one hide timer');
+          const firstTimer=[...timers.keys()][0];
+          assert.strictEqual(timers.get(firstTimer).ms,2200);
+
+          context.__toast('เลือกมื้อก่อนนะครับ');
+          assert(!timers.has(firstTimer),'repeated toast must cancel the old hide timer');
+          assert.strictEqual(toastNode.textContent,'','repeated identical message must clear before re-announcing');
+          assert.strictEqual(frames.size,1,'repeated identical message must schedule a fresh frame');
+          const repeatFrame=[...frames.entries()][0];
+          frames.delete(repeatFrame[0]);
+          repeatFrame[1]();
+          assert.strictEqual(toastNode.textContent,'เลือกมื้อก่อนนะครับ');
+          assert(classes.has('show'));
+          assert.strictEqual(timers.size,1,'repeated toast should receive a fresh full-duration timer');
+          const secondTimer=[...timers.keys()][0];
+          assert.strictEqual(timers.get(secondTimer).ms,2200);
+
+          context.__toast('เลือกงบประมาณก่อนนะครับ');
+          assert(!timers.has(secondTimer),'new different toast must cancel the previous timer');
+          assert.strictEqual(toastNode.textContent,'เลือกงบประมาณก่อนนะครับ');
+          assert.strictEqual(timers.size,1);
+
+          for(const text of [
+            'เลือกมื้อก่อนนะครับ',
+            'เลือกงบประมาณก่อนนะครับ',
+            'บันทึกเมนูโปรดแล้ว ❤️',
+            'คัดลอกสำหรับแชร์แล้ว',
+            'กำลังเปิดร้านใกล้คุณ…'
+          ]) assert(html.includes(text),`expected existing toast purpose to remain: ${text}`);
+
+          assert(surprise.includes("status.id='homeSurpriseStatus'"),'Surprise must retain its own live region');
+          assert(surprise.includes("status.setAttribute('role','status')"),'Surprise live region semantics missing');
+          assert(!surprise.includes("getElementById('toast')"),'Surprise live region must not reuse ordinary toast');
+          assert(!toastSource.includes('homeSurpriseStatus'),'ordinary toast must not reuse Surprise live region');
+          console.log('Toast accessibility and repeated-message contract preserved');
+          NODE
+
+      - name: Record evidence boundary
+        shell: bash
+        run: |
+          {
+            echo '## Toast accessibility evidence boundary'
+            echo
+            echo '- Verifies source/runtime semantics and deterministic repeated-message behavior only.'
+            echo '- Does not establish VoiceOver/TalkBack Physical PASS or full accessibility conformance.'
+            echo '- Surprise busy announcements remain a separate live-region contract.'
+          } >> "$GITHUB_STEP_SUMMARY"
