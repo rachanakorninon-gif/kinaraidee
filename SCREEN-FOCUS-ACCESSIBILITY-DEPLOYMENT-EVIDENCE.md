@@ -4,6 +4,8 @@
 
 This record reconciles the deployed browser/PWA lineage for Issue #584 / PR #614. It is deployment evidence only and must not be promoted to assistive-technology Physical PASS.
 
+Canonical reconciliation is carried by PR #617. The later PR #616 Business/Growth documentation descendant does not change this browser/PWA runtime lineage or broaden its evidence scope.
+
 ## Source and deployment lineage
 
 - Issue: #584 — `A11y: manage focus when SPA screens change`
