@@ -7,15 +7,15 @@
 ## Current source/runtime state
 
 - Canonical reviewed `main` baseline: `bb9d3f308ea25a864267b9ab227e70d425388500` (PR #202 evidence-only merge recording the verified PR #201 deployment trace). This baseline is intentionally allowed to remain an ancestor of newer QA/workflow/documentation-only descendants; `Kinaraidee Release Baseline Regression` blocks guarded browser/API/schema drift after it, so a docs-only merge does not require baseline churn.
-- Current browser/PWA runtime candidate: `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` (Issue #583 selected-state accessibility remediation merged through PR #602).
+- Current browser/PWA runtime candidate: `bde1bfed79696f6982852ca67d3ee4c8120c0c54` (Issue #584 SPA focus-management accessibility remediation merged through PR #614).
 - Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**.
-- Runtime merge/deployed SHA: `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.
+- Runtime merge/deployed SHA: `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.
 - PWA cache marker: `kinaraidee-beta-v16`.
 - Current Group API source candidate: PR #518 / `8ab5fc9dd506740b48b245469421518381bbe079`; production migration `20260904161702 / group_api_event_observability_v1` is deployed and Supabase `group-api` is ACTIVE version 7 with `verify_jwt=false`. Repository/deployment source parity and scoped privacy-safe application-owned rejection-event ingestion are verified. This does not establish a production traffic/error-rate baseline, alerting, approved retention, complete abuse controls, device PASS, Public Beta completion or Commercial GO.
 - Partner API source/deployment hardening is tracked separately in `PARTNER-API-HARDENING-EVIDENCE.md`; existing evidence records Supabase ACTIVE v15 parity and a verified rejection-only live contract on merged main, including run `32675596758`. This is not partner/commercial readiness evidence.
 - `CURRENT-RUNTIME.md` is the canonical small browser/PWA runtime declaration and must stay consistent with this document.
 
-The current Issue #583 accessibility runtime candidate `0968f7cf7f1559f48837172e9a1b3a28b9877b5a` is verified through exact deployed descendant `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`; GitHub Pages run `34559056400`, Kinaraidee Live Smoke `34559096757`, Auth Password Security Live Smoke `34559096658`, and Campaign 3000 Premium Live Smoke `34559096690` completed successfully for that deployment trace while preserving `kinaraidee-beta-v16`. This establishes source/deployment evidence for synchronized `aria-pressed` state on the core choice controls only. It does not establish VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion or Commercial GO. PR #607 merged later as CI/release-guard wording alignment and does not supersede this browser/PWA runtime lineage.
+The current Issue #584 accessibility runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54` is verified through exact deployed descendant `2896748584a1058e9ba1bbc939f49f3b6faf4baf`; GitHub Pages run `34560369925`, Kinaraidee Live Smoke `34560396807`, Auth Password Security Live Smoke `34560396831`, and Campaign 3000 Premium Live Smoke `34560396804` completed successfully for that deployment trace while preserving `kinaraidee-beta-v16`. This establishes source/deployment evidence for deterministic destination focus management across the core SPA screens only. It does not establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion or Commercial GO. The prior Issue #583 selected-state deployment remains historical verified evidence in its recorded scope.
 
 The prior Issues #592/#593 remediation runtime candidate `de18711695bb94617c3cffa7767cb3943c0d2c05` was verified through exact deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`; GitHub Pages run `34382130901`, Kinaraidee Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, and Campaign 3000 Premium Live Smoke `34382207209` completed successfully for that historical deployment trace. Separate fresh 2026-09-10 affected-OPPO Physical PASS closed Issues #592 and #593; those physical results remain scoped and are not generalized by the newer accessibility runtime.
 
@@ -43,11 +43,11 @@ Status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
 
 Current runtime evidence boundary:
 
-- Current source runtime candidate is `0968f7cf7f1559f48837172e9a1b3a28b9877b5a`.
-- It is verified through exact deployed descendant `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.
-- GitHub Pages run `34559056400` completed **success** for exact deployed SHA `969d9f4241d3ff5d8d2c1749d66516a72d3d582d`.
-- Kinaraidee Live Smoke run `34559096757`, Auth Password Security Live Smoke `34559096658`, and Campaign 3000 Premium Live Smoke `34559096690` completed **success** for the same deployed SHA/trace.
-- The Service Worker cache marker remains `kinaraidee-beta-v16`; Issue #583 does not create a new cache generation.
+- Current source runtime candidate is `bde1bfed79696f6982852ca67d3ee4c8120c0c54`.
+- It is verified through exact deployed descendant `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.
+- GitHub Pages run `34560369925` completed **success** for exact deployed SHA `2896748584a1058e9ba1bbc939f49f3b6faf4baf`.
+- Kinaraidee Live Smoke run `34560396807`, Auth Password Security Live Smoke `34560396831`, and Campaign 3000 Premium Live Smoke `34560396804` completed **success** for the same deployed SHA/trace.
+- The Service Worker cache marker remains `kinaraidee-beta-v16`; Issue #584 does not create a new cache generation.
 - Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does **not by itself** establish VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Issues #524/#545, Public Beta completion, Production policy/legal approval or Commercial GO. Issues #592 and #593 retain separate fresh **Physical PASS / CLOSED** evidence from the affected OPPO installed-PWA retest on 2026-09-10; those are not inferred from deployment. Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for their affected iPhone scopes.
 - PR #607 / current-main descendant `f119537219d3eb885e64783a1775486798cd813c` is CI/release-guard wording alignment and does not change the browser runtime candidate, deployed runtime SHA, cache generation, or physical evidence scope.
 
