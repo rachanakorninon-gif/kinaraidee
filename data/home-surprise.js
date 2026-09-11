@@ -71,6 +71,51 @@
     });
     controls.forEach(control=>observer.observe(control,{attributes:true,attributeFilter:['class']}));
   }
+  function installScreenFocusA11y(){
+    if(document.documentElement.dataset.kinaraideeScreenFocusA11y==='1')return;
+    const targets={
+      home:'.heroTitle',
+      mealStep:'.stepHead h1',
+      peopleStep:'.topbar b',
+      budgetStep:'.topbar b',
+      typeStep:'.stepHead h1',
+      loading:'.loading h2',
+      result:'.topbar b',
+      history:'.topbar b'
+    };
+    Object.entries(targets).forEach(([id,selector])=>{
+      const target=document.querySelector(`#${id} ${selector}`);
+      if(!target)return;
+      target.dataset.screenFocus='1';
+      target.setAttribute('tabindex','-1');
+      if(!/^H[1-6]$/.test(target.tagName)){
+        target.setAttribute('role','heading');
+        target.setAttribute('aria-level','1');
+      }
+    });
+    const originalShow=window.show;
+    if(typeof originalShow!=='function')return;
+    const focusDestination=id=>{
+      // Loading is intentionally transient: the existing Surprise live region owns
+      // its busy announcement, while Result receives deterministic focus next.
+      if(id==='loading')return;
+      const screen=document.getElementById(id);
+      if(!screen||!screen.classList.contains('active'))return;
+      const target=screen.querySelector('[data-screen-focus="1"]');
+      if(!target)return;
+      const focus=()=>{
+        if(!screen.classList.contains('active'))return;
+        try{target.focus({preventScroll:true})}catch(e){target.focus()}
+      };
+      if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(focus);
+      else setTimeout(focus,0);
+    };
+    window.show=function(id){
+      originalShow(id);
+      focusDestination(id);
+    };
+    document.documentElement.dataset.kinaraideeScreenFocusA11y='1';
+  }
   function ensurePremiumHomeStyles(){
     if(document.getElementById('kinaraideeHomeV3Styles'))return;
     const style=document.createElement('style');
@@ -205,6 +250,7 @@
   function install(){
     ensureAccessibilityStyles();
     installSelectedStateA11y();
+    installScreenFocusA11y();
     ensureAcquisition();
     ensureProductEvents();
     ensureMemberSync();
