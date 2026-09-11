@@ -1,0 +1,81 @@
+name: Reconcile toast shell runtime one-shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-offline-shell-585"]
+    paths:
+      - '.github/workflows/reconcile-toast-shell-runtime-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: ${{ github.event.head_commit.message == 'chore(ci): stage toast shell runtime declaration' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-offline-shell-585
+          fetch-depth: 0
+      - name: Declare pending offline-shell candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old_candidate='f9b5f137375e9d30d1053d9cad814d636cb88821'
+          new_candidate='9809a1b269d529f9e6c8778898d9f075bbce21b0'
+          prior_deployed='11c27167965c63ba60218d6ec216e503b334b4ca'
+
+          text=text.replace(f'- Current browser/PWA runtime candidate: `{old_candidate}`',f'- Current browser/PWA runtime candidate: `{new_candidate}`',1)
+          text=re.sub(
+              r'^- Runtime change: .*$',
+              '- Runtime change: Issue #585 PWA/offline app-shell parity follow-up on top of the verified Issue #585 toast live-region deployment. `data/toast-accessibility.js` remains the ordinary polite atomic toast controller and is now included in the Service Worker `SHELL`, so fresh offline launches retain the same repeated-message accessibility behavior. The toast controller still does not move focus, the Surprise-specific busy live region remains separate, and the cache generation remains v16.',
+              text,count=1,flags=re.M)
+          text=re.sub(r'^- Last verified deployed browser/PWA descendant: `[^`]+`\.$',f'- Last verified deployed browser/PWA descendant: `{prior_deployed}`.',text,count=1,flags=re.M)
+          text=re.sub(
+              r'^- Current runtime deployment evidence is pending for source candidate `[^`]+`\..*$',
+              f'- Current runtime deployment evidence is pending for source candidate `{new_candidate}`. Source/static/CI completion and offline-shell regression coverage must not be promoted to deployment or screen-reader Physical PASS.',
+              text,count=1,flags=re.M)
+
+          marker='- The previous verified Issue #584 runtime candidate `bde1bfed79696f6982852ca67d3ee4c8120c0c54`'
+          insert=(
+              '- The previous verified Issue #585 core toast runtime candidate `f9b5f137375e9d30d1053d9cad814d636cb88821` was merged/deployed through PR #623 as `11c27167965c63ba60218d6ec216e503b334b4ca`; GitHub Pages run `34571331729`, Kinaraidee Live Smoke run `34571373301`, Auth Password Security Live Smoke run `34571373282`, and Campaign 3000 Premium Live Smoke run `34571373303` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current offline-shell follow-up candidate is merged and independently deployed/verified.\n'
+          )
+          if insert.strip() not in text:
+              if marker not in text:
+                  raise SystemExit('previous Issue #584 marker missing')
+              text=text.replace(marker,insert+marker,1)
+
+          boundary=(
+              f'The current browser/PWA runtime candidate `{new_candidate}` contains the Issue #585 offline app-shell parity follow-up: the already-deployed toast accessibility controller is now included in the Service Worker shell and guarded by deterministic regression coverage, but current-runtime deployment evidence for this follow-up is still pending. The last verified deployed browser/PWA descendant is `{prior_deployed}` for the prior Issue #585 core toast source candidate `f9b5f137375e9d30d1053d9cad814d636cb88821`; GitHub Pages `34571331729`, Kinaraidee Live Smoke `34571373301`, Auth Password Security Live Smoke `34571373282`, and Campaign 3000 Premium Live Smoke `34571373303` completed successfully on that exact deployed SHA. Prior verified deployment evidence remains historical and is not reused as current PASS. This pending source/CI state does not prove deployment, VoiceOver/TalkBack Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          )
+          text,n=re.subn(
+              r'The current browser/PWA runtime candidate `[^`]+` contains.*?Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance\.',
+              boundary,text,count=1,flags=re.S)
+          if n!=1:
+              raise SystemExit(f'evidence boundary replacement count={n}')
+
+          required=[
+              f'Current browser/PWA runtime candidate: `{new_candidate}`',
+              f'Last verified deployed browser/PWA descendant: `{prior_deployed}`',
+              'Prior verified deployment evidence remains historical and is not reused as current PASS.',
+              '34571331729','34571373301','34571373282','34571373303',
+              'Public Beta is still **NOT COMPLETE**'
+          ]
+          for needle in required:
+              if needle not in text:
+                  raise SystemExit(f'missing required runtime evidence: {needle}')
+          p.write_text(text)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare toast offline-shell candidate'
+          git push origin HEAD:fix/a11y-toast-offline-shell-585
