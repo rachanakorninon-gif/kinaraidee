@@ -64,7 +64,10 @@ jobs:
           const frames=new Map(),timers=new Map();
           const context={
             window:{toast(){throw new Error('base toast must be replaced')}},
-            document:{getElementById(id){assert.strictEqual(id,'toast');return node}},
+            document:{
+              getElementById(id){assert.strictEqual(id,'toast');return node},
+              querySelector(){return null}
+            },
             requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id},
             cancelAnimationFrame(id){frames.delete(id)},
             setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,ms});return id},

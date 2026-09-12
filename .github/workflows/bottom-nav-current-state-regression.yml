@@ -1,0 +1,63 @@
+name: Bottom nav current-state regression
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'data/toast-accessibility.js'
+      - '.github/workflows/bottom-nav-current-state-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'data/toast-accessibility.js'
+      - '.github/workflows/bottom-nav-current-state-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  current-state-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify bottom-nav accessibility contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html').read_text(encoding='utf-8')
+          js = Path('data/toast-accessibility.js').read_text(encoding='utf-8')
+
+          assert '<nav class="nav">' in index, 'persistent bottom nav missing'
+          assert index.count('<nav class="nav">') == 1, 'expected one persistent bottom nav'
+          assert "const screenToNav={" in js, 'screen mapping missing'
+
+          expected = {
+              'home': 0,
+              'mealStep': 1,
+              'peopleStep': 1,
+              'budgetStep': 1,
+              'typeStep': 1,
+              'loading': 1,
+              'result': 1,
+              'history': 2,
+          }
+          for screen, slot in expected.items():
+              assert f'{screen}:{slot}' in js, f'mapping missing: {screen}->{slot}'
+
+          assert "button.setAttribute('aria-current','page')" in js, 'aria-current page missing'
+          assert "button.removeAttribute('aria-current')" in js, 'non-current cleanup missing'
+          assert "button.classList.toggle('kinaraidee-current',current)" in js, 'visual hook missing'
+          assert '.nav button.kinaraidee-current' in js, 'current-state styling missing'
+          assert 'background:#fff3df' in js and 'color:#7a3c00' in js, 'contrast styling hook changed unexpectedly'
+
+          show_wrapper = js.index('window.show=function(id)')
+          activate = js.index('const result=originalShow.apply(this,arguments)', show_wrapper)
+          sync = js.index('syncNavCurrent(id)', activate)
+          assert activate < sync, 'current state must update after screen activation'
+
+          assert "syncNavCurrent(activeScreen?.id||'home')" in js, 'initial Home/current screen sync missing'
+          assert "button.focus(" not in js, 'current-state sync must not move focus'
+          assert "aria-live" not in js[js.index("(()=>{\n  const nav=document.querySelector('.nav')"):], 'nav sync must not add live-region announcements'
+          PY
