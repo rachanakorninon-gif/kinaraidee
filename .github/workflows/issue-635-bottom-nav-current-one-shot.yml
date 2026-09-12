@@ -1,0 +1,169 @@
+name: Issue 635 bottom-nav current-state one-shot
+
+on:
+  push:
+    branches: ["a11y/bottom-nav-current-state-635-20260912"]
+    paths:
+      - '.github/workflows/issue-635-bottom-nav-current-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout remediation branch
+        uses: actions/checkout@v4
+        with:
+          ref: a11y/bottom-nav-current-state-635-20260912
+          fetch-depth: 0
+
+      - name: Implement synchronized current navigation state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              n=text.count(old)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected exactly one target, got {n}')
+              return text.replace(old,new,1)
+
+          # Runtime helper: expose one persistent-nav current state without moving focus.
+          p=Path('data/home-surprise.js'); text=p.read_text()
+          anchor='  function ensurePremiumHomeStyles(){\n'
+          helper=r'''  function installNavCurrentA11y(){
+    if(document.documentElement.dataset.kinaraideeNavCurrentA11y==='1')return;
+    const nav=document.querySelector('.nav');
+    if(!nav)return;
+    const buttons=[...nav.querySelectorAll('button')];
+    if(buttons.length<3)return;
+    const screenToNav={
+      home:0,
+      mealStep:1,
+      peopleStep:1,
+      budgetStep:1,
+      typeStep:1,
+      loading:1,
+      result:1,
+      history:2
+    };
+    if(!document.getElementById('kinaraideeNavCurrentStyles')){
+      const style=document.createElement('style');
+      style.id='kinaraideeNavCurrentStyles';
+      style.textContent='.nav button[aria-current="page"]{background:#fff7e8;color:#8a4300;font-weight:900}';
+      document.head.appendChild(style);
+    }
+    const syncCurrent=id=>{
+      buttons.forEach(button=>button.removeAttribute('aria-current'));
+      const index=screenToNav[id];
+      if(index===undefined||!buttons[index])return;
+      buttons[index].setAttribute('aria-current','page');
+    };
+    const originalShow=window.show;
+    if(typeof originalShow!=='function')return;
+    window.show=function(id){
+      originalShow(id);
+      syncCurrent(id);
+    };
+    const active=document.querySelector('.screen.active');
+    syncCurrent(active?.id||'home');
+    document.documentElement.dataset.kinaraideeNavCurrentA11y='1';
+  }
+'''
+          text=replace_once(text,anchor,helper+anchor,'home-surprise helper anchor')
+          install_old='    installSelectedStateA11y();\n    installScreenFocusA11y();\n    ensureAcquisition();\n'
+          install_new='    installSelectedStateA11y();\n    installScreenFocusA11y();\n    installNavCurrentA11y();\n    ensureAcquisition();\n'
+          text=replace_once(text,install_old,install_new,'home-surprise install order')
+          p.write_text(text)
+
+          # Static/regression contract for mapping, ordering, exactly-one state, styling and no focus movement.
+          p=Path('.github/workflows/device-ux-regression.yml'); text=p.read_text()
+          marker='      - name: Verify Home V3 bottom navigation stays above decorated content\n'
+          step=r'''      - name: Verify persistent bottom navigation current state
+        shell: bash
+        run: |
+          set -euo pipefail
+          file='data/home-surprise.js'
+          grep -Fq 'function installNavCurrentA11y(){' "$file"
+          grep -Fq "home:0" "$file"
+          grep -Fq "mealStep:1" "$file"
+          grep -Fq "peopleStep:1" "$file"
+          grep -Fq "budgetStep:1" "$file"
+          grep -Fq "typeStep:1" "$file"
+          grep -Fq "loading:1" "$file"
+          grep -Fq "result:1" "$file"
+          grep -Fq "history:2" "$file"
+          grep -Fq "buttons.forEach(button=>button.removeAttribute('aria-current'))" "$file"
+          grep -Fq "buttons[index].setAttribute('aria-current','page')" "$file"
+          grep -Fq "syncCurrent(active?.id||'home')" "$file"
+          grep -Fq '.nav button[aria-current="page"]{background:#fff7e8;color:#8a4300;font-weight:900}' "$file"
+          grep -Fq 'installNavCurrentA11y();' "$file"
+          node <<'NODE'
+          const fs=require('fs');
+          const source=fs.readFileSync('data/home-surprise.js','utf8');
+          const start=source.indexOf('function installNavCurrentA11y(){');
+          const end=source.indexOf('function ensurePremiumHomeStyles(){',start);
+          if(start<0||end<0)throw new Error('bottom-nav current-state helper boundary missing');
+          const helper=source.slice(start,end);
+          const wrapper=helper.match(/window\.show=function\(id\)\{([\s\S]*?)\n    \};/);
+          if(!wrapper)throw new Error('bottom-nav show wrapper missing');
+          const body=wrapper[1];
+          const activate=body.indexOf('originalShow(id);');
+          const sync=body.indexOf('syncCurrent(id);');
+          if(activate<0||sync<0||activate>=sync)throw new Error('nav current state must sync after destination activation');
+          if(/\.focus\s*\(/.test(helper))throw new Error('bottom-nav current-state helper must not move focus');
+          const install=source.slice(source.indexOf('function install(){'));
+          if(install.indexOf('installScreenFocusA11y();')>install.indexOf('installNavCurrentA11y();'))throw new Error('screen-focus wrapper must install before nav-current wrapper');
+          console.log('Persistent bottom-nav current-state contract preserved');
+          NODE
+          echo 'Persistent bottom navigation current state preserved'
+
+'''
+          text=replace_once(text,marker,step+marker,'device UX navigation step')
+          p.write_text(text)
+          PY
+
+          git rm .github/workflows/issue-635-bottom-nav-current-one-shot.yml
+          git add data/home-surprise.js .github/workflows/device-ux-regression.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(a11y): expose persistent nav current state'
+          SOURCE="$(git rev-parse HEAD)"
+
+          python - "$SOURCE" <<'PY'
+          from pathlib import Path
+          import re,sys
+          source=sys.argv[1]
+
+          def sub1(text, pattern, repl, label, flags=re.M):
+              out,n=re.subn(pattern,repl,text,count=1,flags=flags)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected one target, got {n}')
+              return out
+
+          p=Path('CURRENT-RUNTIME.md'); text=p.read_text()
+          text=sub1(text,r'^- Current browser/PWA runtime candidate: .*$',f'- Current browser/PWA runtime candidate: `{source}`','runtime candidate')
+          text=sub1(text,r'^- Runtime change: .*$',"- Runtime change: Issue #635 accessibility remediation on top of the verified Issue #585 offline/PWA toast runtime. The persistent three-button bottom navigation now exposes exactly one synchronized `aria-current=\"page\"` state: Home maps to `หน้าหลัก`, the Meal→People→Budget→Preference→Loading→Result recommendation flow maps to `เลือกเมนู`, and History maps to `ประวัติ`. The same state drives a high-contrast visual current cue, updates only after the existing `show(id)` destination activation, does not move focus, and preserves the existing screen-focus/live-region behavior. The cache generation remains `kinaraidee-beta-v16`.",'runtime change')
+          text=sub1(text,r'^- Deployment status: .*$', '- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**','runtime status')
+          text=sub1(text,r'^- Runtime merge/deployed SHA: .*$', '- Runtime merge/deployed SHA: **PENDING**','runtime deployed sha')
+          verified_pattern=r'^- Current runtime deployment evidence: PR #627 source candidate `0b6352af081f51ad9df2343022d0683b109d93a4`.*$'
+          pending=(
+              f'- Current runtime deployment evidence is pending for source candidate `{source}`. Source/static/CI completion must not be promoted to deployment, screen-reader/keyboard Physical PASS, or another-device PASS.\n'
+              '- The previous verified Issue #585 offline/PWA toast runtime candidate `0b6352af081f51ad9df2343022d0683b109d93a4` was merged/deployed as `af329c471c0335fd6e0812a8d5f75066ffb335cd`; GitHub Pages run `34676035335`, Kinaraidee Live Smoke run `34676056521`, Auth Password Security Live Smoke run `34676056466`, Campaign 3000 Premium Live Smoke run `34676056536`, Toast Accessibility Live Smoke run `34676056553`, and Premium Research Preview Live Smoke run `34676056518` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace remains the last verified browser/PWA deployment until the current Issue #635 candidate is merged and independently deployed/verified.'
+          )
+          text=sub1(text,verified_pattern,pending,'runtime deployment evidence')
+          boundary=(
+              f'The current browser/PWA runtime candidate `{source}` contains the Issue #635 persistent-navigation current-state remediation but is **not yet verified deployed**. The last verified browser/PWA descendant remains `af329c471c0335fd6e0812a8d5f75066ffb335cd` from the prior Issue #585 offline/PWA toast runtime, with Pages `34676035335` and its recorded live-smoke checks successful. The new source synchronizes one visual/programmatic bottom-navigation current state after SPA screen activation without moving focus. Source/static/CI completion does not prove deployment, VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          )
+          text=sub1(text,r'## Evidence boundary\n\n.*?\n\nIssues #592','## Evidence boundary\n\n'+boundary+'\n\nIssues #592','runtime evidence boundary',flags=re.S)
+          text=text.replace('Public Beta remains NOT COMPLETE, and this deployed offline-shell follow-up does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.','Public Beta remains NOT COMPLETE, and this pending bottom-navigation accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.',1)
+          p.write_text(text)
+          PY
+
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare Issue #635 nav-current candidate'
+          git push origin HEAD:a11y/bottom-nav-current-state-635-20260912
