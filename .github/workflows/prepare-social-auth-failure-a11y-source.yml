@@ -1,0 +1,40 @@
+name: Prepare social auth failure and accessibility source
+
+on:
+  push:
+    branches:
+      - fix/social-auth-failure-a11y-source-529
+    paths:
+      - .github/workflows/prepare-social-auth-failure-a11y-source.yml
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/social-auth-failure-a11y-source-529
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python .github/scripts/prepare-social-auth-failure-a11y-source.py
+      - run: node --check prototype/auth-multi-provider/member-auth-multi-provider.js
+      - run: |
+          grep -Fq 'Object.freeze({line:false,phone:false,facebook:false})' prototype/auth-multi-provider/member-auth-multi-provider.js
+          grep -Fq 'safeMemberRedirect(options.redirectTo)' prototype/auth-multi-provider/member-auth-multi-provider.js
+          grep -Fq "messageRegion.setAttribute('aria-live','polite')" prototype/auth-multi-provider/member-auth-multi-provider.js
+          grep -Fq 'ตรวจอินเทอร์เน็ตแล้วลองใหม่' prototype/auth-multi-provider/member-auth-multi-provider.js
+          ! grep -Fq 'member-auth-multi-provider.js' member.html
+          ! grep -Fq 'member-auth-multi-provider.js' sw.js
+      - run: |
+          rm .github/scripts/prepare-social-auth-failure-a11y-source.py
+          rm .github/workflows/prepare-social-auth-failure-a11y-source.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "fix(auth): prepare provider failure retry and a11y source"
+          git push origin HEAD:fix/social-auth-failure-a11y-source-529
