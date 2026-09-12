@@ -1,0 +1,66 @@
+name: Premium Payment UX Disclosure Regression
+
+on:
+  pull_request:
+    paths:
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md'
+      - '.github/workflows/premium-payment-ux-disclosure-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'BUSINESS-COMMERCIAL-BASELINE.md'
+      - 'PAYMENT-PREMIUM-DECISION.md'
+      - 'PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md'
+      - '.github/workflows/premium-payment-ux-disclosure-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  payment-ux-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify canonical inputs and spec exist
+        run: |
+          test -f BUSINESS-COMMERCIAL-BASELINE.md
+          test -f PAYMENT-PREMIUM-DECISION.md
+          test -f PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+
+      - name: Preserve approved price and method distinction
+        run: |
+          grep -Fq '59 บาท/เดือน' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'PromptPay — 59 บาท / 1 รอบ Premium' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'ไม่ต่ออายุอัตโนมัติ' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'เฉพาะหลัง provider/account-specific recurring/off-session validation ผ่าน' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+
+      - name: Preserve backend payment truth boundary
+        run: |
+          grep -Fq 'Browser return/redirect ไม่ใช่ source of truth' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'backend-authoritative entitlement' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'checkout start ≠ payment' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'Test Mode events must not enter Production paid customer/revenue totals' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+
+      - name: Preserve cancellation and failure semantics
+        run: |
+          grep -Fq 'Premium ที่ชำระแล้วใช้ต่อจนจบรอบที่ชำระ' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'การชำระ/renewal ล้มเหลวไม่ต่ออายุ Premium' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'ยกเลิกการต่ออายุแล้ว' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'Premium สิ้นสุดแล้ว ตอนนี้บัญชีของคุณกลับมาใช้แผน Free' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+
+      - name: Preserve strict Payment and Legal gate
+        run: |
+          grep -Fq 'PAYMENT NOT APPROVED / LEGAL NOT APPROVED' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'Payment gate closed' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md || grep -Fq 'keeps Payment gate closed' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'creates no merchant account, payment, Premium subscriber' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'Status: **NOT APPROVED**' PAYMENT-PREMIUM-DECISION.md
+
+      - name: Reject unsafe blanket refund or PromptPay recurring claims
+        run: |
+          if grep -Eiq 'ไม่คืนเงินทุกกรณี|PromptPay.*ต่ออายุอัตโนมัติ|PromptPay.*auto[- ]?renew' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md; then
+            echo 'Unsafe refund or PromptPay recurring claim found.' >&2
+            exit 1
+          fi
