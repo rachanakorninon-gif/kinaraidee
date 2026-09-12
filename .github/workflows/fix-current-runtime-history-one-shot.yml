@@ -1,0 +1,41 @@
+name: Fix current runtime historical wording one-shot
+
+on:
+  push:
+    branches: ["docs/fix-585-current-runtime-history-20260912"]
+    paths:
+      - '.github/workflows/fix-current-runtime-history-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs/fix-585-current-runtime-history-20260912
+          fetch-depth: 0
+
+      - name: Remove stale pre-deployment wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='That trace is the last verified browser/PWA deployment until the current offline-shell follow-up candidate is merged and independently deployed/verified.'
+          new='That trace remains historical verified deployment evidence and is superseded by the current PR #627 offline-shell parity deployment.'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one stale historical sentence, got {text.count(old)}')
+          p.write_text(text.replace(old,new,1))
+          PY
+          git rm .github/workflows/fix-current-runtime-history-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(runtime): remove stale pre-deployment wording'
+          git push origin HEAD:docs/fix-585-current-runtime-history-20260912
