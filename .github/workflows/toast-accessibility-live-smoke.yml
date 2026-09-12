@@ -1,0 +1,72 @@
+name: Toast Accessibility Live Smoke
+
+on:
+  workflow_run:
+    workflows: ["Deploy Kinaraidee to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live-toast:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout runtime declaration
+        uses: actions/checkout@v4
+
+      - name: Wait for Pages propagation
+        run: sleep 20
+
+      - name: Verify deployed toast accessibility and offline shell parity
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DEPLOY_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEPLOY_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          base='https://rachanakorninon-gif.github.io/kinaraidee'
+          expected_cache="$(sed -n 's/^- PWA cache marker: `\(kinaraidee-beta-v[0-9][0-9]*\)`.*/\1/p' CURRENT-RUNTIME.md | head -n1)"
+          test -n "$expected_cache" || { echo 'Unable to derive expected cache marker'; exit 1; }
+
+          html="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/")"
+          sw="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/sw.js")"
+          toast="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/data/toast-accessibility.js")"
+          release_meta="$(curl --fail --silent --show-error --location --retry 5 --retry-delay 5 "$base/release-meta.json")"
+
+          grep -q 'data/toast-accessibility.js' <<<"$html"
+          grep -Fq "'./data/toast-accessibility.js'" <<<"$sw"
+          grep -q 'cache.addAll(SHELL)' <<<"$sw"
+          grep -Fq "node.setAttribute('role','status')" <<<"$toast"
+          grep -Fq "node.setAttribute('aria-live','polite')" <<<"$toast"
+          grep -Fq "node.setAttribute('aria-atomic','true')" <<<"$toast"
+          grep -Fq "node.textContent=''" <<<"$toast"
+          grep -Fq 'kinaraideeToastA11y' <<<"$toast"
+          if grep -q '.focus(' <<<"$toast"; then echo 'Toast controller unexpectedly moves focus'; exit 1; fi
+
+          live_cache="$(sed -n "s/^const CACHE='\(kinaraidee-beta-v[0-9][0-9]*\)';$/\1/p" <<<"$sw")"
+          deployed_sha="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));if(!/^[0-9a-f]{40}$/.test(String(m.sha||'')))process.exit(2);process.stdout.write(String(m.sha));" <<<"$release_meta")"
+          meta_cache="$(node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(String(m.pwa_cache||''));" <<<"$release_meta")"
+          test "$live_cache" = "$expected_cache"
+          test "$meta_cache" = "$expected_cache"
+
+          if [ "$EVENT_NAME" = 'workflow_run' ] && [ -n "${DEPLOY_HEAD_SHA:-}" ]; then
+            test "$deployed_sha" = "$DEPLOY_HEAD_SHA" || { echo "Live release-meta SHA $deployed_sha does not match Pages head SHA $DEPLOY_HEAD_SHA"; exit 1; }
+          fi
+
+          {
+            echo '## Toast accessibility live evidence'
+            echo
+            echo "- Public release-meta SHA: \`$deployed_sha\`"
+            echo "- Service Worker cache marker: \`$live_cache\`"
+            if [ "$EVENT_NAME" = 'workflow_run' ]; then echo "- Source Pages run: $DEPLOY_RUN_ID"; fi
+            echo '- Deployed toast controller: present'
+            echo '- Polite + atomic status semantics: present'
+            echo '- Repeated-message controller marker: present'
+            echo '- Service Worker offline app-shell parity: present'
+            echo
+            echo '> This automated live smoke proves deployed source/runtime parity only. It does not establish VoiceOver/TalkBack Physical PASS, another-device PASS, Public Beta completion, or Commercial GO.'
+          } >> "$GITHUB_STEP_SUMMARY"
