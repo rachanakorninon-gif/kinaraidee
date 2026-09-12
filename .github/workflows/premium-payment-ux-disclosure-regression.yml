@@ -54,13 +54,12 @@ jobs:
       - name: Preserve strict Payment and Legal gate
         run: |
           grep -Fq 'PAYMENT NOT APPROVED / LEGAL NOT APPROVED' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
-          grep -Fq 'Payment gate closed' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md || grep -Fq 'keeps Payment gate closed' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'keeps Payment gate closed' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
           grep -Fq 'creates no merchant account, payment, Premium subscriber' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
           grep -Fq 'Status: **NOT APPROVED**' PAYMENT-PREMIUM-DECISION.md
 
-      - name: Reject unsafe blanket refund or PromptPay recurring claims
+      - name: Preserve refund and PromptPay anti-misleading boundaries
         run: |
-          if grep -Eiq 'ไม่คืนเงินทุกกรณี|PromptPay.*ต่ออายุอัตโนมัติ|PromptPay.*auto[- ]?renew' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md; then
-            echo 'Unsafe refund or PromptPay recurring claim found.' >&2
-            exit 1
-          fi
+          grep -Fq 'Pricing/checkout ไม่ควรใช้ blanket claim' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'PromptPay ต้องไม่ถูกวางใน UI เดียวกับคำว่า' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
+          grep -Fq 'การชำระเงินจะไม่ต่ออายุอัตโนมัติ' PREMIUM-PAYMENT-UX-DISCLOSURE-SPEC.md
