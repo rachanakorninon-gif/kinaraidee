@@ -1,0 +1,66 @@
+name: Premium Research Integrity Regression
+
+on:
+  pull_request:
+    paths:
+      - 'PREMIUM-VALUE-VALIDATION-PLAN.md'
+      - 'PREMIUM-INTERVIEW-RESPONSE-SHEET.md'
+      - 'PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md'
+      - '.github/workflows/premium-research-integrity-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'PREMIUM-VALUE-VALIDATION-PLAN.md'
+      - 'PREMIUM-INTERVIEW-RESPONSE-SHEET.md'
+      - 'PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md'
+      - '.github/workflows/premium-research-integrity-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  research-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify canonical research files exist
+        run: |
+          test -f PREMIUM-VALUE-VALIDATION-PLAN.md
+          test -f PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          test -f PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+
+      - name: Preserve THB 59 approved proposition boundary
+        run: |
+          grep -Fq 'THB 59/month' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'THB 59/month' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+          grep -Fq 'THB 59 BETA BUSINESS PRICE APPROVED' PREMIUM-VALUE-VALIDATION-PLAN.md
+
+      - name: Preserve question-order protections
+        run: |
+          grep -Fq 'ก่อนเปิดเผย THB 59' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'no-prize' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'campaign ถูกเปิดเผยหลัง no-prize question' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'price was asked before THB 59' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+
+      - name: Preserve stated-intent versus business-result boundary
+        run: |
+          grep -Fq 'ไม่ใช่ paid conversion' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'These are research intents, not paid conversion.' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+          grep -Fq 'actual MRR/revenue:' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+          grep -Fq 'actual CAC:' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+          grep -Fq 'actual LTV:' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+
+      - name: Preserve campaign and authority boundaries
+        run: |
+          grep -Fq 'Campaign 3,000 Premium ยัง **PRE-LAUNCH**' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'Campaign remains PRE-LAUNCH' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+          grep -Fq 'Payment PASS' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
+          grep -Fq 'Commercial GO' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
+
+      - name: Reject accidental current-price replacement language
+        run: |
+          if grep -Eiq 'current (beta )?price *= *THB (69|79|99)|Premium Beta price *= *THB (69|79|99)' PREMIUM-INTERVIEW-RESPONSE-SHEET.md PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md; then
+            echo 'Research templates must not replace the approved THB 59 baseline with optional anchors.' >&2
+            exit 1
+          fi
