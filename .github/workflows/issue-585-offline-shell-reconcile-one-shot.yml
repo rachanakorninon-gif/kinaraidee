@@ -1,0 +1,135 @@
+name: Issue 585 offline-shell reconciliation one-shot
+
+on:
+  push:
+    branches: ["fix/a11y-toast-offline-shell-585-rebased-20260912"]
+    paths:
+      - '.github/workflows/issue-585-offline-shell-reconcile-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.event.head_commit.message == 'chore: reconcile Issue #585 offline shell from current main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current reconciliation branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/a11y-toast-offline-shell-585-rebased-20260912
+          fetch-depth: 0
+
+      - name: Build clean offline-shell follow-up from current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_exact(text, old, new, label, count=1):
+              actual=text.count(old)
+              if actual != count:
+                  raise SystemExit(f'{label}: expected {count} target(s), got {actual}')
+              return text.replace(old,new,count)
+
+          # Service Worker: preserve toast accessibility controller in the installed/offline app shell.
+          p=Path('sw.js'); text=p.read_text()
+          text=replace_exact(
+              text,
+              "  './data/home-surprise.js','./data/history-ui.js'\n",
+              "  './data/home-surprise.js','./data/history-ui.js','./data/toast-accessibility.js'\n",
+              'sw shell'
+          )
+          p.write_text(text)
+
+          # Dedicated regression: also guard the offline app-shell parity contract.
+          p=Path('.github/workflows/toast-accessibility-regression.yml'); text=p.read_text()
+          text=replace_exact(
+              text,
+              "      - 'index.html'\n      - 'data/toast-accessibility.js'\n",
+              "      - 'index.html'\n      - 'sw.js'\n      - 'data/toast-accessibility.js'\n",
+              'workflow paths',
+              count=2
+          )
+          text=replace_exact(
+              text,
+              "          const html=fs.readFileSync('index.html','utf8');\n          const controller=fs.readFileSync('data/toast-accessibility.js','utf8');\n",
+              "          const html=fs.readFileSync('index.html','utf8');\n          const sw=fs.readFileSync('sw.js','utf8');\n          const controller=fs.readFileSync('data/toast-accessibility.js','utf8');\n",
+              'workflow sw read'
+          )
+          text=replace_exact(
+              text,
+              "          assert(html.includes('</script><script src=\"data/toast-accessibility.js\"></script><script src=\"data/home-surprise.js\"></script>'),'toast controller must load after the base toast function and before home-surprise');\n",
+              "          assert(html.includes('</script><script src=\"data/toast-accessibility.js\"></script><script src=\"data/home-surprise.js\"></script>'),'toast controller must load after the base toast function and before home-surprise');\n          assert(sw.includes(\"'./data/toast-accessibility.js'\"),'toast controller must be pre-cached in the PWA app shell for offline parity');\n",
+              'workflow sw assertion'
+          )
+          text=replace_exact(
+              text,
+              "          console.log('Toast accessibility contract preserved');\n",
+              "          console.log('Toast accessibility + offline app-shell contract preserved');\n",
+              'workflow log'
+          )
+          text=replace_exact(
+              text,
+              "            echo '- Verifies source/runtime semantics and repeated-message behavior only.'\n",
+              "            echo '- Verifies source/runtime semantics, repeated-message behavior, and PWA offline app-shell parity only.'\n",
+              'workflow evidence wording'
+          )
+          p.write_text(text)
+          PY
+
+          # The source candidate is intentionally clean: remove this temporary helper before committing source/runtime changes.
+          git rm .github/workflows/issue-585-offline-shell-reconcile-one-shot.yml
+          git add sw.js .github/workflows/toast-accessibility-regression.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(pwa): preserve toast accessibility in offline app shell'
+          SOURCE="$(git rev-parse HEAD)"
+
+          python - "$SOURCE" <<'PY'
+          from pathlib import Path
+          import re,sys
+          source=sys.argv[1]
+
+          def sub1(text, pattern, repl, label, flags=re.M):
+              out,n=re.subn(pattern,repl,text,count=1,flags=flags)
+              if n != 1:
+                  raise SystemExit(f'{label}: expected one target, got {n}')
+              return out
+
+          # CURRENT-RUNTIME: declare the new source candidate while keeping deployment evidence correctly pending.
+          p=Path('CURRENT-RUNTIME.md'); text=p.read_text()
+          text=sub1(text,r'^- Current browser/PWA runtime candidate: .*$',f'- Current browser/PWA runtime candidate: `{source}`','runtime candidate')
+          text=sub1(text,r'^- Runtime change: .*$',"- Runtime change: Issue #585 offline/PWA parity follow-up on top of the verified Issue #585 toast live-region deployment. `data/toast-accessibility.js` is now included in the Service Worker app shell so the polite atomic toast controller remains available after installation/offline shell startup. Repeated-message behavior, focus behavior, Surprise live-region separation, and cache generation `kinaraidee-beta-v16` remain unchanged.",'runtime change')
+          text=sub1(text,r'^- Deployment status: .*$', '- Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**','runtime status')
+          text=sub1(text,r'^- Runtime merge/deployed SHA: .*$', '- Runtime merge/deployed SHA: **PENDING**','runtime deployed sha')
+          prior=(
+              f'- Current runtime deployment evidence is pending for source candidate `{source}`. Source/static/CI completion must not be promoted to deployment or screen-reader Physical PASS.\n'
+              '- The previous verified Issue #585 toast runtime candidate `f9b5f137375e9d30d1053d9cad814d636cb88821` was merged/deployed as `11c27167965c63ba60218d6ec216e503b334b4ca`; GitHub Pages run `34571331729`, Kinaraidee Live Smoke run `34571373301`, Auth Password Security Live Smoke run `34571373282`, and Campaign 3000 Premium Live Smoke run `34571373303` completed successfully on that exact deployed SHA. The cache generation remained `kinaraidee-beta-v16`. That trace is the last verified browser/PWA deployment until the current offline app-shell parity candidate is merged and independently deployed/verified.'
+          )
+          text=sub1(text,r'^- Current runtime deployment evidence: .*$',prior,'runtime pending evidence')
+          boundary=(
+              f'The current browser/PWA runtime candidate `{source}` contains the offline/PWA app-shell parity follow-up for Issue #585, but current-runtime deployment evidence is still pending. '
+              'The last verified deployed browser/PWA descendant is `11c27167965c63ba60218d6ec216e503b334b4ca` for the prior Issue #585 toast source candidate `f9b5f137375e9d30d1053d9cad814d636cb88821`; GitHub Pages `34571331729`, Kinaraidee Live Smoke `34571373301`, Auth Password Security Live Smoke `34571373282`, and Campaign 3000 Premium Live Smoke `34571373303` completed successfully on that exact deployed SHA. '
+              'This source/CI state for the offline follow-up does not prove its deployment or any Physical PASS. No source/static/CI result for Issue #585 proves deployment, VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, or Commercial GO. Source/CI/deployment evidence cannot substitute for required assistive-technology or physical-device acceptance.'
+          )
+          text=sub1(text,r'## Evidence boundary\n\n.*?\n\nIssues #592','## Evidence boundary\n\n'+boundary+'\n\nIssues #592','runtime evidence boundary',flags=re.S)
+          text=text.replace('Public Beta remains NOT COMPLETE, and this deployed accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.','Public Beta remains NOT COMPLETE, and this pending accessibility runtime does not establish Privacy/Legal approval, Payment/Premium readiness, or Commercial GO.',1)
+          p.write_text(text)
+
+          # BETA-CHECKLIST: advance only the current runtime declaration; preserve all existing scoped evidence from current main.
+          p=Path('BETA-CHECKLIST.md'); text=p.read_text()
+          current=(
+              f'- [x] Current browser/PWA runtime candidate: `{source}` (Issue #585 offline/PWA app-shell parity follow-up); deployment status is **PENDING FOR CURRENT RUNTIME DEPLOYMENT** and Runtime merge/deployed SHA remains **PENDING**. '
+              'The last verified deployed browser/PWA descendant is `11c27167965c63ba60218d6ec216e503b334b4ca` from the prior Issue #585 toast runtime; GitHub Pages `34571331729`, main Live Smoke `34571373301`, Auth Password Security Live Smoke `34571373282`, and Campaign 3000 Premium Live Smoke `34571373303` completed successfully on that exact deployed SHA. '
+              'The PWA cache marker remains `kinaraidee-beta-v16`. Prior verified deployment evidence remains historical and is not reused as current PASS. Source/CI completion for the offline-shell candidate does not establish its deployment, VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, Public Beta completion, conversion improvement, Privacy/Legal approval or Commercial GO. '
+              'Issues #592/#593 retain separate fresh **Physical PASS / CLOSED** evidence from the 2026-09-10 affected OPPO installed-PWA regression; Issues #524/#545 remain **PENDING / NOT PASS / NOT FAIL** for their affected iPhone scopes.'
+          )
+          text=sub1(text,r'^- \[x\] Current browser/PWA runtime candidate:.*$',current,'beta current')
+          p.write_text(text)
+          PY
+
+          git add CURRENT-RUNTIME.md BETA-CHECKLIST.md
+          git commit -m 'docs(runtime): declare toast offline-shell candidate'
+          git push origin HEAD:fix/a11y-toast-offline-shell-585-rebased-20260912
