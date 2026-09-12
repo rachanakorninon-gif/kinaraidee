@@ -34,7 +34,7 @@ jobs:
         run: |
           grep -Fq 'THB 59/month' PREMIUM-INTERVIEW-RESPONSE-SHEET.md
           grep -Fq 'THB 59/month' PREMIUM-RESEARCH-SUMMARY-TEMPLATE.md
-          grep -Fq 'not proof of willingness to pay' PREMIUM-VALUE-VALIDATION-PLAN.md
+          grep -Fq 'THB 59 BETA BUSINESS PRICE APPROVED' PREMIUM-VALUE-VALIDATION-PLAN.md
 
       - name: Preserve question-order protections
         run: |
