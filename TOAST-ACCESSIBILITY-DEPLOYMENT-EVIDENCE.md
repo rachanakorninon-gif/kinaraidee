@@ -2,7 +2,7 @@
 
 ## Scope
 
-This record reconciles the deployed browser/PWA lineage for Issue #585 / PR #623. It is deployment evidence only and must not be promoted to assistive-technology Physical PASS.
+This record reconciles the deployed browser/PWA lineage for Issue #585, including the core toast runtime in PR #623 and the offline/PWA app-shell parity follow-up in PR #627. It is deployment evidence only and must not be promoted to assistive-technology Physical PASS.
 
 ## Source and deployment lineage
 
@@ -30,6 +30,23 @@ The exact merged-main SHA also completed the triggered post-merge check set with
 - Meal/Budget validation and Favorite/save/share/Nearby confirmation/progress messages continue using the ordinary toast surface.
 - The Surprise-specific busy live region remains separate and is not duplicated by the ordinary-toast controller.
 - Existing navigation, recommendation, history, share, Nearby, analytics and PWA behavior remain protected by the repository regression suite.
+
+## Offline/PWA app-shell parity follow-up
+
+- Follow-up PR: #627 — `fix(pwa): preserve toast accessibility in offline app shell`
+- Follow-up source candidate: `0b6352af081f51ad9df2343022d0683b109d93a4`
+- Merged/deployed main SHA: `af329c471c0335fd6e0812a8d5f75066ffb335cd`
+- PWA cache marker: `kinaraidee-beta-v16` (unchanged)
+- GitHub Pages run `34676035335`: **SUCCESS**
+- Kinaraidee Live Smoke run `34676056521`: **SUCCESS**
+- Auth Password Security Live Smoke run `34676056466`: **SUCCESS**
+- Campaign 3000 Premium Live Smoke run `34676056536`: **SUCCESS**
+- Toast Accessibility Live Smoke run `34676056553`: **SUCCESS**
+- Premium Research Preview Live Smoke run `34676056518`: **SUCCESS**
+
+The dedicated Toast Accessibility Live Smoke checked the deployed `data/toast-accessibility.js`, polite atomic status semantics, repeated-message controller marker, absence of focus movement, Service Worker `SHELL` inclusion, cache marker parity, and exact equality between public `release-meta.json` SHA and the successful Pages head SHA `af329c471c0335fd6e0812a8d5f75066ffb335cd` / run `34676035335`.
+
+Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does not create or broaden VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, complete accessibility conformance, Public Beta completion, or Commercial GO.
 
 ## Evidence boundary
 
