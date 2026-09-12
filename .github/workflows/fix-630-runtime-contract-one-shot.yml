@@ -1,0 +1,51 @@
+name: PR 630 runtime contract alignment one-shot
+
+on:
+  push:
+    branches: ["docs/reconcile-627-deployment-20260912"]
+    paths:
+      - '.github/workflows/fix-630-runtime-contract-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    if: "github.event.head_commit.message == 'chore: align PR #630 runtime evidence contract'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-627-deployment-20260912
+          fetch-depth: 0
+
+      - name: Align strict release evidence wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          p=Path('CURRENT-RUNTIME.md')
+          text=p.read_text()
+          old='- Current runtime deployment evidence: PR #627 source candidate `0b6352af081f51ad9df2343022d0683b109d93a4` merged/deployed as `af329c471c0335fd6e0812a8d5f75066ffb335cd`; GitHub Pages run `34676035335`, Toast Accessibility Live Smoke run `34676056553`, Kinaraidee Live Smoke run `34676056521`, Auth Password Security Live Smoke run `34676056466`, Campaign 3000 Premium Live Smoke run `34676056536`, and Premium Research Preview Live Smoke run `34676056518` completed successfully on that exact deployed SHA. The cache generation remains `kinaraidee-beta-v16`. This deployment trace does not establish screen-reader or other Physical PASS.'
+          new='- Current runtime deployment evidence: PR #627 source candidate `0b6352af081f51ad9df2343022d0683b109d93a4` merged/deployed as `af329c471c0335fd6e0812a8d5f75066ffb335cd`; GitHub Pages run `34676035335`, Kinaraidee Live Smoke `34676056521`, Auth Password Security Live Smoke `34676056466`, and Campaign 3000 Premium Live Smoke `34676056536` completed successfully on that exact deployed SHA. Toast Accessibility Live Smoke `34676056553` and Premium Research Preview Live Smoke `34676056518` also completed successfully on the same exact deployed SHA. The cache generation remains `kinaraidee-beta-v16`. This deployment trace does not establish screen-reader or other Physical PASS.'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one deployment evidence line, got {text.count(old)}')
+          text=text.replace(old,new,1)
+          anchor='- Deployment PASS does not create or broaden Physical PASS.'
+          scoped='- Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only.\n'
+          if scoped.strip() not in text:
+              if text.count(anchor) != 1:
+                  raise SystemExit(f'expected one deployment PASS anchor, got {text.count(anchor)}')
+              text=text.replace(anchor,scoped+anchor,1)
+          p.write_text(text)
+          PY
+
+          git rm .github/workflows/fix-630-runtime-contract-one-shot.yml
+          git add CURRENT-RUNTIME.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs(release): align verified runtime evidence contract'
+          git push origin HEAD:docs/reconcile-627-deployment-20260912
