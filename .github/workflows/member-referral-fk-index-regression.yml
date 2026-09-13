@@ -1,0 +1,46 @@
+name: Member referral FK index regression
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/member-referrals-referral-code-index-20260913.sql'
+      - 'supabase/member-referrals-referral-code-index-20260913-rollback.sql'
+      - '.github/workflows/member-referral-fk-index-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/referral-acquisition-v1.sql'
+      - 'supabase/member-referrals-referral-code-index-20260913.sql'
+      - 'supabase/member-referrals-referral-code-index-20260913-rollback.sql'
+      - '.github/workflows/member-referral-fk-index-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify additive FK index migration contract
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const must = (ok, msg) => { if (!ok) throw new Error(msg); };
+          const schema = fs.readFileSync('supabase/referral-acquisition-v1.sql', 'utf8');
+          const migration = fs.readFileSync('supabase/member-referrals-referral-code-index-20260913.sql', 'utf8');
+          const rollback = fs.readFileSync('supabase/member-referrals-referral-code-index-20260913-rollback.sql', 'utf8');
+
+          must(schema.includes('referral_code text not null references public.member_referral_codes(code)'), 'referral_code FK contract drifted');
+          must(migration.includes('create index if not exists member_referrals_referral_code_idx'), 'covering index must remain idempotent');
+          must(migration.includes('on public.member_referrals (referral_code)'), 'covering index must target referral_code');
+          must(!/drop\s+(table|constraint|index)/i.test(migration), 'forward migration must remain additive');
+          must(!/alter\s+table[\s\S]*(disable\s+row\s+level\s+security|no\s+force\s+row\s+level\s+security)/i.test(migration), 'migration must not weaken RLS');
+          must(!/\bgrant\b|\brevoke\b/i.test(migration), 'migration must not change grants');
+          must(rollback.includes('drop index if exists public.member_referrals_referral_code_idx'), 'rollback must remove only the new index');
+          must(!/drop\s+(table|constraint)/i.test(rollback), 'rollback must not remove table or FK');
+          NODE
