@@ -1,0 +1,97 @@
+name: Temporary Repair 640 Release Checklist
+
+on:
+  push:
+    branches:
+      - docs/reconcile-635-deployment-20260914
+
+permissions:
+  contents: write
+
+jobs:
+  restore-and-patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/reconcile-635-deployment-20260914
+          fetch-depth: 0
+      - name: Restore checklist from main and patch only current deployment references
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:RELEASE-CHECKLIST.md > RELEASE-CHECKLIST.md
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('RELEASE-CHECKLIST.md')
+          lines = p.read_text(encoding='utf-8').splitlines()
+          candidate = '91cdf79d221c68ca54e5f874aebe421846264821'
+          deployed = 'ff975076a643d123081da8ab3e3baf399fdc5f6d'
+          pages = '34854825324'
+          live = '34854891192'
+          auth = '34854891245'
+          campaign = '34854891441'
+          toast = '34854891055'
+          premium = '34854891061'
+
+          replacements = {
+              '- Current browser/PWA runtime candidate:': f'- Current browser/PWA runtime candidate: `{candidate}` (Issue #635 persistent bottom-navigation current-state accessibility remediation merged through PR #636)',
+              '- Runtime merge/deployed SHA:': f'- Runtime merge/deployed SHA: `{deployed}`.',
+              '- Last verified deployed browser/PWA descendant:': f'- Last verified deployed browser/PWA descendant: `{deployed}`.',
+              '- Current browser/PWA deployment evidence is **PASS for the deployment trace only**:': (
+                  f'- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: Issue #635 runtime candidate `{candidate}` is verified through exact deployed descendant `{deployed}`; '
+                  f'Pages `{pages}`, Kinaraidee Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, Campaign 3000 Premium Live Smoke `{campaign}`, Toast Accessibility Live Smoke `{toast}`, and Premium Research Preview Live Smoke `{premium}` completed successfully for the trace. '
+                  'The Pages predeploy lineage guard verified no guarded browser/PWA runtime drift after the declared candidate, and live `release-meta.json` matched the exact deployed SHA and `kinaraidee-beta-v16`. '
+                  'Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does not establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval or Commercial GO. Issues #524/#545 remain affected-iPhone physical PENDING.'
+              ),
+          }
+
+          for prefix, replacement in replacements.items():
+              hits = [i for i, line in enumerate(lines) if line.startswith(prefix)]
+              if len(hits) != 1:
+                  raise SystemExit(f'Expected exactly one {prefix!r}, found {len(hits)}')
+              lines[hits[0]] = replacement
+
+          heading = lines.index('## Deployment & Release Evidence')
+          target = None
+          for i in range(heading + 1, min(len(lines), heading + 12)):
+              if lines[i].startswith('- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current runtime candidate'):
+                  target = i
+                  break
+          if target is None:
+              raise SystemExit('Unable to find first canonical deployment-evidence bullet')
+          lines[target] = (
+              f'- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current runtime candidate `{candidate}`, deployment status **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**, and Runtime merge/deployed SHA `{deployed}`. '
+              f'Exact Issue #635 deployment evidence: Pages `{pages}`, Kinaraidee Live Smoke `{live}`, Auth Password Security Live Smoke `{auth}`, Campaign 3000 Premium Live Smoke `{campaign}`, Toast Accessibility Live Smoke `{toast}`, Premium Research Preview Live Smoke `{premium}` = SUCCESS, with exact live `release-meta.json` / `kinaraidee-beta-v16` artifact match. '
+              'This is deployment evidence only and does not create VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, Public Beta completion or Commercial GO.'
+          )
+
+          current_evidence_index = next(i for i, line in enumerate(lines) if line.startswith('- Current browser/PWA deployment evidence is **PASS for the deployment trace only**:'))
+          history = (
+              '- Historical Issue #585 PR #627 deployment remains scoped prior evidence: candidate `0b6352af081f51ad9df2343022d0683b109d93a4`, '
+              'deployed descendant `af329c471c0335fd6e0812a8d5f75066ffb335cd`, Pages `34676035335`, main Live Smoke `34676056521`, '
+              'Auth Password Security Live Smoke `34676056466`, Campaign 3000 Premium Live Smoke `34676056536`, Toast Accessibility Live Smoke `34676056553`, '
+              'Premium Research Preview Live Smoke `34676056518` = SUCCESS in that historical scope.'
+          )
+          if history not in lines:
+              lines.insert(current_evidence_index + 1, history)
+
+          text = '\n'.join(lines) + '\n'
+          for required in ('## Beta Exit Evidence','## Product','## Accounts & Payments','## Restaurant Partners','## Privacy & Legal','## Security','## Operations','## Final Go / No-Go Record','ห้ามเปิดรับเงินจริง'):
+              if required not in text:
+                  raise SystemExit(f'Restored checklist lost required section/boundary: {required}')
+          p.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit repaired checklist
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add RELEASE-CHECKLIST.md
+          git diff --cached --check
+          git commit -m 'docs(release): preserve checklist while syncing #635 trace'
+          git push origin HEAD:docs/reconcile-635-deployment-20260914
