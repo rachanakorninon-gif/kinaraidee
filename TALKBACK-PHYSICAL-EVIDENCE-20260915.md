@@ -82,19 +82,23 @@ Focus observation:
 
 Result: **PASS** for understandable Budget validation announcement + no unexpected focus movement.
 
-### 6. Surprise-flow separation
+### 6. Preference-step `ไม่รู้เลย` observation — not the Home Surprise busy-live-region acceptance
 
-The tester focused and activated `ไม่รู้เลย — เลือกให้ฉัน` from the Preference step.
+The tester focused and activated `ไม่รู้เลย — เลือกให้ฉัน` from the **Preference step**.
 
 Observed result-side speech:
 
 - TalkBack reached the Result screen and announced the Result heading/status context.
-- The tester did **not** hear a `กำลังเลือก…` busy utterance in this particular run.
-- The tester also did **not** hear a duplicate ordinary-toast announcement during the transition.
+- The tester did **not** hear a `กำลังเลือก…` busy utterance in this run.
+- The tester did **not** hear a duplicate ordinary-toast announcement during this Preference-step transition.
 
-Result for Issue #585 criterion: **PASS** for `Surprise busy feedback is not heard as a duplicate ordinary-toast announcement` in this session.
+Post-session source review established an important boundary: the Preference shortcut is bound by `bindPreferenceSurprise()` and calls `startRecommend()` directly. The Home Surprise-specific busy feedback is owned by the separate `runSurprise()` / `setBusy()` / `homeSurpriseStatus` path on `homeSurpriseBtn`.
 
-Boundary: this observation does **not** independently establish that the Surprise busy live-region announcement itself is fully effective. The absence of the busy utterance is retained as an observation rather than being converted into a separate PASS claim.
+Therefore this Preference-step observation is **supporting evidence only**. It does not exercise the Home Surprise busy live region and cannot satisfy the remaining Issue #585 criterion requiring the Surprise busy feedback to be checked for duplication against the ordinary toast surface.
+
+Result: **OBSERVED / NOT ACCEPTANCE FOR THE HOME SURPRISE SEPARATION CRITERION**.
+
+Remaining physical check: with TalkBack enabled, activate the actual Home `ไม่รู้เลย — เลือกให้ฉันทันที` control and record whether the Home busy announcement is heard and whether any duplicate ordinary-toast announcement is also heard.
 
 ### 7. Representative confirmation toast — Favorite
 
@@ -117,10 +121,14 @@ Result: **PASS** for a representative confirmation toast being announced underst
 - [x] Budget validation did not move focus unexpectedly.
 - [x] Representative Favorite confirmation announced understandably.
 - [x] Repeating the same Meal validation produced a fresh announcement.
-- [x] Surprise transition did not produce a duplicate ordinary-toast announcement in the tested session.
+- [ ] Actual Home Surprise `homeSurpriseBtn` / `homeSurpriseStatus` busy-feedback separation still requires TalkBack physical verification.
 - [x] Device/context/assistive-technology mode recorded.
 
-Overall scoped result: **TALKBACK PHYSICAL PASS FOR ISSUE #585 ON THIS EXACT SESSION**.
+Overall scoped result: **PARTIAL TALKBACK PHYSICAL ACCEPTANCE FOR ISSUE #585 — MEAL/BUDGET/REPEAT/FAVORITE PASS; HOME SURPRISE SEPARATION PENDING**.
+
+## Evidence correction note
+
+An earlier version of this file incorrectly promoted the Preference-step `ไม่รู้เลย` observation to the Issue #585 Surprise-separation PASS. Source review showed that the tested shortcut did not invoke the Home Surprise busy-live-region path. Issue #585 was reopened and this record was corrected rather than preserving an over-broad PASS claim.
 
 ## Evidence boundary
 
@@ -129,6 +137,7 @@ This record must not be used to infer:
 - TalkBack PASS on another Android device or browser context;
 - VoiceOver PASS from this session;
 - full WCAG/accessibility conformance;
+- Issue #585 complete Physical PASS until the actual Home Surprise separation check is performed;
 - Issue #635 screen-reader Physical PASS unless separately tested and recorded;
 - affected-iPhone #524/#545 acceptance;
 - completion of the broader Android/iPhone device matrix;
