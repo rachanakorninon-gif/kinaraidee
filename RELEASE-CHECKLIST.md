@@ -1,194 +1,106 @@
-# Kinaraidee — Commercial Release Checklist
+# Kinaraidee — Release Checklist
 
-ใช้เอกสารนี้หลัง Public Beta ผ่าน เพื่อเตรียมเปิดใช้งานเชิงพาณิชย์อย่างเป็นระบบ
-
-หลักสำคัญ: ทุกช่องที่ทำเครื่องหมายผ่านต้องมีหลักฐานจริง เช่น real-device run, transaction test, policy ที่เผยแพร่จริง, partner agreement หรือ security review ห้ามผ่านจากการคาดเดา
+ใช้เอกสารนี้เป็น release gate ก่อนเปิด Public Beta / Production
 
 ## Current runtime candidate
-- Current browser/PWA runtime candidate: `0b6352af081f51ad9df2343022d0683b109d93a4` (Issue #585 offline/PWA app-shell parity follow-up merged through PR #627)
+- Current browser/PWA runtime candidate: `91cdf79d221c68ca54e5f874aebe421846264821` (Issue #635 persistent bottom-navigation current-state accessibility remediation merged through PR #636)
 - Current runtime deployment status: **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**
-- Runtime merge/deployed SHA: `af329c471c0335fd6e0812a8d5f75066ffb335cd`.
-- Last verified deployed browser/PWA descendant: `af329c471c0335fd6e0812a8d5f75066ffb335cd`.
-- Current Group API source candidate: `8ab5fc9dd506740b48b245469421518381bbe079` (PR #518), deployed as Supabase `group-api` ACTIVE version 7 with repository source blob `93d5d4afe9436e23ac5a9af3567349bedd8b73af` and bundle SHA-256 `363f7f547f8b773bec46e211a59c380e276f1fbf2fcc2852471dfd1608730887`.
+- Runtime merge/deployed SHA: `ff975076a643d123081da8ab3e3baf399fdc5f6d`.
+- Last verified deployed browser/PWA descendant: `ff975076a643d123081da8ab3e3baf399fdc5f6d`.
+- Current Group API source candidate: `8ab5fc9dd506740b48b245469421518381bbe079` (PR #518); Supabase production `group-api` ACTIVE v7 with repository/deployment source parity and scoped application-owned privacy-safe rejection-event ingestion verified. This does not establish traffic/error-rate baseline, retention approval, alert delivery, complete abuse controls, Public Beta completion or Commercial GO.
+- Partner API source/deployment hardening: Supabase ACTIVE v15, source/deployment parity and rejection-only live probe evidence are recorded in `PARTNER-API-HARDENING-EVIDENCE.md`; this does not establish successful product requests, partner agreements, revenue or Commercial readiness.
 - Expected Service Worker cache: `kinaraidee-beta-v16`
-- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: Issue #585 runtime candidate `0b6352af081f51ad9df2343022d0683b109d93a4` is verified through exact deployed descendant `af329c471c0335fd6e0812a8d5f75066ffb335cd`; Pages run `34676035335`, Kinaraidee Live Smoke `34676056521`, Auth Password Security Live Smoke `34676056466`, Campaign 3000 Premium Live Smoke `34676056536`, Toast Accessibility Live Smoke `34676056553`, and Premium Research Preview Live Smoke `34676056518` completed successfully for the PR #627 trace. The dedicated toast live smoke verified deployed controller semantics and Service Worker offline-shell parity. The cache remains `kinaraidee-beta-v16`. Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does not itself establish VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Privacy/Legal approval or Commercial GO. Issues #592/#593 retain separate scoped **Physical PASS / CLOSED** from the fresh 2026-09-10 OPPO installed-PWA regression; Issues #524/#545 remain affected-iPhone physical PENDING. Historical Issue #585 core-toast / PR #623 and Issue #583 / PR #602 deployments remain prior verified evidence only.
-- Historical Home V3 deployment remains valid only in its original scope: source `d24824948c9df1808178b9bb5a78a8f885086fb4`, deployed descendant `f6b8598597edd874e69cbfe1dae941c919aaa037`, Pages `34161708724`, main Live Smoke `34161744258`. It is superseded as current browser/PWA lineage and must not be reused as fresh Physical PASS evidence.
-- Historical PR #554 remediation deployment remains valid only in its original scope: source `6f7d56f0b68551c731d88d69e34286a8f2ecca70`, deployed descendant `0f96414295f2a5f5abd7da346aa8a58d47c10f63`, Pages `34137902178`, main Live Smoke `34137949343`, Auth Password Security Live Smoke `34137949293`, and Campaign 3000 Premium Live Smoke `34137949307` completed success. It is superseded as the current browser/PWA lineage and must not be reused as fresh Physical PASS evidence.
-- Historical PR #520 is the post-acceptance referral-summary browser runtime. After a scoped signed-in physical session returned privacy-safe `EDGE` and satisfied the render acceptance checks, `member.html` removed the caller-scoped `get_my_referral_summary()` fallback and now uses JWT-verified `member-referral-api` as the only browser retrieval path. Optional QA trace exposes only `EDGE/UNAVAILABLE`. Its deployment/security/physical evidence remains scoped and does not replace current PR #627 runtime.
-- Supabase `member-referral-api` is ACTIVE v1 with `verify_jwt=true`; deployed source parity and missing/malformed-JWT rejection-only smoke are verified. After the Edge-only browser deployment succeeded, migration `referral_summary_edge_cutover_revoke_rpc_20260904` revoked execute on `get_my_referral_summary()` from `PUBLIC`, `anon` and `authenticated`; post-cutover checks report `anon_execute=false`, `authenticated_execute=false`, no browser-role grants on the raw referral tables, and the former authenticated-callable SECURITY DEFINER Advisor warning is no longer present. The separate leaked-password warning remains OPEN.
-- Historical PR #514 pre-cutover referral-summary runtime remains scoped deployment evidence: source `ea409cd02fc7744514b8c867a67f56ec0187de80`, deployed descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`, Pages `33838629999`, main Live Smoke `33838665915`. That runtime retained the temporary fallback and does not replace current PR #627 runtime.
-- Supabase Product Event Measurement schema is deployed with RLS enabled and no direct `anon`/`authenticated` table access; `product-event-api` is ACTIVE v1. Product telemetry is not account identity or Campaign 3,000 eligibility truth.
-- Historical PR #509 Product Event Measurement runtime remains scoped deployment/controlled-ingress evidence: source `0bd5acfb9946e10ed5624205165123eabc8035b4`, deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`, Pages `33823701475`, main Live Smoke `33823746430`, Product Event API Live Smoke `33824058988`; its exact synthetic `landing` row was deleted after evidence capture. A later OPPO physical QA run separately accepted the browser interaction hooks and deleted the controlled QA telemetry; neither trace proves real-user traction.
-- Supabase referral/acquisition schema/RPC migration `20260903220832 / referral_acquisition_v1` and referral-code privacy fix `20260903221043 / referral_code_privacy_fix_20260904` are deployed. Historical post-fix integrity evidence is scoped backend evidence only, not user/referral/campaign counts.
-- Historical PR #499 referral/acquisition runtime remains scoped deployment/acquisition evidence: source `f401ad758e40914a10245cfab08497f7cdb99f7d`, deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793`, and Referral acquisition regression `33811512053`. This historical trace does not replace the current runtime or establish a successful referred signup/referral conversion.
-- Historical PR #373 Auth runtime remains scoped deployment/Auth evidence: source `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`, deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, and main Live Smoke `33229548190`. This historical trace does not replace the current runtime.
-- Historical verified browser/PWA deployment evidence remains PR #201: Pages run `32802440796` = success and Live Smoke run `32802473505` = success for deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`; Public Form Resilience Regression run `32802440775` = success on that exact merged-main SHA.
-- Historical live public `release-meta.json` matched deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` and live Service Worker marker `kinaraidee-beta-v16`.
-- Historical PR #179 v16 member-history deployment evidence remains valid historical/scoped support.
-- Current Group API v7 rejection-only evidence: canonical run `32632951668` was re-run after v7 deployment; attempt-2 job `101112482238` completed success, and a read-only post-probe query verified six privacy-safe daily event/reason presence buckets. This proves scoped application-owned ingestion only, not request/error-rate baseline, device behavior or complete monitoring readiness. Historical v6 probe/platform-log evidence remains valid only in its original scope.
-- Surprise busy-state accessibility has scoped physical iPhone/VoiceOver NF-09 PASS on deployed PR #201/v16; that historical result remains scoped and does not replace current OPPO Auth evidence or second-device/full-matrix accessibility coverage. The prior Android TalkBack follow-up remains INCONCLUSIVE / TEST ENVIRONMENT.
-- Current Auth account-flow evidence has scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 for recovery/password update/sign-in/new signup/email confirmation; leaked-password rejection remains NOT VERIFIED / blocked separately. The post-PR #537 physical reset-specific recheck is still PENDING because recovery-email issuance hit the Supabase rate limit.
-- Regression guards include Public Form Resilience, Surprise accessibility, Group Result, History Sync, PWA cache upgrade, NF-07 physical fixture boundary, iOS install hint, release consistency, runtime lineage, real-device contracts, Device UX, referral-acquisition, Product Event Measurement, Member Referral API Boundary, Group API source-contract checks, and the PR #590 PWA manifest/app-shell contract.
+- Current browser/PWA deployment evidence is **PASS for the deployment trace only**: Issue #635 runtime candidate `91cdf79d221c68ca54e5f874aebe421846264821` is verified through exact deployed descendant `ff975076a643d123081da8ab3e3baf399fdc5f6d`; Pages `34854825324`, main Live Smoke `34854891192`, Auth Password Security Live Smoke `34854891245`, Campaign 3000 Premium Live Smoke `34854891441`, Toast Accessibility Live Smoke `34854891055`, and Premium Research Preview Live Smoke `34854891061` succeeded for that trace. The Pages predeploy guard confirmed no guarded browser/PWA runtime drift after the declared candidate; live `release-meta.json` matched the exact deployed SHA and cache `kinaraidee-beta-v16`. This Deployment PASS does not create VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion or Commercial GO. Issues #524/#545 remain physically PENDING for their affected iPhone scopes.
+- Historical Issue #585 PR #627 deployment remains valid in its original scope: candidate `0b6352af081f51ad9df2343022d0683b109d93a4`, deployed `af329c471c0335fd6e0812a8d5f75066ffb335cd`, Pages `34676035335`, main Live Smoke `34676056521`, Auth Password Security Live Smoke `34676056466`, Campaign 3000 Premium Live Smoke `34676056536`, Toast Accessibility Live Smoke `34676056553`, Premium Research Preview Live Smoke `34676056518` = SUCCESS.
+- Historical PR #596 deployment remains valid in its original scope: source `de18711695bb94617c3cffa7767cb3943c0d2c05`, deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`, Pages `34382130901`, main Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, Campaign 3000 Premium Live Smoke `34382207209` = SUCCESS. Separate fresh 2026-09-10 OPPO physical evidence closed Issues #592/#593 only for that affected-device scope.
+- Historical Home V3 deployment remains valid in its original scope: source `d24824948c9df1808178b9bb5a78a8f885086fb4`, deployed descendant `f6b8598597edd874e69cbfe1dae941c919aaa037`, Pages `34161708724`, main Live Smoke `34161744258` = SUCCESS.
+- Historical PR #554 remediation deployment remains valid in its original scope: source `6f7d56f0b68551c731d88d69e34286a8f2ecca70`, deployed descendant `0f96414295f2a5f5abd7da346aa8a58d47c10f63`, Pages `34137902178`, main Live Smoke `34137949343`, Auth Password Security Live Smoke `34137949293`, Campaign 3000 Premium Live Smoke `34137949307` = SUCCESS.
+- Historical PR #548 Home V3 deployment remains valid in its original scope: source `6eac2ce642a907414260518d0435263b3e54f425`, deployed descendant `46136f5ca6322847545289c18233320139147aa2`, Pages `34087987096`, main Live Smoke `34088055637`, Auth Password Security Live Smoke `34088055663`, Campaign 3000 Premium Live Smoke `34088055657` = SUCCESS.
+- Historical PR #546 Nearby deployment remains valid in its original scope: source `e0523e6cab49b09e910ba66f2ad18351f491d19a`, deployed descendant `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`, Pages `34013867862`, main Live Smoke `34013888880`, Auth Password Security Live Smoke `34013888842` = SUCCESS. Issues #524/#545 remain physically pending.
+- Historical PR #537 password-recovery initialization deployment remains valid in its original scope: source `35cdf74b1c845ba61e46b86ec9e3c0e16e16eb72`, deployed descendant `d7dd3a550b9a0d583cd7f3269a357b0187377d50`, Pages `33975327442`, main Live Smoke `33975353656`, Auth Password Security Live Smoke `33975353718` = SUCCESS. Its physical retest remains PENDING because fresh recovery-email issuance was blocked by the observed Supabase Auth rate limit.
+- Historical PR #520 referral-summary Edge-only deployment remains valid in its original scope: source `4e2e1789921aa6fd73b2677ac5def2bc35a8be73`, deployed descendant `aa470986589d83dd95b4efd6e4a4d68a9f55965d`, Pages `33898258213`, main Live Smoke `33898314400` = SUCCESS. Separate scoped physical `EDGE` acceptance and subsequent RPC privilege revocation remain documented independently.
+- Historical PR #509 Product Event deployment remains valid in its original scope and does not establish real-user traction or conversion.
+- Historical PR #499 referral/acquisition deployment remains valid in its original scope and does not establish a referred signup, referral conversion, Campaign 3,000 eligibility or revenue.
+- Historical PR #373 Auth deployment remains valid in its original scope and does not replace current Issue #635 runtime/device acceptance.
 
-## Beta Exit Evidence
-- [ ] `BETA-RESULTS-TEMPLATE.md` กรอกจากข้อมูลจริงและมี Go decision
-- [ ] `BETA-DAILY-LOG.md` / `BETA-RUN-LOG.md` มีหลักฐานรอบทดสอบที่ใช้ตัดสินใจ
-- [ ] Android Chrome เครื่องจริงอย่างน้อย 3 รุ่นผ่าน core flow ตามกรณีที่รองรับ
-- [ ] iPhone Safari เครื่องจริงอย่างน้อย 2 รุ่นผ่าน core flow ตามกรณีที่รองรับ
-- [ ] iPadOS ถูกตรวจเมื่อมีอุปกรณ์จริง และไม่ใช้ผลจำลองแทน
-- [ ] TC-01–TC-15 และ NF-01–NF-10 มีผล PASS/FAIL/N/A ที่ trace กลับไปยังอุปกรณ์ได้
-- [x] Live-group completed 2/2 vote → final-result path มี same-device Android post-fix evidence ว่าแสดงผลกลุ่ม + reroll + handoff สำเร็จหลัง PR #42; ข้อนี้ไม่แทน multi-device matrix และไม่ถือเป็น fresh v7 device regression
-- [x] iPhone TC-08 Location allow path มี physical-device v16 evidence และ Issue #171 ปิด completed; exact model/OS/Safari version ไม่ได้ถูกบันทึกและไม่เดาเพิ่ม
-- [x] Favorite/History differentiation (`❤️ เมนูโปรด` / `👍 เลือกกิน`) มี physical Android evidence และ Issue #172 ปิดแล้ว
-- [x] Issue #177 มี post-v16 physical Android favorite → full restart → History retention PASS สำหรับ tested installed-PWA session และปิด completed; ข้อนี้ไม่แทน full device matrix
-- [x] NF-09 Surprise busy-state accessibility มี physical iPhone/VoiceOver PASS บน deployed PR #201/v16 สำหรับ tested session และ Issue #57 ปิด completed; Android TalkBack เดิมยัง INCONCLUSIVE / TEST ENVIRONMENT และข้อนี้ไม่แทน second-device/full-matrix accessibility PASS
-- [x] Visible keyboard focus ถูกตรวจด้วย real keyboard/focus navigation บน deployed pages — scoped Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82 PASS โดยใช้ built-in hardware keyboard; trusted Tab/Shift+Tab, visible focus และ Space/Enter activation ผ่านใน Home → meal-selection → back flow; ข้อนี้ไม่แทน full accessibility/device matrix
-- [x] Reduced-motion behavior ถูกตรวจบน real platform ที่เปิด reduced-motion preference — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 PASS; browser รับ `prefers-reduced-motion=reduce`, shipped rule ลด transition เป็น `1e-05s`, Surprise flow จบและกลับ ready; ยังไม่แทน full device matrix
-- [x] NF-07 มี scoped physical v15→v16 PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64: deterministic historical-v15 baseline → physical close → one normal online reopen without clear site data → v16 verifier → Home + Surprise usable. ข้อนี้ไม่แทน full device matrix
-- [x] NF-05 install guidance + suppression/standalone มี PASS สำหรับ physical iPhone/Safari #1 บน deployed v16; ยังไม่แทน iPadOS หรือ iPhone รุ่นที่สอง
-- [x] TC-12 Partner application physical acceptance ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; scoped OPPO Reno13 5G / Android 16 / Chrome 152 session ผ่าน duplicate-submit, failure recovery, direct `aria-busy` recovery, retry success และ privacy/backend evidence; ข้อนี้ไม่แทน full device matrix
-- [x] Android same-device regressions #38 (`Invalid Date`) และ #40 (favorite loss หลัง lock/resume) ถูก retest และบันทึกเป็น fixed ตาม `CURRENT-RELEASE.md`
-- [x] Member signup/login/password-reset interaction ผ่านบนอุปกรณ์จริงตาม scope — scoped OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 มี recovery mail/verify, replacement-password update, sign-in, genuinely new signup, Gmail confirmation delivery, confirmation-link completion และ signed-in Member state พร้อม backend corroboration; automated deployed-source checks ไม่ใช่หลักฐานที่ใช้ปิดข้อนี้
-- [x] Referral-summary signed-in `EDGE` retrieval/render มี scoped physical PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REFERRAL-SUMMARY-PHYSICAL-EVIDENCE.md`; subsequent Edge-only deployment/RPC revocation ถูก verify แยก และข้อนี้ไม่ใช่ referred-signup/referral-conversion PASS
-- [x] Product Event Measurement browser interaction มี scoped physical QA PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64; Surprise/Guided/Nearby ตามที่ exposed ถูก exercise, production stages corroborated, controlled QA telemetry ถูกลบและ follow-up count 0. ข้อนี้ไม่ใช่ real-user traction/First-100/conversion PASS
-- [x] Issues #592/#593 มี fresh affected-device Physical Regression PASS บน OPPO Reno13 5G / Android 16 installed PWA และปิด completed; ข้อนี้ไม่แทน device matrix หรือ affected-iPhone #524/#545
-- [x] TC-05 accepted-meal History และ TC-06 Favorite มี scoped OPPO/PWA PASS จาก 2026-09-10 continuation; ข้อนี้ไม่แทน device matrix ทั้งหมด
-- [ ] Weak/leaked-password rejection ผ่านบน production Auth service; current server-side protection ยัง **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
-- [ ] Member cloud history / favorite persistence มี evidence ครบตาม device matrix ที่กำหนด; #177 ผ่านเฉพาะ tested Android session
-- [ ] Blocker = 0 และ Critical = 0 จาก release-scoped defect evidenceจริง; การไม่มี defect report หรือมีเพียง CI/static/synthetic evidence ห้ามตีความว่าเป็น zero-defect PASS
-- [ ] FAIL ที่ยอมรับไว้มีเหตุผล/owner/แผนติดตามชัดเจน
+## Source / Static
+- [x] HTML/CSS/JS source baseline is committed
+- [x] PWA manifest exists
+- [x] Service Worker exists
+- [x] robots.txt exists
+- [x] sitemap.xml exists
+- [x] 404.html exists
+- [x] Feedback / Partner / Privacy pages exist
+- [x] Static syntax / JSON checks exist
+- [x] Security hygiene checks exist
+- [x] PWA cache/update regression checks exist
+- [x] Release consistency guard exists
 
 ## Deployment & Release Evidence
-- [x] `CURRENT-RUNTIME.md` / `CURRENT-RELEASE.md` ระบุ current runtime candidate `de18711695bb94617c3cffa7767cb3943c0d2c05`, deployment status **PASS FOR CURRENT BROWSER/PWA DEPLOYMENT TRACE**, and Runtime merge/deployed SHA `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`. Exact PR #596 deployment evidence: Pages `34382130901`, Kinaraidee Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, Campaign 3000 Premium Live Smoke `34382207209` = SUCCESS, with live release metadata / `kinaraidee-beta-v16` artifact match. This is deployment evidence only; #592/#593 Physical PASS is separately recorded from the fresh 2026-09-10 OPPO/PWA run.
-- [x] Historical PR #546 Nearby remediation runtime มี canonical descendant Pages deployment + corresponding live-check evidence ตาม release contract — source `e0523e6cab49b09e910ba66f2ad18351f491d19a`, deployed descendant `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`, Pages `34013867862`, main Live Smoke `34013888880`, Auth Password Security Live Smoke `34013888842`. This trace is retained only as historical deployment evidence. Issues #524/#545 physical verification remain **PENDING / NOT PASS / NOT FAIL**; deployment/live checks do not replace physical acceptance. Historical PR #537 password-recovery physical reset-specific recheck remains PENDING because recovery-email issuance was blocked by Supabase 429 rate limit.
-- [x] Historical PR #520 referral-summary Edge-only runtime deployment + physical `EDGE` acceptance + post-cutover RPC privilege verification remain scoped historical evidence and are not replaced or generalized by the current runtime.
-- [x] Group API PR #518 source `8ab5fc9dd506740b48b245469421518381bbe079` + migration `20260904161702 / group_api_event_observability_v1` ถูก deploy เป็น ACTIVE v7; deployed payload/source parity verified, rejection-only attempt-2 job `101112482238` success และ server-only read-back พบหก privacy-safe event/reason presence buckets. ข้อนี้เป็น backend deployment/application-ingestion evidence เท่านั้น ไม่ใช่ monitoring baseline, alert delivery, retention/cleanup, abuse-control completeness หรือ real-device PASS
-- [x] Historical PR #514 pre-cutover referral-summary runtime deployment trace ยังคง scoped evidence — deployed descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`, Pages `33838629999`, main Live Smoke `33838665915`
-- [x] Historical PR #509 Product Event Measurement runtime deployment trace ยังคง scoped evidence — deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`, Pages `33823701475`, main Live Smoke `33823746430`, Product Event API Live Smoke `33824058988`; synthetic probe row ถูก cleanup แล้วหลังเก็บ evidence
-- [x] Historical PR #499 referral/acquisition runtime deployment trace ยังคง scoped evidence — deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793`, Referral acquisition regression `33811512053`
-- [x] Historical PR #373 Auth runtime deployment trace ยังคง scoped evidence — deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth live smoke `33229548182`, main Live Smoke `33229548190`
-- [x] Historical PR #201 GitHub Pages deployment ของ `00bdcb7f432598e2eb82e71dcf1a9ec804ff1c4b2` สำเร็จและ trace กลับไปยัง commit ได้ — run `32802440796`
-- [x] Historical PR #201 public `release-meta.json` ถูกตรวจและมี deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320` กับ live Service Worker marker `kinaraidee-beta-v16`
-- [x] Historical PR #201 corresponding Live Smoke สำเร็จ — run `32802473505`
-- [x] Public Form Resilience Regression run `32802440775` ยืนยัน source recovery-state contracts บน exact PR #201 merged-main SHA โดยไม่ submit form จริง
-- [x] Historical PR #201 public URL / `sw.js` / release metadata ใช้ cache generation `kinaraidee-beta-v16` ตรงกันตาม trace evidence
-- [x] development-only files ที่ Live Smoke ตรวจไม่ถูกเผยแพร่ใน Pages artifact
-- [x] real Feedback/Partner form submission acceptance มี physical Android Chrome + backend evidence ตาม `PUBLIC-FORM-PHYSICAL-EVIDENCE.md`; ข้อนี้เป็น scoped device/session PASS และไม่แทน full device matrix
-- [x] PR #373 Auth account-flow interaction acceptance remains scoped physical OPPO Android Chrome evidence ตาม `AUTH-INTERACTION-PHYSICAL-EVIDENCE.md` สำหรับ recovery/password-update/sign-in/new-signup/email-confirmation; deployed static/live checks ไม่ได้ถูกใช้แทน physical PASS
-- [x] PR #520 referral-summary signed-in `EDGE` interaction acceptance passed in the recorded scoped OPPO session; Pages/Live Smoke/backend rejection evidence were not used as substitutes. Edge-only deployment and RPC execute revocation/Advisor recheck are separately verified.
-- [ ] PR #373 weak/leaked-password rejection acceptance remains open; deployed/static/account-success evidence ห้ามใช้แทน server-side rejection และ setting ยัง blocked ตาม Issue #372
-- [x] PR #509 Product Event Measurement real-device interaction has a separate scoped OPPO QA acceptance; Pages/Live Smoke/API synthetic evidence were not used as substitutes. This does not create real-user traction/conversion evidence.
-- [ ] automated smoke/static/synthetic regression test ไม่ถูกใช้แทน real-device interaction หรือ assistive-technology test ที่จำเป็น — ต้องยืนยันจาก evidence set ตอนตัดสิน Beta/Commercial จริง
+- [x] Current Issue #635 browser/PWA runtime candidate `91cdf79d221c68ca54e5f874aebe421846264821` is verified through exact deployed descendant `ff975076a643d123081da8ab3e3baf399fdc5f6d`; Pages `34854825324`, main Live Smoke `34854891192`, Auth Password Security Live Smoke `34854891245`, Campaign 3000 Premium Live Smoke `34854891441`, Toast Accessibility Live Smoke `34854891055`, and Premium Research Preview Live Smoke `34854891061` succeeded. The current deployment PASS is limited to exact static deployment/live-source evidence and does not create Physical/Public-Beta/Commercial acceptance.
+- [x] Historical PR #596 remediation deployment: source `de18711695bb94617c3cffa7767cb3943c0d2c05`, deployed descendant `ca6a1c1bcb622ff241101a9c40aabfcd2a4b9793`, Pages `34382130901`, main Live Smoke `34382207087`, Auth Password Security Live Smoke `34382207152`, Campaign 3000 Premium Live Smoke `34382207209` = SUCCESS.
+- [x] Historical Home V3 deployment: source `d24824948c9df1808178b9bb5a78a8f885086fb4`, deployed descendant `f6b8598597edd874e69cbfe1dae941c919aaa037`, Pages `34161708724`, main Live Smoke `34161744258` = SUCCESS.
+- [x] Historical OPPO remediation deployment: source `6f7d56f0b68551c731d88d69e34286a8f2ecca70`, deployed descendant `0f96414295f2a5f5abd7da346aa8a58d47c10f63`, Pages `34137902178`, main Live Smoke `34137949343`, Auth Password Security Live Smoke `34137949293`, Campaign 3000 Premium Live Smoke `34137949307` = SUCCESS.
+- [x] Historical Home V3 deployment: source `6eac2ce642a907414260518d0435263b3e54f425`, deployed descendant `46136f5ca6322847545289c18233320139147aa2`, Pages `34087987096`, main Live Smoke `34088055637`, Auth Password Security Live Smoke `34088055663`, Campaign 3000 Premium Live Smoke `34088055657` = SUCCESS.
+- [x] Historical Nearby remediation deployment: source `e0523e6cab49b09e910ba66f2ad18351f491d19a`, deployed descendant `a6db511e0bbd6be9038bbc63a06fb5e1702006d3`, Pages `34013867862`, main Live Smoke `34013888880`, Auth Password Security Live Smoke `34013888842` = SUCCESS; Issues #524/#545 remain physically pending.
+- [x] Historical password-recovery initialization deployment: source `35cdf74b1c845ba61e46b86ec9e3c0e16e16eb72`, deployed descendant `d7dd3a550b9a0d583cd7f3269a357b0187377d50`, Pages `33975327442`, main Live Smoke `33975353656`, Auth Password Security Live Smoke `33975353718` = SUCCESS; physical retest remains pending due observed Auth email-rate limit.
+- [x] Historical Edge-only referral-summary deployment: source `4e2e1789921aa6fd73b2677ac5def2bc35a8be73`, deployed descendant `aa470986589d83dd95b4efd6e4a4d68a9f55965d`, Pages `33898258213`, main Live Smoke `33898314400` = SUCCESS.
+- [x] Historical pre-cutover referral-summary deployment: source `ea409cd02fc7744514b8c867a67f56ec0187de80`, deployed descendant `adbb23c4f373ebfe6ed1d78e71ec051a3c05ed7a`, Pages `33838629999`, main Live Smoke `33838665915` = SUCCESS.
+- [x] Historical Product Event deployment: source `0bd5acfb9946e10ed5624205165123eabc8035b4`, deployed descendant `75f95dd95b0b480f3cf3ebb668d62f7cb45345ba`, Pages `33823701475`, main Live Smoke `33823746430`, Product Event API Live Smoke `33824058988` = SUCCESS in scope.
+- [x] Historical referral/acquisition deployment: source `f401ad758e40914a10245cfab08497f7cdb99f7d`, deployed descendant `02540bb61c3c62de4cfba34e92a876503765847d`, Pages `33811511793`, Referral acquisition regression `33811512053` = SUCCESS in scope.
+- [x] Historical Auth password-security deployment: source `6cd98bf2a2020b86fe2ab05e263dd59f7e4fb387`, deployed descendant `0cc3ec3ef4dda18f0d8e083d8ca0992ef77f844c`, Pages `33229525995`, Auth Password Security Live Smoke `33229548182`, main Live Smoke `33229548190` = SUCCESS in scope.
+- [x] Historical PR #201 public-form deployment: source `a60318b432598e2eb82e71dcf1a9ec804ff1c4b2`, merged/deployed SHA `00bdcb7f432d542b732cf355336e9f08798e4320`, Pages `32802440796`, corresponding Live Smoke `32802473505` = SUCCESS.
 
-## Product
-- [ ] ปุ่ม “ไม่รู้เลย — เลือกให้ฉันทันที” และ recommendation flow ผ่าน real-device test ตาม matrix บน current v16 scope ที่เกี่ยวข้อง
-- [ ] double-tap/busy state/recovery/accessibility ผ่านบนอุปกรณ์ที่เกี่ยวข้อง; NF-09 มี scoped iPhone/VoiceOver PASS แล้ว แต่ Android TalkBack/second-device/full-matrix accessibility ยังเปิดอยู่
-- [x] visible keyboard focus ผ่าน scoped real-platform acceptance — Lenovo system model 83DV / Windows 11 Version 25H2 (OS Build 26200.9168) / Chrome 152.0.7977.82, built-in hardware keyboard; `REAL-PLATFORM-UX-EVIDENCE.md`; ไม่แทน broader accessibility/device matrix
-- [x] reduced-motion behavior มี scoped real-platform PASS บน OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64 ตาม `REAL-PLATFORM-UX-EVIDENCE.md`; ข้อนี้ไม่แทน device matrix ทั้งหมด
-- [ ] Group mode room/create/share/join/vote/completed result ผ่าน real-device flow ตาม matrix; Android device/session แรกมี scoped post-fix 2/2 final-result evidence แล้ว แต่ Group API v7 backend probe/application-ingestion evidence ไม่ใช่ fresh multi-device physical regression
-- [ ] Feedback rating/type/status semantics และ Partner form labels/autocomplete/live status ผ่านบน platform/assistive technology ที่ใช้ทดสอบ
-- [x] iPhone/Safari #1 Location allow + Maps fallback มี scoped v16 PASS ตาม Issue #171; ยังไม่แทน device matrix ทั้งหมด
-- [x] Favorite/History visual differentiation มี physical Android evidence (#172 closed)
-- [x] favorite/history persistence ใหม่ของ v16 ผ่าน physical Android favorite → full restart → History retention สำหรับ tested installed-PWA session และ Issue #177 ปิด
-- [ ] partner result/click flow ผ่านด้วยข้อมูลร้านทดสอบหรือร้านจริงที่ตรวจสอบได้
-- [ ] partner/fallback cards render ถูกต้องบน Android/iPhone ที่ใช้ทดสอบ
-- [x] Partner application ส่ง privacy acknowledgement evidence ได้จริงบน current changed-path acceptance scope; scoped Android Chrome physical/backend evidence ยืนยัน privacy notice version และ acknowledgement timestamp แล้ว แต่ full-matrix coverage ยังเปิดอยู่
-- [x] Android same-device member-history defects #38/#40 ผ่าน retest หลัง fixes ตาม evidence ที่บันทึก
-- [ ] Member history sync/write-race/restart-durability behavior ผ่านบน device matrix ที่จำเป็นและไม่มี regression หลัง release candidate ล่าสุด
-- [ ] PWA install, standalone, offline shell และ update จาก cache รุ่นเก่ามา `kinaraidee-beta-v16` ผ่านการทดสอบตาม platform ที่กำหนด; NF-07 มี scoped OPPO PASS แล้วแต่ยังไม่แทน platform/device matrix ทั้งหมด
-- [x] iPhone/Safari #1 Add to Home Screen guidance และ suppression หลัง “เข้าใจแล้ว” มี NF-05 scoped PASS บน v16; ยังไม่แทน iPadOS/second iPhone
-- [x] Feedback flow ใช้งานจริงได้ตาม device/platform scope ที่กำหนด; PR #201 recovery implementation/deployment evidence ไม่แทน successful form submission — scoped OPPO Reno13 5G / Android 16 / Chrome 152 physical acceptance is recorded separately
-- [x] Partner application recovery path ใช้งานจริงได้หลัง network/submission failure ตาม device/platform scope; PR #201 static/deployment evidence ไม่แทน successful or failed real submission acceptance — scoped OPPO Reno13 5G / Android 16 / Chrome 152 physical acceptance is recorded separately
-- [ ] ไม่มี regression ของ core flow หลัง release candidate ล่าสุด
+## Physical / Device acceptance
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — scoped Issues #592/#593 fresh affected-device regression PASS/CLOSED on 2026-09-10; Preference Surprise one-tap flow and Nearby Location-success terminal-state behavior accepted for that device scope only.
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — scoped TC-05 History and TC-06 Favorite accepted on 2026-09-10 continuation; does not complete device matrix.
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — Issue #551 scoped Home-nav physical PASS/CLOSED.
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — Issue #552 / TC-03 scoped fresh affected-device physical PASS/CLOSED on 2026-09-08.
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — TC-08 fresh Location Allow scoped physical PASS on 2026-09-08 after permission reset/prompt/grant and successful retry acquisition; TC-10 Maps path revalidated in same continuation.
+- [x] OPPO Reno13 5G / Android 16 / installed standalone PWA — fresh Favorite + accepted History persisted across full Recent Apps close/reopen; local 2-person Group flow covered state isolation, result/reroll, History handoff, Android Share Sheet cancel recovery and clean Home recovery after restart on 2026-09-08.
+- [ ] Issue #635 assistive-technology/keyboard acceptance for bottom-navigation current-state semantics remains separate from deployment evidence; current deployment does not itself establish VoiceOver/TalkBack/keyboard Physical PASS.
+- [ ] Issue #524 affected-iPhone Maps fallback retest remains PENDING / NOT PASS / NOT FAIL.
+- [ ] Issue #545 affected-iPhone location-deny remediation retest remains PENDING / NOT PASS / NOT FAIL.
+- [x] NF-09 scoped iPhone/VoiceOver physical PASS on deployed PR #201/v16; does not create current Issue #635 or other-device PASS.
+- [x] Keyboard Focus scoped physical PASS on Lenovo 83DV / Windows 11 / Chrome 152.0.7977.82.
+- [x] Reduced Motion scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64.
+- [x] NF-07 scoped v15→v16 PWA upgrade PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64.
+- [x] Product Event scoped physical QA PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64; not real-user traction.
+- [x] Referral-summary signed-in `EDGE` scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64; not referral conversion.
+- [x] Public Feedback + Partner form scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64.
+- [x] Auth recovery/password-update/sign-in/new-signup/email-confirmation scoped physical PASS on OPPO Reno13 5G / Android 16 / Chrome 152.0.7977.64.
+- [ ] Android Chrome ≥3 distinct device models still incomplete.
+- [ ] iPhone Safari ≥2 distinct device models still incomplete.
+- [ ] iPadOS target remains pending if required by Beta scope.
 
-## Accounts & Payments
-- [ ] เลือก payment provider / merchant account จริง
-- [ ] กำหนดราคา Premium จริงและเงื่อนไข Free/Premium ชัดเจน
-- [ ] ทดสอบ subscribe / renew / cancel / payment failure ใน sandbox หรือ environment ที่ provider รองรับ
-- [ ] กำหนด entitlement ระหว่าง Free และ Premium
-- [ ] webhook/payment status handling ป้องกันการให้สิทธิ์จาก client อย่างเดียว
-- [ ] มี transaction ID / audit trail / reconciliation ที่ตรวจสอบได้
-- [ ] refund/cancel policy สอดคล้องกับ flow ที่ระบบรองรับ
-- [ ] ห้ามเปิดรับเงินจริงหาก payment gate ข้อใดที่จำเป็นยังไม่ผ่าน
+## Backend / Security / Operations
+- [x] Group API v7 source/deployment parity and scoped rejection-event ingestion verified.
+- [x] Partner API v15 source/deployment parity and rejection-only live probe verified.
+- [x] Main repository governance enforced through required checks/ruleset evidence.
+- [x] Referral-summary Edge-only browser cutover deployed before RPC execute revocation; post-cutover browser-role execute/grant checks are negative.
+- [x] Product Event schema/function deployment and controlled-ingress evidence verified in scope.
+- [x] Referral/acquisition schema and referral-code privacy migration deployed.
+- [ ] Supabase leaked-password protection remains **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS** — Issue #372.
+- [ ] Group API monitoring baseline/owner/alert channel/escalation/actual alert delivery remain incomplete.
+- [ ] Group API retention period + cleanup verification remain unapproved/incomplete.
+- [ ] Complete Group API anonymous abuse controls remain incomplete.
+- [ ] Partner API monitoring/retention/complete abuse controls remain incomplete.
+- [ ] Real rollback/restore/recovery drill evidence remains incomplete.
 
-## Restaurant Partners
-- [ ] มีร้านพาร์ตเนอร์จริงชุดแรกและข้อมูลติดต่อที่ตรวจสอบได้
-- [ ] ร้านยอมรับเงื่อนไขค่าคอมมิชชัน/แพ็กเกจเป็นลายลักษณ์อักษรหรือหลักฐานที่เก็บได้
-- [ ] ตรวจ destination URL / menu keywords / active status ของแต่ละร้าน
-- [ ] partner click tracking ไม่สร้าง click ซ้ำผิดปกติจากการกดติดกัน
-- [ ] conversion/commission มีวิธี verify ก่อนจ่าย/เรียกเก็บเงินจริง
-- [ ] pending / confirmed / cancelled flow ถูกทดสอบ
-- [ ] มีขั้นตอน dispute / cancel / refund ที่ชัดเจน
+## Public Beta gate
+- [ ] Public Beta remains **NOT COMPLETE**.
+- [ ] Remaining device-matrix coverage must be satisfied with real-device evidence.
+- [ ] Blocker/Critical closure must be supported by release-scoped defect evidence; CI/synthetic-only absence of reports is not enough.
+- [ ] Issue #635 accessibility remediation requires any assistive-technology/device acceptance specified by the physical QA matrix; deployment evidence alone does not close it.
+- [ ] Issues #524/#545 affected-iPhone paths remain pending.
+- [ ] Weak/leaked-password rejection/protection remains open and cannot be inferred from successful account flows.
 
-## Privacy & Legal
-- [ ] Privacy Policy ฉบับ Production เผยแพร่จริง
-- [ ] Terms of Service เผยแพร่จริง
-- [ ] ช่องทางติดต่อเจ้าของบริการจริง
-- [ ] ระบุวัตถุประสงค์การใช้ location / analytics / partner tracking / account data
-- [ ] กำหนด retention/deletion ของข้อมูลและขั้นตอนคำขอของผู้ใช้
-- [ ] ตรวจ consent/notice ที่จำเป็นก่อนเริ่ม analytics หรือ tracking ที่ต้องขอความยินยอม
-- [x] Beta Partner application บันทึก Privacy notice version และ acknowledgement timestamp แล้ว; ข้อนี้เป็น implementation/observed beta evidence เท่านั้น ไม่แทน Production Privacy/PDPA review
-- [x] Data-governance draft ระบุ Group rooms/votes, expiry/cascade schema facts และ anonymous data-rights caution แล้ว; retention period/owner/legal basis ยังเป็น TBD และข้อนี้ไม่ใช่ legal/retention PASS
-- [ ] ตรวจข้อกำหนด PDPA และกฎหมาย/ข้อกำหนดที่เกี่ยวข้องก่อนรับข้อมูลเชิงพาณิชย์
-- [ ] ข้อความราคา/ต่ออายุ/ยกเลิก Premium ไม่ทำให้ผู้ใช้เข้าใจผิด
+## Commercial / Production gate
+- [ ] Commercial launch remains **NO-GO**.
+- [ ] ห้ามเปิดรับเงินจริง จนกว่า payment/provider/merchant lifecycle, Privacy/Legal, production monitoring/rollback and business/partner requirements have real approved evidence.
+- [ ] Production Privacy/Terms/controller/contact/retention/user-rights decisions remain incomplete.
+- [ ] Payment/Premium provider and real subscribe/renew/cancel/failure/reconciliation evidence remain incomplete.
+- [ ] Real restaurant/affiliate partner agreement/reconciliation evidence remains incomplete.
+- [ ] Production monitoring/incident owner/on-call and rollback/restore drill evidence remain incomplete.
 
-## Security
-- [ ] ตรวจ Supabase RLS ทุกตาราง Production ด้วย role ที่เกี่ยวข้อง
-- [ ] เปิด Supabase Auth leaked-password protection และ re-run Security Advisor; ติดตามใน Issue #11/#372 — current gate = **BLOCKED BY VERIFIED FREE PLAN / CONFIGURATION — NOT PASS**
-- [x] Referral-summary signed-in `EDGE` physical acceptance ผ่านก่อนถอน caller-scoped RPC fallback; Edge-only runtime deploy/live-smoke ผ่านก่อน apply revocation, `anon_execute=false` / `authenticated_execute=false`, raw referral tables ไม่มี browser-role grants และ Security Advisor ไม่รายงาน warning เดิมแล้ว. This closes only the referral-summary browser/RPC cutover security follow-up.
-- [ ] ไม่มี service-role/secret/private key อยู่ใน browser, repository หรือ public build
-- [ ] rotate secret ที่เคยใช้ใน test หากจำเป็น
-- [ ] ทดสอบ auth / sign-out / password recovery / session expiry — recovery/password-update/sign-in/new-signup/email-confirmation มี scoped OPPO PASS แล้ว แต่ session expiry และ broader lifecycle/device coverage ยังเปิด
-- [ ] ทดสอบ owner/admin authorization และ negative cases
-- [ ] ตรวจ Edge Functions/partner endpoints ไม่ยอมรับสิทธิ์จากข้อมูล client ที่เชื่อถือไม่ได้
-- [ ] ตรวจ location และข้อมูลส่วนบุคคลไม่ถูกเปิด public SELECT โดยไม่ตั้งใจ
-- [x] Database boundary ป้องกัน HTML tag delimiters ใน public partner-card text แล้ว และ Security Advisor ไม่พบ regression ใหม่ใน scoped evidence
-- [x] Partner-card renderer ใช้ DOM nodes/`textContent`; implementation evidence มีแล้ว แต่ยังต้องมี real-device evidence ก่อนถือว่า Product gate ผ่าน
-- [x] Group API PR #518 source/deployment parity ถูกยืนยันที่ ACTIVE v7; canonical rejection-only attempt-2 job `101112482238` ผ่าน streamed chunked >8 KiB → 413 และ server-only daily presence read-back ยืนยัน scoped application-owned event ingestion. ข้อนี้ไม่ใช่ production traffic/error baseline, complete anonymous abuse-control, alert-delivery หรือ device PASS
-- [x] Group API retention schema ถูกตรวจแบบ read-only และบันทึกใน `GROUP-API-RETENTION-SCHEMA-EVIDENCE.md`; ข้อนี้เป็น schema evidence เท่านั้น ไม่ใช่ approved retention period, cleanup implementation หรือ cleanup PASS
-- [x] Group API application structured-event ingestion ถูก verify ใน scoped v7 rejection-only daily-presence path โดยไม่เก็บ sensitive identifier/payload หรือ request/event count ตาม Issue #45
-- [ ] Group API monitoring baseline/owner/thresholds, alert channel/escalation/actual alert delivery และ complete anonymous rate/quota strategy ถูก verify ตาม Issue #45
-- [ ] Group API retention period ถูกอนุมัติและ cleanup/purge mechanism ถูก implement + verify ว่าไม่ลบ active rooms และ cascade votes เฉพาะห้องที่เข้าเกณฑ์
-- [ ] Partner API complete abuse-control / monitoring / retention controls ถูก verify นอกเหนือจาก scoped ACTIVE v15 rejection-only evidence
-- [x] `main` branch protection/ruleset + required release/security checks ถูกเปิดและทดสอบว่า failing required check block merge ได้จริง — Issue #35 closed as completed
-- [ ] ตรวจ dependency/security findings และ `SECURITY.md`; Critical findings ต้องปิดก่อน release
-
-## Operations
-- [ ] Production monitoring / error reporting พร้อมช่องทางตรวจ incident
-- [ ] Backup/recovery plan สำหรับข้อมูลสำคัญและมีผู้รับผิดชอบ
-- [ ] Owner dashboard ใช้งานได้จริงกับข้อมูล Production
-- [ ] ขั้นตอนรับและตอบ bug/support พร้อมช่องทางติดต่อ
-- [x] Browser/PWA synthetic monitor mechanism มี historical successful run จริงที่ตรวจย้อนหลังได้; ข้อนี้ไม่ทำให้ current v16 Production monitoring ผ่าน เพราะยังขาด fresh current-runtime monitoring/owner/baseline/alert/escalation ตาม scope จริง
-- [x] Release rollback procedure ถูกเขียนไว้ใน `ROLLBACK-RUNBOOK.md` และมี traceable Group API/Supabase rollback evidence path
-- [ ] Rollback procedure ถูกทดลองอย่างน้อยหนึ่งครั้งใน environment ที่ปลอดภัยและมี Evidence Record จริง
-- [ ] ระบุผู้มีสิทธิ์ deploy/แก้ Production
-- [ ] มีวิธีหยุด Premium/partner traffic ชั่วคราวหากเกิด incident
-
-หมายเหตุ: การมี `ROLLBACK-RUNBOOK.md`, synthetic monitor หรือ rejection probe อย่างเดียวไม่ถือว่า Production operations/rollback readiness ผ่าน ต้องมี owner/channel/baseline และ drill จริงตามขอบเขตที่เปิดใช้งาน
-
-## Store Distribution (ถ้าต้องการ native store)
-- [ ] Google Play developer account
-- [ ] Apple Developer account
-- [ ] Store listing / screenshots / icon / description
-- [ ] Privacy declarations ของ Store ตรงกับพฤติกรรมแอปจริง
-- [ ] Billing implementation สอดคล้องกับข้อกำหนด Store ที่ใช้
-- [ ] ผ่าน review ของแต่ละ Store
-
-## Final Go / No-Go Record
-- วันที่ตัดสินใจ:
-- Release candidate / commit SHA:
-- ผู้อนุมัติ:
-- Beta evidence:
-- Deployment/Live Smoke evidence:
-- Payment evidence (ถ้ามี Premium):
-- Partner evidence (ถ้ามี commission):
-- Privacy/Legal review:
-- Security review:
-- Known accepted risks:
-- Rollback owner/วิธี rollback:
-
-### GO
-เปิดรับเงินจริงได้เฉพาะเมื่อรายการที่จำเป็นต่อรูปแบบธุรกิจที่เปิดใช้ผ่านครบ, มีหลักฐานตรวจสอบย้อนหลังได้ และ Blocker/Critical ด้าน Product, Payment, Privacy, Security = 0
-
-### NO-GO
-ถ้ารายการจำเป็นข้อใดยังไม่มีหลักฐานจริง ให้คง Public Beta/ทดสอบต่อและห้ามตีความช่องว่างว่า “ผ่าน”
+ห้ามทำเครื่องหมาย PASS จาก static review, CI, synthetic monitoring, source markers หรือ deployment แทน real-device/production/business evidence ที่รายการนั้นต้องการ
