@@ -30,7 +30,7 @@ jobs:
           grep -Fq 'function installEmojiControlAccessibleNames(){' data/home-surprise.js
           grep -Fq 'installEmojiControlAccessibleNames();' data/home-surprise.js
           grep -Fq "if(control&&!control.hasAttribute('aria-label'))control.setAttribute('aria-label',label);" data/home-surprise.js
-          grep -Fq "el.setAttribute('aria-pressed',el.classList.contains('on')?'true':'false')" data/home-surprise.js
+          grep -Fq "control.setAttribute('aria-pressed',control.classList.contains('on')?'true':'false')" data/home-surprise.js
           grep -Fq "button.setAttribute('aria-current','page')" data/toast-accessibility.js
           grep -Fq "b.setAttribute('aria-busy','false')" data/home-surprise.js
           grep -Fq 'aria-label="กลับไปเลือกความชอบ"' index.html
