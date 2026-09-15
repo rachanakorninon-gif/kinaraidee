@@ -259,6 +259,13 @@
       if(typeof startFresh==='function')startFresh();
     }
   }
+  function ensureSpaNavigation(){
+    if(document.querySelector('script[src="data/spa-navigation.js"]'))return;
+    const s=document.createElement('script');
+    s.src='data/spa-navigation.js';
+    s.async=false;
+    document.body.appendChild(s);
+  }
   function ensurePwaInstallHelper(){
     if(document.querySelector('script[src="data/pwa-install.js"]'))return;
     const s=document.createElement('script');
@@ -271,6 +278,7 @@
     installSelectedStateA11y();
     installScreenFocusA11y();
     installResultMenuFocusTarget();
+    ensureSpaNavigation();
     ensureAcquisition();
     ensureProductEvents();
     ensureMemberSync();
