@@ -38,11 +38,11 @@ jobs:
 
           p=Path('sw.js')
           s=p.read_text(encoding='utf-8')
-          asset="  './data/spa-navigation.js',\n"
-          if asset not in s:
-            old="  './data/toast-accessibility.js',\n"
-            if old not in s: raise SystemExit('service-worker shell anchor missing')
-            s=s.replace(old,old+asset,1)
+          if "'./data/spa-navigation.js'" not in s:
+            old="  './data/home-surprise.js','./data/history-ui.js','./data/toast-accessibility.js'\n"
+            new="  './data/home-surprise.js','./data/history-ui.js','./data/toast-accessibility.js','./data/spa-navigation.js'\n"
+            if old not in s: raise SystemExit('service-worker current v16 shell anchor missing')
+            s=s.replace(old,new,1)
           p.write_text(s,encoding='utf-8')
           PY
           node --check data/home-surprise.js
