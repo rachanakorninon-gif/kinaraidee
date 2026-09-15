@@ -1,0 +1,77 @@
+name: Emoji Control Accessible Name Regression
+
+on:
+  pull_request:
+    paths:
+      - 'data/home-surprise.js'
+      - 'data/toast-accessibility.js'
+      - 'index.html'
+      - '.github/workflows/emoji-control-accessible-name-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data/home-surprise.js'
+      - 'data/toast-accessibility.js'
+      - 'index.html'
+      - '.github/workflows/emoji-control-accessible-name-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-name-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify emoji is visual, not accessible-name authority
+        run: |
+          set -euo pipefail
+          node --check data/home-surprise.js
+          grep -Fq 'function installEmojiControlAccessibleNames(){' data/home-surprise.js
+          grep -Fq 'installEmojiControlAccessibleNames();' data/home-surprise.js
+          grep -Fq "if(control&&!control.hasAttribute('aria-label'))control.setAttribute('aria-label',label);" data/home-surprise.js
+          grep -Fq "el.setAttribute('aria-pressed',el.classList.contains('on')?'true':'false')" data/home-surprise.js
+          grep -Fq "button.setAttribute('aria-current','page')" data/toast-accessibility.js
+          grep -Fq "b.setAttribute('aria-busy','false')" data/home-surprise.js
+          grep -Fq 'aria-label="กลับไปเลือกความชอบ"' index.html
+          grep -Fq 'aria-label="แชร์เมนูนี้"' index.html
+          grep -Fq 'aria-label="ลดจำนวนคน"' index.html
+          grep -Fq 'aria-label="เพิ่มจำนวนคน"' index.html
+
+          node <<'NODE'
+          const fs=require('fs');
+          const assert=require('assert');
+          const source=fs.readFileSync('data/home-surprise.js','utf8');
+          const start=source.indexOf('function installEmojiControlAccessibleNames(){');
+          const end=source.indexOf('function installResultMenuFocusTarget(){',start);
+          assert.ok(start>=0&&end>start,'accessible-name helper must remain separately scoped');
+          const helper=source.slice(start,end);
+          const entries=[...helper.matchAll(/\['([^']+)','([^']+)'\]/g)].map(m=>({selector:m[1],label:m[2]}));
+          assert.strictEqual(entries.length,27,'reviewed semantic-name set changed; review scope intentionally');
+          const bySelector=new Map(entries.map(x=>[x.selector,x.label]));
+          const expected=new Map([
+            ['#home .homeHero button.secondary[onclick="startFresh()"]','เลือกพร้อมกัน กลุ่ม'],
+            ['#home .quick button[onclick*="renderHistory"]','เมนูโปรดและประวัติ'],
+            ['#home .quick button[onclick="showStatsHome()"]','สถิติการเลือก'],
+            ['#mealChips [data-v="เช้า"]','มื้อเช้า'],
+            ['#mealChips [data-v="กลางวัน"]','มื้อกลางวัน'],
+            ['#mealChips [data-v="เย็น"]','มื้อเย็น'],
+            ['#mealChips [data-v="ดึก"]','มื้อดึก'],
+            ['#typeChips [data-surprise="1"]','ไม่รู้เลย — เลือกให้ฉัน'],
+            ['#typeStep .primary[onclick="startRecommend()"]','ให้เราช่วยเลือกเลย'],
+            ['#result .secondary[onclick="nearby()"]','ดูร้านใกล้คุณที่มีเมนูนี้'],
+            ['#result .actionRow button[onclick="recommendNow()"]','เลือกใหม่'],
+            ['#result .actionRow button[onclick="saveLike()"]','ชอบเมนูนี้'],
+            ['#result .primary[onclick="acceptFood()"]','กินอันนี้'],
+            ['nav.nav button[onclick="goHome()"]','หน้าหลัก'],
+            ['nav.nav button[onclick="startFresh()"]','เลือกเมนู'],
+            ['nav.nav button[onclick*="renderHistory"]','ประวัติ']
+          ]);
+          for(const [selector,label] of expected){assert.strictEqual(bySelector.get(selector),label,selector)}
+          const emoji=/\p{Extended_Pictographic}/u;
+          for(const {label} of entries)assert.ok(!emoji.test(label),`semantic aria-label must not depend on emoji: ${label}`);
+          assert.ok(helper.includes("!control.hasAttribute('aria-label')"),'existing explicit labels must win');
+          assert.ok(!/aria-(pressed|current|busy)/.test(helper),'cleanup helper must not mutate selected/current/busy semantics');
+          assert.ok(!/aria-live|speechSynthesis|\.focus\(/.test(helper),'cleanup helper must not announce or move focus');
+          console.log('Emoji control semantic-name contract PASS (source only; not TalkBack Physical PASS)');
+          NODE
