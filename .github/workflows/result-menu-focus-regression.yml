@@ -1,0 +1,54 @@
+name: Result menu focus regression
+
+on:
+  pull_request:
+    paths:
+      - 'data/home-surprise.js'
+      - 'index.html'
+      - '.github/workflows/result-menu-focus-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data/home-surprise.js'
+      - 'index.html'
+      - '.github/workflows/result-menu-focus-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  result-menu-focus-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Result announcement reuses existing focus path once
+        run: |
+          set -euo pipefail
+          focus='data/home-surprise.js'
+          grep -Fq "result:'.topbar b'" "$focus"
+          grep -Fq "if(id==='loading')return;" "$focus"
+          grep -Fq "target.focus({preventScroll:true})" "$focus"
+          grep -Fq 'function installResultMenuFocusTarget(){' "$focus"
+          grep -Fq "const menu=document.getElementById('foodName');" "$focus"
+          grep -Fq "previous.removeAttribute('data-screen-focus')" "$focus"
+          grep -Fq "menu.dataset.screenFocus='1'" "$focus"
+          grep -Fq "menu.setAttribute('tabindex','-1')" "$focus"
+          grep -Fq "menu.setAttribute('role','heading')" "$focus"
+          grep -Fq "menu.setAttribute('aria-level','1')" "$focus"
+          grep -Fq "menu.removeAttribute('aria-live')" "$focus"
+          grep -Fq 'installScreenFocusA11y();' "$focus"
+          grep -Fq 'installResultMenuFocusTarget();' "$focus"
+          grep -Fq "renderResult();show('result')" index.html
+          ! grep -Eq 'id="foodName"[^>]*aria-live' index.html
+          ! grep -Eq 'speechSynthesis|\.speak\(' "$focus"
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('data/home-surprise.js').read_text(encoding='utf-8')
+          base=s.index('installScreenFocusA11y();')
+          remap=s.index('installResultMenuFocusTarget();',base)
+          assert base < remap, 'Result focus target must be remapped only after the existing focus manager installs'
+          helper=s[s.index('function installResultMenuFocusTarget(){'):s.index('function ensurePremiumHomeStyles(){')]
+          assert 'aria-live' in helper and "removeAttribute('aria-live')" in helper
+          assert 'focus(' not in helper, 'Result remap must not create a second programmatic focus path'
+          print('Result menu reuses the existing focus transition without a duplicate live/speech announcement')
+          PY
