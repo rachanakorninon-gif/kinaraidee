@@ -1,0 +1,69 @@
+name: Issue 644 focus owner one shot
+
+on:
+  push:
+    branches: ['fix/644-result-menu-focus']
+    paths:
+      - '.github/workflows/issue-644-focus-owner-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/644-result-menu-focus
+          fetch-depth: 0
+      - name: Keep Result remediation inside focus-management owner
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout origin/main -- data/toast-accessibility.js
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('data/home-surprise.js')
+          s=p.read_text(encoding='utf-8')
+          anchor='  function ensurePremiumHomeStyles(){'
+          helper='''  function installResultMenuFocusTarget(){\n    const screen=document.getElementById('result');\n    const menu=document.getElementById('foodName');\n    if(!screen||!menu)return;\n    const previous=screen.querySelector('[data-screen-focus="1"]');\n    if(previous&&previous!==menu){\n      previous.removeAttribute('data-screen-focus');\n      previous.removeAttribute('tabindex');\n      if(previous.getAttribute('role')==='heading'&&previous.getAttribute('aria-level')==='1'){\n        previous.removeAttribute('role');\n        previous.removeAttribute('aria-level');\n      }\n    }\n    menu.dataset.screenFocus='1';\n    menu.setAttribute('tabindex','-1');\n    menu.setAttribute('role','heading');\n    menu.setAttribute('aria-level','1');\n    menu.removeAttribute('aria-live');\n  }\n'''
+          if 'function installResultMenuFocusTarget(){' not in s:
+            if anchor not in s: raise SystemExit('focus helper insertion anchor missing')
+            s=s.replace(anchor,helper+anchor,1)
+          call='    installScreenFocusA11y();\n    installResultMenuFocusTarget();\n'
+          if call not in s:
+            old='    installScreenFocusA11y();\n    ensureAcquisition();\n'
+            if old not in s: raise SystemExit('focus install call anchor missing')
+            s=s.replace(old,call+'    ensureAcquisition();\n',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check data/home-surprise.js
+          node --check data/toast-accessibility.js
+          grep -Fq 'function installResultMenuFocusTarget(){' data/home-surprise.js
+          grep -Fq "menu.dataset.screenFocus='1'" data/home-surprise.js
+          grep -Fq "menu.removeAttribute('aria-live')" data/home-surprise.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/home-surprise.js data/toast-accessibility.js
+          git commit -m 'fix(a11y): keep Result menu target in focus manager'
+          candidate="$(git rev-parse HEAD)"
+          export candidate
+          python - <<'PY'
+          from pathlib import Path
+          import os,re
+          p=Path('CURRENT-RUNTIME.md')
+          s=p.read_text(encoding='utf-8')
+          candidate=os.environ['candidate']
+          s=re.sub(r'- Current browser/PWA runtime candidate: `[0-9a-f]{40}`',f'- Current browser/PWA runtime candidate: `{candidate}`',s,count=1)
+          s=re.sub(r'- Current runtime deployment evidence:.*',
+                   f'- Current runtime deployment evidence is pending for Issue #644 candidate `{candidate}`. The last verified deployed browser/PWA trace remains Issue #635 candidate `91cdf79d221c68ca54e5f874aebe421846264821` through deployed descendant `ff975076a643d123081da8ab3e3baf399fdc5f6d`; its prior deployment evidence remains historical and is not reused as current PASS.',s,count=1)
+          s=re.sub(r'The current browser/PWA runtime candidate `[0-9a-f]{40}` is \*\*PENDING FOR CURRENT RUNTIME DEPLOYMENT\*\*\.',
+                   f'The current browser/PWA runtime candidate `{candidate}` is **PENDING FOR CURRENT RUNTIME DEPLOYMENT**.',s,count=1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -Fq "Current browser/PWA runtime candidate: \`$candidate\`" CURRENT-RUNTIME.md
+          grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): bind Issue 644 focus-owner candidate'
+          git push origin HEAD:fix/644-result-menu-focus
