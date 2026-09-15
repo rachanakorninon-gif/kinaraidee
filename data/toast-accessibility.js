@@ -77,3 +77,31 @@
   const activeScreen=document.querySelector('.screen.active');
   syncNavCurrent(activeScreen?.id||'home');
 })();
+
+(()=>{
+  function installResultMenuFocusTarget(){
+    const screen=document.getElementById('result');
+    const menu=document.getElementById('foodName');
+    if(!screen||!menu)return;
+
+    const previous=screen.querySelector('[data-screen-focus="1"]');
+    if(previous&&previous!==menu){
+      previous.removeAttribute('data-screen-focus');
+      previous.removeAttribute('tabindex');
+      if(previous.getAttribute('role')==='heading'&&previous.getAttribute('aria-level')==='1'){
+        previous.removeAttribute('role');
+        previous.removeAttribute('aria-level');
+      }
+    }
+
+    menu.dataset.screenFocus='1';
+    menu.setAttribute('tabindex','-1');
+    menu.setAttribute('role','heading');
+    menu.setAttribute('aria-level','1');
+    menu.removeAttribute('aria-live');
+  }
+
+  const install=()=>setTimeout(installResultMenuFocusTarget,0);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+})();
