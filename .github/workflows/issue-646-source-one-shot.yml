@@ -1,0 +1,66 @@
+name: Issue 646 source one shot
+
+on:
+  push:
+    branches: ['fix/646-emoji-accessible-names']
+    paths:
+      - '.github/workflows/issue-646-source-one-shot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/646-emoji-accessible-names
+          fetch-depth: 0
+      - name: Add semantic names without changing state semantics
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('data/home-surprise.js')
+          s=p.read_text(encoding='utf-8')
+          anchor='  function installResultMenuFocusTarget(){'
+          helper='''  function installEmojiControlAccessibleNames(){\n    const labels=[\n      ['#home .homeHero button.secondary[onclick="startFresh()"]','เลือกพร้อมกัน กลุ่ม'],\n      ['#home .quick button[onclick*="renderHistory"]','เมนูโปรดและประวัติ'],\n      ['#home .quick button[onclick="showStatsHome()"]','สถิติการเลือก'],\n      ['#mealChips [data-v="เช้า"]','มื้อเช้า'],\n      ['#mealChips [data-v="กลางวัน"]','มื้อกลางวัน'],\n      ['#mealChips [data-v="เย็น"]','มื้อเย็น'],\n      ['#mealChips [data-v="ดึก"]','มื้อดึก'],\n      ['#budgetChips [data-v="999"]','ไม่จำกัด'],\n      ['#typeChips [data-surprise="1"]','ไม่รู้เลย — เลือกให้ฉัน'],\n      ['#typeChips [data-v="ข้าว"]','ข้าว'],\n      ['#typeChips [data-v="เส้น"]','เส้น'],\n      ['#typeChips [data-v="เผ็ด"]','เผ็ด'],\n      ['#typeChips [data-v="ของทอด"]','ของทอด'],\n      ['#typeChips [data-v="ของหวาน"]','ของหวาน'],\n      ['#typeChips [data-v="หนัก"]','มื้อหนัก'],\n      ['#typeChips [data-v="โปรตีน"]','เนื้อสัตว์และโปรตีน'],\n      ['#typeChips [data-v="เบา"]','เบา ๆ'],\n      ['#typeChips [data-v="ซุป"]','ซุปและต้ม'],\n      ['#typeChips [data-v="ต่างชาติ"]','อาหารต่างชาติ'],\n      ['#typeStep .primary[onclick="startRecommend()"]','ให้เราช่วยเลือกเลย'],\n      ['#result .secondary[onclick="nearby()"]','ดูร้านใกล้คุณที่มีเมนูนี้'],\n      ['#result .actionRow button[onclick="recommendNow()"]','เลือกใหม่'],\n      ['#result .actionRow button[onclick="saveLike()"]','ชอบเมนูนี้'],\n      ['#result .primary[onclick="acceptFood()"]','กินอันนี้'],\n      ['nav.nav button[onclick="goHome()"]','หน้าหลัก'],\n      ['nav.nav button[onclick="startFresh()"]','เลือกเมนู'],\n      ['nav.nav button[onclick*="renderHistory"]','ประวัติ']\n    ];\n    labels.forEach(([selector,label])=>{\n      const control=document.querySelector(selector);\n      if(control&&!control.hasAttribute('aria-label'))control.setAttribute('aria-label',label);\n    });\n  }\n'''
+          if 'function installEmojiControlAccessibleNames(){' not in s:
+            if anchor not in s: raise SystemExit('accessible-name insertion anchor missing')
+            s=s.replace(anchor,helper+anchor,1)
+          if '    installEmojiControlAccessibleNames();\n' not in s:
+            old='    installSelectedStateA11y();\n    installScreenFocusA11y();\n'
+            if old not in s: raise SystemExit('accessible-name install anchor missing')
+            s=s.replace(old,'    installSelectedStateA11y();\n    installEmojiControlAccessibleNames();\n    installScreenFocusA11y();\n',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check data/home-surprise.js
+          grep -Fq 'function installEmojiControlAccessibleNames(){' data/home-surprise.js
+          grep -Fq "if(control&&!control.hasAttribute('aria-label'))control.setAttribute('aria-label',label);" data/home-surprise.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/home-surprise.js
+          git commit -m 'fix(a11y): normalize emoji control accessible names'
+          candidate="$(git rev-parse HEAD)"
+          export candidate
+          python - <<'PY'
+          from pathlib import Path
+          import os,re
+          p=Path('CURRENT-RUNTIME.md')
+          s=p.read_text(encoding='utf-8')
+          candidate=os.environ['candidate']
+          s=re.sub(r'- Current browser/PWA runtime candidate: `[0-9a-f]{40}`',f'- Current browser/PWA runtime candidate: `{candidate}`',s,count=1)
+          change=('- Runtime change: Issue #646 secondary accessibility cleanup on top of Issues #644/#645. Static emoji-prefixed action/navigation controls now receive concise semantic `aria-label` names that do not depend on emoji pronunciation, while visible text remains unchanged. Existing explicit labels on Back/Share/counter controls and the dynamic Surprise button are preserved; selected-state `aria-pressed`, bottom-nav `aria-current`, busy state, focus management, History API behavior, and v16 cache semantics are unchanged.')
+          s=re.sub(r'- Runtime change:.*',change,s,count=1)
+          s=re.sub(r'- Current runtime deployment evidence.*',
+                   f'- Current runtime deployment evidence is pending for Issue #646 candidate `{candidate}`. Issues #644 and #645 are stacked immediately below this candidate and are not yet deployment evidence; the last verified deployed browser/PWA trace remains Issue #635 through `ff975076a643d123081da8ab3e3baf399fdc5f6d`.',s,count=1)
+          s=re.sub(r'The current browser/PWA runtime candidate `[0-9a-f]{40}` is \*\*PENDING FOR CURRENT RUNTIME DEPLOYMENT\*\*\.',
+                   f'The current browser/PWA runtime candidate `{candidate}` is **PENDING FOR CURRENT RUNTIME DEPLOYMENT**.',s,count=1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -Fq "Current browser/PWA runtime candidate: \`$candidate\`" CURRENT-RUNTIME.md
+          grep -Fq 'Current runtime deployment evidence is pending' CURRENT-RUNTIME.md
+          git add CURRENT-RUNTIME.md
+          git commit -m 'docs(runtime): declare Issue 646 accessible-name candidate'
+          git push origin HEAD:fix/646-emoji-accessible-names
