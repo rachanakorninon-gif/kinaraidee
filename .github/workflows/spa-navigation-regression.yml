@@ -1,0 +1,120 @@
+name: SPA Navigation Regression
+
+on:
+  pull_request:
+    paths:
+      - 'data/spa-navigation.js'
+      - 'data/home-surprise.js'
+      - 'sw.js'
+      - '.github/workflows/spa-navigation-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'data/spa-navigation.js'
+      - 'data/home-surprise.js'
+      - 'sw.js'
+      - '.github/workflows/spa-navigation-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  spa-history-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Android Back uses internal SPA history contract
+        run: |
+          set -euo pipefail
+          node --check data/spa-navigation.js
+          grep -Fq "const TRANSIENT=new Set(['loading']);" data/spa-navigation.js
+          grep -Fq 'history.replaceState' data/spa-navigation.js
+          grep -Fq 'history.pushState' data/spa-navigation.js
+          grep -Fq "window.addEventListener('popstate'" data/spa-navigation.js
+          grep -Fq 'history.back();' data/spa-navigation.js
+          grep -Fq "s.src='data/spa-navigation.js'" data/home-surprise.js
+          grep -Fq "'./data/spa-navigation.js'" sw.js
+          grep -Fq "const CACHE='kinaraidee-beta-v16';" sw.js
+          ! grep -Eq 'beforeunload|preventDefault\(\).*popstate' data/spa-navigation.js
+
+          node <<'NODE'
+          const fs=require('fs');
+          const vm=require('vm');
+          const assert=require('assert');
+          const source=fs.readFileSync('data/spa-navigation.js','utf8');
+          let active='home';
+          const renders=[];
+          let focusProxyCalls=0;
+          const listeners={};
+          const existingIds=new Set(['home','mealStep','peopleStep','budgetStep','typeStep','loading','result','history','nearbyRestaurants']);
+          const root={dataset:{}};
+          const document={
+            documentElement:root,
+            querySelector(sel){
+              if(sel==='.screen.active')return {id:active};
+              return null;
+            },
+            getElementById(id){return existingIds.has(id)?{id}:null}
+          };
+          const history={
+            state:null,
+            replaced:[],
+            pushed:[],
+            backCalls:0,
+            replaceState(state,title,url){this.state=state;this.replaced.push({state,title,url})},
+            pushState(state,title,url){this.state=state;this.pushed.push({state,title,url})},
+            back(){this.backCalls++}
+          };
+          const window={
+            history,
+            show(id){active=id;renders.push(id);focusProxyCalls++},
+            addEventListener(type,fn){listeners[type]=fn}
+          };
+          const context={window,history,document,location:{href:'https://example.test/kinaraidee/'},console};
+          vm.createContext(context);
+          vm.runInContext(source,context);
+
+          assert.strictEqual(root.dataset.kinaraideeSpaHistory,'1');
+          assert.strictEqual(history.replaced.length,1,'initial screen must replace, not push, the base entry');
+          assert.strictEqual(history.replaced[0].state.screen,'home');
+          assert.strictEqual(history.replaced[0].state.prev,null);
+
+          window.show('typeStep');
+          assert.strictEqual(active,'typeStep');
+          assert.strictEqual(history.pushed.length,1);
+          assert.strictEqual(history.state.screen,'typeStep');
+          assert.strictEqual(history.state.prev,'home');
+
+          window.show('loading');
+          assert.strictEqual(active,'loading');
+          assert.strictEqual(history.pushed.length,1,'transient Loading must not become a Back destination');
+          assert.strictEqual(history.state.screen,'typeStep');
+
+          window.show('result');
+          assert.strictEqual(active,'result');
+          assert.strictEqual(history.pushed.length,2);
+          assert.strictEqual(history.state.screen,'result');
+          assert.strictEqual(history.state.prev,'typeStep','Result must remember the last meaningful screen, not Loading');
+
+          const beforeBackRenders=renders.length;
+          window.show('typeStep');
+          assert.strictEqual(history.backCalls,1,'explicit Back to recorded previous screen should consume browser history');
+          assert.strictEqual(history.pushed.length,2,'explicit Back must not push a loop entry');
+          assert.strictEqual(renders.length,beforeBackRenders,'browser back waits for popstate to render');
+
+          const priorPushCount=history.pushed.length;
+          history.state={__kinaraideeSpa:1,screen:'typeStep',prev:'home'};
+          listeners.popstate({state:history.state});
+          assert.strictEqual(active,'typeStep');
+          assert.strictEqual(history.pushed.length,priorPushCount,'popstate restore must not re-push history');
+          assert.ok(focusProxyCalls>=4,'popstate must replay the captured final show renderer so focus/current-nav wrappers still run');
+
+          window.show('typeStep');
+          assert.strictEqual(history.pushed.length,priorPushCount,'same-screen show must not push a duplicate entry');
+
+          const rendersBeforeForeignPop=renders.length;
+          listeners.popstate({state:null});
+          assert.strictEqual(renders.length,rendersBeforeForeignPop,'foreign/base history must be left alone so Home can eventually exit the PWA');
+
+          console.log('SPA History API contract PASS (source simulation only; not Android Physical PASS)');
+          NODE
