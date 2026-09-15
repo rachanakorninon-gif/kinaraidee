@@ -2,13 +2,13 @@
 
 This file is the canonical declaration for the browser/PWA runtime candidate. It is intentionally small so release workflows can validate runtime lineage without rewriting historical evidence.
 
-- Current browser/PWA runtime candidate: `e77e9fdef61fdf7dd4db246de5fdcb0f9b846116`
+- Current browser/PWA runtime candidate: `3c3e173c452dc2c9c34d43047d0dea9c2f0f4821`
 - PWA cache marker: `kinaraidee-beta-v16`
-- Runtime change: Issue #644 TalkBack Result-context remediation. The existing SPA focus-management path still performs the only programmatic focus move, but the Result destination now remaps its deterministic focus target from the generic top-bar label to the already-rendered `#foodName` heading. The menu target remains `tabindex="-1"`, is not a live region, Loading remains transient, and no speech API or duplicate announcement path is added. Existing bottom-nav current-state behavior remains unchanged; cache generation remains `kinaraidee-beta-v16`.
+- Runtime change: Issue #645 Android installed-PWA Back navigation remediation. A dedicated `data/spa-navigation.js` adds History API entries for non-transient SPA screens, keeps `loading` out of browser history, replays `popstate` through the existing final `show()` renderer without re-pushing, and uses `history.back()` when an explicit in-app Back target matches the recorded prior screen. This preserves existing #584 focus and #635 current-nav wrappers, does not trap the base Home entry, and adds the navigation controller to the v16 Service Worker app shell without changing the cache namespace.
 - Deployment status: **PENDING FOR CURRENT RUNTIME DEPLOYMENT**
 - Runtime merge/deployed SHA: **PENDING**
 - Last verified deployed browser/PWA descendant: `ff975076a643d123081da8ab3e3baf399fdc5f6d`.
-- Current runtime deployment evidence is pending for Issue #644 candidate `e77e9fdef61fdf7dd4db246de5fdcb0f9b846116`. The last verified deployed browser/PWA trace remains Issue #635 candidate `91cdf79d221c68ca54e5f874aebe421846264821` through deployed descendant `ff975076a643d123081da8ab3e3baf399fdc5f6d`; its prior deployment evidence remains historical and is not reused as current PASS.
+- Current runtime deployment evidence is pending for Issue #645 candidate `3c3e173c452dc2c9c34d43047d0dea9c2f0f4821`. The last verified deployed browser/PWA trace remains Issue #635 through `ff975076a643d123081da8ab3e3baf399fdc5f6d`; Issue #644 is stacked immediately below this candidate and is not yet deployment evidence.
 - Current deployment PASS is scoped to the browser/PWA static deployment trace and live source markers only. It does not prove VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, full accessibility conformance, Public Beta completion, Production policy/legal approval, or Commercial GO.
 - The prior verified browser/PWA trace for Issue #585 PR #627 is historical evidence only: source candidate `0b6352af081f51ad9df2343022d0683b109d93a4`, merged/deployed as `af329c471c0335fd6e0812a8d5f75066ffb335cd`; GitHub Pages run `34676035335`, Kinaraidee Live Smoke run `34676056521`, Auth Password Security Live Smoke run `34676056466`, Campaign 3000 Premium Live Smoke run `34676056536`, Toast Accessibility Live Smoke run `34676056553`, and Premium Research Preview Live Smoke run `34676056518` completed successfully on that exact deployed SHA.
 - Prior verified deployment evidence remains historical and is not reused as current PASS.
@@ -26,6 +26,6 @@ This file is the canonical declaration for the browser/PWA runtime candidate. It
 
 ## Evidence boundary
 
-The current browser/PWA runtime candidate `e77e9fdef61fdf7dd4db246de5fdcb0f9b846116` is **PENDING FOR CURRENT RUNTIME DEPLOYMENT**. Source/static/CI evidence for the Result menu focus-target remediation does not establish deployment or TalkBack/VoiceOver/keyboard Physical PASS. The last verified deployed runtime remains Issue #635 through `ff975076a643d123081da8ab3e3baf399fdc5f6d`; existing physical evidence retains only its recorded scope.
+The current browser/PWA runtime candidate `3c3e173c452dc2c9c34d43047d0dea9c2f0f4821` is **PENDING FOR CURRENT RUNTIME DEPLOYMENT**. Source/static/CI evidence for the Result menu focus-target remediation does not establish deployment or TalkBack/VoiceOver/keyboard Physical PASS. The last verified deployed runtime remains Issue #635 through `ff975076a643d123081da8ab3e3baf399fdc5f6d`; existing physical evidence retains only its recorded scope.
 
 Source/static/CI/deployment evidence cannot substitute for VoiceOver/TalkBack/keyboard Physical PASS, another-device PASS, the remaining Android/iPhone device matrix, affected-iPhone Issues #524/#545, Product Event real-user acceptance, Privacy/Legal approval, Payment/Premium readiness, or Commercial GO. Campaign 3,000 remains PRE-LAUNCH. Paid acquisition remains NOT LAUNCHED. Premium is not approved/active. Public Beta remains NOT COMPLETE.
