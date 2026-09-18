@@ -1,0 +1,39 @@
+name: Menu Image Regression
+
+on:
+  pull_request:
+    paths:
+      - 'data/foods-expanded.js'
+      - 'data/menu-image-manifest.js'
+      - 'data/menu-images.js'
+      - 'assets/menu-images/**'
+      - 'tools/verify-menu-images.mjs'
+      - 'index.html'
+      - 'sw.js'
+      - '.github/workflows/menu-image-regression.yml'
+  push:
+    branches: ['main']
+    paths:
+      - 'data/foods-expanded.js'
+      - 'data/menu-image-manifest.js'
+      - 'data/menu-images.js'
+      - 'assets/menu-images/**'
+      - 'tools/verify-menu-images.mjs'
+      - 'index.html'
+      - 'sw.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify menu image manifest and assets
+        run: node tools/verify-menu-images.mjs
+      - name: Check menu image runtime syntax
+        run: |
+          node --check data/menu-image-manifest.js
+          node --check data/menu-images.js

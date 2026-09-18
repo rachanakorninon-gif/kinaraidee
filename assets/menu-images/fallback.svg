@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="ภาพประกอบเมนู">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff9ee"/>
+      <stop offset="1" stop-color="#f4ead8"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="640" rx="56" fill="url(#bg)"/>
+  <ellipse cx="320" cy="360" rx="210" ry="118" fill="#fff" stroke="#d9c7ad" stroke-width="18"/>
+  <ellipse cx="320" cy="350" rx="145" ry="72" fill="#f6dfad"/>
+  <path d="M190 238c55-54 205-58 260 0" fill="none" stroke="#7aa874" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="250" cy="325" r="28" fill="#e58a47"/>
+  <circle cx="335" cy="305" r="24" fill="#e8b74f"/>
+  <circle cx="395" cy="350" r="30" fill="#7aa874"/>
+</svg>

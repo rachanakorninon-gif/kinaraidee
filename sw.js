@@ -4,6 +4,7 @@ const SHELL=[
   './','./index.html','./404.html','./manifest.webmanifest','./icon.svg',
   './feedback.html','./privacy.html','./partner.html','./robots.txt','./sitemap.xml',
   './data/foods-expanded.js','./data/choice-rules.js',
+  './data/menu-image-manifest.js','./data/menu-images.js','./assets/menu-images/fallback.svg',
   './data/group-mode.js','./data/group-sync.js','./data/group-remote.js',
   './data/member-sync.js','./data/nearby-restaurants.js','./data/pwa-install.js',
   './data/home-surprise.js','./data/history-ui.js','./data/toast-accessibility.js','./data/spa-navigation.js'
@@ -42,6 +43,13 @@ self.addEventListener('fetch',event=>{
           Response.error();
       }
     })());
+    return;
+  }
+
+  // Menu photos are lazy-loaded and intentionally network-only. Keeping them out
+  // of the runtime cache prevents a large catalog from growing PWA storage without bound.
+  if(url.pathname.includes('/assets/menu-images/')&&!url.pathname.endsWith('/fallback.svg')){
+    event.respondWith(fetch(event.request));
     return;
   }
 
