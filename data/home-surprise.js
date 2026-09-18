@@ -116,6 +116,41 @@
     };
     document.documentElement.dataset.kinaraideeScreenFocusA11y='1';
   }
+  function installEmojiControlAccessibleNames(){
+    const labels=[
+      ['#home .homeHero button.secondary[onclick="startFresh()"]','เลือกพร้อมกัน กลุ่ม'],
+      ['#home .quick button[onclick*="renderHistory"]','เมนูโปรดและประวัติ'],
+      ['#home .quick button[onclick="showStatsHome()"]','สถิติการเลือก'],
+      ['#mealChips [data-v="เช้า"]','มื้อเช้า'],
+      ['#mealChips [data-v="กลางวัน"]','มื้อกลางวัน'],
+      ['#mealChips [data-v="เย็น"]','มื้อเย็น'],
+      ['#mealChips [data-v="ดึก"]','มื้อดึก'],
+      ['#budgetChips [data-v="999"]','ไม่จำกัด'],
+      ['#typeChips [data-surprise="1"]','ไม่รู้เลย — เลือกให้ฉัน'],
+      ['#typeChips [data-v="ข้าว"]','ข้าว'],
+      ['#typeChips [data-v="เส้น"]','เส้น'],
+      ['#typeChips [data-v="เผ็ด"]','เผ็ด'],
+      ['#typeChips [data-v="ของทอด"]','ของทอด'],
+      ['#typeChips [data-v="ของหวาน"]','ของหวาน'],
+      ['#typeChips [data-v="หนัก"]','มื้อหนัก'],
+      ['#typeChips [data-v="โปรตีน"]','เนื้อสัตว์และโปรตีน'],
+      ['#typeChips [data-v="เบา"]','เบา ๆ'],
+      ['#typeChips [data-v="ซุป"]','ซุปและต้ม'],
+      ['#typeChips [data-v="ต่างชาติ"]','อาหารต่างชาติ'],
+      ['#typeStep .primary[onclick="startRecommend()"]','ให้เราช่วยเลือกเลย'],
+      ['#result .secondary[onclick="nearby()"]','ดูร้านใกล้คุณที่มีเมนูนี้'],
+      ['#result .actionRow button[onclick="recommendNow()"]','เลือกใหม่'],
+      ['#result .actionRow button[onclick="saveLike()"]','ชอบเมนูนี้'],
+      ['#result .primary[onclick="acceptFood()"]','กินอันนี้'],
+      ['nav.nav button[onclick="goHome()"]','หน้าหลัก'],
+      ['nav.nav button[onclick="startFresh()"]','เลือกเมนู'],
+      ['nav.nav button[onclick*="renderHistory"]','ประวัติ']
+    ];
+    labels.forEach(([selector,label])=>{
+      const control=document.querySelector(selector);
+      if(control&&!control.hasAttribute('aria-label'))control.setAttribute('aria-label',label);
+    });
+  }
   function installResultMenuFocusTarget(){
     const screen=document.getElementById('result');
     const menu=document.getElementById('foodName');
@@ -276,6 +311,7 @@
   function install(){
     ensureAccessibilityStyles();
     installSelectedStateA11y();
+    installEmojiControlAccessibleNames();
     installScreenFocusA11y();
     installResultMenuFocusTarget();
     ensureSpaNavigation();
